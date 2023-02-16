@@ -68,7 +68,7 @@ public class FastqUtils
     public static long getSequenceCount(File inputFile) throws PipelineJobException
     {
         FileType gz = new FileType(".gz");
-        try (InputStream is = gz.isType(inputFile) ? new GZIPInputStream(new FileInputStream(inputFile)) : new FileInputStream(inputFile);BufferedReader lnr = new BufferedReader(new InputStreamReader(is, Charsets.US_ASCII));)
+        try (InputStream is = gz.isType(inputFile) ? new GZIPInputStream(new FileInputStream(inputFile)) : new FileInputStream(inputFile);BufferedReader lnr = new BufferedReader(new InputStreamReader(is, Charsets.US_ASCII)))
         {
             int count = 0;
             while (lnr.readLine() != null)

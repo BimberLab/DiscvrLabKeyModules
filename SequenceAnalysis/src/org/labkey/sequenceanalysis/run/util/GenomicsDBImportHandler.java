@@ -12,7 +12,7 @@ public class GenomicsDBImportHandler extends AbstractGenomicsDBImportHandler
 
     public GenomicsDBImportHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), NAME, "This will run GATK\'s GenomicsDBImport on a set of GVCF files.  Note: this cannot work against any VCF file - these are primarily VCFs created using GATK\'s HaplotypeCaller.", null, getToolParameters(false));
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), NAME, "This will run GATK's GenomicsDBImport on a set of GVCF files.  Note: this cannot work against any VCF file - these are primarily VCFs created using GATK's HaplotypeCaller.", null, getToolParameters(false));
     }
 
     @Override

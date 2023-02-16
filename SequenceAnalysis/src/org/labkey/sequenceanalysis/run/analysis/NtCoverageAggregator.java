@@ -49,18 +49,18 @@ import java.util.Set;
  */
 public class NtCoverageAggregator extends AbstractAlignmentAggregator
 {
-    private Map<String, int[][]> _totalCoverage = new HashMap<>();
-    private Map<String, int[][]> _totalQual = new HashMap<>();
-    private Map<String, int[][]> _hcCoverage = new HashMap<>();
-    private Map<String, int[][]> _hcQual = new HashMap<>();
-    private Map<String, ReferenceSequence> _refSequences = new HashMap<>();
+    private final Map<String, int[][]> _totalCoverage = new HashMap<>();
+    private final Map<String, int[][]> _totalQual = new HashMap<>();
+    private final Map<String, int[][]> _hcCoverage = new HashMap<>();
+    private final Map<String, int[][]> _hcQual = new HashMap<>();
+    private final Map<String, ReferenceSequence> _refSequences = new HashMap<>();
     private int _totalFilteredSnps = 0;
     private int _totalAlignments = 0;
 
-    private Map<String, int[][][]> _totalCoverageByBase = new HashMap<>();
-    private Map<String, int[][][]> _totalQualByBase = new HashMap<>();
+    private final Map<String, int[][][]> _totalCoverageByBase = new HashMap<>();
+    private final Map<String, int[][][]> _totalQualByBase = new HashMap<>();
 
-    private Set<String> _encounteredReferences = new HashSet<>();
+    private final Set<String> _encounteredReferences = new HashSet<>();
 
     private final Map<Character, String> _baseMap = new HashMap<>()
     {
@@ -396,7 +396,7 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
                             if ('N' == base)
                                 n_total += baseTotal;
 
-                            double totalQual = (double)getValueForPositionAndBase(refName, position, index, base, _totalQualByBase);
+                            double totalQual = getValueForPositionAndBase(refName, position, index, base, _totalQualByBase);
                             double avgQual = baseTotal == 0 ? 0 : totalQual / baseTotal.doubleValue();
                             row.put("avgqual_" + fieldSuffix, avgQual);
 

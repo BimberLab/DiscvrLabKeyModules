@@ -38,9 +38,7 @@ public class OutputVariantsStartingInIntervalsStep extends AbstractPipelineStep 
     {
         public Provider()
         {
-            super("OutputVariantsStartingInIntervals", "Output Variants Starting In Intervals", "DISCVRseq", "This will subset the VCF to include only variants the start within the target intervals", Arrays.asList(
-
-            ), null, "https://bimberlab.github.io/DISCVRSeq/");
+            super("OutputVariantsStartingInIntervals", "Output Variants Starting In Intervals", "DISCVRseq", "This will subset the VCF to include only variants the start within the target intervals", List.of(), null, "https://bimberlab.github.io/DISCVRSeq/");
         }
 
         @Override

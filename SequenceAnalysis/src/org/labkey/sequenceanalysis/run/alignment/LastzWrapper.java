@@ -111,6 +111,7 @@ public class LastzWrapper extends AbstractCommandWrapper
             ), null, "http://www.bx.psu.edu/~rsharris/lastz/", false, false);
         }
 
+        @Override
         public LastzAlignmentStep create(PipelineContext context)
         {
             return new LastzAlignmentStep(this, context);

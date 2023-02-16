@@ -490,6 +490,7 @@ public class StarWrapper extends AbstractCommandWrapper
             setAlwaysCacheIndex(true);
         }
 
+        @Override
         public StarAlignmentStep create(PipelineContext context)
         {
             return new StarAlignmentStep(this, context);

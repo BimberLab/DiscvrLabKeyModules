@@ -26,15 +26,15 @@ package org.labkey.api.sequenceanalysis.pipeline;
  */
 public interface PipelineStep
 {
-    public PipelineContext getPipelineCtx();
+    PipelineContext getPipelineCtx();
 
-    public PipelineStepProvider<?> getProvider();
+    PipelineStepProvider<?> getProvider();
 
-    public int getStepIdx();
+    int getStepIdx();
 
-    public void setStepIdx(int stepIdx);
+    void setStepIdx(int stepIdx);
 
-    public enum CorePipelineStepTypes
+    enum CorePipelineStepTypes
     {
         fastqProcessing(PreprocessingStep.class),
         referenceLibraryCreation(ReferenceLibraryStep.class),
@@ -44,7 +44,7 @@ public interface PipelineStep
         assembly(AssemblyStep.class),
         analysis(AnalysisStep.class);
 
-        private Class<? extends PipelineStep> _stepClass;
+        private final Class<? extends PipelineStep> _stepClass;
 
         CorePipelineStepTypes(Class<? extends PipelineStep> clazz)
         {

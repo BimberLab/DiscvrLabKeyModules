@@ -33,7 +33,7 @@ import java.util.Set;
  */
 public class BamCleanupHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    private FileType _bamFileType = new FileType("bam", false);
+    private final FileType _bamFileType = new FileType("bam", false);
 
     public BamCleanupHandler()
     {

@@ -25,7 +25,7 @@ import java.util.TreeMap;
  */
 public class ClusterServiceImpl extends ClusterService
 {
-    private List<ClusterResourceAllocator.Factory> _allocatorList = new ArrayList<>();
+    private final List<ClusterResourceAllocator.Factory> _allocatorList = new ArrayList<>();
 
     public static ClusterServiceImpl get()
     {

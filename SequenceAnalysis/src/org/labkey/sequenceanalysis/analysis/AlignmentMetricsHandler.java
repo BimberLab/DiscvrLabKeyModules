@@ -39,11 +39,11 @@ import java.util.List;
  */
 public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    private FileType _bamFileType = new FileType("bam", false);
+    private final FileType _bamFileType = new FileType("bam", false);
 
     public AlignmentMetricsHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Alignment Metrics", "This will iterate all alignments and create one or more feature tracks summarizing the alignment.  The original purpose was to create information used for QC purposes or to better understand how data performed against the reference.", null, Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Alignment Metrics", "This will iterate all alignments and create one or more feature tracks summarizing the alignment.  The original purpose was to create information used for QC purposes or to better understand how data performed against the reference.", null, List.of(
                 ToolParameterDescriptor.create("windowSize", "Window Size", "Metrics will be gathered by iterating the genome with a window of this size", "ldk-integerfield", null, 500)
         ));
     }
@@ -195,7 +195,7 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler<
                             try (SamReader reader = bamFact.open(bam))
                             {
                                 SamRecordIntervalIteratorFactory fact = new SamRecordIntervalIteratorFactory();
-                                try (CloseableIterator<SAMRecord> it = fact.makeSamRecordIntervalIterator(reader, Arrays.asList(new Interval(sr.getSequenceName(), windowStart, windowEnd)), true))
+                                try (CloseableIterator<SAMRecord> it = fact.makeSamRecordIntervalIterator(reader, List.of(new Interval(sr.getSequenceName(), windowStart, windowEnd)), true))
                                 {
                                     while (it.hasNext())
                                     {

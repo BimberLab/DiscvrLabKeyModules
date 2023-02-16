@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class SamtoolsIndexer extends SamtoolsRunner
 {
-    private static String COMMAND = "index";
+    private static final String COMMAND = "index";
 
     public SamtoolsIndexer(Logger log)
     {

@@ -17,7 +17,7 @@ public class PreprocessingOutputImpl extends DefaultPipelineStepOutput implement
     public static final String PROCESSED_FQ_ROLE = "Processed FASTQ";
     public static final String FASTQ_PROCESSING_OUTPUT_ROLE = "FASTQ Processing Output";
 
-    private Pair<File, File> _inputs;
+    private final Pair<File, File> _inputs;
     private Pair<File, File> _processed;
 
     public PreprocessingOutputImpl(File inputFile1, File inputFile2)

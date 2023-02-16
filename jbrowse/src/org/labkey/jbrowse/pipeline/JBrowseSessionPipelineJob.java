@@ -61,7 +61,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
             throw new IllegalArgumentException("Unknown database: " + databaseGuid);
         }
 
-        return new JBrowseSessionPipelineJob(c, user, pipeRoot, (String)existingRow.get("name"), (String)existingRow.get("description"), null, trackIds, outputFileIds, databaseGuid, (existingRow.get("temporary") == null ? false : (boolean)existingRow.get("temporary")));
+        return new JBrowseSessionPipelineJob(c, user, pipeRoot, (String)existingRow.get("name"), (String)existingRow.get("description"), null, trackIds, outputFileIds, databaseGuid, (existingRow.get("temporary") != null && (boolean) existingRow.get("temporary")));
     }
 
     public static JBrowseSessionPipelineJob refreshDatabase(Container c, User user, PipeRoot pipeRoot, String databaseGuid)
@@ -205,7 +205,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         ReprocessResources("Recreating Resources"),
         ReprocessSession("Recreating Session");
 
-        private String _description;
+        private final String _description;
 
         Mode(String description)
         {

@@ -29,7 +29,7 @@ import java.util.zip.GZIPOutputStream;
  */
 public class FastqMerger
 {
-    private Logger _logger;
+    private final Logger _logger;
 
     public FastqMerger(Logger logger)
     {

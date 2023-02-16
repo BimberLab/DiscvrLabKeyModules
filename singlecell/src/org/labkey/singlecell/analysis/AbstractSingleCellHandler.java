@@ -610,7 +610,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 so.setName(output.getDatasetName() == null ? output.getDatasetId() : output.getDatasetName());
                 so.setCategory("Seurat Object");
                 so.setFile(output.getFile());
-                String description = getOutputDescription(ctx, output.getFile(), Arrays.asList("Steps: " + steps.stream().map(x -> x.getProvider().getName()).collect(Collectors.joining("; "))));
+                String description = getOutputDescription(ctx, output.getFile(), List.of("Steps: " + steps.stream().map(x -> x.getProvider().getName()).collect(Collectors.joining("; "))));
                 if (jobDescription != null)
                 {
                     description = jobDescription + "\n" + description;
@@ -914,7 +914,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
             SequenceOutputFile so1 = new SequenceOutputFile();
             so1.setRowid(999);
-            r._stepOutputs.put(1, Arrays.asList(new SingleCellStep.SeuratObjectWrapper("datasetId", "datasetName", new File("seurat.rds"), so1)));
+            r._stepOutputs.put(1, List.of(new SingleCellStep.SeuratObjectWrapper("datasetId", "datasetName", new File("seurat.rds"), so1)));
 
             File tmp = new File(System.getProperty("java.io.tmpdir"));
             File f = FileUtil.getAbsoluteCaseSensitiveFile(new File(tmp, AbstractSingleCellHandler.Resumer.JSON_NAME));

@@ -53,7 +53,7 @@ public class CompareVariantsHandler implements SequenceOutputHandler<SequenceOut
     @Override
     public boolean canProcess(SequenceOutputFile f)
     {
-        FileType ft = new FileType(Arrays.asList("vcf"), "vcf", FileType.gzSupportLevel.SUPPORT_GZ);
+        FileType ft = new FileType(List.of("vcf"), "vcf", FileType.gzSupportLevel.SUPPORT_GZ);
 
         return f.getFile() != null && ft.isType(f.getFile());
     }
@@ -67,7 +67,7 @@ public class CompareVariantsHandler implements SequenceOutputHandler<SequenceOut
     @Override
     public LinkedHashSet<String> getClientDependencies()
     {
-        return new LinkedHashSet<>(Arrays.asList("sequenceanalysis/sequenceAnalysisButtons.js"));
+        return new LinkedHashSet<>(List.of("sequenceanalysis/sequenceAnalysisButtons.js"));
     }
 
     @Override

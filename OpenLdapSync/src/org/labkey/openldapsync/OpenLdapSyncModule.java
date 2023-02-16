@@ -74,6 +74,7 @@ public class OpenLdapSyncModule extends SpringModule
     {
         DefaultSchema.registerProvider(OpenLdapSyncSchema.getInstance().getSchema().getQuerySchemaName(), new DefaultSchema.SchemaProvider(this)
         {
+            @Override
             public QuerySchema createSchema(final DefaultSchema schema, Module module)
             {
                 DbSchema dbSchema = DbSchema.get(OpenLdapSyncSchema.NAME, DbSchemaType.Module);

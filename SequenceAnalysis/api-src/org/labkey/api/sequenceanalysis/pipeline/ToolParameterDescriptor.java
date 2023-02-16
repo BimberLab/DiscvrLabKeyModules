@@ -36,13 +36,13 @@ import java.util.Map;
  */
 public class ToolParameterDescriptor
 {
-    private CommandLineParam _ca;
+    private final CommandLineParam _ca;
     private String _name;
     private String _label;
     private String _description;
-    private String _fieldXtype;
-    private JSONObject _additionalExtConfig;
-    private Object _defaultValue;
+    private final String _fieldXtype;
+    private final JSONObject _additionalExtConfig;
+    private final Object _defaultValue;
 
     public ToolParameterDescriptor(CommandLineParam ca, String name, String label, String description, String fieldXtype, @Nullable Object defaultValue, @Nullable JSONObject additionalExtConfig)
     {

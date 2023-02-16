@@ -27,9 +27,9 @@ import java.util.List;
  */
 public interface SequenceDataProvider extends DataProvider
 {
-    public List<NavItem> getSequenceNavItems(Container c, User u, SequenceNavItemCategory category);
+    List<NavItem> getSequenceNavItems(Container c, User u, SequenceNavItemCategory category);
 
-    public enum SequenceNavItemCategory
+    enum SequenceNavItemCategory
     {
         data(),
         references(),

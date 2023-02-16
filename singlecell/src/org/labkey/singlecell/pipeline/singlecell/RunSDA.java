@@ -81,7 +81,7 @@ public class RunSDA extends AbstractCellMembraneStep
                         put("delimiter", ",");
                         put("stripCharsRe", "/['\"]/g");
                     }}, null, null, true).delimiter(",")
-                ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+                ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
 

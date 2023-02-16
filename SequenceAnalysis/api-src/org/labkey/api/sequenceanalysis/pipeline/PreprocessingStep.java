@@ -28,10 +28,10 @@ import java.io.File;
  */
 public interface PreprocessingStep extends PipelineStep
 {
-    public Output processInputFile(File inputFile, @Nullable File inputFile2, File outputDir) throws PipelineJobException;
+    Output processInputFile(File inputFile, @Nullable File inputFile2, File outputDir) throws PipelineJobException;
 
-    public static interface Output extends PipelineStepOutput
+    interface Output extends PipelineStepOutput
     {
-        public Pair<File, File> getProcessedFastqFiles();
+        Pair<File, File> getProcessedFastqFiles();
     }
 }

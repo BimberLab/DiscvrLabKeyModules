@@ -1286,7 +1286,7 @@ public class JsonFile
         }
     }
 
-    public static enum TRACK_TYPES
+    public enum TRACK_TYPES
     {
         bam(".bam", false),
         cram(".cram", false),
@@ -1294,14 +1294,14 @@ public class JsonFile
         gff(Arrays.asList(".gff", ".gff3"), true),
         bed(".bed", true),
         bw(".bw", false),
-        vcf(Arrays.asList(".vcf"), true);
+        vcf(List.of(".vcf"), true);
 
-        private List<String> _extensions;
-        private boolean _allowGzip;
+        private final List<String> _extensions;
+        private final boolean _allowGzip;
 
         TRACK_TYPES(String extension, boolean allowGzip)
         {
-            this(Arrays.asList(extension), allowGzip);
+            this(Collections.singletonList(extension), allowGzip);
         }
 
         TRACK_TYPES(List<String> extensions, boolean allowGzip)

@@ -43,10 +43,10 @@ import java.util.Map;
  */
 public class AvgBaseQualityAggregator
 {
-    private Logger _log;
-    private File _bam;
-    private File _bai;
-    private File _ref;
+    private final Logger _log;
+    private final File _bam;
+    private final File _bai;
+    private final File _ref;
     private Map<Integer, Map<String, Double>> _quals = null;
     private List<SamRecordFilter> _filters = null;
 

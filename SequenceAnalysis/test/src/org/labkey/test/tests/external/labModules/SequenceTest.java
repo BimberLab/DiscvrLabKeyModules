@@ -73,6 +73,7 @@ import java.util.Objects;
 import java.util.zip.GZIPInputStream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -340,7 +341,7 @@ public class SequenceTest extends BaseWebDriverTest
         }
 
         int existingPipelineJobs = SequenceTest.getTotalPipelineJobs(this);
-        _helper.initiatePipelineJob("Import Illumina data", Arrays.asList(ILLUMINA_CSV), getProjectName());
+        _helper.initiatePipelineJob("Import Illumina data", List.of(ILLUMINA_CSV), getProjectName());
 
         setFormElement(Locator.name("jobName"), "TestIlluminaRun" + _helper.getRandomInt());
         setFormElement(Locator.name("runDate"), "08/25/2011");
@@ -612,8 +613,8 @@ public class SequenceTest extends BaseWebDriverTest
 
         log("Testing whether sections are disabled when alignment unchecked");
         Ext4FieldRef.getForLabel(this, "Perform Alignment").setChecked(false);
-        assertEquals("Field should be hidden", false, Ext4FieldRef.isFieldPresent(this, "Reference Genome Type"));
-        assertEquals("Field should be hidden", false, Ext4FieldRef.isFieldPresent(this, "Choose Aligner"));
+        assertFalse("Field should be hidden", Ext4FieldRef.isFieldPresent(this, "Reference Genome Type"));
+        assertFalse("Field should be hidden", Ext4FieldRef.isFieldPresent(this, "Choose Aligner"));
 
         Ext4FieldRef.getForLabel(this, "Perform Alignment").setChecked(true);
         waitForText("Reference Genome Type");
@@ -763,7 +764,7 @@ public class SequenceTest extends BaseWebDriverTest
         FileUtils.copyFile(new File(_sampleData, "test.bam"), inputBam);
         FileUtils.copyFile(new File(_sampleData, "test.bam.bai"), inputBamIdx);
 
-        _helper.initiatePipelineJob(_alignmentImportPipelineName, Arrays.asList(inputBam.getName()), getProjectName());
+        _helper.initiatePipelineJob(_alignmentImportPipelineName, List.of(inputBam.getName()), getProjectName());
         waitForText("Job Name");
 
         Ext4FieldRef.getForLabel(this, "Job Name").setValue("AlignmentTest_" + System.currentTimeMillis());
@@ -1142,9 +1143,9 @@ public class SequenceTest extends BaseWebDriverTest
         sample0 = (Map) fieldsJson.get("readset_0");
         Assert.assertEquals("Unexpected value for param", "Readset1", sample0.get("readsetname"));
         Assert.assertEquals("Unexpected value for param", "Subject1", sample0.get("subjectid"));
-        Assert.assertEquals("Unexpected value for param", null, StringUtils.trimToNull((String) sample0.get("readset")));
+        assertNull("Unexpected value for param", StringUtils.trimToNull((String) sample0.get("readset")));
         Assert.assertEquals("Unexpected value for param", "ILLUMINA", sample0.get("platform"));
-        Assert.assertEquals("Unexpected value for param", null, StringUtils.trimToNull((String) sample0.get("fileId")));
+        assertNull("Unexpected value for param", StringUtils.trimToNull((String) sample0.get("fileId")));
         Assert.assertEquals("Unexpected value for param", "gDNA", sample0.get("sampletype"));
         Assert.assertEquals("Unexpected value for param", "FLD0001", sample0.get("barcode5"));
         Assert.assertNull("Unexpected value for param", StringUtils.trimToNull((String)sample0.get("barcode3")));
@@ -1284,7 +1285,7 @@ public class SequenceTest extends BaseWebDriverTest
         String filter = readset1 + ";" + readset2 + ";" + readset3;
         SelectRowsCommand filePaths = new SelectRowsCommand("sequenceanalysis", "readdata");
         filePaths.addFilter(new Filter("readset/name", filter, Filter.Operator.IN));
-        filePaths.setColumns(Arrays.asList("fileid1/DataFileUrl"));
+        filePaths.setColumns(List.of("fileid1/DataFileUrl"));
 
         List<File> importedFiles = new ArrayList<>();
         filePaths.execute(cn, getProjectName()).getRowset().forEach(x -> {
@@ -1683,7 +1684,7 @@ public class SequenceTest extends BaseWebDriverTest
         //make sure file actually deleted
         SelectRowsCommand sr2 = new SelectRowsCommand("sequenceanalysis", "outputfiles");
         sr2.addFilter(new Filter("category", "BAM File", Filter.Operator.EQUAL));
-        sr2.setColumns(Arrays.asList("rowid"));
+        sr2.setColumns(List.of("rowid"));
         SelectRowsResponse srr2 = sr2.execute(cn, getProjectName());
         if (srr2.getRowCount().intValue() > 0)
         {

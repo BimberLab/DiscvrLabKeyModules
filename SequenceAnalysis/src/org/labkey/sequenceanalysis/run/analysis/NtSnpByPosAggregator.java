@@ -48,8 +48,8 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
 {
     private NtCoverageAggregator _coverageAggregator = null;
     private boolean _coverageTrackedExternally;
-    private Map<String, Integer> _snps = new HashMap<>();
-    private Map<String, String> _settings;
+    private final Map<String, Integer> _snps = new HashMap<>();
+    private final Map<String, String> _settings;
     private int _totalFilteredSnps = 0;
     private int _totalAlignments = 0;
 
@@ -121,10 +121,10 @@ public class NtSnpByPosAggregator extends AbstractAlignmentAggregator
 
     private String getSNPKey(NTSnp snp)
     {
-        return new StringBuilder(snp.getPositionInfo().getReferenceName()).append("||")
-            .append(snp.getLastRefPosition()).append("||")
-            .append(snp.getInsertIndex()).append("||")
-            .append(snp.getReadBaseString()).toString();
+        return snp.getPositionInfo().getReferenceName() + "||" +
+                snp.getLastRefPosition() + "||" +
+                snp.getInsertIndex() + "||" +
+                snp.getReadBaseString();
     }
 
     @Override

@@ -9,6 +9,8 @@ import org.labkey.api.util.PageFlowUtil;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 public class FeaturePlots extends AbstractCellMembraneStep
 {
@@ -21,14 +23,15 @@ public class FeaturePlots extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("FeaturePlots", "FeaturePlots", "Seurat", "This will generate FeaturePlots for each of the features/variables below. Any variable not present is skipped.", Arrays.asList(
-                    SeuratToolParameter.create("fieldNames", "Fields To Plot", "Enter one field name per line", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+            super("FeaturePlots", "FeaturePlots", "Seurat", "This will generate FeaturePlots for each of the features/variables below. Any variable not present is skipped.", Collections.singletonList(
+                    SeuratToolParameter.create("fieldNames", "Fields To Plot", "Enter one field name per line", "sequenceanalysis-trimmingtextarea", new JSONObject()
+                    {{
                         put("allowBlank", false);
                         put("height", 150);
                         put("delimiter", ",");
                         put("stripCharsRe", "/['\"]/g");
                     }}, null).delimiter(",")
-            ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+            ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
 

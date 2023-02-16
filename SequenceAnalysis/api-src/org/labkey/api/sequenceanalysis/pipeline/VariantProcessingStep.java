@@ -31,7 +31,7 @@ import java.util.List;
  */
 public interface VariantProcessingStep extends PipelineStep
 {
-    public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable List<Interval> intervals) throws PipelineJobException;
+    Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable List<Interval> intervals) throws PipelineJobException;
 
     default void init(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles) throws PipelineJobException
     {
@@ -46,17 +46,17 @@ public interface VariantProcessingStep extends PipelineStep
         fixedJobs()
     }
 
-    public static interface Output extends PipelineStepOutput
+    interface Output extends PipelineStepOutput
     {
-        public File getVCF();
+        File getVCF();
     }
 
-    public static interface RequiresPedigree
+    interface RequiresPedigree
     {
 
     }
 
-    public static interface SupportsScatterGather
+    interface SupportsScatterGather
     {
         default void validateScatter(ScatterGatherMethod method, PipelineJob job) throws IllegalArgumentException
         {
@@ -74,10 +74,10 @@ public interface VariantProcessingStep extends PipelineStep
         }
     }
 
-    public static interface MayRequirePrepareTask
+    interface MayRequirePrepareTask
     {
-        public boolean isRequired(PipelineJob job);
+        boolean isRequired(PipelineJob job);
 
-        public void doWork(List<SequenceOutputFile> inputFiles, SequenceOutputHandler.JobContext ctx) throws PipelineJobException;
+        void doWork(List<SequenceOutputFile> inputFiles, SequenceOutputHandler.JobContext ctx) throws PipelineJobException;
     }
 }

@@ -131,8 +131,8 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
         return _taskHelper;
     }
 
-    private Set<File> _finalOutputFiles = new HashSet<>();
-    private Set<File> _unalteredInputs = new HashSet<>();
+    private final Set<File> _finalOutputFiles = new HashSet<>();
+    private final Set<File> _unalteredInputs = new HashSet<>();
 
     private ReadsetImportJob getPipelineJob()
     {

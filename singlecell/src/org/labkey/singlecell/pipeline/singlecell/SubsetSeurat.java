@@ -26,15 +26,16 @@ public class SubsetSeurat extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("SubsetSeurat", "Subset", "CellMembrane/Seurat", "The seurat object will be subset based on the expression below, which is passed directly to Seurat's subset(subset = X).", Arrays.asList(
-                    ToolParameterDescriptor.create("expression", "Expression", "Filter Expression(s)", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+            super("SubsetSeurat", "Subset", "CellMembrane/Seurat", "The seurat object will be subset based on the expression below, which is passed directly to Seurat's subset(subset = X).", List.of(
+                    ToolParameterDescriptor.create("expression", "Expression", "Filter Expression(s)", "sequenceanalysis-trimmingtextarea", new JSONObject()
+                    {{
                         put("allowBlank", false);
                         put("replaceAllWhitespace", false);
                         put("height", 150);
                         put("width", 600);
                         put("delimiter", DELIM);
                     }}, null)
-            ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+            ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
 
@@ -77,7 +78,7 @@ public class SubsetSeurat extends AbstractCellMembraneStep
             {
                 for (String subset : values)
                 {
-                    String subsetEscaped = subset.replace("'", "\\\'");
+                    String subsetEscaped = subset.replace("'", "\\'");
 
                     ret.add("\tif (!is.null(seuratObj)) {");
                     ret.add("\tprint(paste0('Subsetting dataset: ', datasetId, ' with the expression: " + subsetEscaped + "'))");

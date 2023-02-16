@@ -18,7 +18,7 @@ import java.util.List;
 
 public class CellRangerRawDataHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    private FileType _fileType = new FileType("cloupe", false);
+    private final FileType _fileType = new FileType("cloupe", false);
 
     public CellRangerRawDataHandler()
     {

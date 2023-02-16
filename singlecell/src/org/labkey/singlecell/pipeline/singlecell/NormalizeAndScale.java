@@ -7,6 +7,7 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class NormalizeAndScale extends AbstractCellMembraneStep
 {
@@ -56,7 +57,7 @@ public class NormalizeAndScale extends AbstractCellMembraneStep
                         put("checked", true);
                     }}, true),
                     getSeuratThreadsParam()
-                    ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+                    ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
 

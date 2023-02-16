@@ -39,7 +39,7 @@ public class ProcessUtils
                 public void run()
                 {
                     try (BufferedInputStream bufferedInputStream = new BufferedInputStream(tmpProcess1.getInputStream());
-                         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(tmpProcess2.getOutputStream());
+                         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(tmpProcess2.getOutputStream())
                     )
                     {
                         IOUtils.copy(bufferedInputStream, bufferedOutputStream);

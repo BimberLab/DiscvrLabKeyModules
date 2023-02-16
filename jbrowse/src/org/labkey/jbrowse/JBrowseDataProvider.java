@@ -33,7 +33,7 @@ import java.util.Set;
 public class JBrowseDataProvider extends AbstractSequenceDataProvider
 {
     public static final String NAME = "JBrowse";
-    private Module _module;
+    private final Module _module;
 
     public JBrowseDataProvider(Module m)
     {

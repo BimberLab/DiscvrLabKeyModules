@@ -131,7 +131,7 @@ public class BaseQualityScoreRecalibrator extends AbstractGatk4Wrapper
                         ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--maximum-cycle-value"), "maximumCycleValue", "Maximum Cycle Value", "Passed directly to BaseQualityScoreRecalibrator", "ldk-integerfield", new JSONObject(){{
                             put("minValue", 0);
                         }}, null)
-                ), new LinkedHashSet<>(Arrays.asList("ldk/field/ExpDataField.js")), "https://gatk.broadinstitute.org/hc/en-us/articles/360036363332-BaseRecalibrator");
+                ), new LinkedHashSet<>(List.of("ldk/field/ExpDataField.js")), "https://gatk.broadinstitute.org/hc/en-us/articles/360036363332-BaseRecalibrator");
             }
 
             @Override

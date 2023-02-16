@@ -84,7 +84,7 @@ public class PicardMetricsUtil
         return processWgsMetricsBase(mf, log, "WGS Metrics");
     }
 
-    private static String NON_ZERO = "WGS Metrics, Non-Zero Coverage";
+    private static final String NON_ZERO = "WGS Metrics, Non-Zero Coverage";
 
     private static List<Map<String, Object>> processWgsNonZeroMetrics(MetricsFile mf, Logger log) throws PipelineJobException
     {
@@ -104,9 +104,8 @@ public class PicardMetricsUtil
         {
             Map<String, Object> metricNames = new HashMap<>();
 
-            if (m instanceof CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage)
+            if (m instanceof CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage nzc)
             {
-                CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage nzc = (CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage)m;
                 if (nzc.CATEGORY == CollectWgsMetricsWithNonZeroCoverage.WgsMetricsWithNonZeroCoverage.Category.WHOLE_GENOME)
                 {
                     log.debug("skipping whole genome line for non-zero coverage");

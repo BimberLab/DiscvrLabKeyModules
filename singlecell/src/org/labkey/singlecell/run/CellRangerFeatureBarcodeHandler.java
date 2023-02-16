@@ -374,13 +374,13 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                 Integer maxThreads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
                 if (maxThreads != null)
                 {
-                    args.add("--nthreads=" + maxThreads.toString());
+                    args.add("--nthreads=" + maxThreads);
                 }
 
                 Integer maxRam = SequencePipelineService.get().getMaxRam();
                 if (maxRam != null)
                 {
-                    args.add("--memgb=" + maxRam.toString());
+                    args.add("--memgb=" + maxRam);
                 }
 
                 wrapper.setWorkingDir(ctx.getOutputDir());

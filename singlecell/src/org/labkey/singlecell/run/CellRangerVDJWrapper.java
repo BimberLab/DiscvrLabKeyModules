@@ -108,6 +108,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             return false;
         }
 
+        @Override
         public String getName()
         {
             return "CellRanger-VDJ";
@@ -119,6 +120,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             return null;
         }
 
+        @Override
         public AlignmentStep create(PipelineContext context)
         {
             return new CellRangerVDJAlignmentStep(this, context, new CellRangerVDJWrapper(context.getLogger()));
@@ -383,13 +385,13 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
             if (maxThreads != null)
             {
-                args.add("--localcores=" + maxThreads.toString());
+                args.add("--localcores=" + maxThreads);
             }
 
             Integer maxRam = SequencePipelineService.get().getMaxRam();
             if (maxRam != null)
             {
-                args.add("--localmem=" + maxRam.toString());
+                args.add("--localmem=" + maxRam);
             }
 
             File localFqDir = new File(outputDirectory, "localFq");
@@ -660,7 +662,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             //NOTE: cellranger is very picky about file name formatting
             if (doRename)
             {
-                sampleName = FileUtil.makeLegalName(sampleName.replaceAll("_", "-")).replaceAll(" ", "-").replaceAll("\\.", "-");;
+                sampleName = FileUtil.makeLegalName(sampleName.replaceAll("_", "-")).replaceAll(" ", "-").replaceAll("\\.", "-");
                 return sampleName + "_S1_L001_R" + (isReversed ? "2" : "1") + "_" + StringUtils.leftPad(String.valueOf(idx), 3, "0") + ".fastq.gz";
             }
             else
@@ -869,8 +871,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             }
         }
 
-        private static Pattern FILE_PATTERN = Pattern.compile("^(.+?)(_S[0-9]+){0,1}_L(.+?)_(R){0,1}([0-9])(_[0-9]+){0,1}(.*?)(\\.f(ast){0,1}q)(\\.gz)?$");
-        private static Pattern SAMPLE_PATTERN = Pattern.compile("^(.+)_S[0-9]+(.*)$");
+        private static final Pattern FILE_PATTERN = Pattern.compile("^(.+?)(_S[0-9]+){0,1}_L(.+?)_(R){0,1}([0-9])(_[0-9]+){0,1}(.*?)(\\.f(ast){0,1}q)(\\.gz)?$");
+        private static final Pattern SAMPLE_PATTERN = Pattern.compile("^(.+)_S[0-9]+(.*)$");
 
         private String getSampleName(String fn)
         {

@@ -9,9 +9,9 @@ import java.util.Map;
 
 public interface DemographicsSource
 {
-    public Map<String, Map<String, Object>> resolveSubjects(List<String> subjects, Container c, User u);
+    Map<String, Map<String, Object>> resolveSubjects(List<String> subjects, Container c, User u);
 
-    public LinkedHashMap<String, String> getFields();
+    LinkedHashMap<String, String> getFields();
 
-    public boolean isAvailable(Container c, User u);
+    boolean isAvailable(Container c, User u);
 }

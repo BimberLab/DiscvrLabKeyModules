@@ -501,7 +501,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Connection cn = new Connection(WebTestHelper.getBaseURL(), PasswordUtil.getUsername(), PasswordUtil.getPassword());
         SelectRowsCommand sr = new SelectRowsCommand("sequenceanalysis", "reference_library_members");
         sr.addFilter(new Filter("library_id", genomeId, Filter.Operator.EQUAL));
-        sr.setColumns(Arrays.asList("ref_nt_id"));
+        sr.setColumns(List.of("ref_nt_id"));
         Integer refNtId = (int)sr.execute(cn, getProjectName()).getRows().get(0).get("ref_nt_id");
 
         InsertRowsCommand ic = new InsertRowsCommand("sequenceanalysis", "ref_aa_sequences");
@@ -519,7 +519,7 @@ public class JBrowseTest extends BaseWebDriverTest
     @Override
     public List<String> getAssociatedModules()
     {
-        return Arrays.asList("jbrowse");
+        return List.of("jbrowse");
     }
 
     private void testFullTextSearch() throws Exception

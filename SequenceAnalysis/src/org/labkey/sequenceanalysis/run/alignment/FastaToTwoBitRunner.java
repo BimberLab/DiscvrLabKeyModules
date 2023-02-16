@@ -20,7 +20,7 @@ import java.util.List;
  */
 public class FastaToTwoBitRunner extends AbstractCommandWrapper
 {
-    private static String TWO_BIT = "2bit";
+    private static final String TWO_BIT = "2bit";
 
     public FastaToTwoBitRunner(@Nullable Logger logger)
     {

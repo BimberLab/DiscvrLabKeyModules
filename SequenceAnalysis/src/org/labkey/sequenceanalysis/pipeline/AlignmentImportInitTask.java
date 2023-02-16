@@ -44,27 +44,32 @@ public class AlignmentImportInitTask extends WorkDirectoryTask<AlignmentImportIn
             super(AlignmentImportInitTask.class);
         }
 
+        @Override
         public String getStatusName()
         {
             return "IMPORTING ALIGNMENT";
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList();
+            return List.of();
         }
 
-        public PipelineJob.Task createTask(PipelineJob job)
+        @Override
+        public PipelineJob.Task<?> createTask(PipelineJob job)
         {
             AlignmentImportInitTask task = new AlignmentImportInitTask(this, job);
             return task;
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.singletonList(new FileType(".bam"));
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
@@ -76,6 +81,7 @@ public class AlignmentImportInitTask extends WorkDirectoryTask<AlignmentImportIn
         return (AlignmentImportJob)getJob();
     }
 
+    @Override
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {

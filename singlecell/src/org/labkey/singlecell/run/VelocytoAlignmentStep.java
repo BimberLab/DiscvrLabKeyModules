@@ -45,7 +45,7 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
             super("velocyto", "This will run velocyto to generate a supplemental feature count matrix", getCellRangerGexParams(Arrays.asList(
                     ToolParameterDescriptor.createExpDataParam("mask", "Mask File", "This is the ID of an optional GTF file containing repetitive regions to mask.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
                     {{
-                        put("extensions", Arrays.asList("gtf"));
+                        put("extensions", List.of("gtf"));
                         put("width", 400);
                         put("allowBlank", true);
                     }}, null),

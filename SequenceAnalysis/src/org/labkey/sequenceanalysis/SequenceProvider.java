@@ -52,13 +52,14 @@ import java.util.Set;
 public class SequenceProvider extends AbstractSequenceDataProvider
 {
     public static final String NAME = "Sequence";
-    private Module _module;
+    private final Module _module;
 
     public SequenceProvider(Module m)
     {
         _module = m;
     }
 
+    @Override
     public String getName()
     {
         return NAME;

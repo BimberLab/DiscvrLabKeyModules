@@ -45,6 +45,7 @@ public class SelectSamplesStep extends AbstractCommandPipelineStep<SelectVariant
             ), PageFlowUtil.set("/sequenceanalysis/field/TrimmingTextArea.js"), "https://software.broadinstitute.org/gatk/");
         }
 
+        @Override
         public SelectSamplesStep create(PipelineContext ctx)
         {
             return new SelectSamplesStep(this, ctx);

@@ -71,12 +71,12 @@ public class ClipOverlappingAlignmentsWrapper extends AbstractDiscvrSeqWrapper
         {
             public Provider()
             {
-                super("ClipOverlappingAlignments", "Clip Overlapping Alignments", "DISCVRseq", "The step runs DISCVRseq's ClipOverlappingAlignments, which will soft-clip and alignments that start/end in the intervals specified in the provided BED file. It was intended for applications such as clipping amplification primers.", Arrays.asList(
-                    ToolParameterDescriptor.createExpDataParam("bedFile", "BED File (Intervals)", "This is a BED file specifying the intervals to clip.  Strandedness is ignored.", "ldk-expdatafield", new JSONObject()
-                    {{
-                        put("allowBlank", false);
-                    }}, null)
-                ), new LinkedHashSet<>(Arrays.asList("ldk/field/ExpDataField.js")), "https://bimberlab.github.io/DISCVRSeq/");
+                super("ClipOverlappingAlignments", "Clip Overlapping Alignments", "DISCVRseq", "The step runs DISCVRseq's ClipOverlappingAlignments, which will soft-clip and alignments that start/end in the intervals specified in the provided BED file. It was intended for applications such as clipping amplification primers.", List.of(
+                        ToolParameterDescriptor.createExpDataParam("bedFile", "BED File (Intervals)", "This is a BED file specifying the intervals to clip.  Strandedness is ignored.", "ldk-expdatafield", new JSONObject()
+                        {{
+                            put("allowBlank", false);
+                        }}, null)
+                ), new LinkedHashSet<>(List.of("ldk/field/ExpDataField.js")), "https://bimberlab.github.io/DISCVRSeq/");
             }
 
             @Override

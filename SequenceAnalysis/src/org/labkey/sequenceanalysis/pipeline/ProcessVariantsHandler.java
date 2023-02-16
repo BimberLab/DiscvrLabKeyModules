@@ -72,7 +72,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 {
     public static final String VCF_CATEGORY = "VCF File";
 
-    private FileType _vcfFileType = new FileType(Arrays.asList(".vcf"), ".vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
+    private final FileType _vcfFileType = new FileType(List.of(".vcf"), ".vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
     private ProcessVariantsHandler.Resumer _resumer;
 
     public ProcessVariantsHandler()
@@ -346,9 +346,8 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
     public static List<Interval> getIntervals(JobContext ctx)
     {
         PipelineJob pj = ctx.getJob();
-        if (pj instanceof VariantProcessingJob)
+        if (pj instanceof VariantProcessingJob vpj)
         {
-            VariantProcessingJob vpj = (VariantProcessingJob)pj;
             if (vpj.isScatterJob())
             {
                 List<Interval> intervals = vpj.getIntervalsForTask();

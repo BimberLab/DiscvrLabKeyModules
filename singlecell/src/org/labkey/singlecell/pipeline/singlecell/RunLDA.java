@@ -43,7 +43,7 @@ public class RunLDA extends AbstractCellMembraneStep
                     SeuratToolParameter.create(SEURAT_THREADS, "Max Threads", "The number of threads to use. Cannot be higher than the threads allocated to the job.", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 8)
-                ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+                ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
         @Override

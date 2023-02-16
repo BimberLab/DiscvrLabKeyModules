@@ -55,8 +55,8 @@ import java.util.stream.Collectors;
 
 abstract public class AbstractGenomicsDBImportHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.TracksVCF, SequenceOutputHandler.HasCustomVariantMerge, VariantProcessingStep.MayRequirePrepareTask, VariantProcessingStep.SupportsScatterGather
 {
-    protected FileType _gvcfFileType = new FileType(Arrays.asList(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
-    public static final FileType TILE_DB_FILETYPE = new FileType(Arrays.asList(".tdb"), ".tdb", false, FileType.gzSupportLevel.NO_GZ);
+    protected FileType _gvcfFileType = new FileType(List.of(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
+    public static final FileType TILE_DB_FILETYPE = new FileType(List.of(".tdb"), ".tdb", false, FileType.gzSupportLevel.NO_GZ);
 
     public static final String CATEGORY = "GenomicsDB Workspace";
     public static final String EXISTING_WORKSPACE = "existingWorkspaceId";
@@ -132,12 +132,10 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
     public static void validateNoSplitContigScatter(VariantProcessingStep.ScatterGatherMethod method, PipelineJob job) throws IllegalArgumentException
     {
-        if (!(job instanceof VariantProcessingJob))
+        if (!(job instanceof VariantProcessingJob vj))
         {
             return;
         }
-
-        VariantProcessingJob vj = (VariantProcessingJob)job;
 
         if (!vj.isScatterJob())
         {
@@ -241,9 +239,8 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
     protected List<Interval> getIntervals(JobContext ctx)
     {
-        if (ctx.getJob() instanceof VariantProcessingJob)
+        if (ctx.getJob() instanceof VariantProcessingJob job)
         {
-            VariantProcessingJob job = (VariantProcessingJob) ctx.getJob();
 
             return job.getIntervalsForTask();
         }
@@ -942,9 +939,8 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
     @Override
     public boolean isRequired(PipelineJob job)
     {
-        if (job instanceof VariantProcessingJob)
+        if (job instanceof VariantProcessingJob vpj)
         {
-            VariantProcessingJob vpj = (VariantProcessingJob)job;
 
             return doCopyLocal(vpj.getParameterJson());
         }

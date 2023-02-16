@@ -43,11 +43,13 @@ public class AlignmentAnalysisRemoteWorkTask extends WorkDirectoryTask<Alignment
             super(AlignmentAnalysisRemoteWorkTask.class);
         }
 
+        @Override
         public String getStatusName()
         {
             return "PERFORMING ANALYSIS";
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
@@ -59,17 +61,20 @@ public class AlignmentAnalysisRemoteWorkTask extends WorkDirectoryTask<Alignment
             return allowableNames;
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             AlignmentAnalysisRemoteWorkTask task = new AlignmentAnalysisRemoteWorkTask(this, job);
             return task;
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.singletonList(new FileType(".bam"));
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
@@ -81,6 +86,7 @@ public class AlignmentAnalysisRemoteWorkTask extends WorkDirectoryTask<Alignment
         return (AlignmentAnalysisJob)getJob();
     }
 
+    @Override
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {

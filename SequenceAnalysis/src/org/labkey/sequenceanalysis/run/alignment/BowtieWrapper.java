@@ -194,6 +194,7 @@ public class BowtieWrapper extends AbstractCommandWrapper
             ), null, "http://bowtie-bio.sourceforge.net/index.shtml", true, true);
         }
 
+        @Override
         public BowtieAlignmentStep create(PipelineContext context)
         {
             return new BowtieAlignmentStep(this, context);

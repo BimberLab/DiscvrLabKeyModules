@@ -52,9 +52,10 @@ public class GenotypeConcordanceStep extends AbstractCommandPipelineStep<Variant
                     ToolParameterDescriptor.create("skipAnnotation", "Skip Annotation Step If Present", "If checked, this step will first check if the VCF already has the GTD annotations for genotype discordance.  If present, it will not attempt to re-annotate, and will just generate the summary report.  This is designed to allow the summary to be created more than once, without forcing creation of an entirely new VCF.", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, null)
-            ), Arrays.asList("ldk/field/ExpDataField.js"), "");
+            ), List.of("ldk/field/ExpDataField.js"), "");
         }
 
+        @Override
         public GenotypeConcordanceStep create(PipelineContext ctx)
         {
             return new GenotypeConcordanceStep(this, ctx);

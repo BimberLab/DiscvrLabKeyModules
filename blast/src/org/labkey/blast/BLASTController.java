@@ -104,6 +104,7 @@ public class BLASTController extends SpringActionController
     @RequiresSiteAdmin
     public class SetSettingsAction extends MutatingApiAction<SettingsForm>
     {
+        @Override
         public ApiResponse execute(SettingsForm form, BindException errors)
         {
             if (!getContainer().isRoot())
@@ -149,6 +150,7 @@ public class BLASTController extends SpringActionController
     @RequiresPermission(InsertPermission.class)
     public class CreateDatabaseAction extends MutatingApiAction<DatabaseForm>
     {
+        @Override
         public ApiResponse execute(DatabaseForm form, BindException errors)
         {
             if (form.getLibraryIdList().isEmpty())
@@ -196,9 +198,8 @@ public class BLASTController extends SpringActionController
             if (!hasSequence)
             {
                 HttpServletRequest basicRequest = getViewContext().getRequest();
-                if (basicRequest instanceof MultipartHttpServletRequest)
+                if (basicRequest instanceof MultipartHttpServletRequest request)
                 {
-                    MultipartHttpServletRequest request = (MultipartHttpServletRequest) basicRequest;
                     hasSequence = request.getFileNames().hasNext();
                 }
             }
@@ -207,13 +208,14 @@ public class BLASTController extends SpringActionController
                 errors.reject(ERROR_MSG, "Must provide either a file or query sequence");
         }
 
+        @Override
         protected File getTargetFile(String filename) throws IOException
         {
             AssayFileWriter writer = new AssayFileWriter();
             try
             {
-                File targetDirectory = writer.ensureUploadDirectory(getContainer());
-                return writer.findUniqueFileName(filename, targetDirectory);
+                File targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
+                return AssayFileWriter.findUniqueFileName(filename, targetDirectory);
             }
             catch (ExperimentException e)
             {
@@ -260,8 +262,8 @@ public class BLASTController extends SpringActionController
                     AssayFileWriter writer = new AssayFileWriter();
                     try
                     {
-                        File targetDirectory = writer.ensureUploadDirectory(getContainer());
-                        File input = writer.findUniqueFileName("blast", targetDirectory);
+                        File targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
+                        File input = AssayFileWriter.findUniqueFileName("blast", targetDirectory);
                         input.createNewFile();
                         try (PrintWriter fw = PrintWriters.getPrintWriter(input))
                         {
@@ -451,10 +453,7 @@ public class BLASTController extends SpringActionController
                 return Collections.emptyList();
 
             List<Integer> ret = new ArrayList<>();
-            for (Integer o : _libraryIds)
-            {
-                ret.add(o);
-            }
+            Collections.addAll(ret, _libraryIds);
 
             return ret;
         }
@@ -468,6 +467,7 @@ public class BLASTController extends SpringActionController
     @RequiresPermission(AdminPermission.class)
     public class RecreateDatabaseAction extends MutatingApiAction<RecreateDatabaseForm>
     {
+        @Override
         public ApiResponse execute(RecreateDatabaseForm form, BindException errors)
         {
             if (form.getDatabaseIds() == null || form.getDatabaseIds().length == 0)
@@ -571,6 +571,7 @@ public class BLASTController extends SpringActionController
     @IgnoresTermsOfUse
     public class DownloadBlastResultsAction extends ExportAction<DownloadBlastResultsForm>
     {
+        @Override
         public void export(DownloadBlastResultsForm form, HttpServletResponse response, BindException errors) throws Exception
         {
             String jobId = form.getJobId();

@@ -51,9 +51,9 @@ import java.util.List;
  */
 public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    private FileType _bedFileType = new FileType(".bed", false);
+    private final FileType _bedFileType = new FileType(".bed", false);
     //private FileType _gffFileType = new FileType("gff", false);
-    private FileType _vcfFileType = new FileType(Arrays.asList(".vcf", ".bcf"), ".vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
+    private final FileType _vcfFileType = new FileType(Arrays.asList(".vcf", ".bcf"), ".vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
 
     public LiftoverHandler()
     {
@@ -307,7 +307,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
             else
             {
                 SelectVariantsWrapper wrapper = new SelectVariantsWrapper(job.getLogger());
-                wrapper.execute(sourceGenome.getWorkingFastaFile(), currentVCF, outputFile, Arrays.asList("--sites_only"));
+                wrapper.execute(sourceGenome.getWorkingFastaFile(), currentVCF, outputFile, List.of("--sites_only"));
             }
             currentVCF = outputFile;
 

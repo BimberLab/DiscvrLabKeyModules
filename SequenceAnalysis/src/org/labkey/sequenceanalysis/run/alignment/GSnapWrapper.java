@@ -306,7 +306,7 @@ public class GSnapWrapper extends AbstractCommandWrapper
             super("GSnap", "GSnap is a splice aware aligner, suitable for RNA-Seq.", Arrays.asList(
                     ToolParameterDescriptor.createExpDataParam("splice_sites_file", "Gene File", "This is the ID of a GTF file containing genes from this genome.  It will be used to identify splice sites.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
                     {{
-                        put("extensions", Arrays.asList("gtf"));
+                        put("extensions", List.of("gtf"));
                         put("width", 400);
                     }}, null),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("-m"), "mismatches", "Max Mismatches", "Controls the maximum number of mismatches.  If the value is less than 1, it will be interpreted as a percentage.  Otherwise it will be a fixed cutoff.", "ldk-numberfield", new JSONObject()
@@ -339,6 +339,7 @@ public class GSnapWrapper extends AbstractCommandWrapper
             ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "http://research-pub.gene.com/gmap/", true, true);
         }
 
+        @Override
         public GSnapAlignmentStep create(PipelineContext context)
         {
             return new GSnapAlignmentStep(this, context);

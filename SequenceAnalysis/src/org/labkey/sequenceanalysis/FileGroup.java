@@ -39,7 +39,7 @@ public class FileGroup implements Serializable
         {
             if (pair.platformUnit == null)
             {
-                ret.add(Arrays.asList(pair));
+                ret.add(List.of(pair));
             }
             else
             {

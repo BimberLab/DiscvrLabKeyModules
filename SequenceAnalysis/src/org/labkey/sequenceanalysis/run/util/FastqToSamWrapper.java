@@ -21,7 +21,7 @@ import java.util.List;
  */
 public class FastqToSamWrapper extends PicardWrapper
 {
-    private FastqQualityFormat _fastqEncoding = null;
+    private final FastqQualityFormat _fastqEncoding = null;
 
     public FastqToSamWrapper(@Nullable Logger logger)
     {

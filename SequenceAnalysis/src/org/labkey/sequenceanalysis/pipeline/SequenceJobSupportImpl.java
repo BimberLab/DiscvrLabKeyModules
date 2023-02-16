@@ -38,11 +38,11 @@ import java.util.Map;
  */
 public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Serializable
 {
-    private Map<Integer, File> _cachedFilePaths = new HashMap<>();
-    private List<SequenceReadsetImpl> _cachedReadsets = new ArrayList<>();
-    private Map<Integer, AnalysisModel> _cachedAnalyses = new HashMap<>();
-    private Map<Integer, ReferenceGenome> _cachedGenomes = new HashMap<>();
-    private Map<String, Serializable> _cachedObjects = new HashMap<>();
+    private final Map<Integer, File> _cachedFilePaths = new HashMap<>();
+    private final List<SequenceReadsetImpl> _cachedReadsets = new ArrayList<>();
+    private final Map<Integer, AnalysisModel> _cachedAnalyses = new HashMap<>();
+    private final Map<Integer, ReferenceGenome> _cachedGenomes = new HashMap<>();
+    private final Map<String, Serializable> _cachedObjects = new HashMap<>();
 
     private transient boolean _modifiedSinceSerialize = false;
 

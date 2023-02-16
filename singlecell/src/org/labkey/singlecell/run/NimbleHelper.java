@@ -210,7 +210,7 @@ public class NimbleHelper
     private void updateNimbleConfigFile(File configFile, NimbleGenome genome) throws PipelineJobException
     {
         JSONArray json;
-        try (BufferedReader reader = Readers.getReader(configFile); StringBuilderWriter writer = new StringBuilderWriter();)
+        try (BufferedReader reader = Readers.getReader(configFile); StringBuilderWriter writer = new StringBuilderWriter())
         {
             IOUtils.copy(reader, writer);
             json = new JSONArray(writer.toString());

@@ -82,7 +82,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
 
     public PangolinHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), "Pangolin", "Runs pangolin, a tool for assigning SARS-CoV-2 data to lineage", null, Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), "Pangolin", "Runs pangolin, a tool for assigning SARS-CoV-2 data to lineage", null, List.of(
                 getPangoModeOption()
         ));
     }

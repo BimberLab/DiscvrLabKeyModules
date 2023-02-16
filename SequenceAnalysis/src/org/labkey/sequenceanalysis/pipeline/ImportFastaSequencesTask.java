@@ -53,32 +53,38 @@ public class ImportFastaSequencesTask extends PipelineJob.Task<ImportFastaSequen
             super(ImportFastaSequencesTask.class);
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList(ACTION_NAME);
+            return List.of(ACTION_NAME);
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             return new ImportFastaSequencesTask(this, job);
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
         }
     }
 
+    @Override
     public RecordedActionSet run() throws PipelineJobException
     {
         getJob().getLogger().info("Importing sequences from file(s): ");

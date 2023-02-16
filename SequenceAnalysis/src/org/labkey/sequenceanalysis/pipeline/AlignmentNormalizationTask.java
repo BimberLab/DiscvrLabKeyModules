@@ -58,11 +58,13 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
             super(AlignmentNormalizationTask.class);
         }
 
+        @Override
         public String getStatusName()
         {
             return ACTION_NAME.toUpperCase();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
@@ -77,23 +79,27 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
             return allowableNames;
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             AlignmentNormalizationTask task = new AlignmentNormalizationTask(this, job);
             return task;
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.singletonList(new FileType(".bam"));
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
         }
     }
 
+    @Override
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
@@ -254,7 +260,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 new AlignmentSummaryMetricsWrapper(getJob().getLogger()).executeCommand(finalDestination, referenceGenome.getWorkingFastaFile(), metricsFile);
                 getTaskHelper().getFileManager().addInput(metricsAction, "BAM File", finalDestination);
                 getTaskHelper().getFileManager().addOutput(metricsAction, "Summary Metrics File", metricsFile);
-                getTaskHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile, finalDestination, rs.getRowId())));
+                getTaskHelper().getFileManager().addPicardMetricsFiles(List.of(new PipelineStepOutput.PicardMetricsOutput(metricsFile, finalDestination, rs.getRowId())));
 
                 //and insert size metrics
                 getJob().getLogger().info("calculating insert size metrics");
@@ -265,7 +271,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 {
                     getTaskHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
                     getTaskHelper().getFileManager().addOutput(metricsAction, "Insert Size  Metrics Histogram", metricsHistogram);
-                    getTaskHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile2, finalDestination, rs.getRowId())));
+                    getTaskHelper().getFileManager().addPicardMetricsFiles(List.of(new PipelineStepOutput.PicardMetricsOutput(metricsFile2, finalDestination, rs.getRowId())));
                 }
 
                 if (getTaskHelper().getSettings().doCollectWgsMetrics())
@@ -276,7 +282,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                     CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(getJob().getLogger());
                     wgsWrapper.executeCommand(finalDestination, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
                     getTaskHelper().getFileManager().addOutput(metricsAction, "WGS Metrics File", wgsMetricsFile);
-                    getTaskHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, finalDestination, rs.getRowId())));
+                    getTaskHelper().getFileManager().addPicardMetricsFiles(List.of(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, finalDestination, rs.getRowId())));
                 }
 
                 metricsAction.setEndTime(new Date());

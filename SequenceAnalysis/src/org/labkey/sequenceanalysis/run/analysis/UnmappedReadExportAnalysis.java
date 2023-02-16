@@ -54,7 +54,7 @@ public class UnmappedReadExportAnalysis extends AbstractPipelineStep implements 
     {
         public Provider()
         {
-            super("UnalignedReadExport", "Export Unmapped Reads", null, "This will export unmapped reads from each BAM to create FASTQ files.", Arrays.asList(
+            super("UnalignedReadExport", "Export Unmapped Reads", null, "This will export unmapped reads from each BAM to create FASTQ files.", List.of(
                     ToolParameterDescriptor.create("fastaExport", "Export As FASTA", "If selected, the unmapped reads will be exported as a FASTA file, rather than the default FASTQ.", "checkbox", null, null)
             ), null, null);
         }

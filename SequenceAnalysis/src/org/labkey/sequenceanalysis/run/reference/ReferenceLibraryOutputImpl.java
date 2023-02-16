@@ -11,7 +11,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
  */
 public class ReferenceLibraryOutputImpl extends DefaultPipelineStepOutput implements ReferenceLibraryStep.Output
 {
-    private ReferenceGenome _referenceGenome;
+    private final ReferenceGenome _referenceGenome;
 
     public ReferenceLibraryOutputImpl(ReferenceGenome referenceGenome)
     {

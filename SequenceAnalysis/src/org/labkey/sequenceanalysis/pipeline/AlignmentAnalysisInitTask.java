@@ -35,15 +35,17 @@ public class AlignmentAnalysisInitTask extends WorkDirectoryTask<AlignmentAnalys
             super(AlignmentAnalysisInitTask.class);
         }
 
+        @Override
         public String getStatusName()
         {
             return "PREPARING FOR ANALYSIS";
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
-            for (PipelineStepProvider provider: SequencePipelineService.get().getProviders(AnalysisStep.class))
+            for (PipelineStepProvider<?> provider: SequencePipelineService.get().getProviders(AnalysisStep.class))
             {
                 allowableNames.add(provider.getLabel());
             }
@@ -51,16 +53,19 @@ public class AlignmentAnalysisInitTask extends WorkDirectoryTask<AlignmentAnalys
             return allowableNames;
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             return new AlignmentAnalysisInitTask(this, job);
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.singletonList(new FileType(".bam"));
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
@@ -72,6 +77,7 @@ public class AlignmentAnalysisInitTask extends WorkDirectoryTask<AlignmentAnalys
         return _taskHelper;
     }
 
+    @Override
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {

@@ -34,12 +34,12 @@ public class AASnp
 {
     private static final Logger _log = LogManager.getLogger(AASnp.class);
 
-    private NTSnp _ntSnp;
-    private SequenceModel _aaRef;
-    private int _aaPosInProtein;
-    private int _aaInsertIndex;
-    private String _codon;
-    private int _frame;
+    private final NTSnp _ntSnp;
+    private final SequenceModel _aaRef;
+    private final int _aaPosInProtein;
+    private final int _aaInsertIndex;
+    private final String _codon;
+    private final int _frame;
     private String _residueString;
     private String _ntPositionString;
 
@@ -162,10 +162,9 @@ public class AASnp
 
     private String getNtPosString(NTSnp ntSnp, byte[] refSequence)
     {
-        return new StringBuilder()
-                .append(ntSnp.getReferenceBaseString(refSequence))
-                .append((ntSnp.getLastRefPosition() + 1)) //convert to 1-based
-                .append((ntSnp.getInsertIndex() == 0 ? "" : "." + ntSnp.getInsertIndex()))
-                .append(ntSnp.getReadBaseString()).toString();
+        return ntSnp.getReferenceBaseString(refSequence) +
+                (ntSnp.getLastRefPosition() + 1) + //convert to 1-based
+                (ntSnp.getInsertIndex() == 0 ? "" : "." + ntSnp.getInsertIndex()) +
+                ntSnp.getReadBaseString();
     }
 }

@@ -17,6 +17,7 @@ import org.labkey.api.util.PageFlowUtil;
 import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
+import java.util.List;
 
 public class VelocytoAnalysisStep extends AbstractCommandPipelineStep<VelocytoAlignmentStep.VelocytoWrapper> implements AnalysisStep
 {
@@ -32,13 +33,13 @@ public class VelocytoAnalysisStep extends AbstractCommandPipelineStep<VelocytoAl
             super("velocytoPostProcess", "Velocyto", "velocyto", "This will run velocyto to generate a supplemental feature count matrix", Arrays.asList(
                     ToolParameterDescriptor.createExpDataParam("gtf", "Gene File", "This is the ID of a GTF file containing genes from this genome.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
                     {{
-                        put("extensions", Arrays.asList("gtf"));
+                        put("extensions", List.of("gtf"));
                         put("width", 400);
                         put("allowBlank", false);
                     }}, null),
                     ToolParameterDescriptor.createExpDataParam("mask", "Mask File", "This is the ID of an optional GTF file containing repetitive regions to mask.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
                     {{
-                        put("extensions", Arrays.asList("gtf"));
+                        put("extensions", List.of("gtf"));
                         put("width", 400);
                         put("allowBlank", true);
                     }}, null),

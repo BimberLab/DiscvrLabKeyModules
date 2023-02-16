@@ -39,57 +39,57 @@ import java.util.Set;
  */
 public interface TaskFileManager extends PipelineOutputTracker
 {
-    public void addSequenceOutput(SequenceOutputFile o);
+    void addSequenceOutput(SequenceOutputFile o);
 
-    public void addOutput(RecordedAction action, String role, File file);
+    void addOutput(RecordedAction action, String role, File file);
 
-    public void addInput(RecordedAction action, String role, File file);
+    void addInput(RecordedAction action, String role, File file);
 
-    public void addStepOutputs(RecordedAction action, PipelineStepOutput output);
+    void addStepOutputs(RecordedAction action, PipelineStepOutput output);
 
     /**
      * Registers a file that will be deleted only at the very end of the protocol
      */
-    public void addDeferredIntermediateFile(File file);
+    void addDeferredIntermediateFile(File file);
 
-    public void deleteDeferredIntermediateFiles();
+    void deleteDeferredIntermediateFiles();
 
-    public boolean isDeleteIntermediateFiles();
+    boolean isDeleteIntermediateFiles();
 
-    public boolean isCopyInputsLocally();
+    boolean isCopyInputsLocally();
 
-    public void addPicardMetricsFiles(List<PipelineStepOutput.PicardMetricsOutput> files) throws PipelineJobException;
+    void addPicardMetricsFiles(List<PipelineStepOutput.PicardMetricsOutput> files) throws PipelineJobException;
 
-    public void writeMetricsToDb(Map<Integer, Integer> readsetMap, Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap) throws PipelineJobException;
+    void writeMetricsToDb(Map<Integer, Integer> readsetMap, Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap) throws PipelineJobException;
 
-    public void deleteIntermediateFiles() throws PipelineJobException;
+    void deleteIntermediateFiles() throws PipelineJobException;
 
-    public Set<SequenceOutputFile> createSequenceOutputRecords(@Nullable Integer analysisId)throws PipelineJobException;
+    Set<SequenceOutputFile> createSequenceOutputRecords(@Nullable Integer analysisId)throws PipelineJobException;
 
     //should be used for remote jobs or local jobs running in a separate working directory
-    public void cleanup(Collection<RecordedAction> actions) throws PipelineJobException;
+    void cleanup(Collection<RecordedAction> actions) throws PipelineJobException;
 
-    public void cleanup(Collection<RecordedAction> actions, @Nullable AbstractResumer resumer) throws PipelineJobException;
+    void cleanup(Collection<RecordedAction> actions, @Nullable AbstractResumer resumer) throws PipelineJobException;
 
-    public InputFileTreatment getInputFileTreatment();
+    InputFileTreatment getInputFileTreatment();
 
-    public Set<File> getIntermediateFiles();
+    Set<File> getIntermediateFiles();
 
-    public void processUnzippedInputs();
+    void processUnzippedInputs();
 
-    public void decompressInputFiles(Pair<File, File> pair, List<RecordedAction> actions);
+    void decompressInputFiles(Pair<File, File> pair, List<RecordedAction> actions);
 
-    public Set<SequenceOutputFile> getOutputsToCreate();
+    Set<SequenceOutputFile> getOutputsToCreate();
 
-    public void addCommandsToAction(List<String> commands, RecordedAction action);
+    void addCommandsToAction(List<String> commands, RecordedAction action);
 
-    public void onResume(PipelineJob job, WorkDirectory wd);
+    void onResume(PipelineJob job, WorkDirectory wd);
 
-    public enum InputFileTreatment
+    enum InputFileTreatment
     {
         none(),
         delete(),
         compress(),
-        leaveInPlace();
+        leaveInPlace()
     }
 }

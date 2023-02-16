@@ -32,26 +32,31 @@ public class SequenceReadsetHandlerFinalTask extends PipelineJob.Task<SequenceRe
             setLocation("webserver");
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             return Collections.singletonList(ACTION_NAME);
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             return new SequenceReadsetHandlerFinalTask(this, job);
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
@@ -63,6 +68,7 @@ public class SequenceReadsetHandlerFinalTask extends PipelineJob.Task<SequenceRe
         return (SequenceReadsetHandlerJob)getJob();
     }
 
+    @Override
     public RecordedActionSet run() throws PipelineJobException
     {
         Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());

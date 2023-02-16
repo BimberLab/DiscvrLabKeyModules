@@ -91,6 +91,7 @@ public class BWAMemWrapper extends BWAWrapper
             ), null, "http://bio-bwa.sourceforge.net/", true, true);
         }
 
+        @Override
         public BWAMemAlignmentStep create(PipelineContext context)
         {
             return new BWAMemAlignmentStep(this, context);

@@ -24,6 +24,7 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -104,7 +105,7 @@ public class AlignmentAnalysisJob extends SequenceJob
 
             AlignmentAnalysisJob j = new AlignmentAnalysisJob(targetContainer, u, jobName, pr, params, model);
             j.setDescription(description);
-            j.setInputFiles(Arrays.asList(model.getAlignmentFileObject()));
+            j.setInputFiles(Collections.singletonList(model.getAlignmentFileObject()));
 
             ret.add(j);
         }

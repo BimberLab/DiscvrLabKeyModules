@@ -21,7 +21,7 @@ import java.util.List;
  */
 public class CallMdWrapper extends SamtoolsRunner
 {
-    private static String COMMAND = "calmd";
+    private static final String COMMAND = "calmd";
 
     public CallMdWrapper(@Nullable Logger logger)
     {

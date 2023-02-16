@@ -117,7 +117,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
     //NOTE: for internal use only, this should not be registered
     public static class MultiStepTrimmomaticProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
     {
-        private List<Pair<AbstractTrimmomaticProvider, Integer>> _providers = new ArrayList<>();
+        private final List<Pair<AbstractTrimmomaticProvider, Integer>> _providers = new ArrayList<>();
         public static final String NAME = "Trimmomatic";
 
         public MultiStepTrimmomaticProvider()
@@ -233,7 +233,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
             {
                 if (FileUtils.sizeOf(files.get(0)) > 0)
                 {
-                    output.setProcessedFastq(Pair.of(files.get(0), (File) null));
+                    output.setProcessedFastq(Pair.of(files.get(0), null));
                 }
                 else
                 {
@@ -501,7 +501,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
     {
         public AvgQualProvider()
         {
-            super("AVGQUAL", "AvgQualFilter", "Average Quality Filter", "This step will discard any reads where the average of all base qualities is below the provided threshold.", Arrays.asList(
+            super("AVGQUAL", "AvgQualFilter", "Average Quality Filter", "This step will discard any reads where the average of all base qualities is below the provided threshold.", List.of(
                     ToolParameterDescriptor.create("avgqual", "Avg. Qual", "Any read where the average quality of all bases is below this threshold will be discarded.", "ldk-numberfield", new JSONObject()
                     {{
                         put("minValue", 0);

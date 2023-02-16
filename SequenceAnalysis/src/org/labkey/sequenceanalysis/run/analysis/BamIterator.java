@@ -87,17 +87,17 @@ import java.util.TreeMap;
  */
 public class BamIterator
 {
-    private File _bam;
-    private File _bai;
-    private File _ref;
+    private final File _bam;
+    private final File _bai;
+    private final File _ref;
 
-    private Logger _logger;
-    private Map<String, ReferenceSequence> _references = new HashMap<>();
+    private final Logger _logger;
+    private final Map<String, ReferenceSequence> _references = new HashMap<>();
 
     public static final byte INDEL_CHARACTER = (byte)'-';
     public static final byte AMBIGUITY_CHARACTER = (byte)'N';
 
-    private List<AlignmentAggregator> _alignmentAggregators = new ArrayList<>();
+    private final List<AlignmentAggregator> _alignmentAggregators = new ArrayList<>();
 
     public BamIterator(File bam, File refFasta, Logger logger) throws FileNotFoundException
     {
@@ -362,7 +362,7 @@ public class BamIterator
             agg5.setLogProgress(false);
 
             BamIterator bi = new BamIterator(_bam, _refFasta, _log);
-            bi.addAggregators(Arrays.asList((AlignmentAggregator)agg2, agg3, agg4, agg5));
+            bi.addAggregators(Arrays.asList(agg2, agg3, agg4, agg5));
             bi.iterateReads();
 
             //TODO: should create methods that expose output w/o needing DB

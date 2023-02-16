@@ -25,9 +25,9 @@ public class ScatterGatherUtils
         private final boolean _allowSplitChromosomes;
         private final int _maxContigsPerJob;
 
-        private List<Interval> _intervalList = new ArrayList<>();
+        private final List<Interval> _intervalList = new ArrayList<>();
         private int _basesPerActiveIntervalList = 0;
-        private Set<String> _contigsInActiveIntervalList = new HashSet<>();
+        private final Set<String> _contigsInActiveIntervalList = new HashSet<>();
         private int _activeJobId = 1;
 
         public ActiveIntervalSet(int optimalBasesPerJob, boolean allowSplitChromosomes, int maxContigsPerJob)

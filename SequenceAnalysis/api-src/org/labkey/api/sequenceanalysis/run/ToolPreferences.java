@@ -20,9 +20,9 @@ package org.labkey.api.sequenceanalysis.run;
  */
 public interface ToolPreferences
 {
-    public String getArgPrefix();
+    String getArgPrefix();
 
-    public String getArgSeparator();
+    String getArgSeparator();
 
-    public String getQuoteChar();
+    String getQuoteChar();
 }

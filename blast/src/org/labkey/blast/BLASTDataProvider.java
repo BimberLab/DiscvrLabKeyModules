@@ -32,7 +32,7 @@ import java.util.Set;
 public class BLASTDataProvider extends AbstractSequenceDataProvider
 {
     public static final String NAME = "BLAST";
-    private Module _module;
+    private final Module _module;
 
     public BLASTDataProvider(Module m)
     {

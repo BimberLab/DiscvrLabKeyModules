@@ -110,26 +110,31 @@ public class OrphanFilePipelineJob extends PipelineJob
                 super(Task.class);
             }
 
+            @Override
             public List<FileType> getInputTypes()
             {
                 return Collections.emptyList();
             }
 
+            @Override
             public String getStatusName()
             {
                 return PipelineJob.TaskStatus.running.toString();
             }
 
+            @Override
             public List<String> getProtocolActionNames()
             {
-                return Arrays.asList("Find Orphan Sequence Files");
+                return List.of("Find Orphan Sequence Files");
             }
 
+            @Override
             public PipelineJob.Task createTask(PipelineJob job)
             {
                 return new Task(this, job);
             }
 
+            @Override
             public boolean isJobComplete(PipelineJob job)
             {
                 return false;
@@ -167,14 +172,14 @@ public class OrphanFilePipelineJob extends PipelineJob
             {
                 StringBuilder sb = new StringBuilder();
                 orphanFiles.forEach(f -> sb.append("\n").append(f.getPath()));
-                getJob().getLogger().info("## The following sequence files are not referenced by readsets, analyses or output files:" + sb.toString());
+                getJob().getLogger().info("## The following sequence files are not referenced by readsets, analyses or output files:" + sb);
             }
 
             if (!orphanIndexes.isEmpty())
             {
                 StringBuilder sb = new StringBuilder();
                 orphanIndexes.forEach(f -> sb.append("\n").append(f.getPath()));
-                getJob().getLogger().info("## The following index files appear to be orphans:" + sb.toString());
+                getJob().getLogger().info("## The following index files appear to be orphans:" + sb);
             }
 
             if (!orphanJobs.isEmpty())
@@ -227,7 +232,7 @@ public class OrphanFilePipelineJob extends PipelineJob
                 }
 
                 probableDeletes.forEach(f -> sb.append("\n").append(f.getPath()));
-                getJob().getLogger().info("## The following files can almost certainly be deleted; however, please exercise caution. Note: the file toRemove.sh has been written and can be executed to remove these:" + sb.toString());
+                getJob().getLogger().info("## The following files can almost certainly be deleted; however, please exercise caution. Note: the file toRemove.sh has been written and can be executed to remove these:" + sb);
 
 
             }
@@ -500,7 +505,6 @@ public class OrphanFilePipelineJob extends PipelineJob
                 return;
             }
 
-            OUTER:
             for (File f : arr)
             {
                 //skipped for perf reasons.  extremely unlikely

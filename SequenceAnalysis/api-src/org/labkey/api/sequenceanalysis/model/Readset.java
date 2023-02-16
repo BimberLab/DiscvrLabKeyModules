@@ -26,55 +26,55 @@ import java.util.List;
  */
 public interface Readset extends Serializable
 {
-    public Integer getSampleId();
+    Integer getSampleId();
 
-    public String getSubjectId();
+    String getSubjectId();
 
-    public Date getSampleDate();
+    Date getSampleDate();
 
-    public String getPlatform();
+    String getPlatform();
 
-    public String getApplication();
+    String getApplication();
 
-    public String getChemistry();
+    String getChemistry();
 
-    public String getSampleType();
+    String getSampleType();
 
-    public String getLibraryType();
+    String getLibraryType();
 
-    public String getName();
+    String getName();
 
-    public Integer getInstrumentRunId();
+    Integer getInstrumentRunId();
 
-    public Integer getReadsetId();
+    Integer getReadsetId();
 
-    public String getBarcode5();
+    String getBarcode5();
 
-    public String getBarcode3();
+    String getBarcode3();
 
-    public Double getFragmentSize();
+    Double getFragmentSize();
 
-    public Double getConcentration();
+    Double getConcentration();
 
-    public int getRowId();
+    int getRowId();
 
-    public String getContainer();
+    String getContainer();
 
-    public Date getCreated();
+    Date getCreated();
 
-    public Integer getCreatedBy();
+    Integer getCreatedBy();
 
-    public Date getModified();
+    Date getModified();
 
-    public Integer getModifiedBy();
+    Integer getModifiedBy();
 
-    public String getComments();
+    String getComments();
 
-    public String getStatus();
+    String getStatus();
 
-    public Integer getRunId();
+    Integer getRunId();
 
-    public boolean hasPairedData();
+    boolean hasPairedData();
 
-    public List<? extends ReadData> getReadData();
+    List<? extends ReadData> getReadData();
 }

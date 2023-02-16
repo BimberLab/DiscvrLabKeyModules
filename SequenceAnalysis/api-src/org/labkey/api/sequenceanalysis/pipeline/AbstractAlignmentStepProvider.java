@@ -40,11 +40,11 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
     public enum ALIGNMENT_MODE
     {
         ALIGN_THEN_MERGE(),
-        MERGE_THEN_ALIGN();
+        MERGE_THEN_ALIGN()
     }
 
-    private boolean _supportsPairedEnd;
-    private boolean _supportsMergeUnaligned;
+    private final boolean _supportsPairedEnd;
+    private final boolean _supportsMergeUnaligned;
     private boolean _alwaysCacheIndex;
 
     public AbstractAlignmentStepProvider(String name, String description, @Nullable List<ToolParameterDescriptor> parameters, @Nullable Collection<String> clientDependencyPaths, @Nullable String websiteURL, boolean supportsPairedEnd, boolean supportsMergeUnaligned)

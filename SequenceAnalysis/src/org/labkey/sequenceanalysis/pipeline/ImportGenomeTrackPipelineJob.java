@@ -105,6 +105,7 @@ public class ImportGenomeTrackPipelineJob extends PipelineJob
 
         public static class UploadFileFilter extends FileEntryFilter
         {
+            @Override
             public boolean accept(File file)
             {
                 return fileExists(file) && (

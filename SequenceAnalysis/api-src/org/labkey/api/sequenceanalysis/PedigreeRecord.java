@@ -51,12 +51,7 @@ public class PedigreeRecord
         {
             return true;
         }
-        else if (mother != null && mother.equals(potentialParent.subjectName))
-        {
-            return true;
-        }
-
-        return false;
+        else return mother != null && mother.equals(potentialParent.subjectName);
     }
 
     public String getSubjectName()

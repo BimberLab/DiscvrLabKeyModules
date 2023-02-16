@@ -53,6 +53,7 @@ public class VariantFiltrationStep extends AbstractCommandPipelineStep<VariantFi
             ), Arrays.asList("sequenceanalysis/panel/VariantFilterPanel.js", "sequenceanalysis/panel/VariantMaskPanel.js", "sequenceanalysis/field/GenomeFileSelectorField.js", "ldk/field/ExpDataField.js"), "");
         }
 
+        @Override
         public VariantFiltrationStep create(PipelineContext ctx)
         {
             return new VariantFiltrationStep(this, ctx);

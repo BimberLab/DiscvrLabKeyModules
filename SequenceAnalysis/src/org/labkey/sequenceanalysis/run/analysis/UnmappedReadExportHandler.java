@@ -48,7 +48,7 @@ import java.util.List;
  */
 public class UnmappedReadExportHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    private FileType _fileType = new FileType(".bam", FileType.gzSupportLevel.NO_GZ);
+    private final FileType _fileType = new FileType(".bam", FileType.gzSupportLevel.NO_GZ);
 
     public UnmappedReadExportHandler()
     {

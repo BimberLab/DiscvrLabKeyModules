@@ -8,6 +8,7 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class CustomUCell extends AbstractRiraStep
 {
@@ -37,7 +38,7 @@ public class CustomUCell extends AbstractRiraStep
                     SeuratToolParameter.create("assayName", "Assay Name", "Passed directly to UCell::AddModuleScore_UCell.", "textfield", new JSONObject(){{
 
                     }}, "RNA")
-            ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+            ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
 

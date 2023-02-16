@@ -33,6 +33,7 @@ public class FastqcProcessingStep extends AbstractPipelineStep implements Prepro
             super("FASTQC", "FASTQC", "FASTQC", "This step runs FASTQC on the FASTQs immediately prior to this step.  This can be useful to evaluate the state of reads after preprocessing steps.", Collections.emptyList(), null, null);
         }
 
+        @Override
         public FastqcProcessingStep create(PipelineContext context)
         {
             return new FastqcProcessingStep(this, context);

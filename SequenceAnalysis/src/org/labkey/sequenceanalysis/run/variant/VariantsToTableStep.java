@@ -81,6 +81,7 @@ public class VariantsToTableStep extends AbstractCommandPipelineStep<VariantsToT
             ), PageFlowUtil.set("sequenceanalysis/field/VariantFieldSelector.js", "/sequenceanalysis/field/IntervalField.js"), "https://software.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_gatk_tools_walkers_variantutils_VariantsToTable.php");
         }
 
+        @Override
         public VariantsToTableStep create(PipelineContext ctx)
         {
             return new VariantsToTableStep(this, ctx);

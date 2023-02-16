@@ -72,7 +72,7 @@ public class SequenceModel
 
     public void setIsComplement(Boolean complement)
     {
-        isComplement = complement == null ? false : complement;
+        isComplement = complement != null && complement;
     }
 
     public String getSequence()

@@ -32,11 +32,11 @@ import java.util.List;
  */
 abstract public class AbstractParameterizedOutputHandler<T> implements ParameterizedOutputHandler<T>
 {
-    private Module _owner;
-    private String _name;
-    private String _description;
-    private LinkedHashSet<String> _dependencies = new LinkedHashSet<>();
-    private List<ToolParameterDescriptor> _parameters = new ArrayList<>();
+    private final Module _owner;
+    private final String _name;
+    private final String _description;
+    private final LinkedHashSet<String> _dependencies = new LinkedHashSet<>();
+    private final List<ToolParameterDescriptor> _parameters = new ArrayList<>();
 
     public AbstractParameterizedOutputHandler(Module owner, String name, String description, LinkedHashSet<String> dependencies, List<ToolParameterDescriptor> parameters)
     {

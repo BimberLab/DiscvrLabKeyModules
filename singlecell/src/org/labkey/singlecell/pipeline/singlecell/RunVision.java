@@ -14,6 +14,7 @@ import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,14 +30,15 @@ public class RunVision extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("RunVision", "Run VISION", "VISION", "This will run VISION, a tool for functional interpretation of scRNA-seq data, saving the result to an RDS file.", Arrays.asList(
-                    SeuratToolParameter.create("metadataCols", "Field(s)", "This will subset the seuratObj to just these columns prior to running VISION.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+            super("RunVision", "Run VISION", "VISION", "This will run VISION, a tool for functional interpretation of scRNA-seq data, saving the result to an RDS file.", Collections.singletonList(
+                    SeuratToolParameter.create("metadataCols", "Field(s)", "This will subset the seuratObj to just these columns prior to running VISION.", "sequenceanalysis-trimmingtextarea", new JSONObject()
+                    {{
                         put("allowBlank", false);
                         put("height", 200);
                         put("delimiter", ",");
                         put("stripCharsRe", "/(^['\"]+)|(['\"]+$)/g");
                     }}, "nCount_RNA,ClusterNames_0.2,ClusterNames_0.4,ClusterNames_0.6,ClusterNames_0.8", "metadataCols", true, true).delimiter(",")
-                ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+            ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
         @Override

@@ -23,14 +23,14 @@ import java.util.regex.Pattern;
 */
 public class IlluminaReadHeader
 {
-    private String _instrument;
-    private int _runId;
-    private String _flowCellId;
-    private int _flowCellLane;
-    private int _tileNumber;
-    private int _xCoord;
-    private int _yCoord;
-    private int _pairNumber;
+    private final String _instrument;
+    private final int _runId;
+    private final String _flowCellId;
+    private final int _flowCellLane;
+    private final int _tileNumber;
+    private final int _xCoord;
+    private final int _yCoord;
+    private final int _pairNumber;
     private boolean _failedFilter;
     private int _controlBits;
     private int _sampleNum;
@@ -170,7 +170,7 @@ public class IlluminaReadHeader
 
     public void setFailedFilter(String failedFilter)
     {
-        _failedFilter = "Y".equals(failedFilter) ? true : false;
+        _failedFilter = "Y".equals(failedFilter);
     }
 
     public int getControlBits()

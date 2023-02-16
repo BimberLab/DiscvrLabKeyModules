@@ -23,7 +23,7 @@ import java.util.List;
 
 public class SbtGeneCountHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    private final FileType _txtType = new FileType(Arrays.asList(".txt"), ".txt", false, FileType.gzSupportLevel.NO_GZ);
+    private final FileType _txtType = new FileType(List.of(".txt"), ".txt", false, FileType.gzSupportLevel.NO_GZ);
 
     public SbtGeneCountHandler()
     {

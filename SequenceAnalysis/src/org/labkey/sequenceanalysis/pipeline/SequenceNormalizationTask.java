@@ -118,16 +118,19 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             return true;
         }
 
+        @Override
         public String getStatusName()
         {
             return PREPARE_INPUT_STATUS;
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             return Arrays.asList(DECOMPRESS_ACTIONNAME, EXTRACT_READ_GROUP_ACTION, PREPARE_INPUT_ACTIONNAME, MERGE_ACTIONNAME, BARCODE_ACTIONNAME, FASTQ_ACTION_NAME, COMPRESS_ACTIONNAME);
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             SequenceNormalizationTask task = new SequenceNormalizationTask(this, job);
@@ -136,11 +139,13 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             return task;
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.singletonList(new NucleotideSequenceFileType());
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
@@ -301,8 +306,9 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         return _taskHelper;
     }
 
-    private Set<File> _finalOutputs = new HashSet<>();
+    private final Set<File> _finalOutputs = new HashSet<>();
 
+    @Override
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {
@@ -543,12 +549,12 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
                                     if (barcode1.exists())
                                     {
-                                        getHelper().getFileManager().addOutput(barcodeAction, getHelper().NORMALIZED_FASTQ_OUTPUTNAME, barcode1);
+                                        getHelper().getFileManager().addOutput(barcodeAction, SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME, barcode1);
                                     }
 
                                     if (barcode2 != null && barcode2.exists())
                                     {
-                                        getHelper().getFileManager().addOutput(barcodeAction, getHelper().NORMALIZED_FASTQ_OUTPUTNAME, barcode2);
+                                        getHelper().getFileManager().addOutput(barcodeAction, SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME, barcode2);
                                     }
                                 }
                             }
@@ -660,7 +666,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                         runner.setThreads(threads);
                     }
 
-                    runner.execute(Arrays.asList(f), null);
+                    runner.execute(Collections.singletonList(f), null);
 
                     File fq = new File(f.getParentFile(), runner.getExpectedBasename(f) + "_fastqc.html.gz");
                     File zip = new File(f.getParentFile(), runner.getExpectedBasename(f) + "_fastqc.zip");
@@ -1067,7 +1073,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
     private boolean getBarcodesInReadHeader()
     {
-        return getHelper().getSettings().getParams().containsKey("inputfile.barcodesInReadHeader") ? Boolean.parseBoolean(getHelper().getSettings().getParams().get("inputfile.barcodesInReadHeader")) : false;
+        return getHelper().getSettings().getParams().containsKey("inputfile.barcodesInReadHeader") && Boolean.parseBoolean(getHelper().getSettings().getParams().get("inputfile.barcodesInReadHeader"));
     }
 
     public List<BarcodeModel> getExtraBarcodesFromFile() throws PipelineJobException

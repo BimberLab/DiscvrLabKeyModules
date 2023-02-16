@@ -20,10 +20,10 @@ import java.util.Map;
  */
 public class ReferenceLibraryHelperImpl implements ReferenceLibraryHelper
 {
-    private File _refFasta;
+    private final File _refFasta;
     private Logger _log = null;
-    private Map<String, Integer> _cachedIds = new HashMap<>();
-    private Map<String, String> _cachedAccessions = new HashMap<>();
+    private final Map<String, Integer> _cachedIds = new HashMap<>();
+    private final Map<String, String> _cachedAccessions = new HashMap<>();
 
     public ReferenceLibraryHelperImpl(File refFasta, Logger log)
     {

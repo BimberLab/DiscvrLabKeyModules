@@ -43,9 +43,10 @@ public class GenotypeFiltrationStep extends AbstractCommandPipelineStep<VariantF
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--set-filtered-genotype-to-no-call"), "setFilteredGtToNocall", "Set Filtered Genotypes to No-Call", "If selected, any filtered genotypes will be converted to no-call.", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true)
-            ), Arrays.asList("sequenceanalysis/panel/GenotypeFilterPanel.js"), "");
+            ), List.of("sequenceanalysis/panel/GenotypeFilterPanel.js"), "");
         }
 
+        @Override
         public GenotypeFiltrationStep create(PipelineContext ctx)
         {
             return new GenotypeFiltrationStep(this, ctx);

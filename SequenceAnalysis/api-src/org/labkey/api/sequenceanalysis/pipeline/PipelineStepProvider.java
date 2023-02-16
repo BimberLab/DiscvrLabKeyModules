@@ -35,48 +35,48 @@ import java.util.List;
  */
 public interface PipelineStepProvider<StepType extends PipelineStep>
 {
-    public StepType create(PipelineContext context);
+    StepType create(PipelineContext context);
 
     /**
      * @return The name of this pipeline step.  It should be unique within other tools that are part of this pipeline StepType.
      */
-    public String getName();
+    String getName();
 
     /**
      * @return The label to be used for this pipeline step in the UI.
      */
-    public String getLabel();
+    String getLabel();
 
     /**
      * @return Optional.  The name of the underlying tool used in this step
      */
-    public String getToolName();
+    String getToolName();
 
     /**
      * @return Optional.  If provided, the UI will provide a link to this tool's website
      */
-    public String getWebsiteURL();
+    String getWebsiteURL();
 
     /**
      * @return A description of this step, which will be shown in the client UI
      */
-    public String getDescription();
+    String getDescription();
 
     /**
      * @return A list of any addition JS or CSS files required to display this UI on the client.
      */
-    public Collection<ClientDependency> getClientDependencies();
+    Collection<ClientDependency> getClientDependencies();
 
     /**
      * @return A list of the input paramters used by this tool.  Most often they correspond to command line parameters, but
      * this does not necessarily need to be the case.
      */
-    public List<ToolParameterDescriptor> getParameters();
+    List<ToolParameterDescriptor> getParameters();
 
     /**
      * @return The tool parameter matching the supplied name
      */
-    public ToolParameterDescriptor getParameterByName(String name);
+    ToolParameterDescriptor getParameterByName(String name);
 
     default boolean hasParameter(String name)
     {
@@ -86,13 +86,13 @@ public interface PipelineStepProvider<StepType extends PipelineStep>
     /**
      * Creates the JSON object sent to the client that is used to build the client UI
      */
-    public JSONObject toJSON();
+    JSONObject toJSON();
 
-    public Class<StepType> getStepClass();
+    Class<StepType> getStepClass();
 
     /**
      * Allows a given step to combine itself w/ a neighboring step to save compute time.  Should return a new provider, which will
      * replace both original provider.  Return null for no changes.
      */
-    public PipelineStepProvider<StepType> combineSteps(int existingStepIdx, PipelineStepCtx toCombine);
+    PipelineStepProvider<StepType> combineSteps(int existingStepIdx, PipelineStepCtx toCombine);
 }

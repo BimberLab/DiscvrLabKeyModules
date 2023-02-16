@@ -80,7 +80,7 @@ public class ReadsetImportJob extends SequenceJob
             job.setDescription(description);
             job.setInputFiles(inputFiles);
 
-            return Arrays.asList(job);
+            return List.of(job);
         }
         else
         {

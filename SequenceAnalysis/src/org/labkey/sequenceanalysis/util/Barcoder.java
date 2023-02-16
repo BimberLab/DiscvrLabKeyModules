@@ -37,6 +37,7 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -57,8 +58,8 @@ public class Barcoder extends AbstractSequenceMatcher
     private int _totalReads = 0;
     private Map<String, Integer> _readsetCounts;
     private Map<String, Integer> _otherMatches;
-    private Map<String, BarcodeModel> _barcodes = new HashMap<>();
-    private FastqWriterFactory _fastqWriterFactory = new FastqWriterFactory();
+    private final Map<String, BarcodeModel> _barcodes = new HashMap<>();
+    private final FastqWriterFactory _fastqWriterFactory = new FastqWriterFactory();
     private boolean _scanAll = false;
 
     public Barcoder(Logger logger)
@@ -84,7 +85,7 @@ public class Barcoder extends AbstractSequenceMatcher
 
     public Set<File> demultiplexPair(Pair<File, File> fastqs, List<Readset> readsets, List<BarcodeModel> barcodes, @Nullable File outputDir) throws IOException
     {
-        return demultiplexPairs(Arrays.asList(fastqs), readsets, barcodes, outputDir);
+        return demultiplexPairs(Collections.singletonList(fastqs), readsets, barcodes, outputDir);
     }
 
     public Set<File> demultiplexPairs(List<Pair<File, File>> fastqPairs, List<Readset> readsets, List<BarcodeModel> barcodes, @Nullable File outputDir) throws IOException
@@ -288,6 +289,7 @@ public class Barcoder extends AbstractSequenceMatcher
         return _fileMap.keySet();
     }
 
+    @Override
     protected void initDetailLog(File fastq)
     {
         try
@@ -302,6 +304,7 @@ public class Barcoder extends AbstractSequenceMatcher
         }
     }
 
+    @Override
     protected void initSummaryLog(File fastq)
     {
         try
@@ -662,13 +665,9 @@ public class Barcoder extends AbstractSequenceMatcher
                     Integer offset3 = Integer.parseInt(readname[1].split("-")[1].substring(1, 2));
                     Integer deletion3 = Integer.parseInt(readname[1].split("-")[1].substring(2, 3));
 
-                    boolean shouldFindMid5 = false;
-                    if (editDist5 <= editDistance && offset5 <= offset && deletion5 <= deletions)
-                        shouldFindMid5 = true;
+                    boolean shouldFindMid5 = editDist5 <= editDistance && offset5 <= offset && deletion5 <= deletions;
 
-                    boolean shouldFindMid3 = false;
-                    if (editDist3 <= editDistance && offset3 <= offset && deletion3 <= deletions)
-                        shouldFindMid3 = true;
+                    boolean shouldFindMid3 = editDist3 <= editDistance && offset3 <= offset && deletion3 <= deletions;
 
                     Assert.assertEquals("Incorrect 5' barcode on line: " + lineNum, (shouldFindMid5 ? mid5 : ""), line[2]);
                     Assert.assertEquals("Incorrect 3' barcode on line: " + lineNum, (shouldFindMid3 ? mid3 : ""), line[3]);

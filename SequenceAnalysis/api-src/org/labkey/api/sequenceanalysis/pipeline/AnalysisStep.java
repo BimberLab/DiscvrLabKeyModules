@@ -42,15 +42,15 @@ public interface AnalysisStep extends PipelineStep
      * Will perform analysis steps on the remote pipeline server
      * Note: outputDir is the location where the BAM is expected to be written
      */
-    public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException;
+    Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException;
 
     /**
      * Will perform analysis steps on the local webserver
      * Note: outputDir is the location where the BAM was created (if this step creates a BAM)
      */
-    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException;
+    Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException;
 
-    public interface Output extends PipelineStepOutput
+    interface Output extends PipelineStepOutput
     {
 
     }

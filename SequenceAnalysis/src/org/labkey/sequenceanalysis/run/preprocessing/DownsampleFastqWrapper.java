@@ -21,6 +21,7 @@ import org.labkey.sequenceanalysis.util.FastqUtils;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * User: bimber
@@ -29,7 +30,7 @@ import java.util.Arrays;
  */
 public class DownsampleFastqWrapper extends AbstractCommandWrapper
 {
-    private static String DownsampleReadNumber = "downsampleReadNumber";
+    private static final String DownsampleReadNumber = "downsampleReadNumber";
 
     public DownsampleFastqWrapper(@Nullable Logger logger)
     {
@@ -77,7 +78,7 @@ public class DownsampleFastqWrapper extends AbstractCommandWrapper
     {
         public Provider()
         {
-            super("DownsampleReads", "Downsample Reads", "Picard", "If selected, up to the specified number of reads will be randomly selected from each input file.  It can be useful for debugging or trying new settings, as fewer reads will run faster.  Note: this will occur prior to barcode separation, but after merging.", Arrays.asList(
+            super("DownsampleReads", "Downsample Reads", "Picard", "If selected, up to the specified number of reads will be randomly selected from each input file.  It can be useful for debugging or trying new settings, as fewer reads will run faster.  Note: this will occur prior to barcode separation, but after merging.", List.of(
                     ToolParameterDescriptor.create(DownsampleReadNumber, "Total Reads", "For each input file, up to the this number of reads will be randomly retained", "ldk-numberfield", new JSONObject()
                     {{
                         put("minValue", 0);
@@ -85,6 +86,7 @@ public class DownsampleFastqWrapper extends AbstractCommandWrapper
             ), null, "http://picard.sourceforge.net/");
         }
 
+        @Override
         public DownsampleFastqPipelineStep create(PipelineContext context)
         {
             return new DownsampleFastqPipelineStep(this, context, new DownsampleFastqWrapper(context.getLogger()));

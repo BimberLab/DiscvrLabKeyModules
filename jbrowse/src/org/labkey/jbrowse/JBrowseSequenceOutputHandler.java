@@ -61,7 +61,7 @@ public class JBrowseSequenceOutputHandler implements SequenceOutputHandler<Seque
     @Override
     public LinkedHashSet<String> getClientDependencies()
     {
-        return new LinkedHashSet<>(Arrays.asList("jbrowse/window/DatabaseWindow.js"));
+        return new LinkedHashSet<>(List.of("jbrowse/window/DatabaseWindow.js"));
     }
 
     @Override

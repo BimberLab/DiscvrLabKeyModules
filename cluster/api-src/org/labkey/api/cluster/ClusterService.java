@@ -42,6 +42,6 @@ abstract public class ClusterService
 
     public interface ClusterRemoteTask extends Serializable
     {
-        public void run(Logger log);
+        void run(Logger log);
     }
 }

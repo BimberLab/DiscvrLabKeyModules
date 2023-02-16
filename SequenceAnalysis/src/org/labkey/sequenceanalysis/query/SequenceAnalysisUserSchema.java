@@ -260,7 +260,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
                                 ActionURL url = QueryService.get().urlFor(getUser(), ctx.getContainer(), QueryAction.executeQuery, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READ_DATA);
                                 url.addFilter("query", FieldKey.fromString("readset"), CompareType.EQUAL, o);
 
-                                out.write("<a class=\"labkey-text-link\" href=\"" + url.toString() + "\">");
+                                out.write("<a class=\"labkey-text-link\" href=\"" + url + "\">");
                                 out.write("View File(s)");
                                 out.write("</a>");
                             }

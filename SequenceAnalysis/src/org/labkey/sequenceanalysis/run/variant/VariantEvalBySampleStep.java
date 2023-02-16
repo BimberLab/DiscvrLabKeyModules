@@ -35,6 +35,7 @@ public class VariantEvalBySampleStep extends AbstractCommandPipelineStep<Variant
             super("VariantEvalBySampleStep", "GATK VariantEval By Sample", "GATK", "Generates a table of summary data from the final VCF.", null, null, "");
         }
 
+        @Override
         public VariantEvalBySampleStep create(PipelineContext ctx)
         {
             return new VariantEvalBySampleStep(this, ctx);

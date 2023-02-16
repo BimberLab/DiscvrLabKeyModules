@@ -61,11 +61,11 @@ import java.util.Map;
  */
 public class SequenceTaskHelper implements PipelineContext
 {
-    private SequenceJob _job;
-    private WorkDirectory _wd;
-    private SequencePipelineSettings _settings;
+    private final SequenceJob _job;
+    private final WorkDirectory _wd;
+    private final SequencePipelineSettings _settings;
     private TaskFileManager _fileManager;
-    private File _workLocation;
+    private final File _workLocation;
     public static final String FASTQ_DATA_INPUT_NAME = "Input FASTQ File";
     public static final String BAM_INPUT_NAME = "Input BAM File";
     public static final String SEQUENCE_DATA_INPUT_NAME = "Input Sequence File";
@@ -106,6 +106,7 @@ public class SequenceTaskHelper implements PipelineContext
         _fileManager = fileManager;
     }
 
+    @Override
     public Logger getLogger()
     {
         return getJob().getLogger();
@@ -233,6 +234,7 @@ public class SequenceTaskHelper implements PipelineContext
         return filename;
     }
 
+    @Override
     public SequenceAnalysisJobSupport getSequenceSupport()
     {
         return _job.getSequenceSupport();
@@ -289,7 +291,7 @@ public class SequenceTaskHelper implements PipelineContext
 
         //read environment
         String threads = StringUtils.trimToNull(System.getenv(THREAD_PROP_NAME));
-        if (threads != null && NumberUtils.isCreatable(threads))
+        if (NumberUtils.isCreatable(threads))
         {
             try
             {
@@ -331,9 +333,8 @@ public class SequenceTaskHelper implements PipelineContext
             {
                 for (ToolParameterDescriptor pd : fact.getParameters())
                 {
-                    if (pd instanceof ToolParameterDescriptor.CachableParam)
+                    if (pd instanceof ToolParameterDescriptor.CachableParam p)
                     {
-                        ToolParameterDescriptor.CachableParam p = ((ToolParameterDescriptor.CachableParam) pd);
                         for (Object o : pd.extractAllValues(getJob(), fact))
                         {
                             p.doCache(getJob(), o, getSequenceSupport());

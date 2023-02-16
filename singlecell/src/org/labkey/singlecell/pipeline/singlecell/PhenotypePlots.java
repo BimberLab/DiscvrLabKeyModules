@@ -7,6 +7,7 @@ import org.labkey.api.util.PageFlowUtil;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 public class PhenotypePlots extends AbstractRiraStep
 {
@@ -19,7 +20,7 @@ public class PhenotypePlots extends AbstractRiraStep
     {
         public Provider()
         {
-            super("PhenotypePlots", "Immune Phenotype Plots", "Seurat", "This will generate FeaturePlots for a pre-defined set of immune markers. Any feature not present is skipped.", null, Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+            super("PhenotypePlots", "Immune Phenotype Plots", "Seurat", "This will generate FeaturePlots for a pre-defined set of immune markers. Any feature not present is skipped.", null, List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
         @Override

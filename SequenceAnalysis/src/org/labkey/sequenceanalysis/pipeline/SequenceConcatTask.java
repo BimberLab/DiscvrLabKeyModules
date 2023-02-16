@@ -52,32 +52,38 @@ public class SequenceConcatTask extends PipelineJob.Task<SequenceConcatTask.Fact
             //setLocation("webserver");
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList("Concatenate Sequences");
+            return List.of("Concatenate Sequences");
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             return new SequenceConcatTask(this, job);
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
         }
     }
 
+    @Override
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {

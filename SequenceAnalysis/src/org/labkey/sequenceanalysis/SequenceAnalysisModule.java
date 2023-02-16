@@ -396,6 +396,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         ExperimentService.get().registerExperimentRunTypeSource(new ExperimentRunTypeSource()
         {
+            @Override
             @NotNull
             public Set<ExperimentRunType> getExperimentRunTypes(@Nullable Container container)
             {

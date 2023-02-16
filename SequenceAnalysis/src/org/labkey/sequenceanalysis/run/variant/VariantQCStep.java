@@ -36,8 +36,9 @@ public class VariantQCStep extends AbstractPipelineStep implements VariantProces
     {
         public Provider()
         {
-            super("VariantQCStep", "VariantQC", "", "This will generate an HTML summary report for the final VCF file", Arrays.asList(
-                    ToolParameterDescriptor.create("writeJson", "Write Raw Data", "If selected, both an HTML report and a text file with the raw data will be created.", "checkbox", new JSONObject(){{
+            super("VariantQCStep", "VariantQC", "", "This will generate an HTML summary report for the final VCF file", List.of(
+                    ToolParameterDescriptor.create("writeJson", "Write Raw Data", "If selected, both an HTML report and a text file with the raw data will be created.", "checkbox", new JSONObject()
+                    {{
                         put("checked", true);
                     }}, true)
             ), null, "https://bimberlab.github.io/DISCVRSeq/");

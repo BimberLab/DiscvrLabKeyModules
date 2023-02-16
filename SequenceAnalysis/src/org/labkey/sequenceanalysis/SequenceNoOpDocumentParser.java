@@ -30,11 +30,13 @@ public class SequenceNoOpDocumentParser extends AbstractDocumentParser
         //_log.info("skipping indexing of sequence document");
     }
 
+    @Override
     public String getMediaType()
     {
         return "text/plain";
     }
 
+    @Override
     public boolean detect(WebdavResource resource, String contentType, byte[] buf) throws IOException
     {
         return SequenceUtil.FILETYPE.fastq.getFileType().isType(resource.getFile()) ||

@@ -32,16 +32,19 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
             super(VariantProcessingRemoteSplitTask.class);
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
@@ -70,11 +73,13 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
             return super.isParticipant(job);
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             return new VariantProcessingRemoteSplitTask(this, job);
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;

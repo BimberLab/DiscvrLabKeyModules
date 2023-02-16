@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class BamHaplotypeHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    private FileType _bamFileType = new FileType("bam", false);
+    private final FileType _bamFileType = new FileType("bam", false);
 
     public BamHaplotypeHandler()
     {

@@ -38,49 +38,49 @@ public interface ReferenceGenome extends Serializable
      * during the run.  The original FASTA may also have other resources cached in that directory, such as aligner indexes.
      * If this FASTA was created de novo during this run, it will exist on the webserver analysis directory for this job
      */
-    public @NotNull File getSourceFastaFile();
+    @NotNull File getSourceFastaFile();
 
     /**
      * @return This is the file that should typically be used by callers.  The pipeline code usually copies this file to the local working directory.
      * If this has occurred, that file will preferentially be used.  Otherwise, the source FASTA file will be returned.
      */
-    public @NotNull File getWorkingFastaFile();
+    @NotNull File getWorkingFastaFile();
 
     /**
      * @return This is the file that should typically be used by callers.  The pipeline code usually copies this file to the local working directory.
      * If this has occurred, that file will preferentially be used.  Otherwise, the source FASTA file will be returned.
      */
-    public @NotNull File getWorkingFastaFileGzipped();
+    @NotNull File getWorkingFastaFileGzipped();
 
-    public void setWorkingFasta(File workingFasta);
+    void setWorkingFasta(File workingFasta);
 
     /**
      * @return The FASTA index file associated with the working FASTA file
      */
-    public File getFastaIndex();
+    File getFastaIndex();
 
     /**
      * @return The name assigned to this genome
      */
-    public String getName();
+    String getName();
 
     /**
      * @return The rowId of the corresponding record
      */
-    public Integer getGenomeId();
+    Integer getGenomeId();
 
     /**
      * @return The rowId of the ExpData record matching the final version of the FASTA file.  If this is a saved reference,
      * this will correspond to the permanent FASTA, as opposed to the copy used in this job.  If this FASTA was created specifically for
      * this job then the FASTA will be in the analysis directory.
      */
-    public Integer getFastaExpDataId();
+    Integer getFastaExpDataId();
 
     /**
      * @param name The name used by the aligner to identify its cached directory
      * @return The folder expected containing the cached index, which is not guarenteed to exist.  See AlignerIndexUtil for related methods.
      */
-    public File getAlignerIndexDir(String name);
+    File getAlignerIndexDir(String name);
 
     /**
      * @return The path of the .dict file expected to be associated with this genome.  Will be based on the workingFasta file

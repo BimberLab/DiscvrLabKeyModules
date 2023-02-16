@@ -238,7 +238,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
 
             //first calculate avg qualities at each position
             getPipelineCtx().getLogger().info("Calculating avg quality scores");
-            AvgBaseQualityAggregator avgBaseQualityAggregator = new AvgBaseQualityAggregator(getPipelineCtx().getLogger(), inputBam, referenceGenome.getWorkingFastaFile(), Arrays.asList(
+            AvgBaseQualityAggregator avgBaseQualityAggregator = new AvgBaseQualityAggregator(getPipelineCtx().getLogger(), inputBam, referenceGenome.getWorkingFastaFile(), List.of(
                     new DuplicateReadFilter()
             ));
             avgBaseQualityAggregator.calculateAvgQuals();

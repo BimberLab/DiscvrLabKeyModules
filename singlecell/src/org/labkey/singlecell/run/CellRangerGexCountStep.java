@@ -114,7 +114,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                 }}, true),
                 ToolParameterDescriptor.createExpDataParam("gtfFile", "Gene File", "This is the ID of a GTF file containing genes from this genome.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
                 {{
-                    put("extensions", Arrays.asList("gtf"));
+                    put("extensions", List.of("gtf"));
                     put("width", 400);
                     put("allowBlank", false);
                 }}, null),
@@ -274,13 +274,13 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
             Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
             if (maxThreads != null)
             {
-                args.add("--nthreads=" + maxThreads.toString());
+                args.add("--nthreads=" + maxThreads);
             }
 
             Integer maxRam = SequencePipelineService.get().getMaxRam();
             if (maxRam != null)
             {
-                args.add("--memgb=" + maxRam.toString());
+                args.add("--memgb=" + maxRam);
             }
 
             getWrapper().setWorkingDir(indexDir.getParentFile());

@@ -40,8 +40,9 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
     {
         public Provider()
         {
-            super("KingInferenceStep", "KING/Relatedness", "", "This will run KING to infer kinship from a VCF", Arrays.asList(
-                    ToolParameterDescriptor.create("limitToChromosomes", "Limit to Chromosomes", "If checked, the analysis will include only the primary chromosomes", "checkbox", new JSONObject(){{
+            super("KingInferenceStep", "KING/Relatedness", "", "This will run KING to infer kinship from a VCF", List.of(
+                    ToolParameterDescriptor.create("limitToChromosomes", "Limit to Chromosomes", "If checked, the analysis will include only the primary chromosomes", "checkbox", new JSONObject()
+                    {{
                         put("checked", true);
                     }}, true)
             ), null, "https://www.kingrelatedness.com/manual.shtml");

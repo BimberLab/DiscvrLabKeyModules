@@ -33,7 +33,7 @@ import java.util.Set;
 public class SingleCellProvider extends AbstractSequenceDataProvider
 {
     public static final String NAME = "Single Cell";
-    private Module _module;
+    private final Module _module;
 
     public SingleCellProvider(Module module)
     {

@@ -35,7 +35,7 @@ import java.util.Map;
  */
 public class IlluminaReadsetCreationTask extends WorkDirectoryTask<IlluminaReadsetCreationTask.Factory>
 {
-    private static String ACTION_NAME = "Import Illumina Reads";
+    private static final String ACTION_NAME = "Import Illumina Reads";
 
     protected IlluminaReadsetCreationTask(Factory factory, PipelineJob job)
     {
@@ -49,33 +49,39 @@ public class IlluminaReadsetCreationTask extends WorkDirectoryTask<IlluminaReads
             super(IlluminaReadsetCreationTask.class);
         }
 
+        @Override
         public String getStatusName()
         {
             return "IMPORTING ILLUMINA READS";
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList(ACTION_NAME);
+            return Collections.singletonList(ACTION_NAME);
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             IlluminaReadsetCreationTask task = new IlluminaReadsetCreationTask(this, job);
             return task;
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.singletonList(new FileType(".csv"));
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
         }
     }
 
+    @Override
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {

@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -30,8 +31,9 @@ public class MultiQCHandler extends AbstractParameterizedOutputHandler<SequenceO
 {
     public MultiQCHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "MultiQC", "This will run MultiQC to aggregate FASTQC data for these readsets", null, Arrays.asList(
-                ToolParameterDescriptor.create("reportTitle", "Report Name", null, "textfield", new JSONObject(){{
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "MultiQC", "This will run MultiQC to aggregate FASTQC data for these readsets", null, List.of(
+                ToolParameterDescriptor.create("reportTitle", "Report Name", null, "textfield", new JSONObject()
+                {{
                     put("allowBlank", false);
                 }}, null)
         ));
@@ -111,7 +113,7 @@ public class MultiQCHandler extends AbstractParameterizedOutputHandler<SequenceO
                                 Map<File, String> labelMap = new HashMap<>();
                                 labelMap.put(fq, "Readset " + rs.getName());
 
-                                fastqc.execute(Arrays.asList(fq), labelMap);
+                                fastqc.execute(Collections.singletonList(fq), labelMap);
                             }
                         }
                     }

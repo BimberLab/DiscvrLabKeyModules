@@ -18,6 +18,7 @@ import org.labkey.api.view.template.ClientDependency;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -66,7 +67,7 @@ public class DownloadSequenceDisplayColumnFactory implements DisplayColumnFactor
             @Override
             public @NotNull Set<ClientDependency> getClientDependencies()
             {
-                return new LinkedHashSet<ClientDependency>(Arrays.asList(ClientDependency.fromPath("sequenceanalysis/window/DownloadSequencesWindow.js")));
+                return new LinkedHashSet<>(Collections.singletonList(ClientDependency.fromPath("sequenceanalysis/window/DownloadSequencesWindow.js")));
             }
 
             @Override

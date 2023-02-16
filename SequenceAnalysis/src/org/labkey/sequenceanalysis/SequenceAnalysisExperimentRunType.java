@@ -31,6 +31,7 @@ public class SequenceAnalysisExperimentRunType extends ExperimentRunType
         super(SequenceAnalysisModule.PROTOCOL, ExpSchema.SCHEMA_NAME, ExpSchema.TableType.Runs.toString());
     }
 
+    @Override
     public Priority getPriority(ExpProtocol protocol)
     {
         return Priority.LOW;

@@ -25,18 +25,18 @@ import org.labkey.api.security.User;
  */
 public interface GenomeTrigger
 {
-    public String getName();
+    String getName();
 
-    public void onCreate(Container c, User u, Logger log, int genomeId);
+    void onCreate(Container c, User u, Logger log, int genomeId);
 
-    public void onRecreate(Container c, User u, Logger log, int genomeId);
+    void onRecreate(Container c, User u, Logger log, int genomeId);
 
-    public void onDelete(Container c, User u, Logger log, int genomeId);
+    void onDelete(Container c, User u, Logger log, int genomeId);
 
     default void onTrackAdd(Container c, User u, Logger log, int genomeId, int trackId)
     {
 
     }
 
-    public boolean isAvailable(Container c);
+    boolean isAvailable(Container c);
 }

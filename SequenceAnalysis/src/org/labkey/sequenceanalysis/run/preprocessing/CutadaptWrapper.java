@@ -61,6 +61,7 @@ public class CutadaptWrapper extends AbstractCommandWrapper
             ), Collections.singleton("SequenceAnalysis/panel/AdapterPanel.js"), "https://code.google.com/p/cutadapt/");
         }
 
+        @Override
         public CutadaptPipelineStep create(PipelineContext context)
         {
             return new CutadaptPipelineStep(this, context, new CutadaptWrapper(context.getLogger()));

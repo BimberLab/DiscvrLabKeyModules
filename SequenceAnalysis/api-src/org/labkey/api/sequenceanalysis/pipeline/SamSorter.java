@@ -21,7 +21,7 @@ import java.util.List;
  */
 public class SamSorter extends SamtoolsRunner
 {
-    private static String COMMAND = "sort";
+    private static final String COMMAND = "sort";
 
     public SamSorter(@Nullable Logger logger)
     {

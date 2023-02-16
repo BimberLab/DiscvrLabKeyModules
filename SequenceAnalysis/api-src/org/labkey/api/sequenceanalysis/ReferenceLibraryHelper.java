@@ -22,15 +22,15 @@ import java.io.File;
  */
 public interface ReferenceLibraryHelper
 {
-    public File getReferenceFasta();
+    File getReferenceFasta();
 
-    public File getIdKeyFile();
+    File getIdKeyFile();
 
-    public File getFastaIndexFile(boolean createIfDoesntExist);
+    File getFastaIndexFile(boolean createIfDoesntExist);
 
-    public File getSequenceDictionaryFile(boolean createIfDoesntExist);
+    File getSequenceDictionaryFile(boolean createIfDoesntExist);
 
-    public Integer resolveSequenceId(String refName);
+    Integer resolveSequenceId(String refName);
 
-    public String resolveAccession(String refName);
+    String resolveAccession(String refName);
 }

@@ -46,9 +46,9 @@ public class BlastFilterPipelineStep extends AbstractPipelineStep implements Pre
         super(provider, ctx);
     }
 
-    private static String BLAST_DB = "blastDB";
-    private static String E_VAL = "eVal";
-    private static String EXCLUDE = "exclude";
+    private static final String BLAST_DB = "blastDB";
+    private static final String E_VAL = "eVal";
+    private static final String EXCLUDE = "exclude";
 
     public static class Provider extends AbstractPipelineStepProvider<PreprocessingStep>
     {
@@ -67,6 +67,7 @@ public class BlastFilterPipelineStep extends AbstractPipelineStep implements Pre
             ), null, null);
         }
 
+        @Override
         public BlastFilterPipelineStep create(PipelineContext context)
         {
             return new BlastFilterPipelineStep(this, context);

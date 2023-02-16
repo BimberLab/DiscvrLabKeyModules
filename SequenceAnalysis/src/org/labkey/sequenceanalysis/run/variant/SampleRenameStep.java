@@ -54,6 +54,7 @@ public class SampleRenameStep extends AbstractCommandPipelineStep<VariantFiltrat
                 ), null, "");
         }
 
+        @Override
         public SampleRenameStep create(PipelineContext ctx)
         {
             return new SampleRenameStep(this, ctx);

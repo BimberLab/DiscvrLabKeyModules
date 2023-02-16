@@ -592,7 +592,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             ctx.getFileManager().addSequenceOutput(output, "Merged LoFreq Variants: " + inputFiles.size() + " VCFs", "Merged LoFreq Variant Table", null, null, genome.getGenomeId(), null);
         }
 
-        private Map<String, ReferenceSequence> seqMap = new HashMap<>();
+        private final Map<String, ReferenceSequence> seqMap = new HashMap<>();
 
         private ReferenceSequence getReferenceSequence(JobContext ctx, int genomeId, String name) throws IOException
         {
@@ -707,7 +707,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             }
         }
 
-        private Map<File, VCFFileReader> readerMap = new HashMap<>();
+        private final Map<File, VCFFileReader> readerMap = new HashMap<>();
 
         private VCFFileReader getReader(File f)
         {

@@ -20,6 +20,7 @@ import org.labkey.sequenceanalysis.run.util.RnaSeQCWrapper;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -43,7 +44,7 @@ public class RnaSeQCStep extends AbstractCommandPipelineStep<RnaSeQCWrapper> imp
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-singleEnd"), "singleEnd", "Single Ended Reads?", "This BAM contains single end reads.", "checkbox", null, false),
                     ToolParameterDescriptor.createExpDataParam("gtf", "GTF File", "The GTF file containing genes for this genome.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
                     {{
-                            put("extensions", Arrays.asList("gtf"));
+                            put("extensions", List.of("gtf"));
                             put("width", 400);
                             put("allowBlank", false);
                         }}, null),
@@ -90,7 +91,7 @@ public class RnaSeQCStep extends AbstractCommandPipelineStep<RnaSeQCWrapper> imp
             }
         }
 
-        getWrapper().execute(Arrays.asList(inputBam), Arrays.asList(rs.getRowId() + ":" + rs.getName()), null, referenceGenome.getWorkingFastaFile(), gtf, outputDir, "rna-seqc", extraParams, rnaFasta);
+        getWrapper().execute(Collections.singletonList(inputBam), List.of(rs.getRowId() + ":" + rs.getName()), null, referenceGenome.getWorkingFastaFile(), gtf, outputDir, "rna-seqc", extraParams, rnaFasta);
 
         File localBwaDir =new File(outputDir, "bwaIndex");
         if (localBwaDir.exists())

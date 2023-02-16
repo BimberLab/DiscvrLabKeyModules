@@ -29,8 +29,8 @@ public class MergeVcfsAndGenotypesHandler extends AbstractParameterizedOutputHan
 {
     public MergeVcfsAndGenotypesHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Merge Vcfs And Genotypes", "Combine multiple VCF files", null, Arrays.asList(
-            ToolParameterDescriptor.create("basename", "Output File Name", "This will be used as the name for the output VCF.", "textfield", null, "")
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Merge Vcfs And Genotypes", "Combine multiple VCF files", null, List.of(
+                ToolParameterDescriptor.create("basename", "Output File Name", "This will be used as the name for the output VCF.", "textfield", null, "")
         ));
     }
 

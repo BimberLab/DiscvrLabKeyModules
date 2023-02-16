@@ -59,7 +59,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
 
     public PbsvJointCallingHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), "Pbsv Call", "Runs pbsv call, which jointly calls genotypes from PacBio data", new LinkedHashSet<>(Arrays.asList("sequenceanalysis/panel/VariantScatterGatherPanel.js")), Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME), "Pbsv Call", "Runs pbsv call, which jointly calls genotypes from PacBio data", new LinkedHashSet<>(List.of("sequenceanalysis/panel/VariantScatterGatherPanel.js")), Arrays.asList(
                 ToolParameterDescriptor.create("fileName", "VCF Filename", "The name of the resulting file.", "textfield", new JSONObject(){{
                     put("allowBlank", false);
                     put("doNotIncludeInTemplates", true);
@@ -155,7 +155,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
                 {
                     if (i.getStart() != 1)
                     {
-                        throw new PipelineJobException("Expected all intervals to start on the first base: " + i.toString());
+                        throw new PipelineJobException("Expected all intervals to start on the first base: " + i);
                     }
 
                     File o = runPbsvCall(ctx, filesToProcess, genome, outputBaseName + (getVariantPipelineJob(ctx.getJob()).getIntervalsForTask().size() == 1 ? "" : "." + i.getContig()), i.getContig(), jobCompleted);
@@ -372,9 +372,8 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
     @Override
     public boolean isRequired(PipelineJob job)
     {
-        if (job instanceof VariantProcessingJob)
+        if (job instanceof VariantProcessingJob vpj)
         {
-            VariantProcessingJob vpj = (VariantProcessingJob)job;
 
             return doCopyLocal(vpj.getParameterJson());
         }

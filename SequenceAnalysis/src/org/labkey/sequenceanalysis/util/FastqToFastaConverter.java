@@ -21,7 +21,7 @@ import java.util.List;
  */
 public class FastqToFastaConverter
 {
-    private Logger _logger;
+    private final Logger _logger;
 
     public FastqToFastaConverter(Logger logger)
     {

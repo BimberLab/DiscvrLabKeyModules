@@ -515,12 +515,12 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         }
     }
 
-    private static FileType _bamFileType = new FileType("bam");
-    private static FileType _cramFileType = new FileType("cram");
-    private static FileType _vcfFileType = new FileType("vcf", FileType.gzSupportLevel.SUPPORT_GZ);
-    private static FileType _bedFileType = new FileType("bed", FileType.gzSupportLevel.SUPPORT_GZ);
-    private static FileType _fastaFileType = new FileType(Arrays.asList("fasta", "fa"), "fasta", FileType.gzSupportLevel.SUPPORT_GZ);
-    private static FileType _gxfFileType = new FileType(Arrays.asList("gtf", "gff", "gff3"), "gff", FileType.gzSupportLevel.SUPPORT_GZ);
+    private static final FileType _bamFileType = new FileType("bam");
+    private static final FileType _cramFileType = new FileType("cram");
+    private static final FileType _vcfFileType = new FileType("vcf", FileType.gzSupportLevel.SUPPORT_GZ);
+    private static final FileType _bedFileType = new FileType("bed", FileType.gzSupportLevel.SUPPORT_GZ);
+    private static final FileType _fastaFileType = new FileType(Arrays.asList("fasta", "fa"), "fasta", FileType.gzSupportLevel.SUPPORT_GZ);
+    private static final FileType _gxfFileType = new FileType(Arrays.asList("gtf", "gff", "gff3"), "gff", FileType.gzSupportLevel.SUPPORT_GZ);
 
     /**
      * This is intended to return any files associated with an input, which is primarily designed to pick up index files

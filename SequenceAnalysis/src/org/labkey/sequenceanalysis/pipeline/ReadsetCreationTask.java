@@ -91,26 +91,31 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
             setJoin(true);  // Do this once per file-set.
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             return new ReadsetCreationTask(this, job);
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return null;
         }
 
+        @Override
         public String getStatusName()
         {
             return ACTIONNAME;
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList(ACTIONNAME);
+            return List.of(ACTIONNAME);
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
@@ -516,7 +521,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
 
                 //NOTE: task is on webserver, so use single thread only
                 FastqcRunner runner = new FastqcRunner(getJob().getLogger());
-                runner.execute(Arrays.asList(d1.getFile()), null);
+                runner.execute(Collections.singletonList(d1.getFile()), null);
                 getJob().getLogger().info("done");
             }
             catch (IOException e)

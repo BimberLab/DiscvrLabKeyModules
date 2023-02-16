@@ -48,21 +48,25 @@ public class BlastWorkTask extends PipelineJob.Task<BlastWorkTask.Factory>
             super(BlastWorkTask.class);
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList("BLAST");
+            return List.of("BLAST");
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             BlastWorkTask task = new BlastWorkTask(this, job);
@@ -70,12 +74,14 @@ public class BlastWorkTask extends PipelineJob.Task<BlastWorkTask.Factory>
             return task;
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
         }
     }
 
+    @Override
     public RecordedActionSet run() throws PipelineJobException
     {
         try

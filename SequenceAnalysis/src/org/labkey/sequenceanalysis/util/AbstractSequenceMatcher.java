@@ -337,15 +337,15 @@ abstract public class AbstractSequenceMatcher
 
     protected class SequenceMatch
     {
-        private FastqRecord _rec;
-        private SequenceTag _tag;
-        private int _editDistance;
-        private int _offset;
+        private final FastqRecord _rec;
+        private final SequenceTag _tag;
+        private final int _editDistance;
+        private final int _offset;
 
         //NOTE: these are the coordinated used in substring(), which means start is 0-based and stop is 1-based
-        private int _start;
-        private int _stop;
-        private boolean _is5Prime;
+        private final int _start;
+        private final int _stop;
+        private final boolean _is5Prime;
 
         public SequenceMatch(SequenceTag tag, FastqRecord rec, boolean is5Prime, int editDistance, int offset, Integer start, Integer stop)
         {

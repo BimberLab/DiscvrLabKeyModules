@@ -72,13 +72,13 @@ public class LdapSyncRunner implements Job
     private static final Logger _log = LogManager.getLogger(LdapSyncRunner.class);
     private LdapSettings _settings;
     private LdapConnectionWrapper _wrapper;
-    private Map<String, LdapSyncModel> _syncedRecordMap = new HashMap<>();
+    private final Map<String, LdapSyncModel> _syncedRecordMap = new HashMap<>();
     private boolean _previewOnly = false;
-    private List<String> _messages = new ArrayList<>();
+    private final List<String> _messages = new ArrayList<>();
     private boolean _doDetailedLogging = true;
 
-    private Map<String, Integer> _usersSynced = new HashMap<>();
-    private Map<String, Integer> _groupsSynced = new HashMap<>();
+    private final Map<String, Integer> _usersSynced = new HashMap<>();
+    private final Map<String, Integer> _groupsSynced = new HashMap<>();
 
     public static final String AUDIT_EVENT_TYPE = "LdapAuditEvent";
 
@@ -98,6 +98,7 @@ public class LdapSyncRunner implements Job
 
     }
 
+    @Override
     public void execute(JobExecutionContext context) throws JobExecutionException
     {
         try
@@ -437,7 +438,7 @@ public class LdapSyncRunner implements Job
                         if (u.getPrincipalType().equals(PrincipalType.GROUP))
                             continue;
 
-                        if (_usersSynced.values().contains(u.getUserId()))
+                        if (_usersSynced.containsValue(u.getUserId()))
                         {
                             deleteMember(existingGroup, u);
                         }
@@ -1068,9 +1069,9 @@ public class LdapSyncRunner implements Job
         // This can be used to return LdapEntry objects to support some degree of automated testing without needing a functional LDAP Server
         public class DummyConnectionWrapper extends LdapConnectionWrapper
         {
-            private List<LdapEntry> _users = new ArrayList<>();
-            private Map<String, MockLdapEntry> _groupMap = new HashMap<>();
-            private Map<MockLdapEntry, List<LdapEntry>> _groupMemberMap = new HashMap<>();
+            private final List<LdapEntry> _users = new ArrayList<>();
+            private final Map<String, MockLdapEntry> _groupMap = new HashMap<>();
+            private final Map<MockLdapEntry, List<LdapEntry>> _groupMemberMap = new HashMap<>();
 
             public DummyConnectionWrapper() throws LdapException
             {
@@ -1125,9 +1126,9 @@ public class LdapSyncRunner implements Job
 
         private static class MockLdapEntry extends LdapEntry
         {
-            private Dn _dn;
+            private final Dn _dn;
 
-            private Map<String, String> _otherProps = new HashMap<>();
+            private final Map<String, String> _otherProps = new HashMap<>();
 
             //represents an LDAP user entry
             public MockLdapEntry(String dn, Map<String, String> otherProps, LdapSettings settings) throws LdapInvalidDnException

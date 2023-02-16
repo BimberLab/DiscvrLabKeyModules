@@ -31,7 +31,7 @@ import java.util.List;
  */
 public class RnaSeqcHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    private FileType _bamFileType = new FileType("bam", false);
+    private final FileType _bamFileType = new FileType("bam", false);
 
     public RnaSeqcHandler()
     {
@@ -43,7 +43,7 @@ public class RnaSeqcHandler extends AbstractParameterizedOutputHandler<SequenceO
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("-singleEnd"), "singleEnd", "Single Ended Reads?", "This BAM contains single end reads.", "checkbox", null, false),
                 ToolParameterDescriptor.createExpDataParam("gtf", "GTF File", "The GTF file containing genes for this genome.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
                 {{
-                        put("extensions", Arrays.asList("gtf"));
+                        put("extensions", List.of("gtf"));
                         put("width", 400);
                         put("allowBlank", false);
                     }}, null),

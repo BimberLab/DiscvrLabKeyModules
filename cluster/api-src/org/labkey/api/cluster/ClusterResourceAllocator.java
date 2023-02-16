@@ -20,9 +20,9 @@ import java.util.Map;
  */
 public interface ClusterResourceAllocator
 {
-    public interface Factory
+    interface Factory
     {
-        public ClusterResourceAllocator getAllocator();
+        ClusterResourceAllocator getAllocator();
 
         /**
          * Prior to submitting to condor, we iterate all registered ResourceAllocators and query this
@@ -31,27 +31,23 @@ public interface ClusterResourceAllocator
          * Note: because allocators are registered during module startup, this should reflect module dependency order.  This means child modules should
          * take priority over parent modules in the case of a priority tie.
          */
-        @Nullable
-        public Integer getPriority(TaskId taskId);
+        @Nullable Integer getPriority(TaskId taskId);
     }
 
     /**
      * The maximum CPUs to request for this job
      */
-    @Nullable
-    public Integer getMaxRequestCpus(PipelineJob job);
+    @Nullable Integer getMaxRequestCpus(PipelineJob job);
 
     /**
      * The maximum RAM in GBs to request for this job.  Not currently implemented
      */
-    @Nullable
-    public Integer getMaxRequestMemory(PipelineJob job);
+    @Nullable Integer getMaxRequestMemory(PipelineJob job);
 
     /**
      * Additional lines to include in the condor submit script.  These will be appended to the default script.
      */
-    @Nullable
-    public void addExtraSubmitScriptLines(PipelineJob job, RemoteExecutionEngine engine, List<String> existingExtraLines);
+    @Nullable void addExtraSubmitScriptLines(PipelineJob job, RemoteExecutionEngine engine, List<String> existingExtraLines);
 
     /**
      * The memory, in GB, to use as -xmx for the LabKey java remote process

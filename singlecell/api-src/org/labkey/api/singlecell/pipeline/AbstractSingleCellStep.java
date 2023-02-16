@@ -15,9 +15,9 @@ import java.util.List;
 
 public interface AbstractSingleCellStep extends PipelineStep
 {
-    public Collection<String> getRLibraries();
+    Collection<String> getRLibraries();
 
-    public String getDockerContainerName();
+    String getDockerContainerName();
 
     default void init(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputFiles) throws PipelineJobException
     {
@@ -29,32 +29,32 @@ public interface AbstractSingleCellStep extends PipelineStep
         return true;
     }
 
-    public boolean requiresCiteSeq(SequenceOutputHandler.JobContext ctx);
+    boolean requiresCiteSeq(SequenceOutputHandler.JobContext ctx);
 
-    public boolean requiresHashing(SequenceOutputHandler.JobContext ctx);
+    boolean requiresHashing(SequenceOutputHandler.JobContext ctx);
 
-    public boolean isIncluded(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputs) throws PipelineJobException;
+    boolean isIncluded(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputs) throws PipelineJobException;
 
     default String getFileSuffix()
     {
         return getProvider().getName();
     }
 
-    public Output execute(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException;
+    Output execute(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException;
 
-    public static interface Output extends PipelineStepOutput
+    interface Output extends PipelineStepOutput
     {
         /**
          * Returns the cached seurat object
          */
-        public List<SeuratObjectWrapper> getSeuratObjects();
+        List<SeuratObjectWrapper> getSeuratObjects();
 
-        public File getMarkdownFile();
+        File getMarkdownFile();
 
-        public File getHtmlFile();
+        File getHtmlFile();
     }
 
-    public static class SeuratObjectWrapper implements Serializable
+    class SeuratObjectWrapper implements Serializable
     {
         private transient SequenceOutputFile _sequenceOutputFile;
 

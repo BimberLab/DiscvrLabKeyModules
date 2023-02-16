@@ -17,9 +17,8 @@ public class SingleCellTableCustomizer extends AbstractTableCustomizer
     @Override
     public void customize(TableInfo table)
     {
-        if (table instanceof AbstractTableInfo)
+        if (table instanceof AbstractTableInfo ti)
         {
-            AbstractTableInfo ti = (AbstractTableInfo) table;
             if (matches(ti, SingleCellSchema.SEQUENCE_SCHEMA_NAME, SingleCellSchema.TABLE_READSETS))
             {
                 customizeReadsets(ti);

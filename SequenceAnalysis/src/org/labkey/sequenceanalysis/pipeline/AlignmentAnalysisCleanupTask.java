@@ -32,11 +32,13 @@ public class AlignmentAnalysisCleanupTask extends WorkDirectoryTask<AlignmentAna
             super(AlignmentAnalysisCleanupTask.class);
         }
 
+        @Override
         public String getStatusName()
         {
             return "FINAL ANALYSIS STEPS";
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
@@ -48,23 +50,27 @@ public class AlignmentAnalysisCleanupTask extends WorkDirectoryTask<AlignmentAna
             return allowableNames;
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             AlignmentAnalysisCleanupTask task = new AlignmentAnalysisCleanupTask(this, job);
             return task;
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.singletonList(new FileType(".bam"));
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
         }
     }
 
+    @Override
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {

@@ -5,6 +5,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class CiteSeqWnn extends AbstractCellMembraneStep
 {
@@ -17,9 +18,7 @@ public class CiteSeqWnn extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("CiteSeqWnn", "Seurat WNN", "Seurat", "This will run DimRedux steps on the ADT data.", Arrays.asList(
-
-            ), null, null);
+            super("CiteSeqWnn", "Seurat WNN", "Seurat", "This will run DimRedux steps on the ADT data.", List.of(), null, null);
         }
 
         @Override

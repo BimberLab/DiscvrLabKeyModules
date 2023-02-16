@@ -163,7 +163,7 @@ abstract public class CellHashingService
             ret.minCountPerCell = params.optInt("minCountPerCell", 3);
             ret.majorityConsensusThreshold = params.get("majorityConsensusThreshold") == null ? null : params.getDouble("majorityConsensusThreshold");
             ret.callerDisagreementThreshold = params.get("callerDisagreementThreshold") == null ? null : params.getDouble("callerDisagreementThreshold");
-            ret.doTSNE = params.get("doTSNE") == null ? true : params.getBoolean("doTSNE");
+            ret.doTSNE = params.get("doTSNE") == null || params.getBoolean("doTSNE");
             ret.retainRawCountFile = params.optBoolean("retainRawCountFile", true);
             ret.htoReadset = htoReadset;
             ret.parentReadset = parentReadset;

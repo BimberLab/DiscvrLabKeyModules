@@ -9,6 +9,7 @@ import org.labkey.api.util.PageFlowUtil;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 public class PlotAverageCiteSeqCounts extends AbstractCellMembraneStep
 {
@@ -31,7 +32,7 @@ public class PlotAverageCiteSeqCounts extends AbstractCellMembraneStep
                     SeuratToolParameter.create("assayName", "Assay Name", "The assay to use", "textfield", new JSONObject(){{
 
                     }}, "ADT")
-            ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+            ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
         @Override

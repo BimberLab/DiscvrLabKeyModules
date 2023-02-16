@@ -12,9 +12,9 @@ import java.io.File;
  */
 public interface AssemblyStep extends PipelineStep
 {
-    public Output performAssembly(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException;
+    Output performAssembly(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException;
 
-    public static interface Output extends PipelineStepOutput
+    interface Output extends PipelineStepOutput
     {
 
     }

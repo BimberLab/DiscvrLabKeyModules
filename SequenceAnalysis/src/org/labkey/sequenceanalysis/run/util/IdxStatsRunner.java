@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class IdxStatsRunner extends SamtoolsRunner
 {
-    private static String COMMAND = "idxstats";
+    private static final String COMMAND = "idxstats";
 
     public IdxStatsRunner(@Nullable Logger logger)
     {

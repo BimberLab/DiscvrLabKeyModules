@@ -5,6 +5,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class ClearCommands extends AbstractCellMembraneStep
 {
@@ -17,9 +18,7 @@ public class ClearCommands extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("ClearCommands", "ClearCommands", "CellMembrane", "This is a workaround to fix legacy saved objects. It clears the commands slot, which included bloated data in some older objects.", Arrays.asList(
-
-            ), null, null);
+            super("ClearCommands", "ClearCommands", "CellMembrane", "This is a workaround to fix legacy saved objects. It clears the commands slot, which included bloated data in some older objects.", List.of(), null, null);
         }
 
         @Override

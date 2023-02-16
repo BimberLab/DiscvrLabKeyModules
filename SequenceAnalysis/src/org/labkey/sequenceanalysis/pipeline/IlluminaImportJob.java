@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -53,7 +54,7 @@ public class IlluminaImportJob extends SequenceJob
         {
             IlluminaImportJob job = new IlluminaImportJob(c, u, jobName, pr, params);
             job.setDescription(description);
-            job.setInputFiles(Arrays.asList(csv));
+            job.setInputFiles(Collections.singletonList(csv));
             ret.add(job);
         }
 

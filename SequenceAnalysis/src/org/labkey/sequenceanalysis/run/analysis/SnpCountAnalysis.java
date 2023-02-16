@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -54,7 +55,7 @@ public class SnpCountAnalysis extends AbstractPipelineStep implements AnalysisSt
     {
         public Provider()
         {
-            super("SnpCountAnalysis", "SNP Count", null, "This will calculate the count per base and avg quality at each position over the intervals selected.  There are many uses of this information, which could include quantifying a mixed sequence population or calculating a consensus base.  Note: this will ignore indels.", Arrays.asList(
+            super("SnpCountAnalysis", "SNP Count", null, "This will calculate the count per base and avg quality at each position over the intervals selected.  There are many uses of this information, which could include quantifying a mixed sequence population or calculating a consensus base.  Note: this will ignore indels.", List.of(
                     ToolParameterDescriptor.create("intervals", "Interval(s)", "Provide a list of intervals to scan.  These should be in the form 'ReferenceName:Start-Stop' (ie. chr01:2039-2504)", "textarea", new JSONObject()
                     {{
                         put("width", 600);

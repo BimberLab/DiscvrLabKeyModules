@@ -71,7 +71,7 @@ import static org.labkey.singlecell.run.CellRangerGexCountStep.LOUPE_CATEGORY;
 
 public class CellHashingServiceImpl extends CellHashingService
 {
-    private static CellHashingServiceImpl _instance = new CellHashingServiceImpl();
+    private static final CellHashingServiceImpl _instance = new CellHashingServiceImpl();
 
     public static final String READSET_AND_GENOME_TO_H5_MAP = "readsetAndGenomeToH5Map";
     public static final String READSET_TO_HASHING_MAP = "readsetToHashingMap";
@@ -90,7 +90,7 @@ public class CellHashingServiceImpl extends CellHashingService
         return _instance;
     }
 
-    private static String TCR_FIELD = "tcrReadsetId";
+    private static final String TCR_FIELD = "tcrReadsetId";
 
     @Override
     public void prepareHashingForVdjIfNeeded(SequenceOutputHandler.JobContext ctx, final boolean failIfNoHashingReadset) throws PipelineJobException

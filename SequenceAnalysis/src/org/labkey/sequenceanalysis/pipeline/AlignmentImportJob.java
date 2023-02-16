@@ -50,7 +50,7 @@ public class AlignmentImportJob extends SequenceJob
         job.setDescription(description);
         job.setInputFiles(inputFiles);
 
-        return Arrays.asList(job);
+        return List.of(job);
     }
 
     public static String NAME = "AlignmentImportPipeline";

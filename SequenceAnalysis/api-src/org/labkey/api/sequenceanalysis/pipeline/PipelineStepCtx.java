@@ -5,7 +5,7 @@ package org.labkey.api.sequenceanalysis.pipeline;
  */
 public interface PipelineStepCtx<StepType extends PipelineStep>
 {
-    public PipelineStepProvider<StepType> getProvider();
+    PipelineStepProvider<StepType> getProvider();
 
-    public int getStepIdx();
+    int getStepIdx();
 }

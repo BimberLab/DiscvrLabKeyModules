@@ -33,33 +33,33 @@ import java.util.Map;
  */
 public interface SequenceAnalysisJobSupport extends Serializable
 {
-    public void cacheExpData(ExpData data);
+    void cacheExpData(ExpData data);
 
-    public File getCachedData(int dataId);
+    File getCachedData(int dataId);
 
-    public Map<Integer, File> getAllCachedData();
+    Map<Integer, File> getAllCachedData();
 
-    public Readset getCachedReadset(Integer rowId);
+    Readset getCachedReadset(Integer rowId);
 
-    public AnalysisModel getCachedAnalysis(int rowId);
+    AnalysisModel getCachedAnalysis(int rowId);
 
-    public List<Readset> getCachedReadsets();
+    List<Readset> getCachedReadsets();
 
-    public void cacheReadset(int readsetId, User u);
+    void cacheReadset(int readsetId, User u);
 
-    public void cacheReadset(int readsetId, User u, boolean allowReadsetsWithArchivedData);
+    void cacheReadset(int readsetId, User u, boolean allowReadsetsWithArchivedData);
 
-    public List<AnalysisModel> getCachedAnalyses();
+    List<AnalysisModel> getCachedAnalyses();
 
-    public void cacheGenome(ReferenceGenome m);
+    void cacheGenome(ReferenceGenome m);
 
-    public ReferenceGenome getCachedGenome(int genomeId);
+    ReferenceGenome getCachedGenome(int genomeId);
 
-    public Collection<ReferenceGenome> getCachedGenomes();
+    Collection<ReferenceGenome> getCachedGenomes();
 
-    public void cacheObject(String key, Serializable object);
+    void cacheObject(String key, Serializable object);
 
-    public <T> T getCachedObject(String key, Class<T> clazz) throws PipelineJobException;
+    <T> T getCachedObject(String key, Class<T> clazz) throws PipelineJobException;
 
     /**
      * Allows deserialization of generics.  For example, a cached Map<Integer, Integer> could be accessed using:
@@ -67,5 +67,5 @@ public interface SequenceAnalysisJobSupport extends Serializable
      * Map<Integer, Integer> myMap = support.getCachedObject("cachedMap", PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, Integer.class))
      *
      */
-    public <T> T getCachedObject(String key, JavaType type) throws PipelineJobException;
+    <T> T getCachedObject(String key, JavaType type) throws PipelineJobException;
 }

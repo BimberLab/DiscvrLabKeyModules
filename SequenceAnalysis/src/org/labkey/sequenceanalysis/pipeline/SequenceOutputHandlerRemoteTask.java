@@ -41,16 +41,19 @@ public class SequenceOutputHandlerRemoteTask extends WorkDirectoryTask<SequenceO
             super(SequenceOutputHandlerRemoteTask.class);
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
@@ -82,11 +85,13 @@ public class SequenceOutputHandlerRemoteTask extends WorkDirectoryTask<SequenceO
             return super.isParticipant(job);
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             return new SequenceOutputHandlerRemoteTask(this, job);
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;

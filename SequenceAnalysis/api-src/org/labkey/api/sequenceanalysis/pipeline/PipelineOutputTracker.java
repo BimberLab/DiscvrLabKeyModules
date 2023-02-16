@@ -11,9 +11,9 @@ public interface PipelineOutputTracker
      * Add an intermediate file.  If the user selected 'delete intermediates', this will be deleted on job success.
      * @param file
      */
-    public void addIntermediateFile(File file);
+    void addIntermediateFile(File file);
 
-    public void addIntermediateFiles(Collection<File> files);
+    void addIntermediateFiles(Collection<File> files);
 
     /**
      * Add a SequenceOutputFile for this job.  These files are tracked and displayed through the browser UI.
@@ -25,12 +25,12 @@ public interface PipelineOutputTracker
      * @param genomeId
      * @param description
      */
-    public void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId, @Nullable String description);
+    void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId, @Nullable String description);
 
     /**
      * Remove a previously added intermediate file
      * @param toRemove The file to remove
      */
-    public void removeIntermediateFile(File toRemove);
+    void removeIntermediateFile(File toRemove);
 
 }

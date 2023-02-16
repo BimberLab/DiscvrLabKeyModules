@@ -7,6 +7,7 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 public class PlotAssayFeatures extends AbstractCellMembraneStep
 {
@@ -19,8 +20,9 @@ public class PlotAssayFeatures extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("PlotAssayFeatures", "Plot Assay Features", "CellMembrane/Seurat", "This will create FeaturePlots for all features in the selected assays.", Arrays.asList(
-                    SeuratToolParameter.create("assayNames", "Assay Name(s)", "The name(s) of the asays to plot.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+            super("PlotAssayFeatures", "Plot Assay Features", "CellMembrane/Seurat", "This will create FeaturePlots for all features in the selected assays.", Collections.singletonList(
+                    SeuratToolParameter.create("assayNames", "Assay Name(s)", "The name(s) of the asays to plot.", "sequenceanalysis-trimmingtextarea", new JSONObject()
+                    {{
                         put("height", 150);
                         put("delimiter", ",");
                         put("allowBlank", false);

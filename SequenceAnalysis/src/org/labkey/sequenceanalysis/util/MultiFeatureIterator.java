@@ -21,7 +21,7 @@ import java.util.PriorityQueue;
 public class MultiFeatureIterator<TYPE extends Feature> implements AutoCloseable, CloseableIterator<TYPE>
 {
     private final PriorityQueue<ComparableFeatureIterator<TYPE>> _queue;
-    private Collection<Iterator<TYPE>> _iterators = new ArrayList<>();
+    private final Collection<Iterator<TYPE>> _iterators = new ArrayList<>();
 
     private final Comparator<TYPE> _comparator;
 
@@ -100,7 +100,7 @@ public class MultiFeatureIterator<TYPE extends Feature> implements AutoCloseable
 
     private static class ComparableFeatureIterator<TYPE extends Feature> extends PeekableIterator<TYPE> implements Comparable<ComparableFeatureIterator<TYPE>>
     {
-        private Comparator<TYPE> _comparator;
+        private final Comparator<TYPE> _comparator;
 
         public ComparableFeatureIterator(Iterator<TYPE> iterator, Comparator<TYPE> comparator)
         {
@@ -138,10 +138,7 @@ public class MultiFeatureIterator<TYPE extends Feature> implements AutoCloseable
                 return ret;
 
             ret = compareInts(o1.getEnd(), o2.getEnd());
-            if (ret != 0)
-                return ret;
-
-            return 0;
+            return ret;
         }
 
         private int compareInts(int i1, int i2)

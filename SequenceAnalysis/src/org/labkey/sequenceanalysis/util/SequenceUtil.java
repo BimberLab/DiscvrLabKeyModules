@@ -77,7 +77,7 @@ public class SequenceUtil
         return null;
     }
 
-    public static enum FILETYPE
+    public enum FILETYPE
     {
         fastq(Arrays.asList(".fastq", ".fq"), true),
         fasta(Arrays.asList(".fasta", ".fa", ".fna"), true),
@@ -90,15 +90,15 @@ public class SequenceUtil
         gbk(".gbk"),
         bed(Collections.singletonList(".bed"), true),
         bw(Collections.singletonList(".bw"), false),
-        vcf(Arrays.asList(".vcf"), true),
-        gvcf(Arrays.asList(".g.vcf"), true);
+        vcf(List.of(".vcf"), true),
+        gvcf(List.of(".g.vcf"), true);
 
-        private List<String> _extensions;
-        private boolean _allowGzip;
+        private final List<String> _extensions;
+        private final boolean _allowGzip;
 
         FILETYPE(String extension)
         {
-            this(Arrays.asList(extension), false);
+            this(Collections.singletonList(extension), false);
         }
 
         FILETYPE(List<String> extensions, boolean allowGzip)
@@ -121,7 +121,7 @@ public class SequenceUtil
     public static long getLineCount(File f) throws PipelineJobException
     {
         FileType gz = new FileType(".gz");
-        try (InputStream is = gz.isType(f) ? new GZIPInputStream(new FileInputStream(f)) : new FileInputStream(f); BufferedReader reader = new BufferedReader(new InputStreamReader(is, StringUtilsLabKey.DEFAULT_CHARSET));)
+        try (InputStream is = gz.isType(f) ? new GZIPInputStream(new FileInputStream(f)) : new FileInputStream(f); BufferedReader reader = new BufferedReader(new InputStreamReader(is, StringUtilsLabKey.DEFAULT_CHARSET)))
         {
             long i = 0;
             while (reader.readLine() != null)
@@ -150,7 +150,7 @@ public class SequenceUtil
         }
 
         FileType gz = new FileType(".gz");
-        try (InputStream is = gz.isType(f) ? new GZIPInputStream(new FileInputStream(f)) : new FileInputStream(f); BufferedReader reader = new BufferedReader(new InputStreamReader(is, StringUtilsLabKey.DEFAULT_CHARSET));)
+        try (InputStream is = gz.isType(f) ? new GZIPInputStream(new FileInputStream(f)) : new FileInputStream(f); BufferedReader reader = new BufferedReader(new InputStreamReader(is, StringUtilsLabKey.DEFAULT_CHARSET)))
         {
             long lineNo = 0;
             while (reader.readLine() != null)

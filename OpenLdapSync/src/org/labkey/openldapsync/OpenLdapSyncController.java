@@ -49,7 +49,7 @@ public class OpenLdapSyncController extends SpringActionController
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(OpenLdapSyncController.class);
     public static final String NAME = "openldapsync";
 
-    private static Logger _log = LogManager.getLogger(OpenLdapSyncController.class);
+    private static final Logger _log = LogManager.getLogger(OpenLdapSyncController.class);
 
     public OpenLdapSyncController()
     {
@@ -59,6 +59,7 @@ public class OpenLdapSyncController extends SpringActionController
     @RequiresPermission(AdminOperationsPermission.class)
     public class InitiateLdapSyncAction extends MutatingApiAction<InitiateLdapSyncForm>
     {
+        @Override
         public ApiResponse execute(InitiateLdapSyncForm form, BindException errors) throws Exception
         {
             try
@@ -101,6 +102,7 @@ public class OpenLdapSyncController extends SpringActionController
     @RequiresPermission(AdminPermission.class)
     public class ListLdapGroupsAction extends ReadOnlyApiAction<LdapForm>
     {
+        @Override
         public ApiResponse execute(LdapForm form, BindException errors) throws Exception
         {
             ApiSimpleResponse resp = new ApiSimpleResponse();
@@ -495,6 +497,7 @@ public class OpenLdapSyncController extends SpringActionController
     @RequiresPermission(AdminOperationsPermission.class)
     public class TestLdapConnectionAction extends MutatingApiAction<Object>
     {
+        @Override
         public ApiResponse execute(Object form, BindException errors) throws Exception
         {
             ApiSimpleResponse resp = new ApiSimpleResponse();
@@ -544,6 +547,7 @@ public class OpenLdapSyncController extends SpringActionController
     @RequiresPermission(AdminOperationsPermission.class)
     public class GetLdapSettingsAction extends ReadOnlyApiAction<Object>
     {
+        @Override
         public ApiResponse execute(Object form, BindException errors)
         {
             Map<String, Object> result = new HashMap<>();
@@ -567,6 +571,7 @@ public class OpenLdapSyncController extends SpringActionController
     @RequiresPermission(AdminOperationsPermission.class)
     public class SetLdapSettingsAction extends MutatingApiAction<LdapForm>
     {
+        @Override
         public ApiResponse execute(LdapForm form, BindException errors)
         {
             Map<String, String> props = new HashMap<>();

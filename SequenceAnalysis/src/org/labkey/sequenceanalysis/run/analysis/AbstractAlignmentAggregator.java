@@ -40,8 +40,8 @@ import java.util.Map;
  */
 abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
 {
-    private Logger _log;
-    private Map<String, TranslatingReferenceSequence> _ntReferences = new HashMap<>();
+    private final Logger _log;
+    private final Map<String, TranslatingReferenceSequence> _ntReferences = new HashMap<>();
     protected Map<String, CacheKeyInfo> _cacheDef = new HashMap<>();
 
     private int _minAvgSnpQual = 0;
@@ -51,7 +51,7 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
     private int _minMapQual = 0;
     protected AvgBaseQualityAggregator _avgQualAggregator;
     protected boolean _logProgress = true;
-    private File _refFasta;
+    private final File _refFasta;
     private ReferenceLibraryHelper _libraryHelper;
 
     protected long _lowMappingQual = 0L;
@@ -110,12 +110,7 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
             return false;
         }
 
-        if (!inspectMapQual(record))
-        {
-            return false;
-        }
-
-        return true;
+        return inspectMapQual(record);
     }
 
     protected boolean isPassingSnp(SAMRecord r, NTSnp snp) throws PipelineJobException
@@ -156,7 +151,7 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
 
         if (avgQualAtPosition == null)
         {
-            getLogger().error("missing avgQual: " + snp.getIndel() + " / " + snp.getReadPosition() + " / " + snp.getLastReadPosition() + " /read base: [" + snp.getReadBaseString() + "] /lastRef: " + snp.getLastRefPosition() + " /bases with quals: " + (avgQuals == null ? "" : StringUtils.join(Arrays.asList(avgQuals.keySet()), ";")));
+            getLogger().error("missing avgQual: " + snp.getIndel() + " / " + snp.getReadPosition() + " / " + snp.getLastReadPosition() + " /read base: [" + snp.getReadBaseString() + "] /lastRef: " + snp.getLastRefPosition() + " /bases with quals: " + (avgQuals == null ? "" : StringUtils.join(List.of(avgQuals.keySet()), ";")));
             avgQualAtPosition = 95.0;
         }
 
@@ -237,7 +232,7 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
         return ref;
     }
 
-    private Map<Integer, Map<Integer, Map<String, Double>>> _qualMap = new HashMap<>();
+    private final Map<Integer, Map<Integer, Map<String, Double>>> _qualMap = new HashMap<>();
 
     private Map<Integer, Map<String, Double>> getQualsForReference(Integer refId) throws PipelineJobException
     {
@@ -327,12 +322,12 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
 
     protected class CacheKeyInfo
     {
-        private String _refName;
-        private Integer _refPosition;
-        private Integer _insertIndex;
-        private String _readBase;
-        private String _refBase;
-        private String _coverageKey;
+        private final String _refName;
+        private final Integer _refPosition;
+        private final Integer _insertIndex;
+        private final String _readBase;
+        private final String _refBase;
+        private final String _coverageKey;
 
         public CacheKeyInfo(NTSnp snp, ReferenceSequence ref)
         {
@@ -342,11 +337,10 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
             _readBase = snp.getReadBaseString();
             _refBase = Character.toString((char)snp.getReferenceBase(ref.getBases()));
 
-            _coverageKey = new StringBuilder()
-                .append(snp.getPositionInfo().getReferenceName())
-                .append("||")
-                .append(snp.getLastRefPosition()).append("||")
-                .append(snp.getInsertIndex()).toString();
+            _coverageKey = snp.getPositionInfo().getReferenceName() +
+                    "||" +
+                    snp.getLastRefPosition() + "||" +
+                    snp.getInsertIndex();
         }
 
         public String getRefName()

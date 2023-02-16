@@ -79,7 +79,7 @@ public class LdapSettings
 
     public static final String DELIM = "<>";
 
-    private Map<String, Object> _settings;
+    private final Map<String, Object> _settings;
 
     public LdapSettings()
     {
@@ -448,10 +448,6 @@ public class LdapSettings
         {
             ValidEmail e = new ValidEmail(email);
             User u = UserManager.getUser(e);
-            if (u == null)
-            {
-                return null;
-            }
 
             return u;
         }

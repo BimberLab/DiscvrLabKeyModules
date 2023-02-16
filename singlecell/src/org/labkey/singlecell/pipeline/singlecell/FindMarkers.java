@@ -7,6 +7,7 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class FindMarkers extends AbstractCellMembraneStep
 {
@@ -49,7 +50,7 @@ public class FindMarkers extends AbstractCellMembraneStep
                         put("minValue", 0);
                     }}, null, "minDiffPct", false),
                     getSeuratThreadsParam()
-                ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+                ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
         @Override

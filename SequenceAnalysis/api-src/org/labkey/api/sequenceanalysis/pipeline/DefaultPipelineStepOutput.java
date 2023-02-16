@@ -32,13 +32,13 @@ import java.util.List;
  */
 public class DefaultPipelineStepOutput implements PipelineStepOutput
 {
-    private List<Pair<File, String>> _inputs = new ArrayList<>();
-    private List<Pair<File, String>> _outputs = new ArrayList<>();
-    private List<File> _intermediateFiles = new ArrayList<>();
-    private List<PicardMetricsOutput> _picardMetricsFiles = new ArrayList<>();
-    private List<File> _deferredDeleteFiles = new ArrayList<>();
-    private List<SequenceOutput> _sequenceOutputs = new ArrayList<>();
-    private List<String> _commands = new ArrayList<>();
+    private final List<Pair<File, String>> _inputs = new ArrayList<>();
+    private final List<Pair<File, String>> _outputs = new ArrayList<>();
+    private final List<File> _intermediateFiles = new ArrayList<>();
+    private final List<PicardMetricsOutput> _picardMetricsFiles = new ArrayList<>();
+    private final List<File> _deferredDeleteFiles = new ArrayList<>();
+    private final List<SequenceOutput> _sequenceOutputs = new ArrayList<>();
+    private final List<String> _commands = new ArrayList<>();
 
     public DefaultPipelineStepOutput()
     {

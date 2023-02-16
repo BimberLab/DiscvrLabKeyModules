@@ -9,5 +9,5 @@ import java.util.List;
  */
 public interface SequenceOutputTracker
 {
-    public List<SequenceOutputFile> getOutputsToCreate();
+    List<SequenceOutputFile> getOutputsToCreate();
 }

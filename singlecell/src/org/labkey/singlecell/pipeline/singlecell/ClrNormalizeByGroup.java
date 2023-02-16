@@ -7,6 +7,7 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class ClrNormalizeByGroup extends AbstractCellMembraneStep
 {
@@ -51,7 +52,7 @@ public class ClrNormalizeByGroup extends AbstractCellMembraneStep
                         put("delimiter", ",");
                         put("stripCharsRe", "/['\"]/g");
                     }}, null).delimiter(",")
-                    ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+                    ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
 

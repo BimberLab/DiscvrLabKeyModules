@@ -24,41 +24,41 @@ import java.util.Date;
  */
 public interface ReadData extends Serializable
 {
-    public Integer getRowid();
+    Integer getRowid();
 
-    public Integer getReadset();
+    Integer getReadset();
 
-    public String getPlatformUnit();
+    String getPlatformUnit();
 
-    public String getCenterName();
+    String getCenterName();
 
-    public Date getDate();
+    Date getDate();
 
-    public Integer getFileId1();
+    Integer getFileId1();
 
-    public Integer getFileId2();
+    Integer getFileId2();
 
-    public File getFile1();
+    File getFile1();
 
-    public File getFile2();
+    File getFile2();
 
-    public String getDescription();
+    String getDescription();
 
-    public Integer getRunId();
+    Integer getRunId();
 
-    public String getContainer();
+    String getContainer();
 
-    public Date getCreated();
+    Date getCreated();
 
-    public Integer getCreatedBy();
+    Integer getCreatedBy();
 
-    public Date getModified();
+    Date getModified();
 
-    public Integer getModifiedBy();
+    Integer getModifiedBy();
 
-    public Integer getTotalReads();
+    Integer getTotalReads();
 
-    public String getSra_accession();
+    String getSra_accession();
 
-    public boolean isArchived();
+    boolean isArchived();
 }

@@ -33,13 +33,13 @@ public interface CommandWrapper
      * @return The output of this command.
      * @throws PipelineJobException
      */
-    public void execute(List<String> params) throws PipelineJobException;
+    void execute(List<String> params) throws PipelineJobException;
 
-    public String executeWithOutput(List<String> params) throws PipelineJobException;
+    String executeWithOutput(List<String> params) throws PipelineJobException;
 
-    public void execute(List<String> params, ProcessBuilder.Redirect redirect) throws PipelineJobException;
+    void execute(List<String> params, ProcessBuilder.Redirect redirect) throws PipelineJobException;
 
-    public void execute(List<String> params, File stdout) throws PipelineJobException;
+    void execute(List<String> params, File stdout) throws PipelineJobException;
 
-    public List<String> getCommandsExecuted();
+    List<String> getCommandsExecuted();
 }

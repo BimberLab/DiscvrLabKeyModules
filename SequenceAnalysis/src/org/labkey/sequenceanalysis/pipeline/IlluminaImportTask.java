@@ -66,7 +66,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 {
     private SequencePipelineSettings _settings;
     private Integer _instrumentRunId = null;
-    private static String ACTION_NAME = "Import Illumina Reads";
+    private static final String ACTION_NAME = "Import Illumina Reads";
 
     protected IlluminaImportTask(Factory factory, PipelineJob job)
     {
@@ -80,27 +80,32 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
             super(IlluminaImportTask.class);
         }
 
+        @Override
         public String getStatusName()
         {
             return "IMPORTING ILLUMINA READS";
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList(ACTION_NAME);
+            return Collections.singletonList(ACTION_NAME);
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             IlluminaImportTask task = new IlluminaImportTask(this, job);
             return task;
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.singletonList(new FileType(".csv"));
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
@@ -112,6 +117,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         return getJob().getJobSupport(FileAnalysisJobSupport.class);
     }
 
+    @Override
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {

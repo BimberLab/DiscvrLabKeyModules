@@ -56,7 +56,7 @@ import java.util.Set;
  */
 abstract public class AbstractClusterExecutionEngine<ConfigType extends PipelineJobService.RemoteExecutionEngineConfig> implements RemoteClusterEngine, RemoteExecutionEngine<ConfigType>
 {
-    private Logger _log;
+    private final Logger _log;
     public static final String PREPARING = "PREPARING";
     public static final String NOT_SUBMITTED = "NOT_SUBMITTED";
     public static final String JOB_DELETED = "JOB_DELETED";
@@ -64,7 +64,7 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
     //TODO: allow a site param to set this
     protected boolean _debug = false;
 
-    private ConfigType _config;
+    private final ConfigType _config;
 
     protected AbstractClusterExecutionEngine(ConfigType config, Logger log)
     {
@@ -192,6 +192,7 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
         return map;
     }
 
+    @Override
     public void runTestJob(Container c, User u) throws PipelineJobException
     {
         TestCase.runTestJob(c, u, this);

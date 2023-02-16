@@ -28,9 +28,10 @@ public class FlashPipelineStep extends AbstractCommandPipelineStep<FlashWrapper>
     {
         public Provider()
         {
-            super("Flash", "Merge Paired Reads (Flash)", "Flash", "This step merges reads from a pair of FASTQs into a single merged read (if possible).", Arrays.asList(), null, "https://ccb.jhu.edu/software/FLASH/");
+            super("Flash", "Merge Paired Reads (Flash)", "Flash", "This step merges reads from a pair of FASTQs into a single merged read (if possible).", List.of(), null, "https://ccb.jhu.edu/software/FLASH/");
         }
 
+        @Override
         public FlashPipelineStep create(PipelineContext context)
         {
             return new FlashPipelineStep(this, context);

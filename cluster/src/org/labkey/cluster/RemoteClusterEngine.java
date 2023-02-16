@@ -10,7 +10,7 @@ import org.quartz.JobExecutionException;
  */
 public interface RemoteClusterEngine
 {
-    public void doScheduledUpdate() throws JobExecutionException;
+    void doScheduledUpdate() throws JobExecutionException;
 
-    public void runTestJob(Container c, User u) throws PipelineJobException;
+    void runTestJob(Container c, User u) throws PipelineJobException;
 }

@@ -39,7 +39,7 @@ public class TrinityRunner extends AbstractCommandWrapper
     {
         public Provider()
         {
-            super("TrinityAssembly", "Trinity", "Trinity", "Trinity is a de novo assembler.  It will generate contigs using the input FASTQ reads after processing.", Arrays.asList(
+            super("TrinityAssembly", "Trinity", "Trinity", "Trinity is a de novo assembler.  It will generate contigs using the input FASTQ reads after processing.", List.of(
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--min_contig_length"), "min_contig_length", "Min Contig Length", "Any contigs below this value will be discarded", "ldk-integerfield", new JSONObject()
                     {{
 
@@ -47,6 +47,7 @@ public class TrinityRunner extends AbstractCommandWrapper
             ), null, "https://github.com/trinityrnaseq/trinityrnaseq/wiki");
         }
 
+        @Override
         public TrinityPipelineStep create(PipelineContext context)
         {
             return new TrinityPipelineStep(this, context, new TrinityRunner(context.getLogger()));
@@ -60,6 +61,7 @@ public class TrinityRunner extends AbstractCommandWrapper
             super(provider, ctx, wrapper);
         }
 
+        @Override
         public AssemblyStep.Output performAssembly(Readset rs, File inputFastq1, @Nullable File inputFastq2, File outputDirectory, ReferenceGenome referenceGenome, String basename) throws PipelineJobException
         {
             AssemblyOutputImpl ret = new AssemblyOutputImpl();

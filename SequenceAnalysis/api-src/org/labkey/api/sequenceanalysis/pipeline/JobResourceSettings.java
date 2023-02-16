@@ -9,7 +9,7 @@ import java.util.List;
  */
 public interface JobResourceSettings
 {
-    public boolean isAvailable(Container c);
+    boolean isAvailable(Container c);
 
-    public List<ToolParameterDescriptor> getParams();
+    List<ToolParameterDescriptor> getParams();
 }

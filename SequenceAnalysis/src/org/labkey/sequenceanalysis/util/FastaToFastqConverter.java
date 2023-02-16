@@ -17,8 +17,8 @@ import java.io.File;
  */
 public class FastaToFastqConverter
 {
-    private Logger _logger;
-    private int _defaultQual = 80;
+    private final Logger _logger;
+    private final int _defaultQual = 80;
 
     public FastaToFastqConverter(Logger logger)
     {
@@ -43,7 +43,7 @@ public class FastaToFastqConverter
 
                 for (int i = 0; i < seq.getBases().length; i++) {
                     qual.append(c);
-                    nt.append(Character.toString((char)seq.getBases()[i]));
+                    nt.append((char) seq.getBases()[i]);
                 }
 
                 FastqRecord rec = new FastqRecord(seq.getName(), nt.toString(), null, qual.toString());

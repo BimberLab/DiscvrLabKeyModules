@@ -31,9 +31,7 @@ public class PbsvAnalysis extends AbstractPipelineStep implements AnalysisStep
     {
         public Provider()
         {
-            super("pbsv", "PBSV Analysis", null, "This will run pbsv on the selected BAMs.", Arrays.asList(
-
-            ), null, null);
+            super("pbsv", "PBSV Analysis", null, "This will run pbsv on the selected BAMs.", List.of(), null, null);
         }
 
 

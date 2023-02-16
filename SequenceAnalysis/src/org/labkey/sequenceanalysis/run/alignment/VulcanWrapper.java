@@ -35,8 +35,9 @@ public class VulcanWrapper extends AbstractCommandWrapper
     {
         public Provider()
         {
-            super("Vulcan", "Vulcan is an extension of minimap2, which adds NGMLR .", Arrays.asList(
-                    ToolParameterDescriptor.create("readType", "Type", "The type of reads.", "ldk-simplecombo", new JSONObject(){{
+            super("Vulcan", "Vulcan is an extension of minimap2, which adds NGMLR .", List.of(
+                    ToolParameterDescriptor.create("readType", "Type", "The type of reads.", "ldk-simplecombo", new JSONObject()
+                    {{
                         put("storeValues", "clr;hifi;ont;any");
                         put("multiSelect", false);
                     }}, null)

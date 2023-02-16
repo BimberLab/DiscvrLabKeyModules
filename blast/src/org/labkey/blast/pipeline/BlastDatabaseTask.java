@@ -55,21 +55,25 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
             super(BlastDatabaseTask.class);
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList("Creating BLAST Database");
+            return List.of("Creating BLAST Database");
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             BlastDatabaseTask task = new BlastDatabaseTask(this, job);
@@ -77,12 +81,14 @@ public class BlastDatabaseTask extends PipelineJob.Task<BlastDatabaseTask.Factor
             return task;
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
         }
     }
 
+    @Override
     public RecordedActionSet run() throws PipelineJobException
     {
         getJob().getLogger().info("creating BLAST database for library: " + getPipelineJob().getLibraryId());

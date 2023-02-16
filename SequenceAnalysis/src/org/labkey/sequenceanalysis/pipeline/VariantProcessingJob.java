@@ -108,13 +108,12 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
             return;
         }
 
-        if (!(getHandler() instanceof VariantProcessingStep.SupportsScatterGather))
+        if (!(getHandler() instanceof VariantProcessingStep.SupportsScatterGather sg))
         {
             throw new IllegalArgumentException("Task doe not support Scatter/Gather: " + getHandler().getName());
         }
 
 
-        VariantProcessingStep.SupportsScatterGather sg = (VariantProcessingStep.SupportsScatterGather)getHandler();
         sg.validateScatter(getScatterGatherMethod(), this);
     }
 
@@ -315,9 +314,8 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
     {
         super.mergeSplitJob(job);
 
-        if (job instanceof VariantProcessingJob)
+        if (job instanceof VariantProcessingJob childJob)
         {
-            VariantProcessingJob childJob = (VariantProcessingJob)job;
             getLogger().debug("Merging child job VCFs.  total: " + childJob.getScatterJobOutputs().size());
             _scatterOutputs.putAll(childJob.getScatterJobOutputs());
         }
@@ -388,9 +386,9 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
             job1._scatterGatherMethod = VariantProcessingStep.ScatterGatherMethod.chunked;
 
             Map<String, List<Interval>> intervalMap = new LinkedHashMap<>();
-            intervalMap.put("1", Arrays.asList(new Interval("chr1", 1, 10)));
-            intervalMap.put("4", Arrays.asList(new Interval("chr4", 1, 10)));
-            intervalMap.put("5", Arrays.asList(new Interval("chr5", 1, 10)));
+            intervalMap.put("1", List.of(new Interval("chr1", 1, 10)));
+            intervalMap.put("4", List.of(new Interval("chr4", 1, 10)));
+            intervalMap.put("5", List.of(new Interval("chr5", 1, 10)));
             intervalMap.put("2", Arrays.asList(new Interval("chr2", 1, 10), new Interval("chr2", 11, 20), new Interval("chr2", 21, 400)));
             job1.writeJobToIntervalMap(intervalMap);
             job1._jobToIntervalMap = null;

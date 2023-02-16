@@ -15,5 +15,5 @@ import java.util.List;
 
 public interface SingleCellStep extends AbstractSingleCellStep
 {
-    public static final String STEP_TYPE = "singleCell";
+    String STEP_TYPE = "singleCell";
 }

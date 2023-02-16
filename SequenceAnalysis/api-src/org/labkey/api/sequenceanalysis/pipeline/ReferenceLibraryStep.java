@@ -26,10 +26,10 @@ import java.io.File;
  */
 public interface ReferenceLibraryStep extends PipelineStep
 {
-    public Output createReferenceFasta(File outputDirectory) throws PipelineJobException;
+    Output createReferenceFasta(File outputDirectory) throws PipelineJobException;
 
-    public static interface Output extends PipelineStepOutput
+    interface Output extends PipelineStepOutput
     {
-        public ReferenceGenome getReferenceGenome();
+        ReferenceGenome getReferenceGenome();
     }
 }

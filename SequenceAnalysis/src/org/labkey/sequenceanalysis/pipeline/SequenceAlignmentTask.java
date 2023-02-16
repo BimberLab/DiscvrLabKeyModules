@@ -404,7 +404,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         //check client-supplied params
         String val = getJob().getParameters().get(AlignerIndexUtil.COPY_LOCALLY);
-        boolean doCopy = val == null ? true : ConvertHelper.convert(val, Boolean.class);
+        boolean doCopy = val == null || ConvertHelper.convert(val, Boolean.class);
 
         //but let aligners override this.
         AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
@@ -580,7 +580,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 {
                     throw new PipelineJobException("No FASTQ files found after preprocessing, aborting");
                 }
-                else if (pair.second != null && pair.first.equals(pair.second))
+                else if (pair.first.equals(pair.second))
                 {
                     throw new PipelineJobException("First and second FASTQs are identical files.  This can occur is the basename of the forward and reverse files are the same");
                 }
@@ -841,7 +841,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             renameAction.setEndTime(end);
             getJob().getLogger().info("Rename Bam Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
 
-            _resumer.setBamRenameDone(renamedBam, Arrays.asList(renameAction));
+            _resumer.setBamRenameDone(renamedBam, List.of(renameAction));
         }
 
         getJob().setStatus(PipelineJob.TaskStatus.running, "INDEXING BAM");
@@ -923,12 +923,12 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     wrapper.executeCommand(renamedBam, referenceGenome.getWorkingFastaFile(), metricsFile);
                     getHelper().getFileManager().addInput(metricsAction, "BAM File", renamedBam);
                     getHelper().getFileManager().addOutput(metricsAction, "Summary Metrics File", metricsFile);
-                    getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile, renamedBam, rs.getRowId())));
+                    getHelper().getFileManager().addPicardMetricsFiles(List.of(new PipelineStepOutput.PicardMetricsOutput(metricsFile, renamedBam, rs.getRowId())));
                     getHelper().getFileManager().addCommandsToAction(wrapper.getCommandsExecuted(), metricsAction);
 
                     //wgs metrics
                     ToolParameterDescriptor wgsParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.COLLECT_WGS_METRICS);
-                    boolean doCollectWgsMetrics = wgsParam == null ? false : wgsParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
+                    boolean doCollectWgsMetrics = wgsParam != null && wgsParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
 
                     if (doCollectWgsMetrics)
                     {
@@ -938,13 +938,13 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                         CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(getJob().getLogger());
                         wgsWrapper.executeCommand(renamedBam, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
                         getHelper().getFileManager().addOutput(metricsAction, "WGS Metrics File", wgsMetricsFile);
-                        getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, renamedBam, rs.getRowId())));
+                        getHelper().getFileManager().addPicardMetricsFiles(List.of(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, renamedBam, rs.getRowId())));
                         getHelper().getFileManager().addCommandsToAction(wgsWrapper.getCommandsExecuted(), metricsAction);
                     }
 
                     //non-zero wgs metrics
                     ToolParameterDescriptor wgsParamNonZero = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.COLLECT_WGS_METRICS_NON_ZERO);
-                    boolean doCollectWgsMetricsNonZero = wgsParamNonZero == null ? false : wgsParamNonZero.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
+                    boolean doCollectWgsMetricsNonZero = wgsParamNonZero != null && wgsParamNonZero.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
 
                     if (doCollectWgsMetricsNonZero)
                     {
@@ -954,7 +954,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                         CollectWgsMetricsWithNonZeroCoverageWrapper wgsWrapper = new CollectWgsMetricsWithNonZeroCoverageWrapper(getJob().getLogger());
                         wgsWrapper.executeCommand(renamedBam, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
                         getHelper().getFileManager().addOutput(metricsAction, "WGS Non-Zero Coverage Metrics File", wgsMetricsFile);
-                        getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, renamedBam, rs.getRowId())));
+                        getHelper().getFileManager().addPicardMetricsFiles(List.of(new PipelineStepOutput.PicardMetricsOutput(wgsMetricsFile, renamedBam, rs.getRowId())));
                         getHelper().getFileManager().addCommandsToAction(wgsWrapper.getCommandsExecuted(), metricsAction);
                     }
 
@@ -970,7 +970,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                         {
                             getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
                             getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics Histogram", metricsHistogram);
-                            getHelper().getFileManager().addPicardMetricsFiles(Arrays.asList(new PipelineStepOutput.PicardMetricsOutput(metricsFile2, renamedBam, rs.getRowId())));
+                            getHelper().getFileManager().addPicardMetricsFiles(List.of(new PipelineStepOutput.PicardMetricsOutput(metricsFile2, renamedBam, rs.getRowId())));
                             getHelper().getFileManager().addCommandsToAction(collectInsertSizeMetricsWrapper.getCommandsExecuted(), metricsAction);
                         }
                     }
@@ -1052,7 +1052,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         // optional convert to CRAM:
         ToolParameterDescriptor cramParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.CONVERT_TO_CRAM);
-        boolean doCramConvert = cramParam == null ? false : cramParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
+        boolean doCramConvert = cramParam != null && cramParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
         if (doCramConvert)
         {
             getJob().getLogger().info("BAM will be converted to CRAM");
@@ -1176,7 +1176,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             FileUtils.touch(doneFile);
             getHelper().getFileManager().addIntermediateFile(doneFile);
 
-            return doAlignmentForSet(Arrays.asList(Pair.of(mergedForward, mergedReverse)), referenceGenome, rs, -1, "", null);
+            return doAlignmentForSet(List.of(Pair.of(mergedForward, mergedReverse)), referenceGenome, rs, -1, "", null);
         }
         else
         {
@@ -1200,7 +1200,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
             getJob().getLogger().info("Aligning inputs: " + pair.first.getName() + (pair.second == null ? "" : " and " + pair.second.getName()));
 
-            alignOutputs.add(doAlignmentForSet(Arrays.asList(pair), referenceGenome, rs, rd.getRowid(), msgSuffix, rd.getPlatformUnit()));
+            alignOutputs.add(doAlignmentForSet(List.of(pair), referenceGenome, rs, rd.getRowid(), msgSuffix, rd.getPlatformUnit()));
         }
 
         //merge outputs

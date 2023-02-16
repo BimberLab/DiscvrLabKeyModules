@@ -44,9 +44,8 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
     @Override
     public void customize(TableInfo tableInfo)
     {
-        if (tableInfo instanceof AbstractTableInfo)
+        if (tableInfo instanceof AbstractTableInfo ti)
         {
-            AbstractTableInfo ti = (AbstractTableInfo)tableInfo;
             LDKService.get().getDefaultTableCustomizer().customize(ti);
 
             if (tableInfo.getName().equalsIgnoreCase(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES))
@@ -99,6 +98,7 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
     private enum COL_ENUM
     {
         refNtSequence(Integer.class, PageFlowUtil.set("sequenceid", "ref_nt_sequence")){
+            @Override
             public void customizeColumn(MutableColumnInfo col, AbstractTableInfo ti)
             {
                 col.setLabel("Ref NT Sequence");
@@ -106,6 +106,7 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
             }
         },
         libraryId(Integer.class, PageFlowUtil.set("genomeId", "genome_id", "library_id")){
+            @Override
             public void customizeColumn(MutableColumnInfo col, AbstractTableInfo ti)
             {
                 col.setLabel("Reference Genome");
@@ -113,6 +114,7 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
             }
         },
         runid(Integer.class, PageFlowUtil.set("run_id")){
+            @Override
             public void customizeColumn(MutableColumnInfo col, AbstractTableInfo ti)
             {
                 col.setLabel("Run");
@@ -124,6 +126,7 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
             }
         },
         jobid(Integer.class, PageFlowUtil.set("job_id")){
+            @Override
             public void customizeColumn(MutableColumnInfo col, AbstractTableInfo ti)
             {
                 col.setLabel("Job Id");
@@ -134,6 +137,7 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
             }
         },
         dataId(Integer.class, PageFlowUtil.set("data_id")){
+            @Override
             public void customizeColumn(MutableColumnInfo col, AbstractTableInfo ti)
             {
                 col.setLabel("File Id");
@@ -141,6 +145,7 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
             }
         },
         readset(Integer.class, PageFlowUtil.set("readsetId", "readset_id")){
+            @Override
             public void customizeColumn(MutableColumnInfo col, AbstractTableInfo ti)
             {
                 col.setLabel("Readset");
@@ -148,6 +153,7 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
             }
         },
         analysisId(Integer.class, PageFlowUtil.set("analysis_id")){
+            @Override
             public void customizeColumn(MutableColumnInfo col, AbstractTableInfo ti)
             {
                 col.setLabel("Analysis Id");
@@ -155,8 +161,8 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
             }
         };
 
-        private Class dataType;
-        private Collection<String> alternateNames = new CaseInsensitiveHashSet();
+        private final Class dataType;
+        private final Collection<String> alternateNames = new CaseInsensitiveHashSet();
 
         COL_ENUM(Class dataType, @Nullable Collection<String> alternateNames){
             this.dataType = dataType;

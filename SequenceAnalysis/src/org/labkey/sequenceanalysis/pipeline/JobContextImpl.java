@@ -21,13 +21,13 @@ import java.util.LinkedHashSet;
  */
 public class JobContextImpl implements SequenceOutputHandler.MutableJobContext
 {
-    private SequenceJob _job;
-    private SequenceAnalysisJobSupport _support;
-    private JSONObject _params;
-    private File _outputDir;
-    private LinkedHashSet<RecordedAction> _actions = new LinkedHashSet<>();
+    private final SequenceJob _job;
+    private final SequenceAnalysisJobSupport _support;
+    private final JSONObject _params;
+    private final File _outputDir;
+    private final LinkedHashSet<RecordedAction> _actions = new LinkedHashSet<>();
     private TaskFileManager _fileManager;
-    private WorkDirectory _wd;
+    private final WorkDirectory _wd;
 
     public JobContextImpl(SequenceJob job, SequenceAnalysisJobSupport support, JSONObject params, File outputDir, TaskFileManager fileManager, @Nullable WorkDirectory workDirectory)
     {

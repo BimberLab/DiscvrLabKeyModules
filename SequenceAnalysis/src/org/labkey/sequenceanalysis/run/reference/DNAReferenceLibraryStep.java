@@ -138,7 +138,7 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
                 i++;
                 delim = " and ";
             }
-            getPipelineCtx().getLogger().info("\t\t" + sb.toString());
+            getPipelineCtx().getLogger().info("\t\t" + sb);
         }
 
         TableInfo ti = QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), getPipelineCtx().getJob().getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
@@ -226,7 +226,7 @@ public class DNAReferenceLibraryStep extends AbstractPipelineStep implements Ref
 
             if (vals.size() > 1)
             {
-                filter.addClause(new CompareType.CompareClause(FieldKey.fromString(desc.getName()), CompareType.IN, Arrays.asList(vals)));
+                filter.addClause(new CompareType.CompareClause(FieldKey.fromString(desc.getName()), CompareType.IN, List.of(vals)));
             }
             else if (vals.size() == 1)
             {

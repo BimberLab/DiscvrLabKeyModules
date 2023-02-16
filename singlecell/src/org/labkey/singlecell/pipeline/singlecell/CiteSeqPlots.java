@@ -7,6 +7,7 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class CiteSeqPlots extends AbstractCellMembraneStep
 {
@@ -19,8 +20,9 @@ public class CiteSeqPlots extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("CiteSeqPlots", "CiteSeq/ADT Plots", "CellMembrane/Seurat", "This will create FeaturePlots for all features in the ADT assay.", Arrays.asList(
-                    SeuratToolParameter.create("assayName", "Assay Name", "The assay to use", "textfield", new JSONObject(){{
+            super("CiteSeqPlots", "CiteSeq/ADT Plots", "CellMembrane/Seurat", "This will create FeaturePlots for all features in the ADT assay.", List.of(
+                    SeuratToolParameter.create("assayName", "Assay Name", "The assay to use", "textfield", new JSONObject()
+                    {{
 
                     }}, "ADT")
             ), null, null);

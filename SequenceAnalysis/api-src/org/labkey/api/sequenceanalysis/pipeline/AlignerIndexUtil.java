@@ -88,7 +88,7 @@ public class AlignerIndexUtil
                     if (wd != null)
                     {
                         String val = ctx.getJob().getParameters().get(COPY_LOCALLY);
-                        boolean doCopy = forceCopyLocal || (val == null ? true : ConvertHelper.convert(val, Boolean.class));
+                        boolean doCopy = forceCopyLocal || (val == null || ConvertHelper.convert(val, Boolean.class));
 
                         if (doCopy)
                         {

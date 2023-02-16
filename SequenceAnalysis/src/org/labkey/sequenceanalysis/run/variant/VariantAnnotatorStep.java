@@ -47,6 +47,7 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
             ), null, "");
         }
 
+        @Override
         public VariantAnnotatorStep create(PipelineContext ctx)
         {
             return new VariantAnnotatorStep(this, ctx);

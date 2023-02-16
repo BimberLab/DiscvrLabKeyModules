@@ -7,6 +7,7 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class Downsample extends AbstractCellMembraneStep
 {
@@ -31,7 +32,7 @@ public class Downsample extends AbstractCellMembraneStep
                     SeuratToolParameter.create("seed", "Random Seed", "This random seed, used for downsampling", "ldk-integerfield", new JSONObject(){{
 
                     }}, 1234)
-            ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+            ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
         @Override

@@ -198,6 +198,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
                     ), null, "https://code.google.com/p/mosaik-aligner/", true, true);
         }
 
+        @Override
         public MosaikAlignmentStep create(PipelineContext context)
         {
             return new MosaikAlignmentStep(this, context);
@@ -223,7 +224,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
         sanger("sanger"),
         solid("solid");
 
-        private String _paramValue;
+        private final String _paramValue;
 
         SequencingTechnology(String paramValue)
         {

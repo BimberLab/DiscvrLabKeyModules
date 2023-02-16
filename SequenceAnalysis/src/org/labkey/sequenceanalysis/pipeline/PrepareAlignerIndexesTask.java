@@ -104,21 +104,25 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
             return true;
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return ALIGNER_INDEXES_ACTIONNAME.toUpperCase();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList(ALIGNER_INDEXES_ACTIONNAME);
+            return List.of(ALIGNER_INDEXES_ACTIONNAME);
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             PrepareAlignerIndexesTask task = new PrepareAlignerIndexesTask(this, job);
@@ -126,6 +130,7 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
             return task;
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
@@ -137,6 +142,7 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
         return _taskHelper;
     }
 
+    @Override
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {

@@ -444,9 +444,8 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
         for (ToolParameterDescriptor pd : getProvider().getParameters())
         {
-            if (pd instanceof SeuratToolParameter)
+            if (pd instanceof SeuratToolParameter stp)
             {
-                SeuratToolParameter stp = (SeuratToolParameter)pd;
                 if (stp.shouldIncludeInMarkdown(getPipelineCtx().getJob(), getProvider(), getStepIdx()))
                 {
                     addParameterVariables(stp, body);

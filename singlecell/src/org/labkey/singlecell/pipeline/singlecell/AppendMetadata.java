@@ -5,6 +5,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class AppendMetadata extends AbstractRDiscvrStep
 {
@@ -17,9 +18,7 @@ public class AppendMetadata extends AbstractRDiscvrStep
     {
         public Provider()
         {
-            super("AppendMetadata", "Append Metadata", "RDiscvr", "This uses Rdiscvr::QueryAndApplyCdnaMetadata to append sample metadata.", Arrays.asList(
-
-            ), null, null);
+            super("AppendMetadata", "Append Metadata", "RDiscvr", "This uses Rdiscvr::QueryAndApplyCdnaMetadata to append sample metadata.", List.of(), null, null);
         }
 
 

@@ -231,7 +231,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
 
     private FileAnalysisJobSupport getSupport()
     {
-        return (FileAnalysisJobSupport)_job;
+        return _job;
     }
 
     private SequenceAnalysisJobSupport getSequenceSupport()
@@ -864,6 +864,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         cleanup(actions, null);
     }
 
+    @Override
     public void cleanup(Collection<RecordedAction> actions, @Nullable AbstractResumer resumer) throws PipelineJobException
     {
         _job.getLogger().debug("performing file cleanup");
@@ -1078,6 +1079,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         _unzippedMap = unzippedMap;
     }
 
+    @Override
     public Set<File> getIntermediateFiles()
     {
         return _intermediateFiles;

@@ -73,7 +73,6 @@ public class LdapScheduler
         catch (LdapException e)
         {
             _log.error("LDAP sync is enabled, but the saved setting are invalid.  Sync will not start.", e);
-            return;
         }
         catch (Exception e)
         {

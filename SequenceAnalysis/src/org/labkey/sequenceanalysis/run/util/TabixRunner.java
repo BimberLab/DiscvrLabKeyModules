@@ -62,7 +62,7 @@ public class TabixRunner extends AbstractCommandWrapper
         {
             type = "sam";
         }
-        else if (new FileType(Arrays.asList("vcf"), "vcf", FileType.gzSupportLevel.SUPPORT_GZ).isType(input))
+        else if (new FileType(List.of("vcf"), "vcf", FileType.gzSupportLevel.SUPPORT_GZ).isType(input))
         {
             type = "vcf";
         }

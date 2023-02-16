@@ -22,9 +22,9 @@ import java.io.File;
  */
 public interface InputReads
 {
-    public File getFirstFastq();
+    File getFirstFastq();
 
-    public File getSecondFastq();
+    File getSecondFastq();
 
-    public boolean isPairedEnd();
+    boolean isPairedEnd();
 }

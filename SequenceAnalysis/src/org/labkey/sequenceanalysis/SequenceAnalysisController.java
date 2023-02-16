@@ -2285,7 +2285,7 @@ public class SequenceAnalysisController extends SpringActionController
                         Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
                         PipeRoot root = PipelineService.get().getPipelineRootSetting(target);
 
-                        ImportFastaSequencesPipelineJob job = new ImportFastaSequencesPipelineJob(target, getUser(), null, root, Arrays.asList(file), params, form.isSplitWhitespace(), form.isCreateLibrary(), libraryParams);
+                        ImportFastaSequencesPipelineJob job = new ImportFastaSequencesPipelineJob(target, getUser(), null, root, Collections.singletonList(file), params, form.isSplitWhitespace(), form.isCreateLibrary(), libraryParams);
                         job.setDeleteInputs(true);
                         PipelineService.get().queueJob(job);
 
@@ -2738,7 +2738,7 @@ public class SequenceAnalysisController extends SpringActionController
                         }
 
                         //note: permissions on source container should be checked in validate()
-                        ImportGenomeTrackPipelineJob job = new ImportGenomeTrackPipelineJob(target, getUser(), null, root, form.getLibraryId(), form.getTrackName(), file, entry.getValue().getValue(), form.getTrackDescription(), form.getDoChrTranslation() == null ? true : form.getDoChrTranslation());
+                        ImportGenomeTrackPipelineJob job = new ImportGenomeTrackPipelineJob(target, getUser(), null, root, form.getLibraryId(), form.getTrackName(), file, entry.getValue().getValue(), form.getTrackDescription(), form.getDoChrTranslation() == null || form.getDoChrTranslation());
                         PipelineService.get().queueJob(job);
 
                         resp.put("jobId", job.getJobGUID());
@@ -3904,7 +3904,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                         Container targetContainer = form.getUseOutputFileContainer() ? ContainerManager.getForId(o.getContainer()) : getContainer();
                         PipeRoot pr1 = getPipeRoot(targetContainer, containerToPipeRootMap);
-                        PipelineJob job = createOutputJob(form, targetContainer, jobName, pr1, handler, Arrays.asList(o), json);
+                        PipelineJob job = createOutputJob(form, targetContainer, jobName, pr1, handler, List.of(o), json);
                         PipelineService.get().queueJob(job);
                         guids.add(job.getJobGUID());
                     }
@@ -3922,7 +3922,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                         Container targetContainer = form.getUseOutputFileContainer() ? ContainerManager.getForId(o.getContainer()) : getContainer();
                         PipeRoot pr1 = getPipeRoot(targetContainer, containerToPipeRootMap);
-                        SequenceReadsetHandlerJob job = new SequenceReadsetHandlerJob(targetContainer, getUser(), jobName, pr1, handler, Arrays.asList(o), json);
+                        SequenceReadsetHandlerJob job = new SequenceReadsetHandlerJob(targetContainer, getUser(), jobName, pr1, handler, List.of(o), json);
                         PipelineService.get().queueJob(job);
                         guids.add(job.getJobGUID());
                     }
@@ -4110,7 +4110,7 @@ public class SequenceAnalysisController extends SpringActionController
             if (form.getPath() != null)
             {
                 dirData = pr.resolvePath(form.getPath());
-                if (dirData == null || !NetworkDrive.exists(dirData))
+                if (!NetworkDrive.exists(dirData))
                     throw new NotFoundException("Could not resolve path: " + form.getPath());
             }
 
@@ -4856,7 +4856,7 @@ public class SequenceAnalysisController extends SpringActionController
             if (form.getPath() != null)
             {
                 dirData = root.resolvePath(form.getPath());
-                if (dirData == null || !NetworkDrive.exists(dirData))
+                if (!NetworkDrive.exists(dirData))
                 {
                     throw new NotFoundException("Could not resolve path: " + form.getPath());
                 }
@@ -4895,7 +4895,7 @@ public class SequenceAnalysisController extends SpringActionController
                         throw new UnauthorizedException("You do not have permission to update genome " + o.get("libraryId") + ", which is saved in the folder: " + genomeFolder.getPath());
                     }
 
-                    ImportGenomeTrackPipelineJob job = new ImportGenomeTrackPipelineJob(target, getUser(), null, root, o.getInt("libraryId"), o.getString("name"), file, file.getName(), o.getString("description"), form.getDoChrTranslation() == null ? true : form.getDoChrTranslation());
+                    ImportGenomeTrackPipelineJob job = new ImportGenomeTrackPipelineJob(target, getUser(), null, root, o.getInt("libraryId"), o.getString("name"), file, file.getName(), o.getString("description"), form.getDoChrTranslation() == null || form.getDoChrTranslation());
                     toCreate.add(job);
                 }
                 catch (IOException e)

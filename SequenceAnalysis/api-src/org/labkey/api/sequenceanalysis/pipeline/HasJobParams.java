@@ -9,7 +9,7 @@ import java.util.Map;
  */
 public interface HasJobParams
 {
-    public Map<String, String> getJobParams();
+    Map<String, String> getJobParams();
 
-    public JSONObject getParameterJson();
+    JSONObject getParameterJson();
 }

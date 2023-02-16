@@ -28,7 +28,7 @@ import java.util.List;
 */
 public class CommandLineParam
 {
-    private String _argName;
+    private final String _argName;
     protected boolean _isSwitch = false;
 
     private CommandLineParam(String argName, boolean isSwitch)
@@ -76,7 +76,7 @@ public class CommandLineParam
             }
             else
             {
-                return Arrays.asList(ret + separator + value);
+                return List.of(ret + separator + value);
             }
         }
     }

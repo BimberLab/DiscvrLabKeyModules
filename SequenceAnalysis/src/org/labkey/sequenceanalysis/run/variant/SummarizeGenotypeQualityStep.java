@@ -36,13 +36,15 @@ public class SummarizeGenotypeQualityStep extends AbstractPipelineStep implement
     {
         public Provider()
         {
-            super("SummarizeGenotypeQuality", "Summarize Genotype Quality", "DISCVRseq", "This produces a TSV report summarizing genotype qualities by Genotype Type", Arrays.asList(
-                    ToolParameterDescriptor.create("excludeFiltered", "Exclude Filtered", "If selected, filtered sites will be ignored.", "checkbox", new JSONObject(){{
+            super("SummarizeGenotypeQuality", "Summarize Genotype Quality", "DISCVRseq", "This produces a TSV report summarizing genotype qualities by Genotype Type", List.of(
+                    ToolParameterDescriptor.create("excludeFiltered", "Exclude Filtered", "If selected, filtered sites will be ignored.", "checkbox", new JSONObject()
+                    {{
                         put("checked", false);
                     }}, null)
-                ), null, "");
+            ), null, "");
         }
 
+        @Override
         public SummarizeGenotypeQualityStep create(PipelineContext ctx)
         {
             return new SummarizeGenotypeQualityStep(this, ctx);

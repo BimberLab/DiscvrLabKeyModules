@@ -242,7 +242,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                         //    return a[0] > b[0] ? 1 :
                         //            a[0] < b[0] ? -1 : 0;
                         //});
-                    };
+                    }
 
                     //now calculate overlaps:
                     for (var aaId1 in this.ref_aa_sequences){
@@ -319,7 +319,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
 
                         this.coverageMap[r.analysis_id][r.ref_nt_id][r.ref_nt_position][r.ref_nt_insert_index] = r;
 
-                    };
+                    }
                 }
                 else {
                     Ext4.Msg.alert('Error', 'There is either no coverage data, or a problem loading coverage data.');
@@ -416,7 +416,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['readCountMap'] = readCountMap;
             this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['indel_fraction'] = row.indel_fraction;
             this.snps[row.analysis_id][row.ref_aa_id]['snps'][row.ref_aa_position][row.ref_aa_insert_index]['synon_fraction'] = row.synon_fraction;
-        };
+        }
     },
 
     onLoadComplete: function(){
@@ -470,7 +470,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
                     }
 
                     this.ref_aa_features[aaId] = this.ref_aa_features[aaId].concat(this.aa_overlaps[aaId]);
-                };
+                }
             }
 
             this.tracks.push({
@@ -544,7 +544,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
 
                             if (reads < this.inserts[ref_id][pos][idx].samples[a].readcount)
                                 reads = this.inserts[ref_id][pos][idx].samples[a].readcount;
-                        };
+                        }
 
                         if ((percent==0 && reads==0) || minPct && minPct > percent || minReads && minReads > reads)
                             continue;
@@ -572,7 +572,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
         for (var i=0;i<this.analysisIds.length;i++){
             a = this.analysisIds[i];
             this.querysequences[a] = this.buildSequence(a);
-        };
+        }
     },
 
     buildSequence: function(analysis_id){
@@ -1085,7 +1085,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             }
 
             startNT += exonLength;
-        };
+        }
 
         var cover = [];
         var p;
@@ -1102,7 +1102,7 @@ Ext4.define('SequenceAnalysis.panel.SnpAlignmentPanel', {
             else {
                 cover.push(this.coverageMap[analysis_id][ref_nt_id][p][0].adj_depth);
             }
-        };
+        }
 
         return {
             nt_positions: nt_positions,

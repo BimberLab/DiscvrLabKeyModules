@@ -45,12 +45,12 @@ import java.util.List;
  */
 public interface SequenceOutputHandler<T>
 {
-    public static enum TYPE
+    enum TYPE
     {
         OutputFile(SequenceOutputProcessor.class),
         Readset(SequenceReadsetProcessor.class);
 
-        private Class processorClass;
+        private final Class processorClass;
 
         TYPE(Class processorClass)
         {
@@ -63,14 +63,14 @@ public interface SequenceOutputHandler<T>
         }
     }
 
-    public String getName();
+    String getName();
 
     default String getAnalysisType(PipelineJob job)
     {
         return getName();
     }
 
-    public String getDescription();
+    String getDescription();
 
     /**
      * @return Whether this handler requires all inputs to be based on the same genome
@@ -88,7 +88,7 @@ public interface SequenceOutputHandler<T>
         return true;
     }
 
-    public boolean canProcess(SequenceOutputFile o);
+    boolean canProcess(SequenceOutputFile o);
 
     default boolean supportsSraArchivedData()
     {
@@ -112,27 +112,27 @@ public interface SequenceOutputHandler<T>
      * dataRegionName: the name of the DataRegion
      * outputFileIds: the RowIDs of the output files selected
      */
-    public @Nullable String getButtonJSHandler();
+    @Nullable String getButtonJSHandler();
 
     /**
      * When the user chooses this option,
      */
-    public @Nullable ActionURL getButtonSuccessUrl(Container c, User u, List<Integer> outputFileIds);
+    @Nullable ActionURL getButtonSuccessUrl(Container c, User u, List<Integer> outputFileIds);
 
     /**
      * The module that provides this handler.  If the module is not active in the current container, this handler will not be shown.
      */
-    public Module getOwningModule();
+    Module getOwningModule();
 
     /**
      * An ordered list of ClientDependencies, which allows this handler to declare any client-side resources it depends upon.
      */
-    public LinkedHashSet<String> getClientDependencies();
+    LinkedHashSet<String> getClientDependencies();
 
     /**
      * Set whether the user should be prompted for a workbook when this handler is selected
      */
-    public boolean useWorkbooks();
+    boolean useWorkbooks();
 
     /**
      * Provides the opportunity for the handler to validate parameters prior to running
@@ -148,27 +148,27 @@ public interface SequenceOutputHandler<T>
      * If true, the server will run portions of this handler on the remote server.  This is intended to be a background pipeline
      * server, but in some cases this is also the webserver.
      */
-    public boolean doRunRemote();
+    boolean doRunRemote();
 
     /**
      * If true, the server will run portions of this handler on the local webserver.  In general it is a good idea to run intenstive
      * tasks on a remotely; however, some tasks require running SQL or other processes that require the webserver.
      */
-    public boolean doRunLocal();
+    boolean doRunLocal();
 
-    public T getProcessor();
+    T getProcessor();
 
     /**
      * If true, a separate job will be queued per file.  If not, a single job will run for all files.
      */
-    public boolean doSplitJobs();
+    boolean doSplitJobs();
 
-    public interface SequenceProcessor
+    interface SequenceProcessor
     {
 
     }
 
-    public interface SequenceOutputProcessor extends SequenceProcessor
+    interface SequenceOutputProcessor extends SequenceProcessor
     {
         /**
          * Allows handlers to perform setup on the webserver prior to remote running.  This will be run in the background as a pipeline job.
@@ -194,9 +194,9 @@ public interface SequenceOutputHandler<T>
          * @param actions
          * @param outputsToCreate
          */
-        public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException;
+        void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException;
 
-        public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException;
+        void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException;
 
         default void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated, SequenceAnalysisJobSupport support) throws PipelineJobException
         {
@@ -204,7 +204,7 @@ public interface SequenceOutputHandler<T>
         }
     }
 
-    public interface SequenceReadsetProcessor extends SequenceProcessor
+    interface SequenceReadsetProcessor extends SequenceProcessor
     {
         /**
          * Allows handlers to perform setup on the webserver prior to remote running.  This will be run in the background as a pipeline job.
@@ -216,7 +216,7 @@ public interface SequenceOutputHandler<T>
          * @param actions
          * @param outputsToCreate
          */
-        public void init(PipelineJob job, SequenceAnalysisJobSupport support, List<Readset> readsets, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException;
+        void init(PipelineJob job, SequenceAnalysisJobSupport support, List<Readset> readsets, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException;
 
         /**
          *
@@ -227,9 +227,9 @@ public interface SequenceOutputHandler<T>
          * @param actions
          * @param outputsToCreate
          */
-        public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<Readset> readsets, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException;
+        void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<Readset> readsets, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException;
 
-        public void processFilesRemote(List<Readset> readsets, JobContext ctx) throws UnsupportedOperationException, PipelineJobException;
+        void processFilesRemote(List<Readset> readsets, JobContext ctx) throws UnsupportedOperationException, PipelineJobException;
 
         default void complete(PipelineJob job, List<Readset> readsets, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
         {
@@ -237,45 +237,45 @@ public interface SequenceOutputHandler<T>
         }
     }
 
-    public interface JobContext extends PipelineContext
+    interface JobContext extends PipelineContext
     {
-        public JSONObject getParams();
+        JSONObject getParams();
 
-        public File getOutputDir();
+        File getOutputDir();
 
-        public void addActions(RecordedAction... action);
+        void addActions(RecordedAction... action);
 
-        public TaskFileManager getFileManager();
+        TaskFileManager getFileManager();
 
-        public void addSequenceOutput(SequenceOutputFile o);
+        void addSequenceOutput(SequenceOutputFile o);
 
-        public PipeRoot getFolderPipeRoot();
+        PipeRoot getFolderPipeRoot();
     }
 
-    public interface MutableJobContext extends JobContext
+    interface MutableJobContext extends JobContext
     {
-        public void setFileManager(TaskFileManager manager);
+        void setFileManager(TaskFileManager manager);
     }
 
-    public interface HasActionNames
+    interface HasActionNames
     {
-        public Collection<String> getAllowableActionNames();
+        Collection<String> getAllowableActionNames();
     }
 
-    public static interface TracksVCF
+    interface TracksVCF
     {
-        public File getScatterJobOutput(JobContext ctx) throws PipelineJobException;
+        File getScatterJobOutput(JobContext ctx) throws PipelineJobException;
 
         default File finalizeScatterJobOutput(JobContext ctx, File primaryOutput) throws PipelineJobException
         {
             return primaryOutput;
         }
 
-        public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles) throws PipelineJobException;
+        SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles) throws PipelineJobException;
     }
 
-    public static interface HasCustomVariantMerge
+    interface HasCustomVariantMerge
     {
-        public File performVariantMerge(TaskFileManager manager, RecordedAction action, SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler, PipelineJob job) throws PipelineJobException;
+        File performVariantMerge(TaskFileManager manager, RecordedAction action, SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler, PipelineJob job) throws PipelineJobException;
     }
 }

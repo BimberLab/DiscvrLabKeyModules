@@ -36,13 +36,14 @@ import java.util.Iterator;
  */
 public class CigarPositionIterable implements Iterable<CigarPositionIterable.PositionInfo>
 {
-    private SAMRecord _record;
+    private final SAMRecord _record;
 
     public CigarPositionIterable(SAMRecord record)
     {
         _record = record;
     }
 
+    @Override
     public CigarIterator iterator()
     {
         return new CigarIterator(this);
@@ -50,7 +51,7 @@ public class CigarPositionIterable implements Iterable<CigarPositionIterable.Pos
 
     public class CigarIterator implements Iterator<CigarPositionIterable.PositionInfo>
     {
-        private SAMRecord _record;
+        private final SAMRecord _record;
 
         private Integer[] _readPositions;
         private Integer[] _refPositions;
@@ -104,6 +105,7 @@ public class CigarPositionIterable implements Iterable<CigarPositionIterable.Pos
             }
         }
 
+        @Override
         public void remove()
         {
             throw new UnsupportedOperationException("Can not remove elements in CIGAR via an iterator!");
@@ -112,6 +114,7 @@ public class CigarPositionIterable implements Iterable<CigarPositionIterable.Pos
         /**
          * @return true if there are more positions of the CIGAR string to iterate
          */
+        @Override
         public boolean hasNext()
         {
             return _pos < _readPositions.length;
@@ -120,6 +123,7 @@ public class CigarPositionIterable implements Iterable<CigarPositionIterable.Pos
         /**
          * @return The next PositionInfo in the iteration
          */
+        @Override
         public PositionInfo next()
         {
             if (_pos >= _readPositions.length)
@@ -137,11 +141,11 @@ public class CigarPositionIterable implements Iterable<CigarPositionIterable.Pos
      */
     public class PositionInfo
     {
-        private SAMRecord _record;
-        private CigarOperator _op;
-        private int _pos;
-        private int _readPos;
-        private int _refPos;
+        private final SAMRecord _record;
+        private final CigarOperator _op;
+        private final int _pos;
+        private final int _readPos;
+        private final int _refPos;
         private int _indel = 0;
 
         private int _lastReadPos;

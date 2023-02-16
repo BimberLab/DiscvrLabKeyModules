@@ -54,21 +54,25 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
             return true;
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return ACTIONNAME.toUpperCase();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList(ACTIONNAME);
+            return List.of(ACTIONNAME);
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             AlignmentInitTask task = new AlignmentInitTask(this, job);
@@ -76,6 +80,7 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
             return task;
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
@@ -92,6 +97,7 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
         return (SequenceAlignmentJob)getJob();
     }
 
+    @Override
     public RecordedActionSet run() throws PipelineJobException
     {
         _taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);

@@ -35,16 +35,19 @@ public class SequenceReadsetHandlerWebserverTask extends PipelineJob.Task<Sequen
             setLocation("webserver");
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
@@ -71,11 +74,13 @@ public class SequenceReadsetHandlerWebserverTask extends PipelineJob.Task<Sequen
             return super.isParticipant(job);
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             return new SequenceReadsetHandlerWebserverTask(this, job);
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
@@ -87,6 +92,7 @@ public class SequenceReadsetHandlerWebserverTask extends PipelineJob.Task<Sequen
         return (SequenceReadsetHandlerJob)getJob();
     }
 
+    @Override
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {

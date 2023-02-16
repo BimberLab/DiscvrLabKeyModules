@@ -29,26 +29,26 @@ import java.io.File;
  */
 public interface PipelineContext
 {
-    public Logger getLogger();
+    Logger getLogger();
 
-    public PipelineJob getJob();
+    PipelineJob getJob();
 
-    public WorkDirectory getWorkDir();
+    WorkDirectory getWorkDir();
 
-    public SequenceAnalysisJobSupport getSequenceSupport();
+    SequenceAnalysisJobSupport getSequenceSupport();
 
     /**
      * This is the directory where most of the work should take place, usually the remote pipeline working folder.
      */
-    public File getWorkingDirectory();
+    File getWorkingDirectory();
 
     /**
      * This is the directory where the source files were located and where we expect to deposit the files on completion.
      */
-    public File getSourceDirectory();
+    File getSourceDirectory();
 
     /**
      * This is the directory where the source files were located.  In the situation where this is a split job, forceParent=true will return the parent job's sourceDirectory.  This can be important if files are written here prior to split.
      */
-    public File getSourceDirectory(boolean forceParent);
+    File getSourceDirectory(boolean forceParent);
 }

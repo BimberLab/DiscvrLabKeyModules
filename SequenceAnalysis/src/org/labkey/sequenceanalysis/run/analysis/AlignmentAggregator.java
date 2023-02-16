@@ -36,9 +36,9 @@ import java.util.Map;
  */
 public interface AlignmentAggregator
 {
-    public void writeOutput(User u, Container c, AnalysisModel model);
+    void writeOutput(User u, Container c, AnalysisModel model);
 
-    public void inspectAlignment(SAMRecord record, @Nullable ReferenceSequence ref, Map<Integer, List<NTSnp>> snps) throws PipelineJobException;
+    void inspectAlignment(SAMRecord record, @Nullable ReferenceSequence ref, Map<Integer, List<NTSnp>> snps) throws PipelineJobException;
 
-    public String getSynopsis();
+    String getSynopsis();
 }

@@ -54,15 +54,15 @@ import java.util.zip.GZIPOutputStream;
  */
 public class IlluminaFastqSplitter<SampleIdType>
 {
-    private String _outputPrefix;
-    private Map<String, SampleIdType> _illuminaIdToLocalIdMap;
+    private final String _outputPrefix;
+    private final Map<String, SampleIdType> _illuminaIdToLocalIdMap;
     private File _destinationDir;
-    private List<File> _files;
+    private final List<File> _files;
     private Map<Pair<SampleIdType, Integer>, Pair<File, FastqWriter>> _fileMap;
     private Map<Pair<SampleIdType, Integer>, Integer> _sequenceTotals;
-    private Set<String> _skippedSampleId = new HashSet<>();
-    private Logger _logger;
-    private static FileType FASTQ_FILETYPE = new FileType(Arrays.asList("fastq", "fq"), "fastq", FileType.gzSupportLevel.SUPPORT_GZ);
+    private final Set<String> _skippedSampleId = new HashSet<>();
+    private final Logger _logger;
+    private static final FileType FASTQ_FILETYPE = new FileType(Arrays.asList("fastq", "fq"), "fastq", FileType.gzSupportLevel.SUPPORT_GZ);
     private boolean _outputGzip = false;
 
     public IlluminaFastqSplitter(@Nullable String outputPrefix, Map<String, SampleIdType> sampleMap, Logger logger, List<File> files)

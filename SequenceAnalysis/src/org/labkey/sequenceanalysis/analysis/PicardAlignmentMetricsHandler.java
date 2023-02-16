@@ -38,7 +38,7 @@ import java.util.Map;
  */
 public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    private FileType _bamFileType = new FileType("bam", false);
+    private final FileType _bamFileType = new FileType("bam", false);
 
     public PicardAlignmentMetricsHandler()
     {

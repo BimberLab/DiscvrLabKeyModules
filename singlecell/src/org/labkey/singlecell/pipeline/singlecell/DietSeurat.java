@@ -5,6 +5,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class DietSeurat extends AbstractCellMembraneStep
 {
@@ -17,9 +18,7 @@ public class DietSeurat extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("DietSeurat", "DietSeurat", "CellMembrane", "This will run DietSeurat, dropped reductions to reduce object size.", Arrays.asList(
-
-            ), null, null);
+            super("DietSeurat", "DietSeurat", "CellMembrane", "This will run DietSeurat, dropped reductions to reduce object size.", List.of(), null, null);
         }
 
         @Override

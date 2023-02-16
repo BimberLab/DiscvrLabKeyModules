@@ -32,11 +32,13 @@ public class AdapterModel extends SequenceTag
         return ad;
     }
 
+    @Override
     public String getName()
     {
         return _name;
     }
 
+    @Override
     public String getSequence()
     {
         return _sequence;

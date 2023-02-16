@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class FlagStatRunner extends SamtoolsRunner
 {
-    private static String COMMAND = "flagstat";
+    private static final String COMMAND = "flagstat";
 
     public FlagStatRunner(@Nullable Logger logger)
     {

@@ -37,30 +37,30 @@ public interface PipelineStepOutput extends PipelineOutputTracker
      * @param input
      * @param role
      */
-    public void addInput(File input, String role);
+    void addInput(File input, String role);
 
     /**
      * Add an experiment output to this pipeline step
      * @param output
      * @param role
      */
-    public void addOutput(File output, String role);
+    void addOutput(File output, String role);
 
     /**
      * Returns a list of pairs giving additional input files and role of this file.  Note: inputs are usually set upfront, so this will only include
      * any non-standard inputs created during the course of this step
      */
-    public List<Pair<File, String>> getInputs();
+    List<Pair<File, String>> getInputs();
 
     /**
      * Returns a list of pairs giving the output file and role of this output
      */
-    public List<Pair<File, String>> getOutputs();
+    List<Pair<File, String>> getOutputs();
 
     /**
      * Returns a list of pairs giving the output file and role of this output
      */
-    public List<File> getOutputsOfRole(String role);
+    List<File> getOutputsOfRole(String role);
 
     /**
      * Add an intermediate file.  If the user selected 'delete intermediates', this will be deleted on job success.
@@ -68,16 +68,16 @@ public interface PipelineStepOutput extends PipelineOutputTracker
      * @param file
      * @param role
      */
-    public void addIntermediateFile(File file, String role);
+    void addIntermediateFile(File file, String role);
 
     /**
      * Returns a list of intermediate files created during this step.  Intermediate files are files
      * that are deemed non-essential by this step.  If the pipeline has selected deleteIntermediaFiles=true,
      * these files will be deleted during the cleanup step.
      */
-    public List<File> getIntermediateFiles();
+    List<File> getIntermediateFiles();
 
-    public List<PicardMetricsOutput> getPicardMetricsFiles();
+    List<PicardMetricsOutput> getPicardMetricsFiles();
 
     /**
      * Returns a list of deferred delete intermediate files created during this step.  These are similar to the files
@@ -85,24 +85,24 @@ public interface PipelineStepOutput extends PipelineOutputTracker
      * This allows earlier steps to create products that are needed by later steps (such as aligner-specific indexes),
      * but still delete these files at the end of the process.
      */
-    public List<File> getDeferredDeleteIntermediateFiles();
+    List<File> getDeferredDeleteIntermediateFiles();
 
-    public List<SequenceOutput> getSequenceOutputs();
+    List<SequenceOutput> getSequenceOutputs();
 
     /**
      * Returns a list of any commands executed by this step
      */
-    public List<String> getCommandsExecuted();
+    List<String> getCommandsExecuted();
 
-    public static class SequenceOutput
+    class SequenceOutput
     {
-        private File _file;
-        private String _label;
-        private String _category;
-        private Integer _readsetId;
-        private Integer _analysisId;
-        private Integer _genomeId;
-        private String _description;
+        private final File _file;
+        private final String _label;
+        private final String _category;
+        private final Integer _readsetId;
+        private final Integer _analysisId;
+        private final Integer _genomeId;
+        private final String _description;
 
         public SequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId, @Nullable String description)
         {
@@ -151,7 +151,7 @@ public interface PipelineStepOutput extends PipelineOutputTracker
         }
     }
 
-    public static class PicardMetricsOutput
+    class PicardMetricsOutput
     {
         File _metricFile;
         File _inputFile;
@@ -161,7 +161,7 @@ public interface PipelineStepOutput extends PipelineOutputTracker
         public enum TYPE
         {
             bam(),
-            reads();
+            reads()
         }
 
         public PicardMetricsOutput(File metricFile, File inputFile, Integer readsetId)

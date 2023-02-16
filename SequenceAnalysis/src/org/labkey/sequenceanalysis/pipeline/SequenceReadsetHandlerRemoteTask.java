@@ -33,16 +33,19 @@ public class SequenceReadsetHandlerRemoteTask extends WorkDirectoryTask<Sequence
             super(SequenceReadsetHandlerRemoteTask.class);
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
@@ -74,11 +77,13 @@ public class SequenceReadsetHandlerRemoteTask extends WorkDirectoryTask<Sequence
             return super.isParticipant(job);
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             return new SequenceReadsetHandlerRemoteTask(this, job);
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
@@ -90,6 +95,7 @@ public class SequenceReadsetHandlerRemoteTask extends WorkDirectoryTask<Sequence
         return (SequenceReadsetHandlerJob)getJob();
     }
 
+    @Override
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {

@@ -62,6 +62,7 @@ public class BWAWrapper extends AbstractCommandWrapper
             setAlwaysCacheIndex(true);
         }
 
+        @Override
         public String getName()
         {
             return "BWA";
@@ -73,6 +74,7 @@ public class BWAWrapper extends AbstractCommandWrapper
             return null;
         }
 
+        @Override
         public AlignmentStep create(PipelineContext context)
         {
             return new BWAAlignmentStep(this, context, new BWAWrapper(context.getLogger()));

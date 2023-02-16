@@ -31,50 +31,50 @@ import java.util.Date;
  */
 public interface AnalysisModel extends Serializable
 {
-    public Integer getAnalysisId();
+    Integer getAnalysisId();
 
-    public Integer getRunId();
+    Integer getRunId();
 
-    public String getContainer();
+    String getContainer();
 
-    public Integer getReadset();
+    Integer getReadset();
 
-    public Integer getAlignmentFile();
+    Integer getAlignmentFile();
 
-    public File getAlignmentFileObject();
+    File getAlignmentFileObject();
 
-    public ExpData getAlignmentData();
+    ExpData getAlignmentData();
 
     @Deprecated
-    public Integer getReferenceLibrary();
+    Integer getReferenceLibrary();
 
-    public void setReferenceLibrary(Integer libraryId);
+    void setReferenceLibrary(Integer libraryId);
 
-    public ExpData getReferenceLibraryData(User u) throws PipelineJobException;
+    ExpData getReferenceLibraryData(User u) throws PipelineJobException;
 
-    public File getReferenceLibraryFile(User u) throws PipelineJobException;
+    File getReferenceLibraryFile(User u) throws PipelineJobException;
 
-    public String getType();
+    String getType();
 
-    public Date getModified();
+    Date getModified();
 
-    public Integer getModifiedby();
+    Integer getModifiedby();
 
-    public Date getCreated();
+    Date getCreated();
 
-    public Integer getCreatedby();
+    Integer getCreatedby();
 
-    public Integer getRowId();
+    Integer getRowId();
 
-    public String getDescription();
+    String getDescription();
 
-    public String getSynopsis();
+    String getSynopsis();
 
-    public void setSynopsis(String synopsis);
+    void setSynopsis(String synopsis);
 
-    public Integer getLibraryId();
+    Integer getLibraryId();
 
-    public void setLibraryId(Integer libraryId);
+    void setLibraryId(Integer libraryId);
 
-    public JSONObject toJSON();
+    JSONObject toJSON();
 }

@@ -20,13 +20,13 @@ import java.util.Map;
 public class ImportHelper
 {
     private Container _container;
-    private User _user;
-    private TableInfo _table;
-    private TableInfo _sortTable;
+    private final User _user;
+    private final TableInfo _table;
+    private final TableInfo _sortTable;
 
     private static final Logger _log = LogManager.getLogger(ImportHelper.class);
 
-    private Map<String, UserSchema> _userSchemaMap = new HashMap<>();
+    private final Map<String, UserSchema> _userSchemaMap = new HashMap<>();
 
     private ImportHelper(String containerId, int userId, String queryName)
     {

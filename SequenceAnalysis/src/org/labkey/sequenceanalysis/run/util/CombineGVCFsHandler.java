@@ -39,11 +39,11 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
     public static final String NAME = "Combine GVCFs";
     private static final String COMBINED_CATEGORY = "Combined gVCF File";
 
-    private FileType _gvcfFileType = new FileType(Arrays.asList(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
+    private final FileType _gvcfFileType = new FileType(List.of(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
 
     public CombineGVCFsHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), NAME, "This will run GATK\'s CombineGVCFs on a set of GVCF files.  Note: this cannot work against any VCF file - these are primarily VCFs created using GATK\'s HaplotypeCaller.", new LinkedHashSet<>(Arrays.asList("sequenceanalysis/panel/VariantScatterGatherPanel.js")), Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), NAME, "This will run GATK's CombineGVCFs on a set of GVCF files.  Note: this cannot work against any VCF file - these are primarily VCFs created using GATK's HaplotypeCaller.", new LinkedHashSet<>(List.of("sequenceanalysis/panel/VariantScatterGatherPanel.js")), Arrays.asList(
                 ToolParameterDescriptor.create("fileBaseName", "Filename", "This is the basename that will be used for the output gzipped VCF", "textfield", null, "CombinedGenotypes"),
                 ToolParameterDescriptor.create("doCopyLocal", "Copy gVCFs To Working Directory", "If selected, the gVCFs will be copied to the working directory first, which can improve performance when working with a large set of files.", "checkbox", new JSONObject(){{
                     put("checked", false);
@@ -158,9 +158,8 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
             if (!isResume)
             {
                 List<String> options = new ArrayList<>();
-                if (ctx.getJob() instanceof VariantProcessingJob)
+                if (ctx.getJob() instanceof VariantProcessingJob job)
                 {
-                    VariantProcessingJob job = (VariantProcessingJob)ctx.getJob();
                     if (job.getIntervalsForTask() != null)
                     {
                         job.getIntervalsForTask().forEach(interval -> {
@@ -192,9 +191,8 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
             SequenceOutputFile so1 = new SequenceOutputFile();
             so1.setName(outputFile.getName());
 
-            if (ctx.getJob() instanceof VariantProcessingJob)
+            if (ctx.getJob() instanceof VariantProcessingJob job)
             {
-                VariantProcessingJob job = (VariantProcessingJob) ctx.getJob();
                 if (job.getIntervalsForTask() != null)
                 {
                     //NOTE: the VCF was copied back to the source dir, so translate paths
@@ -250,9 +248,8 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
     @Override
     public boolean isRequired(PipelineJob job)
     {
-        if (job instanceof VariantProcessingJob)
+        if (job instanceof VariantProcessingJob vpj)
         {
-            VariantProcessingJob vpj = (VariantProcessingJob)job;
 
             return doCopyLocal(vpj.getParameterJson());
         }

@@ -49,6 +49,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class ClusterModule extends ExtendedSimpleModule
@@ -126,7 +127,7 @@ public class ClusterModule extends ExtendedSimpleModule
     public Set<Class> getIntegrationTests()
     {
         @SuppressWarnings({"unchecked"})
-        Set<Class> testClasses = new HashSet<>(Arrays.asList(
+        Set<Class> testClasses = new HashSet<>(List.of(
                 TestCase.class
         ));
 
@@ -136,7 +137,7 @@ public class ClusterModule extends ExtendedSimpleModule
     @Override
     public @NotNull Set<Class> getUnitTests()
     {
-        return new HashSet<>(Arrays.asList(
+        return new HashSet<>(List.of(
                 SlurmExecutionEngine.TestCase.class
         ));
     }
@@ -147,6 +148,7 @@ public class ClusterModule extends ExtendedSimpleModule
         DbSchema dbSchema = DbSchema.get(ClusterSchema.NAME, DbSchemaType.Module);
         DefaultSchema.registerProvider(dbSchema.getQuerySchemaName(), new DefaultSchema.SchemaProvider(this)
         {
+            @Override
             public QuerySchema createSchema(final DefaultSchema schema, Module module)
             {
                 DbSchema dbSchema = DbSchema.get(ClusterSchema.NAME, DbSchemaType.Module);

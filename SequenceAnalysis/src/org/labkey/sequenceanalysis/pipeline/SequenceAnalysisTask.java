@@ -87,15 +87,17 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             super(SequenceAnalysisTask.class);
         }
 
+        @Override
         public String getStatusName()
         {
             return "PERFORMING ANALYSIS";
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
-            for (PipelineStepProvider provider: SequencePipelineService.get().getProviders(AnalysisStep.class))
+            for (PipelineStepProvider<?> provider: SequencePipelineService.get().getProviders(AnalysisStep.class))
             {
                 allowableNames.add(provider.getLabel());
             }
@@ -103,6 +105,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             return allowableNames;
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             SequenceAnalysisTask task = new SequenceAnalysisTask(this, job);
@@ -110,11 +113,13 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             return task;
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.singletonList(new FileType(".bam"));
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
@@ -134,6 +139,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         return (SequenceAlignmentJob)getJob();
     }
 
+    @Override
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {

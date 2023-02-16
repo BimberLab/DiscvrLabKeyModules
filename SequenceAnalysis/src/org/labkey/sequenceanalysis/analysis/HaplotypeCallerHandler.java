@@ -29,7 +29,7 @@ import java.util.List;
  */
 public class HaplotypeCallerHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    private FileType _bamOrCramFileType = new FileType(Arrays.asList("bam", "cram"), "bam");
+    private final FileType _bamOrCramFileType = new FileType(Arrays.asList("bam", "cram"), "bam");
 
     public HaplotypeCallerHandler()
     {

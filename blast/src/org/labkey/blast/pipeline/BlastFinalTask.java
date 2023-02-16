@@ -50,21 +50,25 @@ public class BlastFinalTask extends PipelineJob.Task<BlastFinalTask.Factory>
             setLocation("webserver-fasta-check");
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList("BLAST");
+            return List.of("BLAST");
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             BlastFinalTask task = new BlastFinalTask(this, job);
@@ -72,12 +76,14 @@ public class BlastFinalTask extends PipelineJob.Task<BlastFinalTask.Factory>
             return task;
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
         }
     }
 
+    @Override
     public RecordedActionSet run() throws PipelineJobException
     {
         getPipelineJob().getBlastJob().setComplete(getJob().getUser(), getJob());

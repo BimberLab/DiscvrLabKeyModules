@@ -50,7 +50,7 @@ public class SequenceTriggerHelper
 
     private static final TranscriptionEngine _engine = new TranscriptionEngine.Builder().dnaCompounds(AmbiguityDNACompoundSet.getDNACompoundSet()).rnaCompounds(AmbiguityRNACompoundSet.getRNACompoundSet()).initMet(false).trimStop(false).build();
 
-    private Map<Integer, String> _sequenceMap = new HashMap<>();
+    private final Map<Integer, String> _sequenceMap = new HashMap<>();
 
     public SequenceTriggerHelper(int userId, String containerId)
     {
@@ -159,13 +159,13 @@ public class SequenceTriggerHelper
             rnaNts = _engine.getDnaRnaTranslator().createSequence(nts);
             if (rnaNts == null)
             {
-                throw new IllegalArgumentException("Unable to create RNA from: " + dna.toString());
+                throw new IllegalArgumentException("Unable to create RNA from: " + dna);
             }
 
             aas = _engine.getRnaAminoAcidTranslator().createSequence(rnaNts);
             if (aas == null)
             {
-                throw new IllegalArgumentException("Unable to create AA from: RNA" + rnaNts.toString() + " / DNA: " + dna.toString());
+                throw new IllegalArgumentException("Unable to create AA from: RNA" + rnaNts + " / DNA: " + dna);
             }
 
             return aas.getSequenceAsString();
@@ -175,17 +175,17 @@ public class SequenceTriggerHelper
             _log.error(e.getMessage() == null ? "There was an error" : e.getMessage(), e);
             if (dna != null)
             {
-                _log.info("DNA: " + dna.toString());
+                _log.info("DNA: " + dna);
             }
 
             if (rnaNts != null)
             {
-                _log.info("RNA: " + rnaNts.toString());
+                _log.info("RNA: " + rnaNts);
             }
 
             if (aas != null)
             {
-                _log.info("AA: " + aas.toString());
+                _log.info("AA: " + aas);
             }
 
             throw e;
@@ -209,13 +209,13 @@ public class SequenceTriggerHelper
                     Sequence<NucleotideCompound> rnaNts = _engine.getDnaRnaTranslator().createSequence(nts);
                     if (rnaNts == null)
                     {
-                        throw new IllegalArgumentException("Unable to create RNA from: " + dna.toString());
+                        throw new IllegalArgumentException("Unable to create RNA from: " + dna);
                     }
 
                     Sequence<AminoAcidCompound> aas = _engine.getRnaAminoAcidTranslator().createSequence(rnaNts);
                     if (aas == null)
                     {
-                        throw new IllegalArgumentException("Unable to create AA from: RNA" + rnaNts.toString() + " / DNA: " + dna.toString());
+                        throw new IllegalArgumentException("Unable to create AA from: RNA" + rnaNts + " / DNA: " + dna);
                     }
 
                     assertEquals("X", aas.getSequenceAsString());

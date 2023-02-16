@@ -26,8 +26,9 @@ public class AppendNimble extends AbstractRDiscvrStep
     {
         public Provider()
         {
-            super("AppendNimble", "Append Nimble Data", "Nimble/Rdiscvr", "The seurat object will be subset based on the expression below, which is passed directly to Seurat's subset(subset = X).", Arrays.asList(
-                    ToolParameterDescriptor.create("nimbleGenomes", "Genomes", "Genomes to include", "singlecell-nimbleappendpanel", new JSONObject(){{
+            super("AppendNimble", "Append Nimble Data", "Nimble/Rdiscvr", "The seurat object will be subset based on the expression below, which is passed directly to Seurat's subset(subset = X).", List.of(
+                    ToolParameterDescriptor.create("nimbleGenomes", "Genomes", "Genomes to include", "singlecell-nimbleappendpanel", new JSONObject()
+                    {{
                         put("allowBlank", false);
                     }}, null)
             ), Arrays.asList("sequenceanalysis/field/GenomeField.js", "/singlecell/panel/NimbleAppendPanel.js"), null);

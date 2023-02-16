@@ -38,16 +38,19 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
             setLocation("webserver");
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
@@ -59,11 +62,13 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
             return allowableNames;
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             return new SequenceOutputHandlerInitTask(this, job);
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
@@ -75,6 +80,7 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
         return (SequenceOutputHandlerJob)getJob();
     }
 
+    @Override
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {

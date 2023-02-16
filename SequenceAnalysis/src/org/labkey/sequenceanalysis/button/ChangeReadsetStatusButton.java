@@ -6,6 +6,7 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * User: bimber
@@ -16,6 +17,6 @@ public class ChangeReadsetStatusButton extends SimpleButtonConfigFactory
 {
     public ChangeReadsetStatusButton()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Change Readset Status", "SequenceAnalysis.window.ChangeReadsetStatusWindow.buttonHandlerForReadsets(dataRegionName);", Arrays.asList(ClientDependency.supplierFromPath("sequenceanalysis/window/ChangeReadsetStatusWindow.js")));
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Change Readset Status", "SequenceAnalysis.window.ChangeReadsetStatusWindow.buttonHandlerForReadsets(dataRegionName);", List.of(ClientDependency.supplierFromPath("sequenceanalysis/window/ChangeReadsetStatusWindow.js")));
     }
 }

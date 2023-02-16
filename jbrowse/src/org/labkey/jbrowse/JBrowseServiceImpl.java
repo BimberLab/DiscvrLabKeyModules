@@ -31,7 +31,7 @@ public class JBrowseServiceImpl extends JBrowseService
     private static final JBrowseServiceImpl _instance = new JBrowseServiceImpl();
     private final Logger _log = LogManager.getLogger(JBrowseServiceImpl.class);
 
-    private Set<DemographicsSource> _sources = new HashSet<>();
+    private final Set<DemographicsSource> _sources = new HashSet<>();
 
     private JBrowseServiceImpl()
     {

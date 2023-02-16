@@ -117,7 +117,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
         @Override
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList(ACTION_NAME);
+            return List.of(ACTION_NAME);
         }
 
         @Override

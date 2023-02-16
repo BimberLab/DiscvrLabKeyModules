@@ -71,6 +71,7 @@ public class OutputIntegrationTests
             doCleanup(PROJECT_NAME);
         }
 
+        @Override
         protected String getProjectName()
         {
             return PROJECT_NAME;
@@ -96,8 +97,8 @@ public class OutputIntegrationTests
             Set<Integer> outputFileIds = Collections.singleton(outputFileId);
 
             TableInfo ti = QueryService.get().getUserSchema(TestContext.get().getUser(), _project, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES, null);
-            assertTrue("No FK found", ti.getColumn("runId").getFk() != null);
-            assertEquals("Job FK not found", 1, QueryService.get().getColumns(ti, Arrays.asList(FieldKey.fromString("runId/jobid/job"))).size());
+            assertNotNull("No FK found", ti.getColumn("runId").getFk());
+            assertEquals("Job FK not found", 1, QueryService.get().getColumns(ti, Collections.singletonList(FieldKey.fromString("runId/jobid/job"))).size());
 
             Set<PipelineJob> jobs = createOutputHandlerJob(jobName, config, ProcessVariantsHandler.class, outputFileIds);
             waitForJobs(jobs);
@@ -191,7 +192,7 @@ public class OutputIntegrationTests
                     VCFConstants.PHASE_QUALITY_KEY
             ));
 
-            VCFHeader header = new VCFHeader(metaLines, Arrays.asList("Sample1"));
+            VCFHeader header = new VCFHeader(metaLines, List.of("Sample1"));
 
             Integer dataId = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("fasta_file"), new SimpleFilter(FieldKey.fromString("rowid"), genomeId), null).getObject(Integer.class);
             ExpData data = ExperimentService.get().getExpData(dataId);
@@ -212,7 +213,7 @@ public class OutputIntegrationTests
                 vcb.chr("SIVmac239_Test");
                 vcb.start(10);
                 vcb.stop(10);
-                vcb.alleles(Arrays.asList(Allele.create("T", true)));
+                vcb.alleles(Collections.singletonList(Allele.create("T", true)));
                 vcb.genotypes(GenotypesContext.NO_GENOTYPES);
 
                 writer.add(vcb.make());

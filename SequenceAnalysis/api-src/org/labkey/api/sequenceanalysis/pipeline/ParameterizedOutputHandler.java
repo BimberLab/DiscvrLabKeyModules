@@ -22,5 +22,5 @@ import java.util.List;
  */
 public interface ParameterizedOutputHandler<T> extends SequenceOutputHandler<T>
 {
-    public List<ToolParameterDescriptor> getParameters();
+    List<ToolParameterDescriptor> getParameters();
 }

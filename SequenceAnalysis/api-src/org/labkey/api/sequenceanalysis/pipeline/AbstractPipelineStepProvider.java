@@ -33,13 +33,13 @@ import java.util.List;
  */
 abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep> implements PipelineStepProvider
 {
-    private String _name;
-    private String _label;
-    private String _toolName;
-    private String _websiteURL;
-    private String _description;
-    private LinkedHashSet<String> _clientDependencyPaths;
-    private final List<ToolParameterDescriptor> _parameters;
+    private final String _name;
+    private final String _label;
+    private final String _toolName;
+    private final String _websiteURL;
+    private final String _description;
+    private final LinkedHashSet<String> _clientDependencyPaths;
+    private List<ToolParameterDescriptor> _parameters;
 
     public AbstractPipelineStepProvider(String name, String label, @Nullable String toolName, String description, @Nullable List<ToolParameterDescriptor> parameters, @Nullable Collection<String> clientDependencyPaths, @Nullable String websiteURL)
     {

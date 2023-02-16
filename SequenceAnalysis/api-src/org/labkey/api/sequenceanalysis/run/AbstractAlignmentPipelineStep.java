@@ -5,7 +5,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 
 abstract public class AbstractAlignmentPipelineStep<Wrapper extends CommandWrapper> extends AbstractCommandPipelineStep<Wrapper>
 {
-    private AlignmentStepProvider _provider;
+    private final AlignmentStepProvider _provider;
 
     public AbstractAlignmentPipelineStep(AlignmentStepProvider provider, PipelineContext ctx, Wrapper wrapper)
     {

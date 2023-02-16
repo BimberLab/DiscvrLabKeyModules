@@ -33,9 +33,9 @@ import java.util.Set;
  */
 abstract public class AbstractCommandPipelineStep<Wrapper extends CommandWrapper> extends AbstractPipelineStep
 {
-    private Wrapper _wrapper;
+    private final Wrapper _wrapper;
 
-    public AbstractCommandPipelineStep(PipelineStepProvider provider, PipelineContext ctx, Wrapper wrapper)
+    public AbstractCommandPipelineStep(PipelineStepProvider<?> provider, PipelineContext ctx, Wrapper wrapper)
     {
         super(provider, ctx);
         _wrapper = wrapper;

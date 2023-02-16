@@ -65,32 +65,38 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
             setLocation("webserver-high-priority");
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList("JBrowse");
+            return List.of("JBrowse");
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             return new JBrowseSessionTask(this, job);
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;
         }
     }
 
+    @Override
     @NotNull
     public RecordedActionSet run() throws PipelineJobException
     {

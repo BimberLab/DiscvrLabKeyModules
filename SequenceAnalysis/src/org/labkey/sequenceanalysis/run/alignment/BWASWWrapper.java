@@ -54,6 +54,7 @@ public class BWASWWrapper extends BWAWrapper
             super("BWA-SW", "BWA-SW uses a different algorithm than BWA that is better suited for longer reads. By design it will only return a single hit for each read. It it currently recommended for viral analysis and other applications that align longer reads, but do not require retaining multiple hits.", null, null, "http://bio-bwa.sourceforge.net/", true, true);
         }
 
+        @Override
         public BWASWAlignmentStep create(PipelineContext context)
         {
             return new BWASWAlignmentStep(this, context);

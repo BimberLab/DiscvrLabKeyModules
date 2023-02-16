@@ -17,9 +17,9 @@ import java.io.File;
 public class GeneToNameTranslator
 {
     private int _noGeneId = 0;
-    private File _geneFile;
+    private final File _geneFile;
 
-    private Map<String, Map<String, String>> geneMap = new HashMap<>(5000);
+    private final Map<String, Map<String, String>> geneMap = new HashMap<>(5000);
 
     public GeneToNameTranslator(File geneFile, Logger log) throws PipelineJobException
     {

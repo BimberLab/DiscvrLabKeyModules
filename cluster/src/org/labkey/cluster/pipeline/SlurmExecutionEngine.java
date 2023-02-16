@@ -588,28 +588,28 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         return Pair.of(status, info);
     }
 
-    public static enum StatusType
+    public enum StatusType
     {
-        BF("Error", PipelineJob.TaskStatus.error, Arrays.asList("BOOT_FAIL")),
+        BF("Error", PipelineJob.TaskStatus.error, List.of("BOOT_FAIL")),
         CA("Cancelled", PipelineJob.TaskStatus.cancelled),
-        CD("Complete", PipelineJob.TaskStatus.complete, Arrays.asList("Completed")),
-        CF("Submitted, Idle", PipelineJob.TaskStatus.waiting, Arrays.asList("CONFIGURING")),
-        CG("Running", PipelineJob.TaskStatus.running, Arrays.asList("COMPLETING")),
+        CD("Complete", PipelineJob.TaskStatus.complete, List.of("Completed")),
+        CF("Submitted, Idle", PipelineJob.TaskStatus.waiting, List.of("CONFIGURING")),
+        CG("Running", PipelineJob.TaskStatus.running, List.of("COMPLETING")),
         F("Failed", PipelineJob.TaskStatus.error),
-        NF("Failed", PipelineJob.TaskStatus.error, Arrays.asList("NODE_FAIL")),
-        PD("Submitted, Idle", PipelineJob.TaskStatus.waiting, Arrays.asList("PENDING")),
+        NF("Failed", PipelineJob.TaskStatus.error, List.of("NODE_FAIL")),
+        PD("Submitted, Idle", PipelineJob.TaskStatus.waiting, List.of("PENDING")),
         PR("Preempted", PipelineJob.TaskStatus.waiting, null, "Job preempted"),
         R("Running", PipelineJob.TaskStatus.running),
-        SE("Error", PipelineJob.TaskStatus.error, Arrays.asList("SPECIAL_EXIT")),
+        SE("Error", PipelineJob.TaskStatus.error, List.of("SPECIAL_EXIT")),
         ST("Stopped", PipelineJob.TaskStatus.error),
         S("Suspended", PipelineJob.TaskStatus.waiting, null, "Job suspended"),
         TO("Timeout", PipelineJob.TaskStatus.error, null, "Job timeout"),
         OOM("Out of Memory", PipelineJob.TaskStatus.error, Arrays.asList("OUT_OF_MEMORY", "OUT_OF_ME"), "Out of Memory");
 
-        private Set<String> _aliases = new CaseInsensitiveHashSet();
-        private String _labkeyStatus;
-        private String _info;
-        private PipelineJob.TaskStatus _taskStatus;
+        private final Set<String> _aliases = new CaseInsensitiveHashSet();
+        private final String _labkeyStatus;
+        private final String _info;
+        private final PipelineJob.TaskStatus _taskStatus;
 
         StatusType(String labkeyStatus, PipelineJob.TaskStatus taskStatus)
         {

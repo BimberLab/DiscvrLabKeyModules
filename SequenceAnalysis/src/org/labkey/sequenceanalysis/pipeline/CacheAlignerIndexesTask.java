@@ -44,21 +44,25 @@ public class CacheAlignerIndexesTask extends WorkDirectoryTask<CacheAlignerIndex
             super(CacheAlignerIndexesTask.class);
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return PipelineJob.TaskStatus.running.toString();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList(ACTION_NAME);
+            return List.of(ACTION_NAME);
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             return new CacheAlignerIndexesTask(this, job);
@@ -76,6 +80,7 @@ public class CacheAlignerIndexesTask extends WorkDirectoryTask<CacheAlignerIndex
             return super.isParticipant(job);
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;

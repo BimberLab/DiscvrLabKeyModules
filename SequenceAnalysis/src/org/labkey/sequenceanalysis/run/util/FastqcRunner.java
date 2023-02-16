@@ -65,7 +65,7 @@ import java.util.zip.GZIPInputStream;
 // is patterned after DotRunner.
 public class FastqcRunner
 {
-    private Logger _logger;
+    private final Logger _logger;
     private int _threads = 1;
     private boolean _cacheResults = true;
 

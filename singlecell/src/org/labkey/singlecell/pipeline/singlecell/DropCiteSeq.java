@@ -5,6 +5,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class DropCiteSeq extends AbstractCellMembraneStep
 {
@@ -17,9 +18,7 @@ public class DropCiteSeq extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("DropCiteSeq", "Drop CiteSeq", "CellMembrane", "This will remove the CITE-seq (ADT) assay, if it exists.", Arrays.asList(
-
-            ), null, null);
+            super("DropCiteSeq", "Drop CiteSeq", "CellMembrane", "This will remove the CITE-seq (ADT) assay, if it exists.", List.of(), null, null);
         }
 
         @Override

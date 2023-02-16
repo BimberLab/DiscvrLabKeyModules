@@ -69,6 +69,7 @@ public class AnalysisModelImpl implements AnalysisModel
         return model;
     }
 
+    @Override
     public Integer getAnalysisId()
     {
         return _rowId;
@@ -119,6 +120,7 @@ public class AnalysisModelImpl implements AnalysisModel
         _reference_library = reference_library;
     }
 
+    @Override
     public void setReferenceLibrary(Integer reference_library)
 {
     _reference_library = reference_library;
@@ -134,26 +136,31 @@ public class AnalysisModelImpl implements AnalysisModel
         _modified = modified;
     }
 
+    @Override
     public Integer getRunId()
     {
         return _runId;
     }
 
+    @Override
     public String getContainer()
     {
         return _container;
     }
 
+    @Override
     public Integer getReadset()
     {
         return _readset;
     }
 
+    @Override
     public Integer getAlignmentFile()
     {
         return _alignmentFile;
     }
 
+    @Override
     public ExpData getAlignmentData()
     {
         return getData(_alignmentFile);
@@ -174,6 +181,7 @@ public class AnalysisModelImpl implements AnalysisModel
         return ExperimentService.get().getExpData(dataId);
     }
 
+    @Override
     public File getAlignmentFileObject()
     {
         ExpData d = getAlignmentData();
@@ -226,36 +234,43 @@ public class AnalysisModelImpl implements AnalysisModel
         return null;
     }
 
+    @Override
     public String getType()
     {
         return _type;
     }
 
+    @Override
     public Date getModified()
     {
         return _modified;
     }
 
+    @Override
     public Integer getModifiedby()
     {
         return _modifiedby;
     }
 
+    @Override
     public Date getCreated()
     {
         return _created;
     }
 
+    @Override
     public Integer getCreatedby()
     {
         return _createdby;
     }
 
+    @Override
     public Integer getRowId()
     {
         return _rowId;
     }
 
+    @Override
     public String getDescription()
     {
         return _description;
@@ -266,16 +281,19 @@ public class AnalysisModelImpl implements AnalysisModel
         _description = description;
     }
 
+    @Override
     public String getSynopsis()
     {
         return _synopsis;
     }
 
+    @Override
     public void setSynopsis(String synopsis)
     {
         _synopsis = synopsis;
     }
 
+    @Override
     public Integer getLibraryId()
     {
         return _library_id;
@@ -291,6 +309,7 @@ public class AnalysisModelImpl implements AnalysisModel
         _library_id = library_id;
     }
 
+    @Override
     public void setLibraryId(Integer library_id)
     {
         _library_id = library_id;
@@ -325,6 +344,7 @@ public class AnalysisModelImpl implements AnalysisModel
         return null;
     }
 
+    @Override
     public JSONObject toJSON()
     {
         JSONObject ret = new JSONObject();

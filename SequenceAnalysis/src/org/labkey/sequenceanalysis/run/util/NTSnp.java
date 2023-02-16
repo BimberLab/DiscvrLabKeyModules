@@ -25,7 +25,7 @@ import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
  */
 public class NTSnp
 {
-    private CigarPositionIterable.PositionInfo _pi;
+    private final CigarPositionIterable.PositionInfo _pi;
     private Integer _insertIndex = null;
     private String _flag;
     private boolean _flagSet;

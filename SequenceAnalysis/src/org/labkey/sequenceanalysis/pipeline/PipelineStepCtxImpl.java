@@ -9,7 +9,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
  */
 public class PipelineStepCtxImpl<StepType extends PipelineStep> implements PipelineStepCtx<StepType>
 {
-    private PipelineStepProvider<StepType> _provider;
+    private final PipelineStepProvider<StepType> _provider;
     private int _stepIdx = 0;
 
     public PipelineStepCtxImpl(PipelineStepProvider<StepType> provider, int stepIdx)

@@ -6,6 +6,7 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class RunPHATE extends AbstractCellMembraneStep
 {
@@ -18,8 +19,8 @@ public class RunPHATE extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("RunPHATE", "Run PHATE", "CellMembrane/phateR", "This will run PHATE on the input object.", Arrays.asList(
-                SeuratToolParameter.create("phateT", "t", "Passed to the t parameter of phateR::phate().", "ldk-integerfield", null, null)
+            super("RunPHATE", "Run PHATE", "CellMembrane/phateR", "This will run PHATE on the input object.", List.of(
+                    SeuratToolParameter.create("phateT", "t", "Passed to the t parameter of phateR::phate().", "ldk-integerfield", null, null)
             ), null, null);
         }
 

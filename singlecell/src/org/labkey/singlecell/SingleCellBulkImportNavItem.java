@@ -13,7 +13,7 @@ public class SingleCellBulkImportNavItem extends AbstractImportingNavItem
 {
     public static final String NAME = "TCR/10x Import";
 
-    private String _url;
+    private final String _url;
 
     public SingleCellBulkImportNavItem(DataProvider provider, String label, LaboratoryService.NavItemCategory itemType, String reportCategory, String url)
     {

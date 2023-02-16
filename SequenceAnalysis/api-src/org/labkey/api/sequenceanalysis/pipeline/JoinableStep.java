@@ -22,5 +22,5 @@ package org.labkey.api.sequenceanalysis.pipeline;
  */
 public interface JoinableStep
 {
-    public void combine();
+    void combine();
 }

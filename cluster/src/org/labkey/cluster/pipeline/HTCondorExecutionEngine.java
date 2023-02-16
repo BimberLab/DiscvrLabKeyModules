@@ -38,6 +38,7 @@ public class HTCondorExecutionEngine extends AbstractClusterExecutionEngine<HTCo
         super(config, _log);
     }
 
+    @Override
     protected Set<String> updateStatusForAllJobs() throws PipelineJobException
     {
         //first check using condor_q, since condor_history might not pick up newly submitted jobs
@@ -297,7 +298,7 @@ public class HTCondorExecutionEngine extends AbstractClusterExecutionEngine<HTCo
         }
     }
 
-    public static enum StatusType
+    public enum StatusType
     {
         U("Unexpanded", null),
         I("Submitted, Idle", PipelineJob.TaskStatus.waiting),
@@ -308,8 +309,8 @@ public class HTCondorExecutionEngine extends AbstractClusterExecutionEngine<HTCo
         E("Error", PipelineJob.TaskStatus.error),
         S("Suspended", PipelineJob.TaskStatus.waiting);
 
-        private String _labkeyStatus;
-        private PipelineJob.TaskStatus _taskStatus;
+        private final String _labkeyStatus;
+        private final PipelineJob.TaskStatus _taskStatus;
 
         StatusType(String labkeyStatus, PipelineJob.TaskStatus taskStatus)
         {
@@ -339,7 +340,7 @@ public class HTCondorExecutionEngine extends AbstractClusterExecutionEngine<HTCo
         String command = getConfig().getHistoryCommandExpr().eval(ctx);
         if (command == null)
         {
-            throw new IllegalArgumentException("History command was null: " + String.valueOf(getConfig().getHistoryCommandExpr()));
+            throw new IllegalArgumentException("History command was null: " + getConfig().getHistoryCommandExpr());
         }
 
         List<String> ret = execute(command);

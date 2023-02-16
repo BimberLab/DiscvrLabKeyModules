@@ -119,10 +119,7 @@ public class BlastJob implements Serializable
     public Map<String, Object> getParamMap()
     {
         Map<String, Object> ret = new HashMap<>(_params);
-        if (ret.containsKey("outputFmt"))
-        {
-            ret.remove("outputFmt");
-        }
+        ret.remove("outputFmt");
 
         return ret;
     }
@@ -329,7 +326,7 @@ public class BlastJob implements Serializable
         return "ERROR".equalsIgnoreCase(statusFile.getStatus());
     }
 
-    public static enum BLAST_OUTPUT_FORMAT
+    public enum BLAST_OUTPUT_FORMAT
     {
         pairwise("Pairwise", "0", false, null),
         queryAnchoredWithIdentities("Query-anchored showing identities", "1", false, null),
@@ -342,7 +339,7 @@ public class BlastJob implements Serializable
         {
             class Summary
             {
-                Map<String, List<Alignment>> hitMap = new HashMap<>();
+                final Map<String, List<Alignment>> hitMap = new HashMap<>();
 
                 private void addAlignment(String sname, int qLen, int sLen, int alignLen)
                 {
@@ -360,9 +357,9 @@ public class BlastJob implements Serializable
 
             class Alignment
             {
-                int qLength;
-                int sLength;
-                int alignLength;
+                final int qLength;
+                final int sLength;
+                final int alignLength;
 
                 public Alignment(int qLength, int sLength, int alignLength)
                 {
@@ -479,10 +476,10 @@ public class BlastJob implements Serializable
                         }
                     }
 
-                    out.write("<td>" + sNameCell.toString() + "</td>");
-                    out.write("<td>" + alignLengthCell.toString() + "</td>");
-                    out.write("<td>" + qLengthCell.toString() + "</td>");
-                    out.write("<td>" + sLengthCell.toString() + "</td>");
+                    out.write("<td>" + sNameCell + "</td>");
+                    out.write("<td>" + alignLengthCell + "</td>");
+                    out.write("<td>" + qLengthCell + "</td>");
+                    out.write("<td>" + sLengthCell + "</td>");
 
                     out.write("</tr>");
                 }
@@ -513,10 +510,10 @@ public class BlastJob implements Serializable
             }
         });
 
-        private String _label;
-        private String _cmd;
-        private boolean _supportsHTML;
-        private BlastResultProcessor _processor;
+        private final String _label;
+        private final String _cmd;
+        private final boolean _supportsHTML;
+        private final BlastResultProcessor _processor;
 
         BLAST_OUTPUT_FORMAT(String label, String cmd, boolean supportsHtml, @Nullable BlastResultProcessor processor)
         {
@@ -555,9 +552,9 @@ public class BlastJob implements Serializable
 
     }
 
-    public static interface BlastResultProcessor
+    public interface BlastResultProcessor
     {
-        public void processResults(File results, Writer out) throws IOException, PipelineJobException;
+        void processResults(File results, Writer out) throws IOException, PipelineJobException;
     }
 }
 

@@ -104,7 +104,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
         @Override
         public List<String> getProtocolActionNames()
         {
-            return Arrays.asList("Create Reference Genome");
+            return List.of("Create Reference Genome");
         }
 
         @Override
@@ -172,7 +172,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                 libraryRow.put("description", getPipelineJob().getLibraryDescription());
 
                 BatchValidationException errors = new BatchValidationException();
-                List<Map<String, Object>> inserted = libraryTable.getUpdateService().insertRows(getJob().getUser(), getJob().getContainer(), Arrays.asList(libraryRow), errors, null, new HashMap<String, Object>());
+                List<Map<String, Object>> inserted = libraryTable.getUpdateService().insertRows(getJob().getUser(), getJob().getContainer(), List.of(libraryRow), errors, null, new HashMap<String, Object>());
                 if (errors.hasErrors())
                 {
                     throw errors;
@@ -369,7 +369,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             toUpdate.put("fasta_file", d.getRowId());
             Map<String, Object> existingKeys = new CaseInsensitiveHashMap<>();
             existingKeys.put("rowid", rowId);
-            libraryTable.getUpdateService().updateRows(getJob().getUser(), getJob().getContainer(), Arrays.asList(toUpdate), Arrays.asList(existingKeys), null, new HashMap<>());
+            libraryTable.getUpdateService().updateRows(getJob().getUser(), getJob().getContainer(), List.of(toUpdate), List.of(existingKeys), null, new HashMap<>());
 
             //then insert children, only if not already present
             List<Map<String, Object>> toInsert = new ArrayList<>();

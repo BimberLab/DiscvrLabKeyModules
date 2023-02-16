@@ -50,12 +50,12 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
     protected static final Set<String> OTHER_IDS = PageFlowUtil.set("N_ambiguous", "N_multimapping", "N_noFeature", "N_unmapped");
 
 
-    private FileType _fileType;
-    private String _toolName;
+    private final FileType _fileType;
+    private final String _toolName;
 
     public AbstractCombineGeneCountsHandler(String name, String description, boolean allowInferStranded, FileType fileType, String toolName)
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), name, description, new LinkedHashSet<>(Arrays.asList("LDK/field/SimpleCombo.js")), getParams(allowInferStranded));
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), name, description, new LinkedHashSet<>(List.of("LDK/field/SimpleCombo.js")), getParams(allowInferStranded));
         _fileType = fileType;
         _toolName = toolName;
     }
@@ -396,9 +396,9 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
         ctx.addActions(action);
     }
 
-    public static interface HeaderProvider
+    public interface HeaderProvider
     {
-        public String getHeader(JobContext ctx, SequenceOutputFile so);
+        String getHeader(JobContext ctx, SequenceOutputFile so);
     }
 
     private static String getHeaderValue(String idInHeader, SequenceAnalysisJobSupport support, SequenceOutputFile so)

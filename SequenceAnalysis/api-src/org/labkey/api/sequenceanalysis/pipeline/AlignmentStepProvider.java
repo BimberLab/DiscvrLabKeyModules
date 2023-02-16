@@ -7,5 +7,5 @@ public interface AlignmentStepProvider extends PipelineStepProvider
         return true;
     }
 
-    public boolean supportsMergeUnaligned();
+    boolean supportsMergeUnaligned();
 }

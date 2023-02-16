@@ -7,6 +7,8 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class DropAssays extends AbstractRiraStep
 {
@@ -19,14 +21,15 @@ public class DropAssays extends AbstractRiraStep
     {
         public Provider()
         {
-            super("DropAssays", "Assay(s) to Drop", "Seurat", "This will drop the selected assays from your Seurat object(s)", Arrays.asList(
-                SeuratToolParameter.create("assayNames", "Assay(s)", "The names of assays to drop, such as: RNA.orig, ADT, or RNA", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
-                    put("allowBlank", false);
-                    put("height", 150);
-                    put("delimiter", ",");
-                    put("stripCharsRe", "/['\"]/g");
-                }}, null).delimiter(",")
-            ), Arrays.asList("/sequenceanalysis/field/TrimmingTextArea.js"), null);
+            super("DropAssays", "Assay(s) to Drop", "Seurat", "This will drop the selected assays from your Seurat object(s)", Collections.singletonList(
+                    SeuratToolParameter.create("assayNames", "Assay(s)", "The names of assays to drop, such as: RNA.orig, ADT, or RNA", "sequenceanalysis-trimmingtextarea", new JSONObject()
+                    {{
+                        put("allowBlank", false);
+                        put("height", 150);
+                        put("delimiter", ",");
+                        put("stripCharsRe", "/['\"]/g");
+                    }}, null).delimiter(",")
+            ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
         @Override

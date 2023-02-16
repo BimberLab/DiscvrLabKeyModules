@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class PrintReadBackedHaplotypesHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    private FileType _bamFileType = new FileType("bam", false);
+    private final FileType _bamFileType = new FileType("bam", false);
 
     public PrintReadBackedHaplotypesHandler()
     {

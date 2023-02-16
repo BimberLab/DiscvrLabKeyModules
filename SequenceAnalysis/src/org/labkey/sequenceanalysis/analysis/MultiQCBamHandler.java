@@ -30,8 +30,9 @@ public class MultiQCBamHandler extends AbstractParameterizedOutputHandler<Sequen
 {
     public MultiQCBamHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "MultiQC", "This will run MultiQC to aggregate QC data for these files", null, Arrays.asList(
-                ToolParameterDescriptor.create("reportTitle", "Report Name", null, "textfield", new JSONObject(){{
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "MultiQC", "This will run MultiQC to aggregate QC data for these files", null, List.of(
+                ToolParameterDescriptor.create("reportTitle", "Report Name", null, "textfield", new JSONObject()
+                {{
                     put("allowBlank", false);
                 }}, null)
         ));

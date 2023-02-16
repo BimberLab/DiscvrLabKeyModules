@@ -27,7 +27,7 @@ import java.io.File;
  */
 public interface BamProcessingStep extends PipelineStep
 {
-    public BamProcessingStep.Output processBam(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDirectory) throws PipelineJobException;
+    BamProcessingStep.Output processBam(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDirectory) throws PipelineJobException;
 
     /**
      * The BamProcessingStep must call Output.setBam() to explicitly specify the modified file.  This method exists as a check
@@ -39,11 +39,11 @@ public interface BamProcessingStep extends PipelineStep
         return true;
     }
 
-    public static interface Output extends PipelineStepOutput
+    interface Output extends PipelineStepOutput
     {
         /**
          * Returns the processed BAM
          */
-        public File getBAM();
+        File getBAM();
     }
 }

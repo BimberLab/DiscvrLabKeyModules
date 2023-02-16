@@ -68,7 +68,7 @@ import static org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler.getInt
  */
 public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, SequenceOutputHandler.HasActionNames, SequenceOutputHandler.TracksVCF, VariantProcessingStep.MayRequirePrepareTask, VariantProcessingStep.SupportsScatterGather
 {
-    private FileType _gvcfFileType = new FileType(Arrays.asList(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
+    private final FileType _gvcfFileType = new FileType(List.of(".g.vcf"), ".g.vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
 
     @Override
     public String getName()
@@ -233,7 +233,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
             PipelineJob job = ctx.getJob();
-            ProcessVariantsHandler.Resumer resumer = ProcessVariantsHandler.Resumer.create((JobContextImpl) ctx);
+            ProcessVariantsHandler.Resumer resumer = ProcessVariantsHandler.Resumer.create(ctx);
 
             Set<Integer> genomeIds = new HashSet<>();
             List<File> inputVcfs = new ArrayList<>();

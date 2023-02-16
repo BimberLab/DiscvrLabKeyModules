@@ -43,16 +43,17 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
     {
         public Provider()
         {
-            super("SNPEffStep", "SNPEff", "SNPEff", "Annotate predicted functional effects using SNPEff", Arrays.asList(
+            super("SNPEffStep", "SNPEff", "SNPEff", "Annotate predicted functional effects using SNPEff", List.of(
                     ToolParameterDescriptor.createExpDataParam(GENE_PARAM, "Gene File", "This is the ID of a GTF or GFF3 file containing genes from this genome.", "sequenceanalysis-genomefileselectorfield", new JSONObject()
                     {{
                         put("extensions", Arrays.asList("gtf", "gff"));
                         put("width", 400);
                         put("allowBlank", false);
                     }}, null)
-                ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "http://snpeff.sourceforge.net/index.html");
+            ), PageFlowUtil.set("sequenceanalysis/field/GenomeFileSelectorField.js"), "http://snpeff.sourceforge.net/index.html");
         }
 
+        @Override
         public SNPEffStep create(PipelineContext ctx)
         {
             return new SNPEffStep(this, ctx);

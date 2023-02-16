@@ -17,7 +17,7 @@ import java.util.List;
  */
 public class FastaIndexer extends SamtoolsRunner
 {
-    private static String COMMAND = "faidx";
+    private static final String COMMAND = "faidx";
 
     public FastaIndexer(@Nullable Logger logger)
     {

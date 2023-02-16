@@ -61,9 +61,8 @@ public class VariantProcessingScatterRemotePrepareTask extends WorkDirectoryTask
         @Override
         public boolean isParticipant(PipelineJob job)
         {
-            if (job instanceof VariantProcessingJob)
+            if (job instanceof VariantProcessingJob vpj)
             {
-                VariantProcessingJob vpj = (VariantProcessingJob)job;
                 if (!vpj.isScatterJob())
                 {
                     job.getLogger().info("Skipping: " + ACTION_NAME);

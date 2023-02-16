@@ -9,10 +9,10 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 
 public class SeuratToolParameter extends ToolParameterDescriptor
 {
-    private String _rName;
-    private boolean _includeIfEmptyOrNull;
+    private final String _rName;
+    private final boolean _includeIfEmptyOrNull;
     private String _delimiter = ";";
-    private boolean _isMultiValue;
+    private final boolean _isMultiValue;
 
     public SeuratToolParameter(String name, String label, String description, String fieldXtype, @Nullable Object defaultValue, @Nullable JSONObject additionalExtConfig, String rName, boolean includeIfEmptyOrNull, boolean isMultiValue)
     {

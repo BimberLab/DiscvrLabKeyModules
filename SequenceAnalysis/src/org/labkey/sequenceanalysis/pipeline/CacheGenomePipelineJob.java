@@ -125,26 +125,31 @@ public class CacheGenomePipelineJob extends PipelineJob
                 super(CacheGenomesTask.class);
             }
 
+            @Override
             public List<FileType> getInputTypes()
             {
                 return Collections.emptyList();
             }
 
+            @Override
             public String getStatusName()
             {
                 return PipelineJob.TaskStatus.running.toString();
             }
 
+            @Override
             public List<String> getProtocolActionNames()
             {
-                return Arrays.asList("JBrowse");
+                return List.of("JBrowse");
             }
 
+            @Override
             public PipelineJob.Task createTask(PipelineJob job)
             {
                 return new CacheGenomesTask(this, job);
             }
 
+            @Override
             public boolean isJobComplete(PipelineJob job)
             {
                 return false;

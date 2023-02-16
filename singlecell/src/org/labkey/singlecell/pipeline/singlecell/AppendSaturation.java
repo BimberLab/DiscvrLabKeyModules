@@ -45,9 +45,7 @@ public class AppendSaturation extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("AppendSaturation", "Append Saturation", "CellMembrane", "This will calculate sequencing saturation per-cell and append as metadata.", Arrays.asList(
-
-            ), null, null);
+            super("AppendSaturation", "Append Saturation", "CellMembrane", "This will calculate sequencing saturation per-cell and append as metadata.", List.of(), null, null);
         }
 
         @Override

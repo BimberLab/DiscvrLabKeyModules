@@ -69,7 +69,7 @@ public class ImportFastaSequencesPipelineJob extends PipelineJob
 
         AssayFileWriter writer = new AssayFileWriter();
         String folderName = "SequenceImport_" + FileUtil.getTimestamp();
-        webserverOutDir = writer.findUniqueFileName(folderName, webserverOutDir);
+        webserverOutDir = AssayFileWriter.findUniqueFileName(folderName, webserverOutDir);
         if (!webserverOutDir.exists())
         {
             webserverOutDir.mkdirs();
@@ -186,8 +186,9 @@ public class ImportFastaSequencesPipelineJob extends PipelineJob
 
         public static class UploadFileFilter extends PipelineProvider.FileEntryFilter
         {
-            private static FileType _fasta = new FileType(Arrays.asList("fa", "fasta"), "fasta", FileType.gzSupportLevel.SUPPORT_GZ);
+            private static final FileType _fasta = new FileType(Arrays.asList("fa", "fasta"), "fasta", FileType.gzSupportLevel.SUPPORT_GZ);
 
+            @Override
             public boolean accept(File file)
             {
                 return fileExists(file) && _fasta.isType(file);

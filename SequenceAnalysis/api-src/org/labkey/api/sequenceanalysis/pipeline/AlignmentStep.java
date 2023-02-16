@@ -37,9 +37,9 @@ public interface AlignmentStep extends PipelineStep
      * Creates any indexes needed by this aligner if not already present.
      * @throws PipelineJobException
      */
-    public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException;
+    IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException;
 
-    default public String getIndexCachedDirName(PipelineJob job)
+    default String getIndexCachedDirName(PipelineJob job)
     {
         return getProvider().getName();
     }
@@ -51,7 +51,7 @@ public interface AlignmentStep extends PipelineStep
      * @param basename The basename to use as the output
      * @throws PipelineJobException
      */
-    public AlignmentOutput performAlignment(Readset rs, List<File> inputFastqs1, @Nullable List<File> inputFastqs2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException;
+    AlignmentOutput performAlignment(Readset rs, List<File> inputFastqs1, @Nullable List<File> inputFastqs2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException;
 
     default boolean canAlignMultiplePairsAtOnce()
     {
@@ -68,18 +68,18 @@ public interface AlignmentStep extends PipelineStep
         return inputs == null ? null : inputs.get(0);
     }
 
-    public boolean doAddReadGroups();
+    boolean doAddReadGroups();
 
-    public boolean doSortIndexBam();
+    boolean doSortIndexBam();
 
     default boolean supportsMetrics()
     {
         return true;
     }
 
-    public boolean alwaysCopyIndexToWorkingDir();
+    boolean alwaysCopyIndexToWorkingDir();
 
-    public boolean supportsGzipFastqs();
+    boolean supportsGzipFastqs();
 
     @Override
     AlignmentStepProvider getProvider();
@@ -89,14 +89,14 @@ public interface AlignmentStep extends PipelineStep
         return "Aligner: " + getProvider().getName();
     }
 
-    public static interface AlignmentOutput extends PipelineStepOutput
+    interface AlignmentOutput extends PipelineStepOutput
     {
         /**
          * If created, returns a pair of FASTQ files containing the unaligned reads
          */
-        public File getUnalignedReadsFastq();
+        File getUnalignedReadsFastq();
 
-        public File getBAM();
+        File getBAM();
     }
 
     /**
@@ -117,7 +117,7 @@ public interface AlignmentStep extends PipelineStep
 
     }
 
-    public static interface IndexOutput extends PipelineStepOutput
+    interface IndexOutput extends PipelineStepOutput
     {
 
     }

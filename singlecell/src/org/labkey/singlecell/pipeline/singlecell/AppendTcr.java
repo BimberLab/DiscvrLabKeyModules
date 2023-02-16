@@ -7,6 +7,7 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class AppendTcr extends AbstractRDiscvrStep
 {
@@ -19,8 +20,9 @@ public class AppendTcr extends AbstractRDiscvrStep
     {
         public Provider()
         {
-            super("AppendTcr", "Append TCR Data", "RDiscvr", "This uses Rdiscvr::DownloadAndAppendTcrClonotypes to append TCR data.", Arrays.asList(
-                    SeuratToolParameter.create("allowMissing", "Allow Missing Data", "If checked, an error will be thrown if any sample lacks TCR data", "checkbox", new JSONObject(){{
+            super("AppendTcr", "Append TCR Data", "RDiscvr", "This uses Rdiscvr::DownloadAndAppendTcrClonotypes to append TCR data.", List.of(
+                    SeuratToolParameter.create("allowMissing", "Allow Missing Data", "If checked, an error will be thrown if any sample lacks TCR data", "checkbox", new JSONObject()
+                    {{
                         put("checked", true);
                     }}, true)
             ), null, null);

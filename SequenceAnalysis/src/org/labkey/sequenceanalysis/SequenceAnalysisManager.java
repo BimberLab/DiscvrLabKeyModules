@@ -137,7 +137,7 @@ public class SequenceAnalysisManager
         while (null != (e = e.getNextException()))
         {
             sb.append("; ");
-            sb.append(e.toString());
+            sb.append(e);
         }
         return sb.toString();
     }
@@ -164,6 +164,7 @@ public class SequenceAnalysisManager
             TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_SEQUENCE_PLATFORMS));
             ts.forEach(new TableSelector.ForEachBlock<ResultSet>()
             {
+                @Override
                 public void exec(ResultSet rs) throws SQLException
                 {
                     _platforms.add(rs.getString("platform"));
@@ -678,7 +679,7 @@ public class SequenceAnalysisManager
         //finally the record itself
         Map<String, Object> map = new CaseInsensitiveHashMap<>();
         map.put("rowid", rowId);
-        List<Map<String, Object>> toDelete = Arrays.asList(map);
+        List<Map<String, Object>> toDelete = List.of(map);
 
         Map<String, Object> scriptContext = new HashMap<>();
         scriptContext.put("deleteFromServer", true);  //a flag to make the trigger script accept this
@@ -827,8 +828,7 @@ public class SequenceAnalysisManager
 
         //create file
         String expectedName = "chain-" + genomeId1 + "to" + genomeId2 + ".chain";
-        AssayFileWriter writer = new AssayFileWriter();
-        File outputFile = writer.findUniqueFileName(expectedName, targetDir);
+        File outputFile = AssayFileWriter.findUniqueFileName(expectedName, targetDir);
 
         FileUtils.moveFile(file, outputFile);
         ExpData chainFile = ExperimentService.get().createData(c, new DataType("Sequence Track"));
@@ -852,14 +852,14 @@ public class SequenceAnalysisManager
         Table.insert(u, chainTable, map);
     }
 
-    public SequenceOutputHandler getFileHandler(String handlerClass, SequenceOutputHandler.TYPE type)
+    public SequenceOutputHandler<?> getFileHandler(String handlerClass, SequenceOutputHandler.TYPE type)
     {
         if (StringUtils.isEmpty(handlerClass))
         {
             return null;
         }
 
-        for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers(type))
+        for (SequenceOutputHandler<?> handler : SequenceAnalysisServiceImpl.get().getFileHandlers(type))
         {
             if (handler.getClass().getName().equals(handlerClass))
             {

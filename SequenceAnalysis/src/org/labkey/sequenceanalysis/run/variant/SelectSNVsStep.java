@@ -65,6 +65,7 @@ public class SelectSNVsStep extends AbstractCommandPipelineStep<SelectVariantsWr
             ), PageFlowUtil.set("/ldk/field/SimpleCombo.js"), "https://software.broadinstitute.org/gatk/");
         }
 
+        @Override
         public SelectSNVsStep create(PipelineContext ctx)
         {
             return new SelectSNVsStep(this, ctx);

@@ -24,8 +24,8 @@ import java.util.regex.Pattern;
 public class CellRangerWrapper extends AbstractCommandWrapper
 {
     public static final String GTF_FILE = "GTF File";
-    private static Pattern FILE_PATTERN = Pattern.compile("^(.+?)(_S[0-9]+){0,1}_L(.+?)_(R){0,1}([0-9])(_[0-9]+){0,1}(.*?)(\\.f(ast){0,1}q)(\\.gz)?$");
-    private static Pattern SAMPLE_PATTERN = Pattern.compile("^(.+)_S[0-9]+(.*)$");
+    private static final Pattern FILE_PATTERN = Pattern.compile("^(.+?)(_S[0-9]+){0,1}_L(.+?)_(R){0,1}([0-9])(_[0-9]+){0,1}(.*?)(\\.f(ast){0,1}q)(\\.gz)?$");
+    private static final Pattern SAMPLE_PATTERN = Pattern.compile("^(.+)_S[0-9]+(.*)$");
 
     public CellRangerWrapper(@Nullable Logger logger)
     {
@@ -88,13 +88,13 @@ public class CellRangerWrapper extends AbstractCommandWrapper
         Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
         if (maxThreads != null)
         {
-            args.add("--localcores=" + maxThreads.toString());
+            args.add("--localcores=" + maxThreads);
         }
 
         Integer maxRam = SequencePipelineService.get().getMaxRam();
         if (maxRam != null)
         {
-            args.add("--localmem=" + maxRam.toString());
+            args.add("--localmem=" + maxRam);
         }
 
         File localFqDir = getLocalFastqDir(outputDirectory);

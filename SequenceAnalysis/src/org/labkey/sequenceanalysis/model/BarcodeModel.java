@@ -65,11 +65,13 @@ public class BarcodeModel extends SequenceTag
         return bc;
     }
 
+    @Override
     public String getName()
     {
         return _tag_name;
     }
 
+    @Override
     public String getSequence()
     {
         return _sequence;

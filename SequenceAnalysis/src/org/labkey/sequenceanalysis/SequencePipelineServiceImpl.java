@@ -55,13 +55,13 @@ import java.util.Set;
  */
 public class SequencePipelineServiceImpl extends SequencePipelineService
 {
-    private static SequencePipelineServiceImpl _instance = new SequencePipelineServiceImpl();
+    private static final SequencePipelineServiceImpl _instance = new SequencePipelineServiceImpl();
 
     private static final Logger _log = LogManager.getLogger(SequencePipelineServiceImpl.class);
-    private Set<PipelineStepProvider> _providers = new HashSet<>();
-    private Set<JobResourceSettings> _resourceSettings = new HashSet<>();
+    private final Set<PipelineStepProvider> _providers = new HashSet<>();
+    private final Set<JobResourceSettings> _resourceSettings = new HashSet<>();
 
-    private Map<Class<? extends PipelineStep>, String> _pipelineStepTypeMap = new HashMap<>();
+    private final Map<Class<? extends PipelineStep>, String> _pipelineStepTypeMap = new HashMap<>();
 
     private SequencePipelineServiceImpl()
     {

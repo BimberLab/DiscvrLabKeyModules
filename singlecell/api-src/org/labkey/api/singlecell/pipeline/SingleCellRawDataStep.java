@@ -5,5 +5,5 @@ package org.labkey.api.singlecell.pipeline;
  */
 public interface SingleCellRawDataStep extends AbstractSingleCellStep
 {
-    public final String STEP_TYPE = "singleCellRawData";
+    String STEP_TYPE = "singleCellRawData";
 }

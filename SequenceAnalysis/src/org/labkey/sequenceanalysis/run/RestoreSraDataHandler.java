@@ -68,8 +68,9 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
 {
     public RestoreSraDataHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Restore SRA Data", "This will run SRA fasterq-dump to re-download the original FASTQ(s), based on SRA accession. This will fail for any job without an archived read data or archived read data without an SRA accession", null, Arrays.asList(
-                ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Restore SRA Data", "This will run SRA fasterq-dump to re-download the original FASTQ(s), based on SRA accession. This will fail for any job without an archived read data or archived read data without an SRA accession", null, List.of(
+                ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject()
+                {{
                     put("checked", true);
                 }}, false)
         ));
@@ -232,7 +233,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                                 ExpData d2 = r.getFileId2() == null ? null : ExperimentService.get().getExpData(r.getFileId2());
                                 writer.println("Condensing/merging readdata: " + r.getRowid() + ", " + r.getFileId1() + ", " + d1.getFile().getPath() + ", " + (r.getFileId2() == null ? "N/A" : r.getFileId2()) + ", " + (r.getFileId2() == null ? "N/A" : d2.getFile().getPath()));
 
-                                List<Map<String, Object>> toDelete = Arrays.asList(Map.of("rowid", r.getRowid()));
+                                List<Map<String, Object>> toDelete = List.of(Map.of("rowid", r.getRowid()));
                                 QueryService.get().getUserSchema(job.getUser(), ContainerManager.getForId(r.getContainer()), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READ_DATA).getUpdateService().deleteRows(job.getUser(), ContainerManager.getForId(r.getContainer()), toDelete, null, null);
                             }
 

@@ -65,7 +65,7 @@ public class PARalyzerAnalysis extends AbstractCommandPipelineStep<PARalyzerRunn
         output.addInput(inputBam, "BAM File");
 
         Map<String, String> toolParams = new HashMap<>();
-        for (ToolParameterDescriptor pd : (List<ToolParameterDescriptor>)getProvider().getParameters())
+        for (ToolParameterDescriptor pd : getProvider().getParameters())
         {
             String val = pd.extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx());
             if (!StringUtils.isEmpty(val))

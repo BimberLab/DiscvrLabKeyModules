@@ -7,6 +7,7 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class DoubletFinder extends AbstractCellMembraneStep
 {
@@ -19,8 +20,9 @@ public class DoubletFinder extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("DoubletFinder", "DoubletFinder", "DoubletFinder", "This will run DoubletFinder to identify putative doublets.", Arrays.asList(
-                    SeuratToolParameter.create("dropDoublets", "Drop Doublets", "If true, any cells flagged as doublets will be dropped from the seurat object", "checkbox", new JSONObject(){{
+            super("DoubletFinder", "DoubletFinder", "DoubletFinder", "This will run DoubletFinder to identify putative doublets.", List.of(
+                    SeuratToolParameter.create("dropDoublets", "Drop Doublets", "If true, any cells flagged as doublets will be dropped from the seurat object", "checkbox", new JSONObject()
+                    {{
 
                     }}, false)
             ), null, null);

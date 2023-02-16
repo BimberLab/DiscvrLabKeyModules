@@ -28,9 +28,9 @@ import java.util.Set;
  */
 public class AASnpByReadAggregator extends AASnpByCodonAggregator
 {
-    private Map<String, Integer> _snps = new HashMap<>();
-    private Map<String, CacheKeyInfo> _cacheDef = new HashMap<>();
-    private Map<String, byte[]> _refSequenceMap = new HashMap<>();
+    private final Map<String, Integer> _snps = new HashMap<>();
+    private final Map<String, CacheKeyInfo> _cacheDef = new HashMap<>();
+    private final Map<String, byte[]> _refSequenceMap = new HashMap<>();
     private static final String SNP_KEY = "_snpKey";
 
     public AASnpByReadAggregator(Logger log, File refFasta, AvgBaseQualityAggregator avgQualAggregator, Map<String, String> settings)
@@ -104,10 +104,10 @@ public class AASnpByReadAggregator extends AASnpByCodonAggregator
 
     private String getAAKey(AASnp snp)
     {
-        return new StringBuilder().append(snp.getAaRef().getRowId()).append("||")
-            .append(snp.getReferenceAaPosition()).append("||")
-            .append(snp.getCodon()).append("||")
-            .append(snp.getNtSnp().getReadname()).toString();
+        return snp.getAaRef().getRowId() + "||" +
+                snp.getReferenceAaPosition() + "||" +
+                snp.getCodon() + "||" +
+                snp.getNtSnp().getReadname();
     }
 
     @Override
@@ -125,17 +125,17 @@ public class AASnpByReadAggregator extends AASnpByCodonAggregator
 
     private class CacheKeyInfo
     {
-        private Integer _aaRefId;
-        private String _aaRefName;
-        private String _ntRefName;
-        private Integer _aaRefPos;
-        private Integer _aaInsertIndex;
-        private String _readResidue;
-        private String _refResidue;
-        private String _codon;
+        private final Integer _aaRefId;
+        private final String _aaRefName;
+        private final String _ntRefName;
+        private final Integer _aaRefPos;
+        private final Integer _aaInsertIndex;
+        private final String _readResidue;
+        private final String _refResidue;
+        private final String _codon;
 
-        private Set<Pair<Integer, Integer>> _ntPositions = new HashSet<>();
-        private Set<String> _ntPositionStrings = new HashSet<>();
+        private final Set<Pair<Integer, Integer>> _ntPositions = new HashSet<>();
+        private final Set<String> _ntPositionStrings = new HashSet<>();
 
         public CacheKeyInfo(AASnp snp)
         {

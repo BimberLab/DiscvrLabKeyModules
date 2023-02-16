@@ -282,7 +282,7 @@ public class ChainFileValidator
         return newId;
     }
 
-    private Map<Integer, Map<String, String>> _cachedReferencesByGenome = new HashMap<>();
+    private final Map<Integer, Map<String, String>> _cachedReferencesByGenome = new HashMap<>();
 
     private String resolveSequenceId(String refName, int genomeId)
     {

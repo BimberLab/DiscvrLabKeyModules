@@ -53,6 +53,7 @@ public class PrintReadsContainingStep extends AbstractCommandPipelineStep<PrintR
             ), PageFlowUtil.set("/sequenceanalysis/field/TrimmingTextArea.js"), "https://github.com/BimberLab/DISCVRSeq");
         }
 
+        @Override
         public PrintReadsContainingStep create(PipelineContext context)
         {
             return new PrintReadsContainingStep(this, context);

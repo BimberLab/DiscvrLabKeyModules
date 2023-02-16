@@ -48,7 +48,7 @@ import java.util.TreeSet;
 public class BamHaplotyper
 {
     private static final Logger _log = LogManager.getLogger(BamHaplotyper.class);
-    private User _u;
+    private final User _u;
 
     public BamHaplotyper(User u)
     {
@@ -407,7 +407,6 @@ public class BamHaplotyper
         }
         else if (base == 'N')
         {
-            return;
         }
         else if (existing != base)
         {
