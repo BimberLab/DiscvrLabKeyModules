@@ -4,7 +4,7 @@ CREATE TABLE singlecell.singlecellDatasets (
     loupeFileId int,
     readsetId int,
     cDNAId int,
-    status nvarchar(100),
+    status varchar(100),
 
     container entityid,
     created timestamp,
