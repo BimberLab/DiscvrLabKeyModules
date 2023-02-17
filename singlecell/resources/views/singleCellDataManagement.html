@@ -82,6 +82,18 @@
                             'query.category~eq': '10x Run Summary',
                             'query.readset/totalOutputs~eq': 1
                         })
+                    },{
+                        name: 'Stale Seurat Object Prototypes',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
+                            schemaName: 'singlecell',
+                            queryName: 'stalePrototypes'
+                        })
+                    },{
+                        name: 'List of Single-cell Datasets',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
+                            schemaName: 'singlecell',
+                            queryName: 'singlecellDatasets'
+                        })
                     }]
                 }]
             }]
