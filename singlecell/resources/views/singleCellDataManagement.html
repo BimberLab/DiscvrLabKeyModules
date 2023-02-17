@@ -89,6 +89,12 @@
                             queryName: 'stalePrototypes'
                         })
                     },{
+                        name: 'Duplicate Seurat Object Prototypes',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
+                            schemaName: 'singlecell',
+                            queryName: 'duplicatePrototypes'
+                        })
+                    },{
                         name: 'List of Single-cell Datasets',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
                             schemaName: 'singlecell',
