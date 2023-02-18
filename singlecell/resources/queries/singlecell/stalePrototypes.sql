@@ -5,6 +5,7 @@ SELECT
 FROM (
     SELECT
     o.rowId,
+    o.analysis_id,
     o.name,
     o.readset,
     o.readset.status,
