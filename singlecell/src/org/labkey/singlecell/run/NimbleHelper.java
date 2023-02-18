@@ -185,6 +185,16 @@ public class NimbleHelper
         for (NimbleGenome genome : genomes)
         {
             File results = resultMap.get(genome);
+            if (results == null)
+            {
+                throw new PipelineJobException("No output recorded for genome : " + genome.getGenomeId());
+            }
+
+            if (!results.exists())
+            {
+                throw new PipelineJobException("Unable to find file: " + results.getPath());
+            }
+
             String description = genome.getScorePercent() > 0 ? "score_percent: " + genome.getScorePercent() : null;
             output.addSequenceOutput(results, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), description);
         }
@@ -382,7 +392,7 @@ public class NimbleHelper
                 throw new PipelineJobException("Expected to find file: " + log.getPath());
             }
 
-            getPipelineCtx().getLogger().info("Nimble alignment stats:");
+            getPipelineCtx().getLogger().info("Nimble alignment stats for genome :" + genome.getGenomeId());
             try (BufferedReader reader = Readers.getReader(log))
             {
                 String line;
@@ -406,6 +416,8 @@ public class NimbleHelper
             {
                 getPipelineCtx().getLogger().debug("Alignment output file not present: " + alignmentOutputFile.getName());
             }
+
+            resultMap.put(genome, resultsGz);
         }
 
         return resultMap;
