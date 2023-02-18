@@ -98,6 +98,7 @@ saveData <- function(seuratObj, datasetId) {
     }
 
     write.table(toAppend, file = 'savedSeuratObjects.txt', quote = FALSE, sep = '\t', row.names = FALSE, col.names = FALSE, append = TRUE)
+    print(paste0('Total lines in savedSeuratObjects.txt after save:', length(readLines('savedSeuratObjects.txt'))))
 
     # Write cell barcodes and metadata:
     metaDf <- seuratObj@meta.data
