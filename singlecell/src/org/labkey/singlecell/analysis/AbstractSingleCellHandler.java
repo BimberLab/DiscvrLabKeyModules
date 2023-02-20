@@ -669,6 +669,8 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     try
                     {
                         ctx.getLogger().debug("Comparing file context of output to determine if it matches input: "+ output.getFile().getName());
+                        ctx.getLogger().debug("Original file: " + localCopyToOrig.get(output.getFile()));
+                        ctx.getLogger().debug("Pipeline output file: " + output.getFile());
                         if (FileUtils.contentEquals(localCopyToOrig.get(output.getFile()), output.getFile()))
                         {
                             ctx.getLogger().info("Sequence output is the same as an input, will not re-create output for seurat object: " + output.getFile().getPath());
