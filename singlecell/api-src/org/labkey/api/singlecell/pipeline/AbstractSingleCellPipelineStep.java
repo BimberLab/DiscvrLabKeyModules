@@ -550,7 +550,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 return "library(" + x + ")";
             }).collect(Collectors.toList()));
 
-            bodyLines.add("knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE, error=FALSE)");
+            bodyLines.add("knitr::opts_chunk$set(echo = TRUE, cache=FALSE, message=FALSE, warning=FALSE, error=FALSE)");
             chunkOpts = "include=FALSE";
         }
     }
