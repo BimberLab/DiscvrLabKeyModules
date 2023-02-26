@@ -559,6 +559,11 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Create New Session", false);
 
         beginAt("/project/" + getProjectName() + "/begin.view");
+
+        // If the search panel doesnt fully load, we can get an alert on page navigation
+        Locator searchLocator = Locator.tagWithClass("input", "MuiInputBase-input");
+        waitForElement(searchLocator);
+
         _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
         dr = DataRegionTable.DataRegion(getDriver()).find();
         dr.clickRowDetails(0);
