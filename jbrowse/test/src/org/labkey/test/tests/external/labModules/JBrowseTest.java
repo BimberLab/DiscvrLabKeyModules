@@ -561,6 +561,10 @@ public class JBrowseTest extends BaseWebDriverTest
         beginAt("/project/" + getProjectName() + "/begin.view");
         _helper.waitForLabToolsToLoad();
 
+        // If the search panel doesnt fully load, we can get an alert on page navigation
+        Locator searchLocator = Locator.tagWithClass("input", "MuiInputBase-input");
+        waitForElement(searchLocator);
+
         _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
         dr = DataRegionTable.DataRegion(getDriver()).find();
         dr.clickRowDetails(0);

@@ -35,6 +35,7 @@ import org.labkey.singlecell.analysis.AbstractSingleCellHandler;
 import org.labkey.singlecell.analysis.CellRangerRawDataHandler;
 import org.labkey.singlecell.analysis.ProcessSeuratObjectHandler;
 import org.labkey.singlecell.analysis.ProcessSingleCellHandler;
+import org.labkey.singlecell.analysis.SingleCellReadsetListener;
 import org.labkey.singlecell.button.FeatureBarcodeButton;
 import org.labkey.singlecell.pipeline.singlecell.*;
 import org.labkey.singlecell.run.CellBenderCiteSeqHandler;
@@ -65,7 +66,7 @@ public class SingleCellModule extends ExtendedSimpleModule
     @Override
     public @Nullable Double getSchemaVersion()
     {
-        return 20.004;
+        return 20.005;
     }
 
     @Override
@@ -213,6 +214,8 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new CustomUCell.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunSDA.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunLDA.Provider());
+
+        SequenceAnalysisService.get().registerReadsetListener(new SingleCellReadsetListener());
     }
 
     @Override

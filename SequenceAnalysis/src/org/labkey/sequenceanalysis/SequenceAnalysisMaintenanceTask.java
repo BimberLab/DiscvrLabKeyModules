@@ -533,6 +533,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         if (_bamFileType.isType(f))
         {
             ret.add(f.getName() + ".bai");
+            ret.add(f.getName() + ".pbi");
         }
         else if (_cramFileType.isType(f))
         {

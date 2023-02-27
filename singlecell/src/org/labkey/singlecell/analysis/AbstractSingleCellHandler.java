@@ -378,7 +378,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
             List<SingleCellStep.SeuratObjectWrapper> currentFiles;
             Set<File> originalInputs = inputFiles.stream().map(SequenceOutputFile::getFile).collect(Collectors.toSet());
-            Set<File> originalRDSCopiedLocal = new HashSet<>();
+            Map<File, File> localCopyToOrig = new HashMap<>();
             if (_doProcessRawCounts)
             {
                 currentFiles = processRawCounts(ctx, inputFiles, basename);
@@ -453,9 +453,8 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         }
                         
                         currentFiles.add(new SingleCellStep.SeuratObjectWrapper(datasetId, datasetId, local, so));
+                        localCopyToOrig.put(local, so.getFile());
                     }
-
-                    originalRDSCopiedLocal.addAll(currentFiles.stream().map(AbstractSingleCellStep.SeuratObjectWrapper::getFile).collect(Collectors.toSet()));
                 }
                 catch (IOException e)
                 {
@@ -664,11 +663,27 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 }
 
                 //This indicates the job processed an input file, but did not create a new object (like running FindMarkers)
-                if (originalRDSCopiedLocal.contains(output.getFile()))
+                boolean skipOutput = false;
+                if (localCopyToOrig.containsKey(output.getFile()))
                 {
-                    ctx.getLogger().info("Sequence output is the same as an input, will not re-create output for seurat object: " + output.getFile().getPath());
+                    try
+                    {
+                        ctx.getLogger().debug("Comparing file context of output to determine if it matches input: "+ output.getFile().getName());
+                        ctx.getLogger().debug("Original file: " + localCopyToOrig.get(output.getFile()));
+                        ctx.getLogger().debug("Pipeline output file: " + output.getFile());
+                        if (FileUtils.contentEquals(localCopyToOrig.get(output.getFile()), output.getFile()))
+                        {
+                            ctx.getLogger().info("Sequence output is the same as an input, will not re-create output for seurat object: " + output.getFile().getPath());
+                            skipOutput = true;
+                        }
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
                 }
-                else
+
+                if (!skipOutput)
                 {
                     Set<File> existingOutputs = _resumer.getFileManager().getOutputsToCreate().stream().map(SequenceOutputFile::getFile).collect(Collectors.toSet());
                     if (existingOutputs.contains(so.getFile()))

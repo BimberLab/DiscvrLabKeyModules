@@ -1,0 +1,23 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="" useColumnOrder="false" tableDbType="TABLE">
+                <tableTitle>Duplicated Seurat Object Prototypes</tableTitle>
+                <columns>
+                    <column columnName="readset">
+                        <columnTitle>Readset Id</columnTitle>
+                    </column>
+                    <column columnName="minRowId">
+                        <columnTitle>Row Id</columnTitle>
+                    </column>
+                    <column columnName="minAnalysisId">
+                        <columnTitle>Analysis Id</columnTitle>
+                    </column>
+                    <column columnName="totalPrototypes">
+                        <columnTitle>Total Prototypes</columnTitle>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

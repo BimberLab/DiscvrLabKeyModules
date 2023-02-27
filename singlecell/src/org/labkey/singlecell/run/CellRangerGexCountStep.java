@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.arrays.IntegerArray;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.ConvertHelper;
@@ -22,6 +23,7 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.reader.Readers;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -43,13 +45,16 @@ import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
+import org.labkey.singlecell.SingleCellSchema;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -529,6 +534,38 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         else
         {
             getPipelineCtx().getLogger().warn("unable to find metrics file: " + metrics.getPath());
+        }
+
+        TableInfo cDNA = SingleCellSchema.getInstance().getSchema().getTable(SingleCellSchema.TABLE_CDNAS);
+        TableInfo singlecellDatasets = SingleCellSchema.getInstance().getSchema().getTable(SingleCellSchema.TABLE_SINGLECELL_DATASETS);
+        for (SequenceOutputFile so : outputFilesCreated)
+        {
+            if (LOUPE_CATEGORY.equals(so.getCategory()))
+            {
+                getPipelineCtx().getLogger().debug("Creating singlecell dataset record");
+                if (so.getRowid() == null || so.getRowid() == 0)
+                {
+                    throw new PipelineJobException("The outputfiles have not been created in the database yet");
+                }
+
+                Map<String, Object> toInsert = new HashMap<>();
+                toInsert.put("loupeFileId", so.getRowid());
+                toInsert.put("readsetId", so.getReadset());
+
+                Readset rs = SequenceAnalysisService.get().getReadset(so.getReadset(), getPipelineCtx().getJob().getUser());
+                toInsert.put("name", rs.getName());
+
+                Integer maxCDNA = new TableSelector(cDNA, PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("readsetId"), rs.getReadsetId()), null).getArrayList(Integer.class).stream().max(Integer::compareTo).orElse(null);
+                toInsert.put("cDNAId", maxCDNA);
+
+                toInsert.put("container", so.getContainer());
+                toInsert.put("created", so.getCreated());
+                toInsert.put("createdby", so.getCreatedby());
+                toInsert.put("modified", so.getModified());
+                toInsert.put("modifiedby", so.getModifiedby());
+
+                Table.insert(getPipelineCtx().getJob().getUser(), singlecellDatasets, toInsert);
+            }
         }
     }
 }

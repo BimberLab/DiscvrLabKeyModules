@@ -66,7 +66,7 @@ public class RunCelltypist extends AbstractRiraStep
                     SeuratToolParameter.create("maxBatchSize", "Max Cells Per Batch", "If the object has more than this many cells, celltypist will be run in batches", "ldk-integerfield", new JSONObject()
                     {{
                         put("minValue", 0);
-                    }}, 500000)
+                    }}, 100000)
             ), null, null);
         }
 

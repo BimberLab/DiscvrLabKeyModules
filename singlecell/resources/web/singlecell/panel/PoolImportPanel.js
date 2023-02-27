@@ -510,7 +510,15 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             xtype: 'checkbox',
             fieldLabel: 'Combine Hashing and Cite-Seq Libraries',
             itemId: 'combineHashingCite',
-            checked: false
+            checked: false,
+            listeners: {
+                change: function(field, val) {
+                    if (val) {
+                        // The combined library only makes sense if using BioLegend:
+                        field.up('panel').down('#hashingType').setValue('BioLegend');
+                    }
+                }
+            }
         },{
             xtype: 'checkbox',
             fieldLabel: 'Require Library Concentrations',
