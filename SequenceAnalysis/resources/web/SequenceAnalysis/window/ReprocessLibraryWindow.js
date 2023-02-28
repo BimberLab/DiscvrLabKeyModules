@@ -27,6 +27,11 @@ Ext4.define('SequenceAnalysis.window.ReprocessLibraryWindow', {
                 html: 'This will cause the server to reprocess the selected reference genomes, which should be used if the data or attributes have changed.',
                 border: false,
                 style: 'padding-bottom: 10px;'
+            },{
+                xtype: 'checkbox',
+                itemId: 'alignerIndexesOnly',
+                fieldLabel: 'Prepare Aligner Indexes Only',
+                checked: false
             }],
             buttons: [{
                 text: 'Submit',
@@ -46,10 +51,13 @@ Ext4.define('SequenceAnalysis.window.ReprocessLibraryWindow', {
     onSubmit: function(){
         Ext4.Msg.wait('Saving...');
 
+        var skipFastaRecreate = !!this.down('#alignerIndexesOnly').getValue();
+
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'recreateReferenceLibrary'),
             jsonData: {
-                libraryIds: this.libraryIds
+                libraryIds: this.libraryIds,
+                skipFastaRecreate: skipFastaRecreate
             },
             scope: this,
             success: function(){

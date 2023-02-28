@@ -57,9 +57,9 @@ import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
-import picard.sam.CreateSequenceDictionary;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -111,6 +111,33 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
         public PipelineJob.Task<?> createTask(PipelineJob job)
         {
             return new CreateReferenceLibraryTask(this, job);
+        }
+
+        @Override
+        public boolean isParticipant(PipelineJob job) throws IOException
+        {
+            if (!(job instanceof ReferenceLibraryPipelineJob rpj))
+            {
+                throw new IllegalArgumentException("Pipeline job is not a ReferenceLibraryPipelineJob");
+            }
+
+            if (rpj.isSkipFastaRecreate())
+            {
+                job.getLogger().debug("Will skip re-creation of FASTA");
+                try
+                {
+                    ReferenceGenomeImpl genome = SequenceAnalysisServiceImpl.get().getReferenceGenome(rpj.getLibraryId(), job.getUser());
+                    rpj.setReferenceGenome(genome);
+                }
+                catch (PipelineJobException e)
+                {
+                    job.error(e.getMessage(), e);
+                }
+
+                return false;
+            }
+
+            return super.isParticipant(job);
         }
 
         @Override

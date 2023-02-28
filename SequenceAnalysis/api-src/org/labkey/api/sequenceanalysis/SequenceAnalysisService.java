@@ -105,4 +105,13 @@ abstract public class SequenceAnalysisService
     abstract public void mergeFastqFiles(File output, List<File> inputs, Logger log) throws PipelineJobException;
 
     abstract public void registerAccessoryFileProvider(Function<File, List<File>> fn);
+
+    abstract public void registerReadsetListener(ReadsetListener listener);
+
+    public static interface ReadsetListener
+    {
+        public void onReadsetCreate(User u, Readset rs, @Nullable Readset replacedReadset, @Nullable PipelineJob job);
+
+        public boolean isAvailable(Container c, User u);
+    }
 }

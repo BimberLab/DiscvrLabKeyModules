@@ -177,6 +177,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
             {
                 SequenceReadsetImpl r = (SequenceReadsetImpl)rs;
                 getJob().getLogger().info("Starting readset " + r.getName());
+                SequenceReadsetImpl replacedReadset = null;
 
                 boolean readsetExists = r.getReadsetId() != null && r.getReadsetId() > 0;
                 SequenceReadsetImpl existingReadset = readsetExists ? ((SequenceReadsetImpl)SequenceAnalysisService.get().getReadset(r.getReadsetId(), getJob().getUser())) : null;
@@ -185,6 +186,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                 if (readsetExistsWithData)
                 {
                     getJob().getLogger().info("Readset has existing data: " + r.getName() + ", " + r.getRowId() + " from: " + existingReadset.getContainer());
+                    replacedReadset = r;
                     readsetsToDeactivate.put(r.getReadsetId(), existingReadset.getContainer());
                 }
 
@@ -433,6 +435,8 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                         Table.insert(getJob().getUser(), readDataTable, rd);
                     }
                 }
+
+                SequenceAnalysisServiceImpl.get().onReadsetCreate(getJob().getUser(), newRow, replacedReadset, getJob());
             }
 
             if (!readsetsToDeactivate.isEmpty())

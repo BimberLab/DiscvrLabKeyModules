@@ -38,6 +38,11 @@ public interface VariantProcessingStep extends PipelineStep
 
     }
 
+    default void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated, SequenceAnalysisJobSupport support) throws PipelineJobException
+    {
+
+    }
+
     enum ScatterGatherMethod
     {
         none(),

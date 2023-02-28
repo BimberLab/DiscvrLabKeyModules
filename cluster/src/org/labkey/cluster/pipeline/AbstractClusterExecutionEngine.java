@@ -229,13 +229,17 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
 
     private final Set<String> INACTIVE_STATUS = new CaseInsensitiveHashSet()
     {{
-        add(PipelineJob.TaskStatus.cancelled.name().toUpperCase());
         add(PipelineJob.TaskStatus.error.name().toUpperCase());
         add(PipelineJob.TaskStatus.complete.name().toUpperCase());
     }};
 
+    private List<ClusterJob> getClusterSubmissionsForJob(String jobId, boolean includeInactiveAndCancelled)
+    {
+        return getClusterSubmissionsForJob(jobId, includeInactiveAndCancelled, includeInactiveAndCancelled);
+    }
+
     @NotNull
-    private List<ClusterJob> getClusterSubmissionsForJob(String jobId, boolean includeInactive)
+    private List<ClusterJob> getClusterSubmissionsForJob(String jobId, boolean includeInactive, boolean includeCancelled)
     {
         TableInfo ti = ClusterSchema.getInstance().getSchema().getTable(ClusterSchema.CLUSTER_JOBS);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("jobId"), jobId);
@@ -248,6 +252,11 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
             {
                 filter.addCondition(FieldKey.fromString("status"), status, CompareType.NEQ_OR_NULL);
             }
+        }
+
+        if (!includeCancelled)
+        {
+            filter.addCondition(FieldKey.fromString("status"), PipelineJob.TaskStatus.cancelled.name().toUpperCase(), CompareType.NEQ_OR_NULL);
         }
 
         filter.addCondition(FieldKey.fromString("status"), PREPARING, CompareType.NEQ_OR_NULL);
@@ -266,6 +275,11 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
                 if (!includeInactive)
                 {
                     potentialJobs.removeIf(x -> INACTIVE_STATUS.contains(x.getStatus()));
+                }
+
+                if (!includeCancelled)
+                {
+                    potentialJobs.removeIf(x -> PipelineJob.TaskStatus.cancelled.name().equalsIgnoreCase(x.getStatus()));
                 }
 
                 if (!potentialJobs.isEmpty())
@@ -670,8 +684,8 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
             return;
         }
 
-        //find cluster Id for Job Id
-        ClusterJob clusterJob = getMostRecentClusterSubmission(jobId, false);
+        //find cluster Id for Job Id. Allow status=cancelled in case the cluster already updated:
+        ClusterJob clusterJob = getMostRecentClusterSubmission(jobId, false, true);
         if (clusterJob == null)
         {
             //NOTE: if this is the parent of a split job, it was never actually submitted to the cluster
@@ -738,9 +752,14 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
 
     abstract protected boolean removeJob(ClusterJob clusterJob);
 
-    private ClusterJob getMostRecentClusterSubmission(String jobId, boolean includeInactive)
+    private ClusterJob getMostRecentClusterSubmission(String jobId, boolean includeInactiveAndCancelled)
     {
-        List<ClusterJob> jobs = getClusterSubmissionsForJob(jobId, includeInactive);
+        return getMostRecentClusterSubmission(jobId, includeInactiveAndCancelled, includeInactiveAndCancelled);
+    }
+
+    private ClusterJob getMostRecentClusterSubmission(String jobId, boolean includeInactive, boolean includeCancelled)
+    {
+        List<ClusterJob> jobs = getClusterSubmissionsForJob(jobId, includeInactive, includeCancelled);
         if (jobs.isEmpty())
         {
             return null;

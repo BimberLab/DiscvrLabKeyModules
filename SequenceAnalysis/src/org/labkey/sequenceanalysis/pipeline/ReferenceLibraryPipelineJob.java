@@ -47,6 +47,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     private boolean _isNew;
     private boolean _skipCacheIndexes = false;
     private boolean _skipTriggers = false;
+    private boolean _skipFastaRecreate = false;
     private String _libraryName;
     private List<String> _unplacedContigPrefixes;
     private Set<GenomeTrigger> _extraTriggers = new HashSet<>();
@@ -56,12 +57,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     {
     }
 
-    public ReferenceLibraryPipelineJob(Container c, User user, PipeRoot pipeRoot, String libraryName, String assemblyId, String description, @Nullable List<ReferenceLibraryMember> libraryMembers, @Nullable Integer libraryId, boolean skipCacheIndexes, boolean skipTriggers, @Nullable List<String> unplacedContigPrefixes) throws IOException
-    {
-        this(c, user, pipeRoot, libraryName, assemblyId, description, libraryMembers, libraryId, skipCacheIndexes, skipTriggers, unplacedContigPrefixes, null);
-    }
-
-    public ReferenceLibraryPipelineJob(Container c, User user, PipeRoot pipeRoot, String libraryName, String assemblyId, String description, @Nullable List<ReferenceLibraryMember> libraryMembers, @Nullable Integer libraryId, boolean skipCacheIndexes, boolean skipTriggers, @Nullable List<String> unplacedContigPrefixes, @Nullable Set<GenomeTrigger> extraTriggers) throws IOException
+    public ReferenceLibraryPipelineJob(Container c, User user, PipeRoot pipeRoot, String libraryName, String assemblyId, String description, @Nullable List<ReferenceLibraryMember> libraryMembers, @Nullable Integer libraryId, boolean skipCacheIndexes, boolean skipTriggers, @Nullable List<String> unplacedContigPrefixes, @Nullable Set<GenomeTrigger> extraTriggers, boolean skipFastaRecreate) throws IOException
     {
         super(ReferenceLibraryPipelineProvider.NAME, c, user, "referenceLibrary_" + FileUtil.getTimestamp(), pipeRoot, new JSONObject(), new TaskId(ReferenceLibraryPipelineJob.class), FOLDER_NAME);
         _assemblyId = assemblyId;
@@ -73,6 +69,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
         _skipTriggers = skipTriggers;
         _unplacedContigPrefixes = unplacedContigPrefixes;
         _extraTriggers = extraTriggers;
+        _skipFastaRecreate = skipFastaRecreate;
 
         saveLibraryMembersToFile(libraryMembers);
     }
@@ -93,7 +90,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
         if (file.exists())
         {
             ObjectMapper objectMapper = createObjectMapper();
-            List<ReferenceLibraryMember> ret = objectMapper.readValue(file, new TypeReference<List<ReferenceLibraryMember>>(){});
+            List<ReferenceLibraryMember> ret = objectMapper.readValue(file, new TypeReference<>(){});
             getLogger().debug("read libraryMembers from file: " + ret.size());
 
             return ret;
@@ -114,7 +111,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     }
 
     //for recreating an existing library
-    public static ReferenceLibraryPipelineJob recreate(Container c, User user, PipeRoot pipeRoot, Integer libraryId, boolean skipCacheIndexes, boolean skipTriggers) throws IOException
+    public static ReferenceLibraryPipelineJob recreate(Container c, User user, PipeRoot pipeRoot, Integer libraryId, boolean skipCacheIndexes, boolean skipTriggers, boolean skipFastaRecreate) throws IOException
     {
         TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
         Map rowMap = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getMap();
@@ -123,7 +120,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
             throw new IllegalArgumentException("Library not found: " + libraryId);
         }
 
-        return new ReferenceLibraryPipelineJob(c, user, pipeRoot, (String)rowMap.get("name"), (String)rowMap.get("assemblyId"), (String)rowMap.get("description"), null, libraryId, skipCacheIndexes, skipTriggers, null);
+        return new ReferenceLibraryPipelineJob(c, user, pipeRoot, (String)rowMap.get("name"), (String)rowMap.get("assemblyId"), (String)rowMap.get("description"), null, libraryId, skipCacheIndexes, skipTriggers, null, null, skipFastaRecreate);
     }
 
     @Override
@@ -150,6 +147,11 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     public boolean isSkipTriggers()
     {
         return _skipTriggers;
+    }
+
+    public boolean isSkipFastaRecreate()
+    {
+        return _skipFastaRecreate;
     }
 
     public List<String> getUnplacedContigPrefixes()

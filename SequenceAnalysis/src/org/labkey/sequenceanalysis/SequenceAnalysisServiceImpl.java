@@ -34,6 +34,7 @@ import org.labkey.api.sequenceanalysis.PedigreeRecord;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceDataProvider;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
@@ -80,6 +81,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     private final Set<SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>> _fileHandlers = new HashSet<>();
     private final Set<SequenceOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor>> _readsetHandlers = new HashSet<>();
     private final Map<String, SequenceDataProvider> _dataProviders = new HashMap<>();
+    private final List<ReadsetListener> _readsetListeners = new ArrayList<>();
 
     private SequenceAnalysisServiceImpl()
     {
@@ -538,5 +540,21 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     public List<Function<File, List<File>>> getAccessoryFileProviders()
     {
         return Collections.unmodifiableList(_accessoryFileProviders);
+    }
+
+    @Override
+    public void registerReadsetListener(ReadsetListener listener)
+    {
+        _readsetListeners.add(listener);
+    }
+
+    public void onReadsetCreate(User u, Readset rs, @Nullable Readset replacedReadset, @Nullable PipelineJob job)
+    {
+        _readsetListeners.forEach(l -> {
+            Container c = ContainerManager.getForId(rs.getContainer());
+            if (l.isAvailable(c, u)) {
+                l.onReadsetCreate(u, rs, replacedReadset, job);
+            }
+        });
     }
 }

@@ -35,7 +35,7 @@
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'outputfiles', 'query.readset/status~isblank': null, 'query.readset/numTcrResults~eq': 0, 'query.category~eq': '10x VLoupe', 'query.sort': 'readset/name'})
                     },{
                         name: 'Loupe Files Missing Prototype',
-                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'outputfiles', 'query.category~eq': '10x Loupe File', 'query.readset/status~isblank': null, 'query.readset/outputFileTypes~doesnotcontain': 'Prototype', 'query.sort': 'readset/name'})
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'outputfiles', 'query.category~eq': '10x Loupe File', 'query.readset/status~isblank': null, 'query.readset/cDNA/rowid~isnonblank': null, 'query.readset/outputFileTypes~doesnotcontain': 'Prototype', 'query.sort': 'readset/name'})
                     },{
                         name: 'Readsets Assigned to Run Lacking Data',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.viewName': 'Assigned to Run Lacking Data'})
@@ -81,6 +81,24 @@
                             queryName: 'outputfiles',
                             'query.category~eq': '10x Run Summary',
                             'query.readset/totalOutputs~eq': 1
+                        })
+                    },{
+                        name: 'Stale Seurat Object Prototypes',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
+                            schemaName: 'singlecell',
+                            queryName: 'stalePrototypes'
+                        })
+                    },{
+                        name: 'Duplicate Seurat Object Prototypes',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
+                            schemaName: 'singlecell',
+                            queryName: 'duplicatePrototypes'
+                        })
+                    },{
+                        name: 'List of Single-cell Datasets',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
+                            schemaName: 'singlecell',
+                            queryName: 'singlecellDatasets'
                         })
                     }]
                 }]

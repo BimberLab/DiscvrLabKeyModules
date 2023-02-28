@@ -38,6 +38,7 @@ public class SingleCellSchema
     public static final String TABLE_READSETS = "sequence_readsets";
     public static final String TABLE_QUALITY_METRICS = "quality_metrics";
     public static final String TABLE_OUTPUTFILES = "outputfiles";
+    public static final String TABLE_SINGLECELL_DATASETS = "singlecellDatasets";
 
     public static SingleCellSchema getInstance()
     {
