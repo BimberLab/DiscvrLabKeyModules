@@ -29,7 +29,10 @@ public class FilterDisallowedClasses extends AbstractRiraStep
                     SeuratToolParameter.create("ucellCutoff", "UCell Cutoff", "Any cells expressing the disallowed UCell above this value will be flagged", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("decimalPrecision", 2);
-                    }}, 0.2)
+                    }}, 0.2),
+                    SeuratToolParameter.create("dropFilteredCells", "Drop Filtered Cells", "If checked, filtered cells will be dropped", "checkbox", new JSONObject(){{
+
+                    }}, false)
                     ), null, null);
         }
 
