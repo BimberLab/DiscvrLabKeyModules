@@ -214,6 +214,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new CustomUCell.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunSDA.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunLDA.Provider());
+        SequencePipelineService.get().registerPipelineStep(new FilterDisallowedClasses.Provider());
 
         SequenceAnalysisService.get().registerReadsetListener(new SingleCellReadsetListener());
     }
