@@ -13,6 +13,13 @@ for (datasetId in names(seuratObjects)) {
         }
     }
 
+    if (updateInputColumn) {
+        toUpdate <- !is.na(seuratObj@meta.data[[outputFieldName]])
+        seuratObj@meta.data[[sourceField]] <- as.character(seuratObj@meta.data[[sourceField]])
+        seuratObj@meta.data[[sourceField]][toUpdate] <- 'Contaminant'
+        seuratObj@meta.data[[sourceField]] <- naturalsort::naturalfactor(seuratObj@meta.data[[sourceField]])
+    }
+
     saveData(seuratObj, datasetId)
 
     # Cleanup

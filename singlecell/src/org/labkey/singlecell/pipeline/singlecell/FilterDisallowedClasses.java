@@ -32,6 +32,9 @@ public class FilterDisallowedClasses extends AbstractRiraStep
                     }}, 0.2),
                     SeuratToolParameter.create("dropFilteredCells", "Drop Filtered Cells", "If checked, filtered cells will be dropped", "checkbox", new JSONObject(){{
 
+                    }}, false),
+                    SeuratToolParameter.create("updateInputColumn", "Mark Filtered Cells As Contaminant", "If checked, the source field for filter cells will be updated to Contaminant", "checkbox", new JSONObject(){{
+
                     }}, false)
                     ), null, null);
         }
