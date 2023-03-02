@@ -34,6 +34,8 @@ jbPkgTask.configure {
     outputs.dir(project.file("./resources/external/jb-cli"))
 }
 
+project.tasks.processModuleResources.dependsOn(jbPkgTask)
+
 project.tasks.named("npm_run_build-prod").configure {
     finalizedBy jbPkgTask.get()
 }
