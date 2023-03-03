@@ -846,7 +846,17 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
             if (seurat != null)
             {
-                seurat.forEach(x -> action.addOutput(x.getFile(), "Seurat Object", false));
+                seurat.forEach(x -> {
+                    List<RecordedAction.DataFile> matching = action.getOutputs().stream().filter(o -> x.getFile().toURI().equals(o.getURI())).toList();
+                    if (!matching.isEmpty())
+                    {
+                        log.error("There is already an output in this action for the file: " + x.getFile().getPath());
+                    }
+                    else
+                    {
+                        action.addOutput(x.getFile(), "Seurat Object", false);
+                    }
+                });
             }
 
             action.addOutput(markdown, "Markdown File", true);
