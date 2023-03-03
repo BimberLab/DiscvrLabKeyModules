@@ -480,7 +480,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
         body.addAll(loadChunkFromFile("singlecell", "chunks/Functions.R"));
 
-        return new Chunk("parameters", null, null, body);
+        return new Chunk("parameters", null, null, body, "cache=FALSE");
     }
 
     protected String printInputFile(SeuratObjectWrapper so)
