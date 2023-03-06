@@ -31,7 +31,10 @@ public class SplitSeurat extends AbstractCellMembraneStep
                         put("height", 150);
                         put("delimiter", ",");
                         put("stripCharsRe", "/(^['\"]+)|(['\"]+$)/g");
-                    }}, null, null, true).delimiter(",")
+                    }}, null, null, true).delimiter(","),
+                    SeuratToolParameter.create("alwaysRetainOtherClass", "Always Retain Other Class", "If true, even if the number of cells is less than minCellsToKeep, this class with be retained.", "checkbox", new JSONObject(){{
+                        put("checked", true);
+                    }}, true)
             ), null, null);
         }
 
