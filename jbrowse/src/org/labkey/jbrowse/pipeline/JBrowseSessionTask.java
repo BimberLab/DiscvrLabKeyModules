@@ -250,6 +250,8 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                     trackRecord.put("modifiedby", getJob().getUser().getUserId());
                     trackRecord = Table.insert(getJob().getUser(), databaseMembers, trackRecord);
                     databaseMemberRecordsCreated.add((Integer)trackRecord.get("rowid"));
+
+                    json.prepareResource(getJob().getLogger(), false, false);
                 }
             }
             else
@@ -299,6 +301,8 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                     trackRecord.put("modifiedby", getJob().getUser().getUserId());
                     trackRecord = Table.insert(getJob().getUser(), databaseMembers, trackRecord);
                     databaseMemberRecordsCreated.add((Integer) trackRecord.get("rowid"));
+
+                    json.prepareResource(getJob().getLogger(), false, false);
                 }
             }
 
@@ -330,6 +334,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                 }
             }
         }
+
     }
 
     private JBrowseSessionPipelineJob getPipelineJob()
