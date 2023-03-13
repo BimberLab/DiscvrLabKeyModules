@@ -266,3 +266,37 @@ export function getGenotypeURL(trackId, contig, start, end) {
 
     return ActionURL.buildURL("jbrowse", "genotypeTable.view", null, {trackId: trackId, chr: contig, start: start, stop: end})
 }
+
+export async function fetchLuceneQuery(filters, sessionId, offset, successCallback) {
+    console.log("filters: ", filters)
+    console.log("sessionId: ", sessionId)
+    console.log("offset: ", offset)
+
+    if (!sessionId) {
+        console.log("Lucene query: no session ID")
+        return
+    }
+
+    if (!filters || (offset == undefined)) {
+        console.log("No filters, or no offset!")
+        return
+    }
+
+    console.log("Attempting lucene query:")
+
+    return Ajax.request({
+        url: ActionURL.buildURL('jbrowse', 'luceneQuery.api'),
+        method: 'GET',
+        success: async function(res){
+            let jsonRes = JSON.parse(res.response);
+            console.log("Lucene query success:", jsonRes)
+
+            successCallback(jsonRes)
+        },
+        failure: function(res){
+            console.log("Lucene query failure:", res.status)
+            handleFailure("There was an error: " + res.status, sessionId)
+        },
+        params: {"searchString": filters.map(val => val.field + "," + val.operator + "," + val.value + "&").join(''), "sessionId": sessionId, "offset": offset},
+    });
+}

@@ -3,8 +3,8 @@ package org.labkey.jbrowse.model;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-import org.json.old.JSONArray;
-import org.json.old.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -28,6 +28,9 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.jbrowse.JBrowseManager;
 import org.labkey.jbrowse.JBrowseSchema;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -390,6 +393,10 @@ public class JBrowseSession
         }});
 
         return ret;
+    }
+
+    public Path getFullTextIndexPath() {
+        return Paths.get("E:\\Work\\vcfsearch\\index");
     }
 
     public static JBrowseSession getGenericGenomeSession(int genomeId)

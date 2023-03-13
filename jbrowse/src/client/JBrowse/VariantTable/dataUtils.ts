@@ -14,23 +14,24 @@ const prepareInfoField = (rawFeature: ExtendedVcfFeature, propKey: string) => {
     }
 }
 
-// Takes a feature JSON from the API and converts it into a JS object in the schema we want.
-export function rawFeatureToRow(rawFeature: ExtendedVcfFeature, id: number, trackId: string): Row {
-  return {
-      id: id,
-      chrom: (rawFeature.get("CHROM") ?? "-1").toString(),
-      pos: (rawFeature.get("POS") ?? "-1").toString(),
-      ref: (rawFeature.get("REF") ?? "").toString(),
-      alt: rawFeature.get("ALT") && rawFeature.get("ALT").length ? rawFeature.get("ALT").filter(x => !!x).join(", ") : "",
-      af: prepareInfoField(rawFeature, "AF"),
-      impact: (rawFeature.get("INFO").IMPACT ?? "").toString(),
-      overlapping_genes: parseAnnField(rawFeature.get("INFO").ANN, 3, null),
-      variant_type: parseAnnField(rawFeature.get("INFO").ANN, 1, 'custom'),
-      cadd_ph: prepareInfoField(rawFeature, "CADD_PH"),
-      start: rawFeature.get("POS"),
-      end: rawFeature.get("end"),
-      trackId: trackId
-  } as Row
+export function APIDataToRows(data: any, trackId: string): Row[] {
+  return data.map((obj) => ({
+    id: obj.genomicPosition,
+    chrom: obj.CHROM || "",
+    pos: obj.genomicPosition || "",
+    start: obj.start || "",
+    end: obj.end || "",
+    contig: obj.contig || "",
+    ref: obj.REF || "",
+    alt: obj.ALT || "",
+    af: obj.AF || "",
+    variant_type: parseAnnField(data.ANN, 1, 'custom') || "",
+    impact: obj.impact || "",
+    overlapping_genes: parseAnnField(data.ANN, 3, null),
+    cadd_ph: obj.CADD_PH || "",
+    samples: obj.Samples || "",
+    trackId: trackId
+  }));
 }
 
 // Takes a list of ANN annotations and retrieves all unique genes from it.
