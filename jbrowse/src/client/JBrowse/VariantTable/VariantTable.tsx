@@ -10,13 +10,12 @@ import LogSession from '../Browser/plugins/LogSession/index';
 import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index';
 import VariantTableWidget from './components/VariantTableWidget';
 import { fetchSession } from '../utils';
-import { ErrorBoundary } from '@labkey/components';
+//import { ErrorBoundary } from '@labkey/components';
 import LoadingIndicator from './components/LoadingIndicator';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
 function VariantTable() {
-      
     const queryParam = new URLSearchParams(window.location.search);
     const sessionId = queryParam.get('session') || queryParam.get('database')
     const locString = queryParam.get('location') || queryParam.get('loc')
@@ -88,10 +87,10 @@ function VariantTable() {
     return (
         <ThemeProvider theme={theme}>
         <div style={{height: "80vh", display:"block"}}>
-            <ErrorBoundary>
+            {/*<ErrorBoundary>*/}
                 <VariantTableWidget assemblyName={assemblyNames[0]} assembly={assembly} trackId={trackId} locString={locString}
                                     parsedLocString={parsedLocString} sessionId={sessionId} session={session} pluginManager={pluginManager}/>
-            </ErrorBoundary>
+            {/*</ErrorBoundary>*/}
         </div>
         </ThemeProvider>
     )
