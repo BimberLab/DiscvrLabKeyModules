@@ -28,6 +28,9 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.jbrowse.JBrowseManager;
 import org.labkey.jbrowse.JBrowseSchema;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -390,6 +393,10 @@ public class JBrowseSession
         }});
 
         return ret;
+    }
+
+    public Path getFullTextIndexPath() {
+        return Paths.get("E:\\Work\\vcfsearch\\index");
     }
 
     public static JBrowseSession getGenericGenomeSession(int genomeId)

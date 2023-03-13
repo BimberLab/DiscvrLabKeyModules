@@ -9,4 +9,5 @@ export interface Row {
     variant_type: string;
     overlapping_genes: string;
     cadd_ph: string;
+    samples: string;
 }
