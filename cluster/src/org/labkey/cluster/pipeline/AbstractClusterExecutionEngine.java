@@ -101,8 +101,8 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
                 }
                 else
                 {
-                    job.getLogger().error("duplicate submission attempt, skipping.  original cluster id: " + existingSubmission.getClusterId());
-                    _log.error("duplicate submission attempt, skipping.  original cluster id: " + existingSubmission.getClusterId() + ", job id: " + job.getJobGUID());
+                    job.getLogger().error("duplicate submission attempt, skipping.  original cluster id: " + existingSubmission.getClusterId() + ", with status: " + existingSubmission.getStatus());
+                    _log.error("duplicate submission attempt, skipping.  original cluster id: " + existingSubmission.getClusterId() + ", job id: " + job.getJobGUID() + ", with status: " + existingSubmission.getStatus());
                     return;
                 }
             }
