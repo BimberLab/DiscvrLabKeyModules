@@ -185,7 +185,17 @@ public class CacheGenomePipelineJob extends PipelineJob
                 if (toDelete != null && toDelete.length > 0)
                 {
                     getJob().getLogger().info("Folders will be deleted: " + StringUtils.join(toDelete, ", "));
-                    //TODO: verify
+                    for (File x : toDelete)
+                    {
+                        try
+                        {
+                            FileUtils.deleteDirectory(x);
+                        }
+                        catch (IOException e)
+                        {
+                            throw new PipelineJobException(e);
+                        }
+                    }
                 }
             }
 
