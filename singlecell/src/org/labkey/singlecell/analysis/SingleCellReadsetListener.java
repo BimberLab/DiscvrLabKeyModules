@@ -56,7 +56,7 @@ public class SingleCellReadsetListener implements SequenceAnalysisService.Readse
                 ts.forEachResults(cDNARow -> {
                     Map<String, Object> toUpdate = new CaseInsensitiveHashMap<>();
                     toUpdate.put("rowid", cDNARow.getInt(FieldKey.fromString("rowid")));
-                    toUpdate.put("container", cDNARow.getInt(FieldKey.fromString("container")));
+                    toUpdate.put("container", cDNARow.getString(FieldKey.fromString("container")));
                     toUpdate.put(field, rs.getReadsetId());
 
                     if (job != null)
