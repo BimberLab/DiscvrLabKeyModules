@@ -680,6 +680,12 @@ public class JsonFile
 
     public String getTrackType()
     {
+        JSONObject extraConfig = getExtraTrackConfig();
+        if (extraConfig != null && extraConfig.has("type"))
+        {
+            return extraConfig.getString("type");
+        }
+
         ExpData targetFile = getExpData();
         if (TRACK_TYPES.vcf.getFileType().isType(targetFile.getFile()))
         {
