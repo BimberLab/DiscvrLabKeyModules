@@ -837,7 +837,7 @@ public class JsonFile
                 {
                     if (!targetFile.getParentFile().equals(finalLocation.getParentFile()))
                     {
-                        // Make local copy so we dont delete the original
+                        log.debug("Creating local copy of: " + targetFile.getPath());
                         File local = new File(finalLocation.getParentFile(), targetFile.getName());
                         if (local.exists())
                         {
