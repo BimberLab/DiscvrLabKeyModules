@@ -1,5 +1,7 @@
 import org.labkey.gradle.util.BuildUtils;
 
+luceneVersion="9.5.0"
+
 repositories {
 	mavenCentral()
 	// Added for org.clojars.chapmanb:sam dependency required by com.github.samtools:htsjdk
@@ -23,6 +25,10 @@ dependencies {
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "published", depExtension: "module")
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:DiscvrLabKeyModules:SequenceAnalysis", depProjectConfig: "published", depExtension: "module")
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: BuildUtils.getPlatformModuleProjectPath(project.gradle, "pipeline"), depProjectConfig: "published", depExtension: "module")
+
+	external "org.apache.lucene:lucene-analyzers-common:${luceneVersion}"
+	external "org.apache.lucene:lucene-core:${luceneVersion}"
+	external "org.apache.lucene:lucene-queryparser:${luceneVersion}"
 }
 
 def jbPkgTask = project.tasks.named("npm_run_jb-pkg")
