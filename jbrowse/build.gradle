@@ -1,6 +1,6 @@
 import org.labkey.gradle.util.BuildUtils;
 
-ext.luceneVersion="9.5.0"
+luceneVersion="9.5.0"
 
 repositories {
 	mavenCentral()
