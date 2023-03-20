@@ -56,10 +56,7 @@ import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbScope;
-import org.labkey.api.data.Results;
-import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.StopIteratingException;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
@@ -98,8 +95,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+<<<<<<< HEAD
 import java.nio.file.Paths;
 import java.sql.SQLException;
+=======
+>>>>>>> 8800692a9541fede1b230c90a5f828312a5fa439
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -843,234 +843,24 @@ public class JBrowseController extends SpringActionController
         @Override
         public ApiResponse execute(LuceneQueryForm form, BindException errors)
         {
-            JBrowseSession session = JBrowseSession.getForId(form.getSessionId());
-            if (session == null)
+            JBrowseLuceneSearch searcher;
+            try
             {
-                errors.reject(ERROR_MSG, "Unable to find JBrowse session: " + form.getSessionId());
+                searcher = JBrowseLuceneSearch.create(form.getSessionId(), form.getTrackId(), getUser());
+            }
+            catch (IllegalArgumentException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
                 return null;
             }
-
-            JsonFile track = session.getTrack(getUser(), form.getTrackId());
-            if (track == null)
-            {
-                errors.reject(ERROR_MSG, "Unable to find track with ID: " + form.getTrackId());
-                return null;
-            }
-
-            if (!track.shouldHaveFreeTextSearch())
-            {
-                errors.reject(ERROR_MSG, "This track does not support free text search: " + form.getTrackId());
-                return null;
-            }
-
-            if (!track.doExpectedSearchIndexesExist())
-            {
-                errors.reject(ERROR_MSG, "The lucene index has not been created for this track: " + form.getTrackId());
-                return null;
-            }
-
-            File indexPath = track.getExpectedLocationOfLuceneIndex(true);
-
-            int pageSize = form.getPageSize();
-            int offset = form.getOffset();
-
-            String searchString = form.getSearchString();
 
             try
             {
-                // Open directory of lucene path, get a directory reader, and create the index search manager
-                Directory indexDirectory = FSDirectory.open(indexPath.toPath());
-                IndexReader indexReader = DirectoryReader.open(indexDirectory);
-                Analyzer analyzer = new StandardAnalyzer();
-                IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-
-                BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
-                StringTokenizer tokenizer = new StringTokenizer(searchString, "&");
-
-                while (tokenizer.hasMoreTokens())
-                {
-                    String filter = tokenizer.nextToken();
-                    String[] parts = filter.split(",");
-                    String field = parts[0];
-                    String operator = parts[1];
-                    String valueStr = parts[2];
-
-                    Query query = null;
-                    switch (field)
-                    {
-                        case "genomicPosition":
-                        case "start":
-                        case "end":
-                        {
-                            int value = parseInt(valueStr);
-                            if (operator.equals("="))
-                            {
-                                query = IntPoint.newExactQuery(field, value);
-                            }
-                            else if (operator.equals("!="))
-                            {
-                                query = new BooleanQuery.Builder()
-                                        .add(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD)
-                                        .add(IntPoint.newExactQuery(field, value), BooleanClause.Occur.MUST_NOT)
-                                        .build();
-                            }
-                            else if (operator.equals(">"))
-                            {
-                                query = IntPoint.newRangeQuery(field, value+1, Integer.MAX_VALUE);
-                            }
-                            else if (operator.equals(">="))
-                            {
-                                query = IntPoint.newRangeQuery(field, value,Integer.MAX_VALUE);
-                            }
-
-                            else if (operator.equals("<"))
-                            {
-                                query = IntPoint.newRangeQuery(field, Integer.MIN_VALUE, value-1);
-                            }
-                            else if (operator.equals("<="))
-                            {
-                                query = IntPoint.newRangeQuery(field, Integer.MIN_VALUE, value);
-                            }
-                            else if (operator.equals("is not empty"))
-                            {
-                                query = new TermQuery(new Term(field));
-                            }
-                            else if (operator.equals("is empty"))
-                            {
-                                BooleanQuery.Builder builder = new BooleanQuery.Builder();
-                                builder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
-                                builder.add(new TermQuery(new Term(field)), BooleanClause.Occur.MUST_NOT);
-                                query = builder.build();
-                            }
-                        }
-                        break;
-                        case "AF":
-                        case "CADD_PH":
-                        {
-                            float value = Float.parseFloat(valueStr);
-                            if (operator.equals("="))
-                            {
-                                query = FloatPoint.newExactQuery(field, value);
-                            }
-                            else if (operator.equals("!="))
-                            {
-                                query = new BooleanQuery.Builder()
-                                        .add(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD)
-                                        .add(FloatPoint.newExactQuery(field, value), BooleanClause.Occur.MUST_NOT)
-                                        .build();
-                            }
-                            else if (operator.equals(">"))
-                            {
-                                query = FloatPoint.newRangeQuery(field, value+1.0f, Float.POSITIVE_INFINITY);
-                            }
-                            else if (operator.equals(">="))
-                            {
-                                query = FloatPoint.newRangeQuery(field, value, Float.POSITIVE_INFINITY);
-                            }
-                            else if (operator.equals("<"))
-                            {
-                                query = FloatPoint.newRangeQuery(field, Float.NEGATIVE_INFINITY, value-1.0f);
-                            }
-                            else if (operator.equals("<="))
-                            {
-                                query = FloatPoint.newRangeQuery(field, Float.NEGATIVE_INFINITY, value);
-                            }
-                            else if (operator.equals("is not empty"))
-                            {
-                                query = new TermQuery(new Term(field));
-                            }
-                            else if (operator.equals("is empty"))
-                            {
-                                BooleanQuery.Builder builder = new BooleanQuery.Builder();
-                                builder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
-                                builder.add(new TermQuery(new Term(field)), BooleanClause.Occur.MUST_NOT);
-                                query = builder.build();
-                            }
-                        }
-                        break;
-
-                        case "CHROM":
-                        case "REF":
-                        case "ALT":
-                        case "variant_type":
-                        case "IMPACT":
-                        case "Overlapping Genes":
-                        case "Samples":
-                        case "contig":
-                        {
-                            QueryParser parser = new QueryParser(field, analyzer);
-                            parser.setAllowLeadingWildcard(true);
-
-                            if (operator.equals("is"))
-                            {
-                                query = parser.parse(field + ":" + valueStr);
-                            }
-                            else if (operator.equals("contains"))
-                            {
-                                query = parser.parse(field + ":*" + valueStr + "*");
-                            }
-                            else if (operator.equals("starts with"))
-                            {
-                                query = parser.parse(field + ":" + valueStr + "*");
-                            }
-                            else if (operator.equals("ends with"))
-                            {
-                                query = parser.parse(field + ":*" + valueStr);
-                            }
-                            else if (operator.equals("is empty"))
-                            {
-                                query = parser.parse("-" + field + ":[* TO *]");
-                            }
-                            else if (operator.equals("is not empty"))
-                            {
-                                query = parser.parse(field + ":[* TO *]");
-                            }
-                        }
-                        break;
-
-                        case "Advanced":
-                        {
-                            QueryParser parser = new QueryParser(field, analyzer);
-                            query = parser.parse(valueStr);
-                        }
-                        break;
-                    }
-
-                    booleanQueryBuilder.add(query, BooleanClause.Occur.MUST);
-                }
-
-                BooleanQuery query = booleanQueryBuilder.build();
-
-                // Get chunks of size {pageSize}. Default to 1 chunk -- add to the offset to get more.
-                // We then iterate over the range of documents we want based on the offset. This does grow in memory
-                // linearly with the number of documents, but my understanding is that these are just score,id pairs
-                // rather than full documents, so mem usage *should* still be pretty low.
-                TopDocs topDocs = indexSearcher.search(query, pageSize * (offset + 1));
-
-                JSONObject results = new JSONObject();
-
-                // Iterate over the doc list, (either to the total end or until the page ends) grab the requested docs,
-                // and add to returned results
-                List<JSONObject> data = new ArrayList<>();
-                for (int i = pageSize * offset; i < Math.min(pageSize * (offset + 1), topDocs.scoreDocs.length); i++) {
-                    JSONObject elem = new JSONObject();
-
-                    indexSearcher.doc(topDocs.scoreDocs[i].doc).forEach(field -> {
-                        elem.put(field.name(), field.stringValue());
-                    });
-
-                    data.add(elem);
-                }
-
-                results.put("data", data);
-                indexReader.close();
-
-                //TODO: we should probably stream this
-                return new ApiSimpleResponse(results);
+                return new ApiSimpleResponse(searcher.doSearch(form.getSearchString(), form.getPageSize(), form.getOffset()));
             }
             catch (Exception e)
             {
-                _log.error("Error in LuceneQuery", e);
+                _log.error("Error in JBrowse lucene query", e);
                 errors.reject(ERROR_MSG, e.getMessage());
                 return null;
             }

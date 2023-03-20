@@ -197,6 +197,16 @@ public class NimbleHelper
 
             String description = genome.getScorePercent() > 0 ? "score_percent: " + genome.getScorePercent() : null;
             output.addSequenceOutput(results, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), description);
+
+            File outputBam = new File(results.getPath().replaceAll("results." + genome.genomeId + ".txt.gz", "nimbleAlignment." + genome.genomeId + ".bam"));
+            if (outputBam.exists())
+            {
+                output.addSequenceOutput(outputBam, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), description);
+            }
+            else
+            {
+                getPipelineCtx().getLogger().debug("BAM not found: " + outputBam.getPath());
+            }
         }
     }
 
@@ -326,7 +336,7 @@ public class NimbleHelper
         alignArgs.add("/work/" + getNimbleLogFile(getPipelineCtx().getWorkingDirectory(), null).getName());
 
         boolean alignOutput = getProvider().getParameterByName(ALIGN_OUTPUT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
-        File alignmentOutputFile = new File(getPipelineCtx().getWorkingDirectory(), "nimbleAlignment.txt.gz");
+        File alignmentOutputFile = new File(getPipelineCtx().getWorkingDirectory(), "nimbleAlignment.bam");
         if (alignOutput)
         {
             alignArgs.add("--alignment_path");
@@ -404,17 +414,6 @@ public class NimbleHelper
             catch (IOException e)
             {
                 throw new PipelineJobException(e);
-            }
-
-            if (alignmentOutputFile.exists())
-            {
-                SimpleScriptWrapper runner = new SimpleScriptWrapper(getPipelineCtx().getLogger());
-                File alignmentOutputFile2 = new File(alignmentOutputFile.getParentFile(), alignmentOutputFile.getName().replace(".txt.gz", ".nimbleHits.txt.gz"));
-                runner.execute(Arrays.asList("/bin/bash", "-c", "zcat '" + alignmentOutputFile.getPath() + "' | awk -F '\t' ' $1!=\"\" ' | gzip -c > " + alignmentOutputFile2.getPath()));
-            }
-            else
-            {
-                getPipelineCtx().getLogger().debug("Alignment output file not present: " + alignmentOutputFile.getName());
             }
 
             resultMap.put(genome, resultsGz);

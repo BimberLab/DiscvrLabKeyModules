@@ -255,7 +255,7 @@ public class JBrowseSession
         if (getJsonConfig() != null)
         {
             JSONObject json = new JSONObject(getJsonConfig());
-            if (json.containsKey("defaultLocation"))
+            if (json.has("defaultLocation"))
             {
                 ret.put("location", json.get("defaultLocation"));
             }

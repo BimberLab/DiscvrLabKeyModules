@@ -60,7 +60,7 @@ public class AlignerIndexUtil
     }
 
     /**
-     * If WorkDirectory is null, files will not be copied.  Otherwise files be be copied to this destination.
+     * If WorkDirectory is null, files will not be copied.  Otherwise, files will be copied to this destination.
      */
     private static boolean verifyOrCreateCachedIndex(PipelineContext ctx, @Nullable WorkDirectory wd, @Nullable AlignmentOutputImpl output, String localName, String webserverName, ReferenceGenome genome, boolean forceCopyLocal) throws PipelineJobException
     {
@@ -78,7 +78,7 @@ public class AlignerIndexUtil
                 File lockFile = new File(webserverIndexDir.getPath() + ".copyLock");
                 if (lockFile.exists())
                 {
-                    ctx.getLogger().error("Another job is actively saving this cached index.  This job will skip that step; however, if this job tries to start alignment and use the index before copy is complete this might cause issues.");
+                    throw new PipelineJobException("Another job is actively saving this cached index.  This error is being thrown as a precaution to avoid duplicate rsync jobs, and to prevent this job from progressing file that copy is in-progress. This job can be restarted after the copy is complete, and should resume normally.");
                 }
 
                 hasCachedIndex = true;
