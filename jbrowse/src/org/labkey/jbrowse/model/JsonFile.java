@@ -680,6 +680,12 @@ public class JsonFile
 
     public String getTrackType()
     {
+        JSONObject extraConfig = getExtraTrackConfig();
+        if (extraConfig != null && extraConfig.has("type"))
+        {
+            return extraConfig.getString("type");
+        }
+
         ExpData targetFile = getExpData();
         if (TRACK_TYPES.vcf.getFileType().isType(targetFile.getFile()))
         {
@@ -831,7 +837,7 @@ public class JsonFile
                 {
                     if (!targetFile.getParentFile().equals(finalLocation.getParentFile()))
                     {
-                        // Make local copy so we dont delete the original
+                        log.debug("Creating local copy of: " + targetFile.getPath());
                         File local = new File(finalLocation.getParentFile(), targetFile.getName());
                         if (local.exists())
                         {

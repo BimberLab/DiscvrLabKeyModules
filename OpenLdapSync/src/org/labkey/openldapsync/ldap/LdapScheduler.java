@@ -1,11 +1,11 @@
 package org.labkey.openldapsync.ldap;
 
 import org.apache.directory.api.ldap.model.exception.LdapException;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
-import org.quartz.DailyTimeIntervalScheduleBuilder;
+import org.apache.logging.log4j.Logger;
 import org.quartz.JobBuilder;
 import org.quartz.JobDetail;
+import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
 import org.quartz.impl.StdSchedulerFactory;
@@ -62,7 +62,7 @@ public class LdapScheduler
 
             Trigger trigger = TriggerBuilder.newTrigger()
                     .withIdentity(LdapScheduler.class.getCanonicalName(), LdapScheduler.class.getCanonicalName())
-                    .withSchedule(DailyTimeIntervalScheduleBuilder.dailyTimeIntervalSchedule().withIntervalInHours(_frequency))
+                    .withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInHours(_frequency).repeatForever())
                     .forJob(_job)
                     .build();
 

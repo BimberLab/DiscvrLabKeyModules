@@ -143,7 +143,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         allowRowSpan: true
     },{
         name: 'kitType',
-        labels: ['Kit Type', 'V1.1/V2/HT', 'V1.1/HT'],
+        labels: ['Kit Type', 'V1.1/V2/HT', 'V1.1/HT', 'HT/V1.1/V2'],
         transform: 'kitType'
     }],
 
@@ -216,8 +216,8 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 }
                 else if (val && type === 'BioLegend') {
                     val = String(val);
-                    if (val.indexOf('SI-NA') === -1) {
-                        val = 'SI-NA-' + val;
+                    if (val.indexOf('SI-TN') === -1) {
+                        val = 'SI-TN-' + val;
                     }
                 }
             }
@@ -288,7 +288,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         },
 
         hto: function(val, panel){
-            if (val === 'N/A') {
+            if (val === 'N/A' || val === 'NA') {
                 return null;
             }
 
@@ -1026,7 +1026,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
     getUniqueValues: function(rowArr, colName){
         var ret = [];
         Ext4.Array.forEach(rowArr, function(row){
-            if (row[colName])
+            if (row[colName] && row[colName] !== 'NA' && row[colName] != 'N/A')
                 ret.push(row[colName]);
         }, this);
 
