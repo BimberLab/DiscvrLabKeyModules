@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
@@ -28,6 +29,7 @@ import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.api.view.ViewContext;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -190,7 +192,17 @@ public class CacheGenomePipelineJob extends PipelineJob
                 if (toDelete != null && toDelete.length > 0)
                 {
                     getJob().getLogger().info("Folders will be deleted: " + StringUtils.join(toDelete, ", "));
-                    //TODO: verify
+                    for (File x : toDelete)
+                    {
+                        try
+                        {
+                            FileUtils.deleteDirectory(x);
+                        }
+                        catch (IOException e)
+                        {
+                            throw new PipelineJobException(e);
+                        }
+                    }
                 }
             }
 
