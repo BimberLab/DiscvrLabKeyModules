@@ -978,8 +978,6 @@ public class JsonFile
         log.debug("Generating VCF full text index for file: " + getExpData().getFile().getName());
 
         DISCVRSeqRunner runner = new DISCVRSeqRunner(log);
-        runner.addJava8HomeToEnvironment();
-
         if (!runner.jarExists())
         {
             log.error("Unable to find DISCVRSeq.jar, skiping lucene index creation");
