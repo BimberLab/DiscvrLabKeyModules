@@ -88,8 +88,15 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
                 return NumberUtils.isCreatable(name) || "X".equalsIgnoreCase(name) || "Y".equalsIgnoreCase(name);
             }).map(SAMSequenceRecord::getSequenceName).toList();
 
-            plinkArgs.add("--chr");
-            plinkArgs.add(StringUtils.join(toKeep, ","));
+            if (toKeep.size() == 0)
+            {
+                getPipelineCtx().getLogger().info("The option to limit to chromosomes was selected, but no contigs were foudn with numeric names or names beginning with chr. All contigs will be used.");
+            }
+            else
+            {
+                plinkArgs.add("--chr");
+                plinkArgs.add(StringUtils.join(toKeep, ","));
+            }
         }
 
         plinkArgs.add("--allow-extra-chr");
