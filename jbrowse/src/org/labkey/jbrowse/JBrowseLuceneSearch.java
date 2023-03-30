@@ -11,8 +11,12 @@ import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
+import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
+import org.apache.lucene.queryparser.flexible.standard.config.PointsConfig;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
@@ -29,11 +33,15 @@ import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static java.lang.Integer.parseInt;
 
@@ -135,156 +143,60 @@ public class JBrowseLuceneSearch
         )
         {
             IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+            Map<String, LuceneFieldDescriptor> fields = getIndexedFields();
+
+            List<String> stringQueryParserFields = new ArrayList<>();
+            List<String> numericQueryParserFields = new ArrayList<>();
+
+            // Iterate fields and split them into fields for the queryParser and the numericQueryParser
+            for (Map.Entry<String, LuceneFieldDescriptor> entry : fields.entrySet())
+            {
+                String field = entry.getKey();
+                LuceneFieldDescriptor descriptor = entry.getValue();
+
+                switch(descriptor._type)
+                {
+                    case Flag, String, Character -> stringQueryParserFields.add(field);
+                    case Float, Integer -> numericQueryParserFields.add(field);
+                }
+            }
+
+            // The numericQueryParser can perform range queries, but numeric fields they can't be indexed alongside
+            // lexicographic  fields, so they get split into a separate parser
+            MultiFieldQueryParser queryParser = new MultiFieldQueryParser(stringQueryParserFields.toArray(new String[stringQueryParserFields.size()]), new StandardAnalyzer());
+
+            StandardQueryParser numericQueryParser = new StandardQueryParser();
+            numericQueryParser.setAnalyzer(analyzer);
+            PointsConfig pointsConfig = new PointsConfig(new DecimalFormat(), Double.class);
+            Map<String, PointsConfig> pointsConfigMap = new HashMap<>();
+            numericQueryParserFields.forEach(fieldName -> pointsConfigMap.put(fieldName, pointsConfig));
+            numericQueryParser.setPointsConfigMap(pointsConfigMap);
+
             BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
+
+            // Split input into tokens, 1 token per query separated by &
             StringTokenizer tokenizer = new StringTokenizer(searchString, "&");
+
             while (tokenizer.hasMoreTokens())
             {
-                String filter = tokenizer.nextToken();
-                String[] parts = filter.split(",");
-                String field = parts[0];
-                String operator = parts[1];
-                String valueStr = parts[2];
-
+                String queryString = tokenizer.nextToken();
                 Query query = null;
 
-                if (!fieldMap.containsKey(field))
-                {
+                // Type is defined by the first field in the lucene query
+                // "First" field is defined by getting the first consecutive string of ASCII characters terminated by a colon
+                // we might just want to return the field(s) in the form instead
+                Pattern pattern = Pattern.compile("[\\p{ASCII}&&[^\\p{P}\\s:]]+:");
+                Matcher matcher = pattern.matcher(queryString);
 
+                String fieldName = null;
+                if (matcher.find()) {
+                    fieldName = matcher.group().substring(0, matcher.group().length() - 1);
                 }
-                LuceneFieldDescriptor fieldDescriptor = fieldMap.get(field);
 
-                // TODO: switch based on field.type
-                switch (fieldDescriptor._type)
-                {
-                    case Integer:
-                    {
-                        int value = parseInt(valueStr);
-                        if (operator.equals("="))
-                        {
-                            query = IntPoint.newExactQuery(field, value);
-                        }
-                        else if (operator.equals("!="))
-                        {
-                            query = new BooleanQuery.Builder()
-                                    .add(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD)
-                                    .add(IntPoint.newExactQuery(field, value), BooleanClause.Occur.MUST_NOT)
-                                    .build();
-                        }
-                        else if (operator.equals(">"))
-                        {
-                            query = IntPoint.newRangeQuery(field, value + 1, Integer.MAX_VALUE);
-                        }
-                        else if (operator.equals(">="))
-                        {
-                            query = IntPoint.newRangeQuery(field, value, Integer.MAX_VALUE);
-                        }
-
-                        else if (operator.equals("<"))
-                        {
-                            query = IntPoint.newRangeQuery(field, Integer.MIN_VALUE, value - 1);
-                        }
-                        else if (operator.equals("<="))
-                        {
-                            query = IntPoint.newRangeQuery(field, Integer.MIN_VALUE, value);
-                        }
-                        else if (operator.equals("is not empty"))
-                        {
-                            query = new TermQuery(new Term(field));
-                        }
-                        else if (operator.equals("is empty"))
-                        {
-                            BooleanQuery.Builder builder = new BooleanQuery.Builder();
-                            builder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
-                            builder.add(new TermQuery(new Term(field)), BooleanClause.Occur.MUST_NOT);
-                            query = builder.build();
-                        }
-                    }
-                    break;
-                    case Float:
-                    {
-                        float value = Float.parseFloat(valueStr);
-                        if (operator.equals("="))
-                        {
-                            query = FloatPoint.newExactQuery(field, value);
-                        }
-                        else if (operator.equals("!="))
-                        {
-                            query = new BooleanQuery.Builder()
-                                    .add(new MatchAllDocsQuery(), BooleanClause.Occur.SHOULD)
-                                    .add(FloatPoint.newExactQuery(field, value), BooleanClause.Occur.MUST_NOT)
-                                    .build();
-                        }
-                        else if (operator.equals(">"))
-                        {
-                            query = FloatPoint.newRangeQuery(field, value + 1.0f, Float.POSITIVE_INFINITY);
-                        }
-                        else if (operator.equals(">="))
-                        {
-                            query = FloatPoint.newRangeQuery(field, value, Float.POSITIVE_INFINITY);
-                        }
-                        else if (operator.equals("<"))
-                        {
-                            query = FloatPoint.newRangeQuery(field, Float.NEGATIVE_INFINITY, value - 1.0f);
-                        }
-                        else if (operator.equals("<="))
-                        {
-                            query = FloatPoint.newRangeQuery(field, Float.NEGATIVE_INFINITY, value);
-                        }
-                        else if (operator.equals("is not empty"))
-                        {
-                            query = new TermQuery(new Term(field));
-                        }
-                        else if (operator.equals("is empty"))
-                        {
-                            BooleanQuery.Builder builder = new BooleanQuery.Builder();
-                            builder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
-                            builder.add(new TermQuery(new Term(field)), BooleanClause.Occur.MUST_NOT);
-                            query = builder.build();
-                        }
-                    }
-                    break;
-                    case Character:
-                    {
-                        QueryParser parser = new QueryParser(field, analyzer);
-                        parser.setAllowLeadingWildcard(true);
-
-                        if (operator.equals("is"))
-                        {
-                            query = parser.parse(field + ":" + valueStr);
-                        }
-                        else if (operator.equals("contains"))
-                        {
-                            query = parser.parse(field + ":*" + valueStr + "*");
-                        }
-                        else if (operator.equals("starts with"))
-                        {
-                            query = parser.parse(field + ":" + valueStr + "*");
-                        }
-                        else if (operator.equals("ends with"))
-                        {
-                            query = parser.parse(field + ":*" + valueStr);
-                        }
-                        else if (operator.equals("is empty"))
-                        {
-                            query = parser.parse("-" + field + ":[* TO *]");
-                        }
-                        else if (operator.equals("is not empty"))
-                        {
-                            query = parser.parse(field + ":[* TO *]");
-                        }
-                    }
-                    break;
-                    case Flag:
-                        //TODO: do something. how do we do this in DISCVRseq? is this basically boolean?
-                    break;
-
-                    // TODO: restore this in some manner. maybe outside this switch statement?
-//                    case "Advanced":
-//                    {
-//                        QueryParser parser = new QueryParser(field, analyzer);
-//                        query = parser.parse(valueStr);
-//                    }
-//                    break;
+                if(stringQueryParserFields.contains(fieldName)) {
+                    query = queryParser.parse(queryString);
+                } else if(numericQueryParserFields.contains(fieldName)) {
+                    query = numericQueryParser.parse(queryString, "");
                 }
 
                 booleanQueryBuilder.add(query, BooleanClause.Occur.MUST);
@@ -319,6 +231,13 @@ public class JBrowseLuceneSearch
 
             //TODO: we should probably stream this
             return results;
+        }
+        catch (QueryNodeException e)
+        {
+            e.printStackTrace();
+
+            //TODO: This should be a descriptive error
+            return null;
         }
     }
 }
