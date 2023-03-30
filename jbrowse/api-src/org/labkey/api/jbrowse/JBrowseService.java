@@ -34,4 +34,6 @@ abstract public class JBrowseService
     abstract public void reprocessDatabase(User u, String databaseGuid) throws PipelineValidationException;
 
     abstract public void registerDemographicsSource(DemographicsSource source);
+
+    abstract public void registerGroupsProvider(GroupsProvider provider);
 }

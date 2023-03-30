@@ -1,0 +1,4 @@
+# direct external dependencies for project :server:modules:DiscvrLabKeyModules:jbrowse
+lucene-analyzers-common-8.11.2.jar
+lucene-core-8.11.2.jar
+lucene-queryparser-8.11.2.jar
