@@ -199,6 +199,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new PlotAverageCiteSeqCounts.Provider());
         SequencePipelineService.get().registerPipelineStep(new DropCiteSeq.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunScGate.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunScGateBuiltin.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunCelltypist.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunCelltypistCustomModel.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunRiraClassification.Provider());
