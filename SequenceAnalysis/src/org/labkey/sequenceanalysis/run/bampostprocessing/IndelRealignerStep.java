@@ -16,6 +16,7 @@ import org.labkey.sequenceanalysis.run.util.IndelRealignerWrapper;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * User: bimber
@@ -24,7 +25,7 @@ import java.util.Arrays;
  */
 public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealignerWrapper> implements BamProcessingStep
 {
-    public IndelRealignerStep(PipelineStepProvider provider, PipelineContext ctx)
+    public IndelRealignerStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new IndelRealignerWrapper(ctx.getLogger()));
     }
@@ -33,17 +34,7 @@ public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealign
     {
         public Provider()
         {
-            super("IndelRealigner", "Indel Realigner", "GATK", "The step runs GATK's IndelRealigner tool.  This tools performs local realignment to minmize the number of mismatching bases across all the reads.", Arrays.asList(
-                    ToolParameterDescriptor.create("useQueue", "Use Queue?", "If checked, this tool will attempt to run using GATK queue, allowing parallelization using scatter/gather.", "checkbox", new JSONObject()
-                    {{
-                        put("checked", false);
-                    }}, false),
-                    //TODO: consider supporting:
-                    //--maxReadsForRealignment
-                    //--maxReadsForConsensuses
-
-                    ToolParameterDescriptor.create("minRamPerQueueJob", "Min RAM Per Queue Job", "This only applies if queue is checked.  If provided, the scatter count (number of jobs) for queue will be adjusted to ensure at least this amount of RAM, in GB, is available for each job", "ldk-integerfield", null, null)
-            ), null, "http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walkers_indels_IndelRealigner.html");
+            super("IndelRealigner", "Indel Realigner", "GATK", "The step runs GATK's IndelRealigner tool.  This tools performs local realignment to minmize the number of mismatching bases across all the reads.", Collections.emptyList(), null, "http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walkers_indels_IndelRealigner.html");
         }
 
         @Override
@@ -65,22 +56,7 @@ public class IndelRealignerStep extends AbstractCommandPipelineStep<IndelRealign
         getPipelineCtx().getLogger().debug("dict exists: " + preExistingDictionary + ", " + dictionary.getPath());
 
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".realigned.bam");
-        File created;
-        if (getProvider().getParameterByName("useQueue").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
-        {
-            Integer minRamPerQueueJob = getProvider().getParameterByName("minRamPerQueueJob").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
-            if (minRamPerQueueJob != null)
-            {
-                getWrapper().setMinRamPerQueueJob(minRamPerQueueJob);
-            }
-
-            created = getWrapper().executeWithQueue(inputBam, outputBam, referenceGenome.getWorkingFastaFile(), null);
-        }
-        else
-        {
-            created = getWrapper().execute(inputBam, outputBam, referenceGenome.getWorkingFastaFile(), null);
-        }
-
+        File created = getWrapper().execute(inputBam, outputBam, referenceGenome.getWorkingFastaFile(), null);
         if (created != null)
         {
             output.setBAM(created);
