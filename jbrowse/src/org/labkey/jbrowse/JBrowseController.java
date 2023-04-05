@@ -95,11 +95,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-<<<<<<< HEAD
 import java.nio.file.Paths;
 import java.sql.SQLException;
-=======
->>>>>>> 8800692a9541fede1b230c90a5f828312a5fa439
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
