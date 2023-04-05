@@ -133,7 +133,7 @@ public class JBrowseLuceneSearch
     public JSONObject doSearch(final String searchString, final int pageSize, final int offset) throws IOException, ParseException
     {
         File indexPath = _jsonFile.getExpectedLocationOfLuceneIndex(true);
-        Map<String, LuceneFieldDescriptor> fieldMap = getIndexedFields();
+        Map<String, LuceneFieldDescriptor> fields = getIndexedFields();
 
         // Open directory of lucene path, get a directory reader, and create the index search manager
         try (
@@ -143,7 +143,6 @@ public class JBrowseLuceneSearch
         )
         {
             IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-            Map<String, LuceneFieldDescriptor> fields = getIndexedFields();
 
             List<String> stringQueryParserFields = new ArrayList<>();
             List<String> numericQueryParserFields = new ArrayList<>();
@@ -196,7 +195,14 @@ public class JBrowseLuceneSearch
                 if(stringQueryParserFields.contains(fieldName)) {
                     query = queryParser.parse(queryString);
                 } else if(numericQueryParserFields.contains(fieldName)) {
-                    query = numericQueryParser.parse(queryString, "");
+                    try {
+                        query = numericQueryParser.parse(queryString, "");
+                    }
+                    catch (QueryNodeException e)
+                    {
+                        // TODO return error
+                        e.printStackTrace();
+                    }
                 }
 
                 booleanQueryBuilder.add(query, BooleanClause.Occur.MUST);
@@ -231,13 +237,6 @@ public class JBrowseLuceneSearch
 
             //TODO: we should probably stream this
             return results;
-        }
-        catch (QueryNodeException e)
-        {
-            e.printStackTrace();
-
-            //TODO: This should be a descriptive error
-            return null;
         }
     }
 }
