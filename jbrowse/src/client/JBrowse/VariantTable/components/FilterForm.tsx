@@ -33,24 +33,29 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
+const stringType = ["contains", "in", "starts with", "ends with", "is empty", "is not empty"];
+const numericType = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"];
+const noneType = [];
+const impactType = ["LOW", "MODERATE", "HIGH"];
+
 const availableOperators = {
-  None: [""],
-  Samples: ["contains", "is", "starts with", "ends with", "is empty", "is not empty"],
-  CHROM: ["contains", "is", "starts with", "ends with", "is empty", "is not empty"],
-  genomicPosition: ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"],
-  start: ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"],
-  end: ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"],
-  contig: ["contains", "is", "starts with", "ends with", "is empty", "is not empty"],
-  REF: ["contains", "is", "starts with", "ends with", "is empty", "is not empty"],
-  ALT: ["contains", "is", "starts with", "ends with", "is empty", "is not empty"],
-  AF: ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"],
-  VARIANT_TYPE: ["contains", "is", "starts with", "ends with", "is empty", "is not empty"],
-  IMPACT: ["LOW", "MODERATE", "HIGH"],
-  OVERLAPPING_GENES: ["contains", "is", "starts with", "ends with", "is empty", "is not empty"],
-  CADD_PH: ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"],
+  None: noneType,
+  variableSamples: stringType,
+  CHROM: stringType,
+  genomicPosition: numericType,
+  start: numericType,
+  end: numericType,
+  contig: stringType,
+  REF: stringType,
+  ALT: stringType,
+  AF: numericType,
+  VARIANT_TYPE: stringType,
+  IMPACT: impactType,
+  OVERLAPPING_GENES: stringType,
+  CADD_PH: numericType,
 };
 
-const FilterForm = ({ open, setOpen, sessionId, handleSubmitCallback }) => {
+const FilterForm = ({ open, setOpen, sessionId, handleSubmitCallback, handleFailureCallback }) => {
   const [filters, setFilters] = useState([{ field: "None", operator: "", value: "" }]);
   const classes = useStyles();
 
@@ -83,10 +88,7 @@ const FilterForm = ({ open, setOpen, sessionId, handleSubmitCallback }) => {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    console.log("handleSubmit")
-    console.log("filter form callback", handleSubmitCallback)
-    console.log("sessionId", sessionId)
-    fetchLuceneQuery(filters, sessionId, 0, (json)=>{console.log(json); handleSubmitCallback(json)});
+    fetchLuceneQuery(filters, sessionId, 0, (json)=>{console.log(json); handleSubmitCallback(json)}, () => {handleFailureCallback()});
     setOpen(false);
   };
 
@@ -121,13 +123,11 @@ const FilterForm = ({ open, setOpen, sessionId, handleSubmitCallback }) => {
                 </MenuItem>
                 <MenuItem value="CHROM">Chromosome</MenuItem>
                 <MenuItem value="genomicPosition">Position</MenuItem>
-                <MenuItem value="Samples">Samples</MenuItem>
-                <MenuItem value="start">Start</MenuItem>
-                <MenuItem value="end">End</MenuItem>
+                <MenuItem value="variableSamples">Samples</MenuItem>
                 <MenuItem value="contig">Contig</MenuItem>
-                <MenuItem value="REF">Reference</MenuItem>
+                <MenuItem value="ref">Reference</MenuItem>
                 <MenuItem value="ALT">Alternative Allele</MenuItem>
-                <MenuItem value="AF">Allele Frequency</MenuItem>
+                <MenuItem value="AF">Allele Freq.</MenuItem>
                 <MenuItem value="Type">Type</MenuItem>
                 <MenuItem value="IMPACT">Impact</MenuItem>
                 <MenuItem value="OVERLAPPING_GENES">Overlapping Genes</MenuItem>

@@ -28,7 +28,6 @@ const VariantTableWidget = observer(props => {
   }
 
   function handleSearch(data) {
-    console.log("handlesearch data:", data)
     setFeatures(APIDataToRows(data.data, trackId))
   }
 
@@ -90,12 +89,16 @@ const VariantTableWidget = observer(props => {
   // API call to retrieve the requested features.
   useEffect(() => {
     async function fetch() {
-    const queryParam = new URLSearchParams(window.location.search)
+      const queryParam = new URLSearchParams(window.location.search)
 
-      fetchLuceneQuery(queryParam.get('searchString'), sessionId, queryParam.get('offset'), (res) => {
-        setFeatures(resToArray(queryParam.get('offset')))
-        setDataLoaded(true)
-      })
+      fetchLuceneQuery(queryParam.get('searchString'), sessionId, queryParam.get('offset'),
+        (res) => {
+          setFeatures(APIDataToRows(res.data, trackId))
+          setDataLoaded(true)
+        },
+        () => {
+          setDataLoaded(true)
+        })
     }
 
     fetch()
@@ -196,7 +199,7 @@ const VariantTableWidget = observer(props => {
       <div style={{marginBottom: "10px"}}>
         <Grid container spacing={1} justifyContent="flex-start" alignItems="center">
           <Grid key='searchButton' item xs="auto">
-            <Search sessionId={sessionId} handleSubmitCallback={(data) => handleSearch(data)}/>
+            <Search sessionId={sessionId} handleSubmitCallback={(data) => handleSearch(data)} handleFailureCallback={() => {}}/>
           </Grid>
 
           {/*<Grid key='filterMenu' item xs="auto">

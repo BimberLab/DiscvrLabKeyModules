@@ -267,18 +267,71 @@ export function getGenotypeURL(trackId, contig, start, end) {
     return ActionURL.buildURL("jbrowse", "genotypeTable.view", null, {trackId: trackId, chr: contig, start: start, stop: end})
 }
 
-export async function fetchLuceneQuery(filters, sessionId, offset, successCallback) {
-    console.log("filters: ", filters)
-    console.log("sessionId: ", sessionId)
-    console.log("offset: ", offset)
+function generateLuceneString(field, operator, value) {
+  let luceneQueryString = '';
+
+  if (field === 'IMPACT') {
+    return `impact:${operator}`;
+  }
+
+  switch (operator) {
+    case '=':
+      luceneQueryString = `${field}:${value}`;
+      break;
+    case '!=':
+      luceneQueryString = `*:* -${field}:${value}`;
+      break;
+    case '>':
+      luceneQueryString = `${field}:[${value + 1} TO *]`;
+      break;
+    case '>=':
+      luceneQueryString = `${field}:[${value} TO *]`;
+      break;
+    case '<':
+      luceneQueryString = `${field}:[* TO ${value - 1}]`;
+      break;
+    case '<=':
+      luceneQueryString = `${field}:[* TO ${value}]`;
+      break;
+    case 'contains':
+      luceneQueryString = `${field}:*${value}*`;
+      break;
+    case 'in':
+      luceneQueryString = `${field}:(${value.join(' OR ')})`;
+      break;
+    case 'starts with':
+      luceneQueryString = `${field}:${value}*`;
+      break;
+    case 'ends with':
+      luceneQueryString = `${field}:*${value}`;
+      break;
+    case 'is empty':
+      luceneQueryString = `*:* -${field}:*`;
+      break;
+    case 'is not empty':
+      luceneQueryString = `${field}:*`;
+      break;
+    default:
+      throw new Error(`Invalid operator: ${operator}`);
+  }
+
+  return luceneQueryString;
+}
+
+export async function fetchLuceneQuery(filters, sessionId, offset, successCallback, failureCallback) {
+    if(!offset) {
+        offset = 0
+    }
 
     if (!sessionId) {
         console.log("Lucene query: no session ID")
+        failureCallback()
         return
     }
 
     if (!filters || (offset == undefined)) {
-        console.log("No filters, or no offset!")
+        console.log("No filters!")
+        failureCallback()
         return
     }
 
@@ -290,13 +343,13 @@ export async function fetchLuceneQuery(filters, sessionId, offset, successCallba
         success: async function(res){
             let jsonRes = JSON.parse(res.response);
             console.log("Lucene query success:", jsonRes)
-
             successCallback(jsonRes)
         },
         failure: function(res){
             console.log("Lucene query failure:", res.status)
+            failureCallback()
             handleFailure("There was an error: " + res.status, sessionId)
         },
-        params: {"searchString": filters.map(val => val.field + "," + val.operator + "," + val.value + "&").join(''), "sessionId": sessionId, "offset": offset},
+        params: {"searchString": filters.map(val => generateLuceneString(val.field, val.operator, val.value)).join('&'), "sessionId": sessionId, "offset": offset},
     });
 }
