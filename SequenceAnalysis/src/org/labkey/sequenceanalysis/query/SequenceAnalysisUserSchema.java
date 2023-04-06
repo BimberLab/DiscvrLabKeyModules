@@ -134,7 +134,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         {
             String chr = sourceTable.getSqlDialect().isPostgreSQL() ? "chr" : "char";
             SQLFragment sql = new SQLFragment("(SELECT ").
-                    append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("rd.category"), true, true, chr + "(10)")).
+                    append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("rd.category"), true, true, new SQLFragment(chr + "(10)"))).
                     append(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " rd WHERE rd.analysis_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
             ExprColumn newCol = new ExprColumn(ret, "outputFileTypes", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
             newCol.setLabel("Output File Types");
@@ -189,7 +189,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         if (ret.getColumn("analysisSets") == null)
         {
             String chr = sourceTable.getSqlDialect().isPostgreSQL() ? "chr" : "char";
-            SQLFragment sql = new SQLFragment("(SELECT ").append(ret.getSqlDialect().getGroupConcat(new SQLFragment("a.name"), true, true, chr + "(10)")).append(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSIS_SET_MEMBERS + " asm JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSIS_SETS + " a ON (asm.analysisSet = a.rowid) WHERE asm.dataid = " + ExprColumn.STR_TABLE_ALIAS + ".dataid)");
+            SQLFragment sql = new SQLFragment("(SELECT ").append(ret.getSqlDialect().getGroupConcat(new SQLFragment("a.name"), true, true, new SQLFragment(chr + "(10)"))).append(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSIS_SET_MEMBERS + " asm JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSIS_SETS + " a ON (asm.analysisSet = a.rowid) WHERE asm.dataid = " + ExprColumn.STR_TABLE_ALIAS + ".dataid)");
             ExprColumn newCol = new ExprColumn(ret, "analysisSets", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
             newCol.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=analysisSetMembers&query.dataid~eq=${dataid}", ret.getContainer().isWorkbook() ? ret.getContainer().getParent() : ret.getContainer()));
             newCol.setLabel("Analyses Using This File");
@@ -283,14 +283,14 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             newCol.setLabel("Total Files");
             ret.addColumn(newCol);
 
-            SQLFragment sql2 = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("d.Name"), true, true, "','")).append(new SQLFragment(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd JOIN exp.data d ON (d.RowId = rd.fileId1 OR d.RowId = rd.fileId2) WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)"));
+            SQLFragment sql2 = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("d.Name"), true, true, ",")).append(new SQLFragment(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd JOIN exp.data d ON (d.RowId = rd.fileId1 OR d.RowId = rd.fileId2) WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)"));
             ExprColumn newCol2 = new ExprColumn(ret, "fileNames", sql2, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
             newCol2.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=readData&query.readset~eq=${rowid}"));
             newCol2.setLabel("File Names");
             newCol2.setDescription("This will display a comma-separated list of all file names with reads.  This can be useful for SRA submissions.");
             ret.addColumn(newCol2);
 
-            SQLFragment sql3 = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("rd.sra_accession"), true, true, "','")).append(new SQLFragment(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)"));
+            SQLFragment sql3 = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("rd.sra_accession"), true, true, ",")).append(new SQLFragment(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)"));
             ExprColumn newCol3 = new ExprColumn(ret, "sraRuns", sql3, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
             newCol3.setURL(DetailsURL.fromString("/query/executeQuery.view?schemaName=sequenceanalysis&query.queryName=readData&query.readset~eq=${rowid}"));
             newCol3.setLabel("SRA Runs");
@@ -327,7 +327,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         if (ret.getColumn("distinctGenomes") == null)
         {
             String chr = ret.getSqlDialect().isPostgreSQL() ? "chr" : "char";
-            SQLFragment sql = new SQLFragment("(SELECT ").append(ret.getSqlDialect().getGroupConcat(new SQLFragment("l.name"), true, true, (chr + "(10)"))).append(new SQLFragment(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " a JOIN " + SequenceAnalysisSchema.SCHEMA_NAME  + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARIES + " l ON (a.library_id = l.rowid) WHERE a.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)"));
+            SQLFragment sql = new SQLFragment("(SELECT ").append(ret.getSqlDialect().getGroupConcat(new SQLFragment("l.name"), true, true,  new SQLFragment(chr + "(10)"))).append(new SQLFragment(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " a JOIN " + SequenceAnalysisSchema.SCHEMA_NAME  + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARIES + " l ON (a.library_id = l.rowid) WHERE a.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)"));
             ExprColumn newCol = new ExprColumn(ret, "distinctGenomes", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
             newCol.setLabel("Genomes With Alignments For Readset");
             newCol.setWidth("200");
@@ -351,7 +351,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
         {
             String chr = sourceTable.getSqlDialect().isPostgreSQL() ? "chr" : "char";
             SQLFragment sql = new SQLFragment("(SELECT ").
-                    append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("rd.category"), true, true, chr + "(10)")).
+                    append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("rd.category"), true, true, new SQLFragment(chr + "(10)"))).
                     append(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " rd WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
             ExprColumn newCol = new ExprColumn(ret, "outputFileTypes", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
             newCol.setLabel("Output File Types");
@@ -390,7 +390,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
 
         if (ret.getColumn("runIds") == null)
         {
-            SQLFragment sql = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("rd.runId"), true, true, "','")).append(" FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+            SQLFragment sql = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("rd.runId"), true, true, ",")).append(" FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
             ExprColumn newCol = new ExprColumn(ret, "runIds", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
             newCol.setLabel("Run(s)");
 
@@ -400,7 +400,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
 
         if (ret.getColumn("jobIds") == null)
         {
-            SQLFragment sql = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("runs.jobId"), true, true, "','")).append(" FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd JOIN exp.experimentrun runs ON (rd.runId = runs.rowId) WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+            SQLFragment sql = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("runs.jobId"), true, true, ",")).append(" FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_READ_DATA + " rd JOIN exp.experimentrun runs ON (rd.runId = runs.rowId) WHERE rd.readset = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
             ExprColumn newCol = new ExprColumn(ret, "jobIds", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
             newCol.setLabel("Job(s)");
 
@@ -453,7 +453,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
     {
         SharedDataTable<?> ret = new SharedDataTable<>(this, sourceTable);
         String chr = sourceTable.getSqlDialect().isPostgreSQL() ? "chr" : "char";
-        SQLFragment sql = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("r.name"), true, true, chr + "(10)")).append(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS + " rm JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARIES + " r ON (rm.library_id = r.rowid) WHERE rm.ref_nt_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+        SQLFragment sql = new SQLFragment("(SELECT ").append(sourceTable.getSqlDialect().getGroupConcat(new SQLFragment("r.name"), true, true, new SQLFragment(chr + "(10)"))).append(" as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS + " rm JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARIES + " r ON (rm.library_id = r.rowid) WHERE rm.ref_nt_id = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
         ExprColumn newCol = new ExprColumn(ret, "genomes", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
         newCol.setLabel("Genome(s) Using Sequence");
         newCol.setWidth("200");
