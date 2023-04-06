@@ -276,10 +276,10 @@ then
     rm -Rf gatk-4*
     rm -Rf $LKTOOLS_DIR/GenomeAnalysisTK4.jar
 
-    wget $WGET_OPTS https://github.com/broadinstitute/gatk/releases/download/4.3.0.0/gatk-4.3.0.0.zip
-    unzip gatk-4.3.0.0.zip
+    wget $WGET_OPTS https://github.com/broadinstitute/gatk/releases/download/4.4.0.0/gatk-4.4.0.0.zip
+    unzip gatk-4.4.0.0.zip
 
-    cp ./gatk-4.3.0.0/gatk-package-4.3.0.0-local.jar $LKTOOLS_DIR/GenomeAnalysisTK4.jar
+    cp ./gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar $LKTOOLS_DIR/GenomeAnalysisTK4.jar
 else
     echo "Already installed"
 fi
@@ -695,7 +695,7 @@ then
     rm -Rf $LKTOOLS_DIR/htsjdk-*
     rm -Rf $LKTOOLS_DIR/libIntelDeflater.so
 
-    wget $WGET_OPTS https://github.com/broadinstitute/picard/releases/download/2.27.4/picard.jar
+    wget $WGET_OPTS https://github.com/broadinstitute/picard/releases/download/3.0.0/picard.jar
 
     cp -R ./picard.jar $LKTOOLS_DIR/
 else

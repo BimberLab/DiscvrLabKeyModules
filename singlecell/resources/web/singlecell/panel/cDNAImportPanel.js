@@ -126,7 +126,15 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
             xtype: 'checkbox',
             fieldLabel: 'Combined Hashing and Cite-Seq Libraries',
             itemId: 'combineHashingCite',
-            checked: false
+            checked: false,
+            listeners: {
+                change: function(field, val) {
+                    if (val) {
+                        // The combined library only makes sense if using BioLegend:
+                        field.up('panel').down('#hashingType').setValue('BioLegend');
+                    }
+                }
+            }
         },{
             xtype: 'checkbox',
             fieldLabel: 'Require Library Concentrations',
@@ -343,7 +351,7 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
         var toInsert = data.readsetRows.filter(r => r.doInsert)
         if (!toInsert.length) {
             Ext4.Msg.hide();
-            Ext4.Msg.alert('Success', 'Data Saved', function(){
+            Ext4.Msg.alert('No Rows To Save', 'None of the rows needed to be saved. This might mean they already exist, or could indicate a problem with the import', function(){
                 window.location = LABKEY.ActionURL.buildURL('query', 'executeQuery.view', Laboratory.Utils.getQueryContainerPath(), {'query.queryName': 'cdna_libraries', schemaName: 'singlecell', 'query.sort': '-created'});
             }, this);
         }
@@ -378,12 +386,12 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
                             baseRow.tcrReadsetId = tcrReadsetId;
                         }
 
-                        var htoReadsetId = readsetMap[row.plateId + '-HTO'];
+                        var htoReadsetId = readsetMap[row.plateId + '-HTO'] || readsetMap[row.plateId + '-HTO-CITE'];
                         if (htoReadsetId) {
                             baseRow.hashingReadsetId = htoReadsetId;
                         }
 
-                        var citeseqReadsetId = readsetMap[row.plateId + '-CITE'];
+                        var citeseqReadsetId = readsetMap[row.plateId + '-CITE'] || readsetMap[row.plateId + '-HTO-CITE'];
                         if (citeseqReadsetId) {
                             baseRow.citeseqReadsetId = citeseqReadsetId;
                         }
@@ -420,6 +428,16 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
                             failure: LDK.Utils.getErrorCallback(),
                             scope: this
                         });
+                    }
+                    else {
+                        Ext4.Msg.hide();
+                        Ext4.Msg.alert('Success', 'Data Saved', function () {
+                            window.location = LABKEY.ActionURL.buildURL('query', 'executeQuery.view', Laboratory.Utils.getQueryContainerPath(), {
+                                'query.queryName': 'cdna_libraries',
+                                schemaName: 'singlecell',
+                                'query.sort': '-created'
+                            });
+                        }, this);
                     }
                 },
                 failure: LDK.Utils.getErrorCallback(),
