@@ -176,6 +176,52 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
         });
 
         this.callParent(arguments);
+
+        if (this.jsonFiles.length === 1) {
+            Ext4.Msg.wait('Loading...');
+            LABKEY.Query.selectRows({
+                schemaName: 'jbrowse',
+                queryName: 'jsonfiles',
+                filterArray: [
+                    LABKEY.Filter.create('objectid', this.jsonFiles.join(';'), LABKEY.Filter.Types.EQUALS_ONE_OF)
+                ],
+                columns: 'objectid,trackjson',
+                scope: this,
+                success: this.onSelectLoad,
+                failure: LDK.Utils.getErrorCallback()
+            });
+        }
+    },
+
+    onSelectLoad: function(results){
+        Ext4.Msg.hide();
+        if (results.rows && results.rows.length) {
+            if (!results.rows[0].trackJson) {
+                return;
+            }
+
+            var json = JSON.parse(results.rows[0].trackJson);
+            var store = this.down('ldk-gridpanel').store;
+            for (var attribute in json) {
+                var val = json[attribute];
+                var dataType = 'STRING';
+                if (typeof val === 'number' && !isNaN(val)){
+                    dataType = Number.isInteger(val) ? 'INT' : 'FLOAT';
+                }
+                else if (typeof val === 'string') {
+                    dataType = 'STRING';
+                }
+                else if (typeof val === 'boolean') {
+                    dataType = 'BOOLEAN';
+                }
+
+                store.add(store.createModel({
+                    attribute: attribute,
+                    value: val,
+                    dataType: dataType
+                }));
+            }
+        }
     },
 
     addAttribute: function(attribute, value, dataType){

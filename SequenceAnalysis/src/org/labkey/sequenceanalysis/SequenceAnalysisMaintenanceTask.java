@@ -571,6 +571,10 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             ret.add(f.getName() + ".gz.gzi");
             ret.add(f.getName() + ".gz.fai");
         }
+        else if (new FileType("txt.gz").isType(f))
+        {
+            ret.add(f.getName() + ".tbi");
+        }
 
         // NOTE: this allows modules to register handlers for extra ancillary files, such as seurat metadata
         SequenceAnalysisServiceImpl.get().getAccessoryFileProviders().forEach(fn -> {

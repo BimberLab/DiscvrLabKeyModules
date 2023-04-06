@@ -36,7 +36,7 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         }
 
         List<String> params = new LinkedList<>();
-        params.add(SequencePipelineService.get().getJava8FilePath());
+        params.add(SequencePipelineService.get().getJavaFilepath());
         params.add("-jar");
         params.add(getJar().getPath());
         params.add(getToolName());
@@ -95,7 +95,7 @@ abstract public class PicardWrapper extends AbstractCommandWrapper
         }
 
         List<String> params = new LinkedList<>();
-        params.add(SequencePipelineService.get().getJava8FilePath());
+        params.add(SequencePipelineService.get().getJavaFilepath());
         params.addAll(SequencePipelineService.get().getJavaOpts());
         params.add("-jar");
         params.add(getJar().getPath());

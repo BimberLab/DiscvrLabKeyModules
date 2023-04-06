@@ -11,6 +11,6 @@ public class SequenceOutputFileType extends FileType
 {
     public SequenceOutputFileType()
     {
-        super(Arrays.asList(".bam", ".cram", ".gff", ".gtf", ".bed", ".vcf", ".rds", ".bw"), ".bed", FileType.gzSupportLevel.SUPPORT_GZ);
+        super(Arrays.asList(".bam", ".cram", ".gff", ".gtf", ".bed", ".vcf", ".rds", ".bw", ".txt"), ".bed", FileType.gzSupportLevel.SUPPORT_GZ);
     }
 }

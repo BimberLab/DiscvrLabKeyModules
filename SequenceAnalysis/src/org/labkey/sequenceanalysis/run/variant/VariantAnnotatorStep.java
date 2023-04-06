@@ -43,6 +43,9 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
                     }}, null),
                     ToolParameterDescriptor.create("maf", "Minor Allele Frequency", "If selected, MAF will be annotated.", "checkbox", new JSONObject(){{
                         put("checked", true);
+                    }}, null),
+                    ToolParameterDescriptor.create("chromosomeCounts", "Chromosome Counts", "If selected, GATK ChromosomeCounts annotations, including AF and AC, will be annotated.", "checkbox", new JSONObject(){{
+                        put("checked", false);
                     }}, null)
             ), null, "");
         }
@@ -86,6 +89,12 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
         {
             options.add("-A");
             options.add("MinorAlleleFrequency");
+        }
+
+        if (getProvider().getParameterByName("chromosomeCounts").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
+        {
+            options.add("-A");
+            options.add("ChromosomeCounts");
         }
 
         if (intervals != null)
