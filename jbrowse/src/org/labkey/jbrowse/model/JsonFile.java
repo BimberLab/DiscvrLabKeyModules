@@ -998,10 +998,6 @@ public class JsonFile
             args.add(field);
         }
 
-        // Always include this:
-        args.add("-AN");
-        args.add("SampleList");
-
         runner.execute(args);
     }
 
