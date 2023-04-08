@@ -78,7 +78,7 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
         String name = "fileSets";
         if (ti.getColumn(name) == null)
         {
-            SQLFragment sql = new SQLFragment("(SELECT ").append(ti.getSqlDialect().getGroupConcat(new SQLFragment("s.name"), true, true, "','")).append(" FROM sequenceanalysis.analysisSetMembers m JOIN sequenceanalysis.analysisSets s ON (s.rowid = m.analysisSet) WHERE m.outputFileId = " + ExprColumn.STR_TABLE_ALIAS + ".rowId)");
+            SQLFragment sql = new SQLFragment("(SELECT ").append(ti.getSqlDialect().getGroupConcat(new SQLFragment("s.name"), true, true, ",")).append(" FROM sequenceanalysis.analysisSetMembers m JOIN sequenceanalysis.analysisSets s ON (s.rowid = m.analysisSet) WHERE m.outputFileId = " + ExprColumn.STR_TABLE_ALIAS + ".rowId)");
             ExprColumn newCol = new ExprColumn(ti, name, sql, JdbcType.VARCHAR, ti.getColumn("rowId"));
             newCol.setLabel("File Sets");
             newCol.setDisplayColumnFactory(new FileSetDisplayColumnFactory());
