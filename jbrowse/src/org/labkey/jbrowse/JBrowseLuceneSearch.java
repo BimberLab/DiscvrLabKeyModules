@@ -26,6 +26,7 @@ import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.security.User;
 import org.labkey.jbrowse.model.JBrowseSession;
@@ -99,7 +100,15 @@ public class JBrowseLuceneSearch
 
     private Map<String, LuceneFieldDescriptor> getIndexedFields()
     {
-        Map<String, LuceneFieldDescriptor> ret = new HashMap<>();
+        Map<String, LuceneFieldDescriptor> ret = new HashMap<>() {{
+            put("contig", new LuceneFieldDescriptor("contig", VCFHeaderLineType.String));
+            put("ref", new LuceneFieldDescriptor("ref", VCFHeaderLineType.String));
+            put("alt", new LuceneFieldDescriptor("alt", VCFHeaderLineType.String));
+            put("start", new LuceneFieldDescriptor("start", VCFHeaderLineType.Integer));
+            put("end", new LuceneFieldDescriptor("end", VCFHeaderLineType.Integer));
+            put("genomicPosition", new LuceneFieldDescriptor("genomicPosition", VCFHeaderLineType.Integer));
+            put("variableSamples", new LuceneFieldDescriptor("variableSamples", VCFHeaderLineType.Character));
+        }};
 
         File vcf = _jsonFile.getTrackFile();
         if (!vcf.exists()){
@@ -111,12 +120,6 @@ public class JBrowseLuceneSearch
             VCFHeader header = reader.getFileHeader();
             for (String fn : _jsonFile.getInfoFieldsToIndex())
             {
-                if (VARIABLE_SAMPLES.equals(fn))
-                {
-                    ret.put(VARIABLE_SAMPLES, new LuceneFieldDescriptor(VARIABLE_SAMPLES, VCFHeaderLineType.Character));
-                    continue;
-                }
-
                 if (!header.hasInfoLine(fn))
                 {
                     throw new IllegalArgumentException("Field not present: " + fn);
@@ -128,6 +131,25 @@ public class JBrowseLuceneSearch
         }
 
         return ret;
+    }
+
+    public JSONObject returnIndexedFields() {
+        Map<String, LuceneFieldDescriptor> fields = getIndexedFields();
+        JSONObject results = new JSONObject();
+        JSONArray data = new JSONArray();
+
+        for (Map.Entry<String, LuceneFieldDescriptor> entry : fields.entrySet()) {
+            String field = entry.getKey();
+            LuceneFieldDescriptor descriptor = entry.getValue();
+            JSONObject fieldDescriptorJSON = new JSONObject();
+            fieldDescriptorJSON.put("name", field);
+            fieldDescriptorJSON.put("type", descriptor._type.toString());
+
+            data.put(fieldDescriptorJSON);
+        }
+
+        results.put("fields", data);
+        return results;
     }
 
     public JSONObject doSearch(final String searchString, final int pageSize, final int offset) throws IOException, ParseException

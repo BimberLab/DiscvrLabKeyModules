@@ -23,27 +23,9 @@ import htsjdk.variant.vcf.VCFFileReader;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.DoublePoint;
-import org.apache.lucene.document.FloatPoint;
-import org.apache.lucene.document.IntPoint;
-import org.apache.lucene.index.DirectoryReader;
-import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.IndexableField;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
-import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.BooleanClause;
-import org.apache.lucene.search.BooleanQuery;
-import org.apache.lucene.search.MatchAllDocsQuery;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
 import org.jetbrains.annotations.NotNull;
-import org.json.old.JSONObject;
 import org.json.old.JSONArray;
+import org.json.old.JSONObject;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.MutatingApiAction;
@@ -95,27 +77,16 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Paths;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TopDocs;
-
-import static java.lang.Integer.parseInt;
 
 public class JBrowseController extends SpringActionController
 {
@@ -831,6 +802,28 @@ public class JBrowseController extends SpringActionController
 
                 return new JSONObject(sb.toString());
             }
+        }
+    }
+
+    @RequiresPermission(AdminPermission.class)
+    public class GetIndexedFieldsAction extends ReadOnlyApiAction<LuceneQueryForm>
+    {
+        @Override
+        public ApiResponse execute(LuceneQueryForm form, BindException errors)
+        {
+            JBrowseLuceneSearch searcher;
+            try
+            {
+                searcher = JBrowseLuceneSearch.create(form.getSessionId(), form.getTrackId(), getUser());
+            }
+            catch (IllegalArgumentException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+
+            org.json.JSONObject indexedFieldsJson = searcher.returnIndexedFields();
+            return new ApiSimpleResponse(indexedFieldsJson);
         }
     }
 

@@ -35,7 +35,6 @@ const multiModalOperator = (operator: GridFilterOperator) => {
 
     return (params: GridCellParams) => {
       let cellValue = parseCellValue(params.value)
-      console.log(filterItem.operatorValue)
 
       switch(filterItem.operatorValue) {
         case "!=":
