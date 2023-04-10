@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
@@ -10,7 +10,7 @@ import Dialog from "@material-ui/core/Dialog";
 import DialogActions from "@material-ui/core/DialogActions";
 import DialogContent from "@material-ui/core/DialogContent";
 import DialogTitle from "@material-ui/core/DialogTitle";
-import { fetchLuceneQuery } from "../../utils"
+import { fetchLuceneQuery, fetchFieldTypeInfo } from "../../utils"
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -38,25 +38,21 @@ const numericType = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"
 const noneType = [];
 const impactType = ["LOW", "MODERATE", "HIGH"];
 
-const availableOperators = {
-  None: noneType,
-  variableSamples: stringType,
-  CHROM: stringType,
-  genomicPosition: numericType,
-  start: numericType,
-  end: numericType,
-  contig: stringType,
-  REF: stringType,
-  ALT: stringType,
-  AF: numericType,
-  VARIANT_TYPE: stringType,
-  IMPACT: impactType,
-  OVERLAPPING_GENES: stringType,
-  CADD_PH: numericType,
-};
-
 const FilterForm = ({ open, setOpen, sessionId, handleSubmitCallback, handleFailureCallback }) => {
   const [filters, setFilters] = useState([{ field: "None", operator: "", value: "" }]);
+
+  const [availableOperators, setAvailableOperators] = useState<any>({
+    variableSamples: { type: stringType },
+    ref: { type: stringType },
+    alt: { type: stringType },
+    start: { type: numericType },
+    end: { type: numericType },
+    genomicPosition: { type: numericType },
+    contig: { type: stringType },
+  });
+
+  const [dataLoaded, setDataLoaded] = useState(false)
+
   const classes = useStyles();
 
   const handleClose = () => {
@@ -85,6 +81,48 @@ const FilterForm = ({ open, setOpen, sessionId, handleSubmitCallback, handleFail
       })
     );
   };
+
+  // API call to retrieve the fields and build the form
+  useEffect(() => {
+    async function fetch() {
+      const queryParam = new URLSearchParams(window.location.search)
+
+      fetchFieldTypeInfo(sessionId,
+        (res) => {
+          const availableOperators = Object.keys(res.data).reduce((acc, field) => {
+            let fieldType;
+
+            switch (res.data[field]) {
+              case 'Flag':
+              case 'String':
+              case 'Character':
+                fieldType = stringType;
+                break;
+              case 'Float':
+              case 'Integer':
+                fieldType = numericType;
+                break;
+              case 'Impact':
+                fieldType = impactType;
+                break;
+              case 'None':
+              default:
+                fieldType = noneType;
+                break;
+            }
+
+            acc[field] = fieldType;
+            return acc;
+          }, {}); 
+
+          setAvailableOperators(availableOperators)
+          setDataLoaded(true)
+        })
+    }
+
+    fetch()
+
+  }, [])
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -121,18 +159,11 @@ const FilterForm = ({ open, setOpen, sessionId, handleSubmitCallback, handleFail
                 <MenuItem value="None">
                   <em>None</em>
                 </MenuItem>
-                <MenuItem value="CHROM">Chromosome</MenuItem>
-                <MenuItem value="genomicPosition">Position</MenuItem>
-                <MenuItem value="variableSamples">Samples</MenuItem>
-                <MenuItem value="contig">Contig</MenuItem>
-                <MenuItem value="ref">Reference</MenuItem>
-                <MenuItem value="ALT">Alternative Allele</MenuItem>
-                <MenuItem value="AF">Allele Freq.</MenuItem>
-                <MenuItem value="Type">Type</MenuItem>
-                <MenuItem value="IMPACT">Impact</MenuItem>
-                <MenuItem value="OVERLAPPING_GENES">Overlapping Genes</MenuItem>
-                <MenuItem value="CADD_PH">CADD Score</MenuItem>
-                <MenuItem value="ADVANCED">Advanced</MenuItem>
+                {Object.keys(availableOperators).map((field) => (
+                  <MenuItem key={field} value={field}>
+                    {field}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
 
@@ -150,9 +181,16 @@ const FilterForm = ({ open, setOpen, sessionId, handleSubmitCallback, handleFail
                   <em>None</em>
                 </MenuItem>
 
-                {availableOperators[filter.field] ? availableOperators[filter.field].map((operator) => (
-                  <MenuItem key={operator} value={operator}>{operator}</MenuItem>
-                )) : <MenuItem></MenuItem> }
+                {availableOperators[filter.field] && availableOperators[filter.field].type ? (
+                  availableOperators[filter.field].type.map((operator) => (
+                    <MenuItem key={operator} value={operator}>
+                      {operator}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem></MenuItem>
+                )}
+
               </Select>
             </FormControl>
             : null

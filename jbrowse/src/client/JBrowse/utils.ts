@@ -353,3 +353,25 @@ export async function fetchLuceneQuery(filters, sessionId, offset, successCallba
         params: {"searchString": filters.map(val => generateLuceneString(val.field, val.operator, val.value)).join('&'), "sessionId": sessionId, "offset": offset},
     });
 }
+
+export async function fetchFieldTypeInfo(sessionId, successCallback) {
+    if (!sessionId) {
+        console.log("Lucene fetch field type info: no session ID")
+        return
+    }
+
+    return Ajax.request({
+        url: ActionURL.buildURL('jbrowse', 'getIndexedFields.api'),
+        method: 'GET',
+        success: async function(res){
+            let jsonRes = JSON.parse(res.response);
+            console.log("Fetch field type info success:", jsonRes)
+            successCallback(jsonRes)
+        },
+        failure: function(res){
+            console.log("Fetch field type info failure:", res.status)
+            handleFailure("There was an error: " + res.status, sessionId)
+        },
+        params: {"sessionId": sessionId},
+    });
+}

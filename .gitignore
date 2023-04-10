@@ -3,6 +3,7 @@
 /jbrowse/node_modules
 /intellijBuild
 /travisSettings.sh
+index/
 
 # Created by npm install
 jbrowse/jb_run.js

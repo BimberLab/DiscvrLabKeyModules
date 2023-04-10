@@ -1,6 +1,6 @@
 import org.labkey.gradle.util.BuildUtils;
 
-final String luceneVersion="8.11.2"
+final String luceneVersion="9.3.0"
 
 repositories {
 	mavenCentral()
@@ -26,7 +26,7 @@ dependencies {
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:DiscvrLabKeyModules:SequenceAnalysis", depProjectConfig: "published", depExtension: "module")
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: BuildUtils.getPlatformModuleProjectPath(project.gradle, "pipeline"), depProjectConfig: "published", depExtension: "module")
 
-	external "org.apache.lucene:lucene-analyzers-common:${luceneVersion}"
+	external "org.apache.lucene:lucene-analysis-common:${luceneVersion}"
 	external "org.apache.lucene:lucene-core:${luceneVersion}"
 	external "org.apache.lucene:lucene-queryparser:${luceneVersion}"
 }
