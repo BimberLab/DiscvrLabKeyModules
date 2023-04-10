@@ -97,7 +97,6 @@ public class JBrowseTest extends BaseWebDriverTest
         testVariantTableComparators();
 
         testOutputFileProcessing();
-
         testFullTextSearch();
     }
 

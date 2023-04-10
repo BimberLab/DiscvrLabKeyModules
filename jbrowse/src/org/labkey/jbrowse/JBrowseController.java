@@ -77,8 +77,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Paths;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -799,6 +797,28 @@ public class JBrowseController extends SpringActionController
 
                 return new JSONObject(sb.toString());
             }
+        }
+    }
+
+    @RequiresPermission(AdminPermission.class)
+    public class GetIndexedFieldsAction extends ReadOnlyApiAction<LuceneQueryForm>
+    {
+        @Override
+        public ApiResponse execute(LuceneQueryForm form, BindException errors)
+        {
+            JBrowseLuceneSearch searcher;
+            try
+            {
+                searcher = JBrowseLuceneSearch.create(form.getSessionId(), form.getTrackId(), getUser());
+            }
+            catch (IllegalArgumentException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+
+            org.json.JSONObject indexedFieldsJson = searcher.returnIndexedFields();
+            return new ApiSimpleResponse(indexedFieldsJson);
         }
     }
 
