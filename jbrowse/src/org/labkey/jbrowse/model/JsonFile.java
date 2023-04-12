@@ -1147,7 +1147,7 @@ public class JsonFile
     public boolean isVisibleByDefault()
     {
         JSONObject json = getExtraTrackConfig();
-        if (json == null || json.get("visibleByDefault") == null)
+        if (json == null || json.opt("visibleByDefault") == null)
             return false;
 
         return Boolean.parseBoolean(json.get("visibleByDefault").toString());
