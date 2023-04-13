@@ -338,6 +338,16 @@ public class ChainFileValidator
 
         //UCSC is a main source of chain files, so deal with their quirks:
         // https://genome.ucsc.edu/cgi-bin/hgGateway
+        if (refName.startsWith("chr0"))
+        {
+            // Allow chr01, chr1 -> 1
+            String toTest = refName.replaceFirst("chr0", "");
+            if (cachedReferences.containsKey(toTest))
+            {
+                return cachedReferences.get(toTest);
+            }
+        }
+
         if (refName.startsWith("chr"))
         {
             String toTest = refName.replaceFirst("chr", "");
