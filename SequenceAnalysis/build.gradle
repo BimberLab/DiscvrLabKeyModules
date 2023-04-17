@@ -23,7 +23,6 @@ repositories {
 configurations.all {
     resolutionStrategy {
         force "com.sun.activation:jakarta.activation:${activationVersion}"
-        force "javax.xml.bind:jaxb-api:2.3.0"  // CONSIDER: Exclude jaxb-api? It's essentially the same jar as jakarta.xml.bind-api (below)
         // NOTE: this should be kept in sync with mcc module:
         force "jakarta.xml.bind:jakarta.xml.bind-api:${jaxbVersion}"
     }
@@ -61,8 +60,8 @@ dependencies {
             ),
             {
                 // Exclude activation jars from webapp to avoid classloader conflicts with <tomcat>/lib/javax.activation.jar
-                exclude group: 'jakarta.activation', module: 'jakarta.activation-api'
                 exclude group: 'com.sun.activation', module: 'jakarta.activation'
+                exclude group: 'javax.activation', module: 'javax.activation-api'
             }
     )
 
@@ -79,8 +78,8 @@ dependencies {
             ),
             {
                 // Exclude activation jars from webapp to avoid classloader conflicts with <tomcat>/lib/javax.activation.jar
-                exclude group: 'jakarta.activation', module: 'jakarta.activation-api'
                 exclude group: 'com.sun.activation', module: 'jakarta.activation'
+                exclude group: 'javax.activation', module: 'javax.activation-api'
             }
     )
 

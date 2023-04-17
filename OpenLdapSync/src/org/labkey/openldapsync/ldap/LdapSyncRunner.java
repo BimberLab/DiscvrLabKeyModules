@@ -1,6 +1,6 @@
 package org.labkey.openldapsync.ldap;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.apache.directory.api.ldap.model.exception.LdapInvalidDnException;
 import org.apache.directory.api.ldap.model.name.Dn;
@@ -347,7 +347,7 @@ public class LdapSyncRunner implements Job
         //concatenate to the group name if the field is not empty
         if (StringUtils.trimToNull(_settings.getGroupNameSuffix()) != null)
         {
-            //Note: do not trim the suffix, as this allows the admin to provide leading whitespace.  for example: the suffix " (LDAP)" would result in "MyGroup (LDAP)"
+//            Note: do not trim the suffix, as this allows the admin to provide leading whitespace.  for example: the suffix " (LDAP)" would result in "MyGroup (LDAP)"
             groupName = groupName.concat(_settings.getGroupNameSuffix());
         }
 

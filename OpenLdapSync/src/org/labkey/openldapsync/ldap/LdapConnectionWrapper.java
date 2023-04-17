@@ -95,7 +95,7 @@ public class LdapConnectionWrapper
     {
         try
         {
-            LdapConnection connection = _pool.makeObject();
+            LdapConnection connection = _pool.makeObject().getObject();
             connection.bind();
 
             if (!connection.isConnected())
