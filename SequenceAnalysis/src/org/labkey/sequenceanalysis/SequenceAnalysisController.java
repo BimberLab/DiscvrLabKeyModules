@@ -1952,23 +1952,23 @@ public class SequenceAnalysisController extends SpringActionController
 
         public String getJobName()
         {
-            return getNewJsonObject().optString("jobName");
+            return getJsonObject().optString("jobName");
         }
 
         public String getDescription()
         {
-            return getNewJsonObject().optString("description");
+            return getJsonObject().optString("description");
         }
 
         public TYPE getType()
         {
-            return !getNewJsonObject().has("type") ? null : TYPE.valueOf(getNewJsonObject().getString("type"));
+            return !getJsonObject().has("type") ? null : TYPE.valueOf(getJsonObject().getString("type"));
         }
 
         public JSONObject getJobParameters()
         {
-            // Return clone so we dont mutate it:
-            return new JSONObject(getNewJsonObject().optJSONObject("jobParameters").toMap());
+            // Return clone so we don't mutate it:
+            return new JSONObject(getJsonObject().optJSONObject("jobParameters").toMap());
         }
 
         public JSONArray getReadsetIds()

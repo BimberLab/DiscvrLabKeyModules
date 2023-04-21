@@ -414,14 +414,14 @@ public class JBrowseController extends SpringActionController
         @Override
         public ApiResponse execute(SimpleApiJsonForm form, BindException errors)
         {
-            JSONArray jsonFiles = form.getNewJsonObject().getJSONArray("jsonFiles");
+            JSONArray jsonFiles = form.getJsonObject().getJSONArray("jsonFiles");
             Set<String> objectIds = new HashSet<>();
             for (Object o : jsonFiles.toList())
             {
                 objectIds.add(o.toString());
             }
 
-            JSONObject attributes = form.getNewJsonObject().getJSONObject("attributes");
+            JSONObject attributes = form.getJsonObject().getJSONObject("attributes");
 
             final Map<Container, List<Map<String, Object>>> rows = new HashMap<>();
             TableSelector ts = new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_JSONFILES), PageFlowUtil.set("objectid", "container", "trackJson"), new SimpleFilter(FieldKey.fromString("objectid"), objectIds, CompareType.IN), null);
