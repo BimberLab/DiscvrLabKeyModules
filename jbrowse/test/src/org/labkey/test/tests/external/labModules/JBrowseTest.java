@@ -16,6 +16,8 @@
 package org.labkey.test.tests.external.labModules;
 
 import org.apache.commons.lang3.StringUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -97,6 +99,7 @@ public class JBrowseTest extends BaseWebDriverTest
         testVariantTableComparators();
 
         testOutputFileProcessing();
+
         testFullTextSearch();
     }
 
@@ -598,9 +601,32 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
         waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Recreating Resources", false);
 
-        beginAt("/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=foo");
-        // TODO: check the actual results once this is fully working
+        // this should return 100 values and each should have contig = 1
+        String url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=contig:=1";
+        beginAt(url);
         waitForText("{");
+        String jsonString = getBodyText();
+        JSONArray jsonArray = new JSONArray(jsonString);
+        Assert.assertEquals(100, jsonArray.length());
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject jsonObject = jsonArray.getJSONObject(i);
+            Assert.assertEquals(1, jsonObject.getInt("contig"));
+        }
+
+        // contig := 1
+        // ref := A
+        // should be 104 results and each should be ref = A
+        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=contig%3A%3D1%26ref%3A%3DA";
+        beginAt(url);
+        waitForText("{");
+        jsonArray = new JSONArray(jsonString);
+        Assert.assertEquals(104, jsonArray.length());
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject jsonObject = jsonArray.getJSONObject(i);
+            Assert.assertEquals(1, jsonObject.getInt("contig"));
+            Assert.assertEquals("A", jsonObject.getString("ref"));
+        }
+
         getArtifactCollector().dumpPageSnapshot("JBrowseLuceneIndexPage");
 
         beginAt("/query/" + getProjectName() + "/executeQuery.view?query.queryName=jsonfiles&schemaName=jbrowse");

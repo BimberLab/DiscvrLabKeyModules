@@ -17,7 +17,7 @@ const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
 function VariantTable() {
     const queryParam = new URLSearchParams(window.location.search);
-    const sessionId = queryParam.get('session') || queryParam.get('database')
+    const sessionId = queryParam.get('session') || queryParam.get('database') || queryParam.get('sessionId')
     const locString = queryParam.get('location') || queryParam.get('loc')
     const refTheme = createTheme()
 

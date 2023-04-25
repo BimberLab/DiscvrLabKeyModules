@@ -7,6 +7,7 @@ import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline';
 import { DataGrid, GridColDef, GridRenderCellParams, GridToolbar } from '@mui/x-data-grid';
 import { columns } from '../constants';
 import { APIDataToRows } from '../dataUtils';
+import ArrowPagination from './ArrowPagination';
 
 import '../VariantTable.css';
 import '../../jbrowse.css';
@@ -19,6 +20,8 @@ const VariantTableWidget = observer(props => {
   const { assembly, assemblyName, trackId, locString, parsedLocString, sessionId, session, pluginManager } = props
   const { view } = session
 
+  const currentOffset = parseInt(new URLSearchParams(window.location.search).get('offset') || '0');
+
   const track = view.tracks.find(
       t => t.configuration.trackId === trackId,
   )
@@ -30,6 +33,16 @@ const VariantTableWidget = observer(props => {
   function handleSearch(data) {
     setFeatures(APIDataToRows(data.data, trackId))
   }
+
+  const handleOffsetChange = (newOffset: number) => {
+    const url = new URL(window.location.href);
+    const urlSearchParams = url.searchParams;
+
+    urlSearchParams.set('offset', newOffset.toString());
+    url.search = urlSearchParams.toString();
+
+    window.location.href = url.toString();
+  };
 
   function handleMenu(item) {
     switch(item) {
@@ -90,15 +103,18 @@ const VariantTableWidget = observer(props => {
   useEffect(() => {
     async function fetch() {
       const queryParam = new URLSearchParams(window.location.search)
+      const searchString = queryParam.get('searchString');
 
-      fetchLuceneQuery(queryParam.get('searchString'), sessionId, queryParam.get('offset'),
-        (res) => {
-          setFeatures(APIDataToRows(res.data, trackId))
-          setDataLoaded(true)
-        },
-        () => {
-          setDataLoaded(true)
-        })
+      if (searchString) {
+        fetchLuceneQuery(queryParam.get('searchString'), sessionId, queryParam.get('offset'),
+          (res) => {
+            setFeatures(APIDataToRows(res.data, trackId))
+            setDataLoaded(true)
+          },
+          () => {
+            setDataLoaded(true)
+          })
+      }
     }
 
     fetch()
@@ -196,23 +212,37 @@ const VariantTableWidget = observer(props => {
         })
       }
 
-      <div style={{marginBottom: "10px"}}>
-        <Grid container spacing={1} justifyContent="flex-start" alignItems="center">
-          <Grid key='searchButton' item xs="auto">
-            <Search sessionId={sessionId} handleSubmitCallback={(data) => handleSearch(data)} handleFailureCallback={() => {}}/>
+      <div style={{ marginBottom: "10px" }}>
+        <Grid container spacing={1} justifyContent="space-between" alignItems="center">
+          <Grid item>
+            <Grid container spacing={1} justifyContent="flex-start" alignItems="center">
+              <Grid key="searchButton" item xs="auto">
+                <Search
+                  sessionId={sessionId}
+                  handleSubmitCallback={(data) => handleSearch(data)}
+                  handleFailureCallback={() => {}}
+                />
+              </Grid>
+
+              <Grid key="genomeViewButton" item xs="auto">
+                <Button
+                  disabled={!isValidLocString}
+                  style={{ marginTop: "8px" }}
+                  color="primary"
+                  variant="contained"
+                  onClick={() => handleMenu("browserRedirect")}
+                >
+                  View in Genome Browser
+                </Button>
+              </Grid>
+            </Grid>
           </Grid>
 
-          {/*<Grid key='filterMenu' item xs="auto">
-            <MenuButton disabled={!isValidLocString} id={'filterMenu'} color="primary" variant="contained" text="Filter" anchor={anchorFilterMenu}
-              handleClick={(e) => handleMenuClick(e, setAnchorFilterMenu)}
-              handleClose={(e) => handleMenuClose(setAnchorFilterMenu)}>
-              <MenuItem className="menuItem" onClick={() => { handleMenu("filterSample"); handleMenuClose(setAnchorFilterMenu) }}>Filter By Sample</MenuItem>
-              <MenuItem className="menuItem" onClick={() => { handleMenu("filterInfo"); handleMenuClose(setAnchorFilterMenu) }}>Filter By Attributes</MenuItem>
-            </MenuButton>
-          </Grid>*/}
-
-          <Grid key='genomeViewButton' item xs="auto">
-            <Button disabled={!isValidLocString} style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("browserRedirect")}>View in Genome Browser</Button>
+          <Grid key="arrowPagination" item xs="auto">
+            <ArrowPagination
+              offset={currentOffset}
+              onOffsetChange={handleOffsetChange}
+            />
           </Grid>
         </Grid>
       </div>

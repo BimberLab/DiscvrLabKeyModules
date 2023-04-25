@@ -319,6 +319,8 @@ function generateLuceneString(field, operator, value) {
 }
 
 export async function fetchLuceneQuery(filters, sessionId, offset, successCallback, failureCallback) {
+    console.log(filters)
+
     if(!offset) {
         offset = 0
     }
@@ -350,8 +352,15 @@ export async function fetchLuceneQuery(filters, sessionId, offset, successCallba
             failureCallback()
             handleFailure("There was an error: " + res.status, sessionId)
         },
-        params: {"searchString": filters.map(val => generateLuceneString(val.field, val.operator, val.value)).join('&'), "sessionId": sessionId, "offset": offset},
+        params: {"searchString": createEncodedFilterString(filters), "sessionId": sessionId, "offset": offset},
     });
+}
+
+function createEncodedFilterString(filters: Array<{field: string; operator: string; value: string}>) {
+  const luceneStrings = filters.map(val => generateLuceneString(val.field, val.operator, val.value));
+  const concatenatedString = luceneStrings.join('&');
+  const encodedString = encodeURIComponent(concatenatedString);
+  return encodedString;
 }
 
 export async function fetchFieldTypeInfo(sessionId, successCallback) {
