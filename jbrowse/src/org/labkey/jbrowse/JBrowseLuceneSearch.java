@@ -222,9 +222,10 @@ public class JBrowseLuceneSearch
                     }
                     catch (QueryNodeException e)
                     {
-                        // TODO return error
                         e.printStackTrace();
                     }
+                } else {
+                    throw new IllegalArgumentException("No such field(s), or malformed query.");
                 }
 
                 booleanQueryBuilder.add(query, BooleanClause.Occur.MUST);
