@@ -25,15 +25,21 @@ const useStyles = makeStyles((theme) => ({
   addButton: {
     marginTop: theme.spacing(2),
   },
-  removeButton: {
+  textField: {
     marginLeft: theme.spacing(2),
+    marginRight: theme.spacing(2),
   },
   submitButton: {
     marginTop: theme.spacing(2),
   },
+  valueInput: {
+    width: 120,
+    marginLeft: theme.spacing(2),
+  },
 }));
 
 const stringType = ["contains", "in", "starts with", "ends with", "is empty", "is not empty"];
+const variableSamplesType = ["in set", "contains", "in", "starts with", "ends with", "is empty", "is not empty"];
 const numericType = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"];
 const noneType = [];
 const impactType = ["LOW", "MODERATE", "HIGH"];
@@ -42,7 +48,7 @@ const FilterForm = ({ open, setOpen, sessionId, handleSubmitCallback, handleFail
   const [filters, setFilters] = useState([{ field: "None", operator: "", value: "" }]);
 
   const [availableOperators, setAvailableOperators] = useState<any>({
-    variableSamples: { type: stringType },
+    variableSamples: { type: variableSamplesType },
     ref: { type: stringType },
     alt: { type: stringType },
     start: { type: numericType },
@@ -112,6 +118,11 @@ const FilterForm = ({ open, setOpen, sessionId, handleSubmitCallback, handleFail
             }
 
             acc[field] = fieldType;
+
+            if(field == "variableSamples") {
+              acc[field] = variableSamplesType;
+            }
+
             return acc;
           }, {}); 
 
@@ -196,14 +207,30 @@ const FilterForm = ({ open, setOpen, sessionId, handleSubmitCallback, handleFail
             : null
             }
 
-            <TextField
-              label="Value"
-              className={classes.removeButton}
-              value={filter.value}
-              onChange={(event) =>
-                handleFilterChange(index, "value", event.target.value)
-              }
-            />
+            {filter.operator === "in set" ? (
+              <FormControl className={`${classes.formControl} ${classes.valueInput}`}>
+                <InputLabel id="value-select-label">Value</InputLabel>
+                <Select
+                  labelId="value-select-label"
+                  value={filter.value}
+                  onChange={(event) =>
+                    handleFilterChange(index, "value", event.target.value)
+                  }
+                >
+                  <MenuItem value="ONPRC">ONPRC</MenuItem>
+                </Select>
+              </FormControl>
+            ) : (
+              <TextField
+                label="Value"
+                className={`${classes.textField} ${classes.valueInput}`}
+                value={filter.value}
+                onChange={(event) =>
+                  handleFilterChange(index, "value", event.target.value)
+                }
+              />
+            )}
+
             <Button
               variant="contained"
               color="primary"

@@ -152,6 +152,28 @@ public class JBrowseLuceneSearch
         return results;
     }
 
+    private static String templateReplace(final String searchString) {
+        Map<String, String> variableMap = new HashMap<>();
+
+        // TODO define and fetch this map
+        variableMap.put("ONPRC", "m00001 OR m000004 OR m00008");
+
+        String result = searchString;
+        Pattern pattern = Pattern.compile("~(.*?)~");
+        Matcher matcher = pattern.matcher(searchString);
+
+        while (matcher.find()) {
+            String variableName = matcher.group(1);
+            String replacement = variableMap.get(variableName);
+
+            if (replacement != null) {
+                result = result.replace("~" + variableName + "~", replacement);
+            }
+        }
+
+        return result;
+    }
+
     public JSONObject doSearch(final String searchString, final int pageSize, final int offset) throws IOException, ParseException
     {
         File indexPath = _jsonFile.getExpectedLocationOfLuceneIndex(true);
@@ -212,6 +234,10 @@ public class JBrowseLuceneSearch
                 String fieldName = null;
                 if (matcher.find()) {
                     fieldName = matcher.group().substring(0, matcher.group().length() - 1);
+                }
+
+                if (fieldName == "variableSamples") {
+                    queryString = templateReplace(queryString);
                 }
 
                 if(stringQueryParserFields.contains(fieldName)) {
