@@ -301,11 +301,11 @@ public class ChainFileValidator
                     // Always store the numeric version, if present:
                     if (name.startsWith("chr0"))
                     {
-                        cachedReferences.put(name.replaceAll("chr0", ""), name);
+                        cachedReferences.put(name.replaceFirst("chr0", ""), name);
                     }
                     else if (name.startsWith("chr"))
                     {
-                        cachedReferences.put(name.replaceAll("chr", ""), name);
+                        cachedReferences.put(name.replaceFirst("chr", ""), name);
                     }
 
                     if (StringUtils.trimToNull(rs.getString("genbank")) != null)

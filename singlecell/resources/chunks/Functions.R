@@ -70,11 +70,13 @@ file.create('/work/savedSeuratObjects.txt')
 print(paste0('Total lines in savedSeuratObjects.txt on job start:', length(readLines('savedSeuratObjects.txt'))))
 
 saveData <- function(seuratObj, datasetId) {
+    message(paste0('Saving dataset: ', datasetId, ' with ', ncol(seuratObj), ' cells'))
     print(paste0('Saving dataset: ', datasetId))
     print(seuratObj)
 
     datasetIdForFile <- makeLegalFileName(datasetId)
     fn <- paste0(outputPrefix, '.', datasetIdForFile, '.seurat.rds')
+    message(paste0('Filename: ', fn))
 
     message(paste0('Saving RDS file: ', fn, ' with ', ncol(seuratObj), ' cells'))
     barcodeFile <- paste0(outputPrefix, '.', datasetIdForFile, '.cellBarcodes.csv')

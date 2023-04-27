@@ -544,7 +544,7 @@ public class JsonFile
                 JSONObject json = getExtraTrackConfig();
                 if (json != null && json.has("additionalFeatureMsg"))
                 {
-                    getJSONObject("renderer").put("message", json.getString("message"));
+                    getJSONObject("renderer").put("message", json.getString("additionalFeatureMsg"));
                 }
             }});
         }});

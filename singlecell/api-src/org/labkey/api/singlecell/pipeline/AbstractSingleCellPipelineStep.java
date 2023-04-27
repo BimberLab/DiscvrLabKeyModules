@@ -29,7 +29,9 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineStep implements SingleCellStep
@@ -89,6 +91,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         try (CSVReader reader = new CSVReader(Readers.getReader(tracker), '\t'))
         {
             String[] line;
+            Set<String> encounteredFiles = new HashSet<>();
             while ((line = reader.readNext()) != null)
             {
                 File f = new File(ctx.getOutputDir(), line[2]);
@@ -96,6 +99,14 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 {
                     throw new PipelineJobException("File not found: " + f.getPath());
                 }
+
+                String key = line[0] + " / " + line[1] + " / "+ f.getName() + " / " + line[3] + " / " + line[4];
+                if (encounteredFiles.contains(key))
+                {
+                    ctx.getLogger().error("Duplicate output found: " + key);
+                    continue;
+                }
+                encounteredFiles.add(key);
 
                 getPipelineCtx().getLogger().debug("Output seurat: " + line[0] + " / " + line[1] + " / "+ f.getName() + " / " + line[3] + " / " + line[4]);
 
