@@ -274,6 +274,10 @@ function generateLuceneString(field, operator, value) {
     return `impact:${operator}`;
   }
 
+  if(field === 'variableSamples') {
+    return `variableSamples:~${value}~`
+  }
+
   switch (operator) {
     case '=':
       luceneQueryString = `${field}:${value}`;
