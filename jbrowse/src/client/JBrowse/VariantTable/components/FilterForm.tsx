@@ -45,7 +45,7 @@ const noneType = [];
 const impactType = ["LOW", "MODERATE", "HIGH"];
 
 const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback, handleFailureCallback }) => {
-  const [filters, setFilters] = useState([{ field: "None", operator: "", value: "" }]);
+  const [filters, setFilters] = useState([{ field: "", operator: "", value: "" }]);
 
   const [availableOperators, setAvailableOperators] = useState<any>({
     variableSamples: { type: variableSamplesType },
@@ -95,10 +95,14 @@ const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback,
 
       fetchFieldTypeInfo(sessionId, trackGUID,
         (res) => {
-          const availableOperators = Object.keys(res.data).reduce((acc, field) => {
+          const availableOperators = Object.keys(res.fields).reduce((acc, idx) => {
+            const fieldObj = res.fields[idx];
+            const field = fieldObj.name;
+            const type = fieldObj.type;
+
             let fieldType;
 
-            switch (res.data[field]) {
+            switch (type) {
               case 'Flag':
               case 'String':
               case 'Character':
@@ -117,10 +121,10 @@ const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback,
                 break;
             }
 
-            acc[field] = fieldType;
+            acc[field] = { type: fieldType };
 
             if(field == "variableSamples") {
-              acc[field] = variableSamplesType;
+              acc[field] = { type: variableSamplesType };
             }
 
             return acc;

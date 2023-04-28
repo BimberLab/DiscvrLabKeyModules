@@ -1,17 +1,18 @@
 import { observer } from 'mobx-react';
+import { GridColumns, GridComparatorFn, getGridNumericColumnOperators, GridFilterOperator, GridFilterItem, GridStateColDef, GridCellParams } from '@mui/x-data-grid';
 import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { Widget } from '@jbrowse/core/util';
 import { AppBar, Box, Button, Dialog, Grid, MenuItem, Toolbar, Typography, Paper } from '@material-ui/core';
 import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline';
 import { DataGrid, GridColDef, GridRenderCellParams, GridToolbar } from '@mui/x-data-grid';
-import { columns } from '../constants';
 import { APIDataToRows } from '../dataUtils';
 import ArrowPagination from './ArrowPagination';
+import { fieldToReadableName, multiValueComparator, multiModalOperator } from '../constants';
 
 import '../VariantTable.css';
 import '../../jbrowse.css';
-import { getGenotypeURL, navigateToBrowser, fetchLuceneQuery } from '../../utils';
+import { getGenotypeURL, navigateToBrowser, fetchLuceneQuery, fetchFieldTypeInfo } from '../../utils';
 import LoadingIndicator from './LoadingIndicator';
 import { Row } from '../types';
 import Search from './Search';
@@ -82,6 +83,7 @@ const VariantTableWidget = observer(props => {
   // Contains all features from the API call once the useEffect finished
   //const [features, setFeatures] = useState<ExtendedVcfFeature[]>([])
   const [features, setFeatures] = useState<Row[]>([])
+  const [columns, setColumns] = useState<GridColumns>([])
 
   // Active widget ID list to force rerender when a JBrowseUIButton is clicked
   const [activeWidgetList, setActiveWidgetList] = useState<string[]>([])
@@ -105,8 +107,50 @@ const VariantTableWidget = observer(props => {
       const queryParam = new URLSearchParams(window.location.search)
       const searchString = queryParam.get('searchString');
 
+      await fetchFieldTypeInfo(sessionId, trackId,
+        (res) => {
+          let columns: GridColumns = [];
+
+          for(const fieldObj of res.fields) {
+            const field = fieldObj.name;
+            const type = fieldObj.type;
+            let muiFieldType;
+
+            switch (type) {
+              case 'Flag':
+              case 'String':
+              case 'Character':
+              case 'Impact':
+                muiFieldType = "string";
+                break;
+              case 'Float':
+              case 'Integer':
+                muiFieldType = "number";
+                break;
+            }
+
+            let column: any = { field: field, headerName: fieldToReadableName[field] ?? field, width: muiFieldType == "string" ? 150 : 50, type: type as string, flex: 1, headerAlign: 'left', hide: fieldToReadableName[field] ? false : true }
+
+            if (field == "af") {
+              column = { 
+                field: 'af', 
+                headerName: 'Allele Frequency',
+                width: 50,
+                type: "number",
+                flex: 1,
+                headerAlign: 'left',
+                sortComparator: multiValueComparator,
+                filterOperators: getGridNumericColumnOperators().map(op => multiModalOperator(op))
+              }
+            }
+
+            columns.push(column)
+          }
+          setColumns(columns)
+        })
+
       if (searchString) {
-        fetchLuceneQuery(queryParam.get('searchString'), sessionId, queryParam.get('offset'),
+        await fetchLuceneQuery(queryParam.get('searchString'), sessionId, queryParam.get('offset'),
           (res) => {
             setFeatures(APIDataToRows(res.data, trackId))
             setDataLoaded(true)
@@ -115,6 +159,7 @@ const VariantTableWidget = observer(props => {
             setDataLoaded(true)
           })
       }
+
     }
 
     fetch()
