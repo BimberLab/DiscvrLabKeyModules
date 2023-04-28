@@ -123,8 +123,13 @@ const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback,
 
             acc[field] = { type: fieldType };
 
+<<<<<<< HEAD
             if(field == "variableSamples") {
               acc[field] = { type: variableSamplesType };
+=======
+            if (field == "variableSamples") {
+              acc[field] = variableSamplesType;
+>>>>>>> 38da686e (Update table widget to always pass a proper GUID)
             }
 
             return acc;
@@ -141,7 +146,7 @@ const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback,
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    fetchLuceneQuery(filters, sessionId, 0, (json)=>{console.log(json); handleSubmitCallback(json)}, () => {handleFailureCallback()});
+    fetchLuceneQuery(filters, sessionId, trackGUID, 0, (json)=>{console.log(json); handleSubmitCallback(json)}, () => {handleFailureCallback()});
     setOpen(false);
   };
 

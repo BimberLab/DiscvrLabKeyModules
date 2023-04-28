@@ -59,7 +59,7 @@ function VariantTable() {
                 return assemblyManager.isValidRefName(refName, assemblyNames[0])
             }
 
-            if(locString) {
+            if (locString) {
                 const parsedLocString = parseLocString(locString, isValidRefNameForAssembly)
                 setParsedLocString(parsedLocString)
             }

@@ -3,7 +3,7 @@ import { GridColumns, GridComparatorFn, getGridNumericColumnOperators, GridFilte
 import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { Widget } from '@jbrowse/core/util';
-import { AppBar, Box, Button, Dialog, Grid, MenuItem, Toolbar, Typography, Paper } from '@material-ui/core';
+import { AppBar, Box, Button, Dialog, Grid, Paper, Toolbar, Typography } from '@material-ui/core';
 import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline';
 import { DataGrid, GridColDef, GridRenderCellParams, GridToolbar } from '@mui/x-data-grid';
 import { APIDataToRows } from '../dataUtils';
@@ -12,7 +12,11 @@ import { fieldToReadableName, multiValueComparator, multiModalOperator } from '.
 
 import '../VariantTable.css';
 import '../../jbrowse.css';
+<<<<<<< HEAD
 import { getGenotypeURL, navigateToBrowser, fetchLuceneQuery, fetchFieldTypeInfo } from '../../utils';
+=======
+import { fetchLuceneQuery, getGenotypeURL, navigateToBrowser, truncateToValidGUID } from '../../utils';
+>>>>>>> 38da686e (Update table widget to always pass a proper GUID)
 import LoadingIndicator from './LoadingIndicator';
 import { Row } from '../types';
 import Search from './Search';
@@ -22,6 +26,9 @@ const VariantTableWidget = observer(props => {
   const { view } = session
 
   const currentOffset = parseInt(new URLSearchParams(window.location.search).get('offset') || '0');
+
+  // The code expects a proper GUID, yet the trackId is a string containing the GUID + filename
+  const trackGUID = truncateToValidGUID(props.trackId)
 
   const track = view.tracks.find(
       t => t.configuration.trackId === trackId,
@@ -150,7 +157,11 @@ const VariantTableWidget = observer(props => {
         })
 
       if (searchString) {
+<<<<<<< HEAD
         await fetchLuceneQuery(queryParam.get('searchString'), sessionId, queryParam.get('offset'),
+=======
+        fetchLuceneQuery(queryParam.get('searchString'), sessionId, trackGUID, queryParam.get('offset'),
+>>>>>>> 38da686e (Update table widget to always pass a proper GUID)
           (res) => {
             setFeatures(APIDataToRows(res.data, trackId))
             setDataLoaded(true)
