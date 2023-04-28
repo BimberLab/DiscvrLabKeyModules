@@ -817,8 +817,21 @@ public class JBrowseController extends SpringActionController
                 return null;
             }
 
-            org.json.JSONObject indexedFieldsJson = searcher.returnIndexedFields();
+            JSONObject indexedFieldsJson = searcher.returnIndexedFields();
             return new ApiSimpleResponse(indexedFieldsJson);
+        }
+
+        @Override
+        public void validateForm(LuceneQueryForm form, Errors errors)
+        {
+            if ((form.getTrackId() == null || form.getSessionId() == null))
+            {
+                errors.reject(ERROR_MSG, "Must provide trackId and the JBrowse session ID");
+            }
+            else if (!isValidUUID(form.getTrackId()))
+            {
+                errors.reject(ERROR_MSG, "Invalid track ID: " + form.getTrackId());
+            }
         }
     }
 
@@ -854,9 +867,13 @@ public class JBrowseController extends SpringActionController
         @Override
         public void validateForm(LuceneQueryForm form, Errors errors)
         {
-            if ((form.getSearchString() == null || form.getSessionId() == null))
+            if ((form.getSearchString() == null || form.getSessionId() == null || form.getTrackId() == null))
             {
-                errors.reject(ERROR_MSG, "Must provide search string and the JBrowse session ID");
+                errors.reject(ERROR_MSG, "Must provide search string, track ID, and the JBrowse session ID");
+            }
+            else if (!isValidUUID(form.getTrackId()))
+            {
+                errors.reject(ERROR_MSG, "Invalid track ID: " + form.getTrackId());
             }
         }
     }

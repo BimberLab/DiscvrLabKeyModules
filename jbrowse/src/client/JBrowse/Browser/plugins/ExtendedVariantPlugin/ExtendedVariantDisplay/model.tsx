@@ -8,7 +8,7 @@ import { getEnv, IAnyStateTreeNode, types } from 'mobx-state-tree';
 import PaletteIcon from '@material-ui/icons/Palette';
 import { default as SetMaxHeightDlg } from '@jbrowse/plugin-linear-genome-view/src/LinearBasicDisplay/components/SetMaxHeight';
 import { LinearGenomeViewModel } from '@jbrowse/plugin-linear-genome-view';
-import { navigateToTable } from '../../../../utils';
+import { navigateToFreeTextSearch, navigateToTable } from '../../../../utils';
 
 export default jbrowse => {
    const configSchema = jbrowse.jbrequire(configSchemaF)
@@ -212,6 +212,16 @@ export default jbrowse => {
                         const location = region.refName + ':' + region.start + '..' + region.end
                         const sessionId = view.id;
                         navigateToTable(sessionId, location, track.configuration.trackId, track)
+                     },
+                  },
+                  {
+                     label: 'Free-text Search',
+                     onClick: () => {
+                        const track = getContainingTrack(self) as IAnyStateTreeNode & { configuration: AnyConfigurationModel }
+                        const view = getContainingView(self) as LinearGenomeViewModel
+
+                        const sessionId = view.id;
+                        navigateToFreeTextSearch(sessionId, track.configuration.trackId)
                      },
                   }
               ]
