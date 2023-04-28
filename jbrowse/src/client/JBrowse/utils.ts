@@ -327,20 +327,26 @@ function generateLuceneString(field, operator, value) {
   return luceneQueryString;
 }
 
-export async function fetchLuceneQuery(filters, sessionId, offset, successCallback, failureCallback) {
+export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, successCallback, failureCallback) {
     console.log(filters)
 
-    if(!offset) {
+    if (!offset) {
         offset = 0
     }
 
     if (!sessionId) {
-        console.log("Lucene query: no session ID")
+        console.error("Lucene query: no session ID")
         failureCallback()
         return
     }
 
-    if (!filters || (offset == undefined)) {
+    if (!trackGUID) {
+        console.error("Lucene query: no track ID")
+        failureCallback()
+        return
+    }
+
+    if (!filters) {
         console.log("No filters!")
         failureCallback()
         return
@@ -361,7 +367,7 @@ export async function fetchLuceneQuery(filters, sessionId, offset, successCallba
             failureCallback()
             handleFailure("There was an error: " + res.status, sessionId)
         },
-        params: {"searchString": createEncodedFilterString(filters), "sessionId": sessionId, "offset": offset},
+        params: {"searchString": createEncodedFilterString(filters), "sessionId": sessionId, "trackId": trackGUID, "offset": offset},
     });
 }
 
@@ -392,4 +398,12 @@ export async function fetchFieldTypeInfo(sessionId, trackId, successCallback) {
         },
         params: {sessionId: sessionId, trackId: trackId},
     });
+}
+
+export function truncateToValidGUID(str: string) {
+    if (str && str.length > 36) {
+        return str.substring(0, 36)
+    }
+
+    return str;
 }

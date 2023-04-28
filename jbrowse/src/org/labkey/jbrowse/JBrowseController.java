@@ -854,7 +854,7 @@ public class JBrowseController extends SpringActionController
 
             try
             {
-                return new ApiSimpleResponse(searcher.doSearch(form.getSearchString(), form.getPageSize(), form.getOffset()));
+                return new ApiSimpleResponse(searcher.doSearch(PageFlowUtil.decode(form.getSearchString()), form.getPageSize(), form.getOffset()));
             }
             catch (Exception e)
             {

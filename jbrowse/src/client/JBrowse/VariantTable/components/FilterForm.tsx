@@ -119,7 +119,7 @@ const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback,
 
             acc[field] = fieldType;
 
-            if(field == "variableSamples") {
+            if (field == "variableSamples") {
               acc[field] = variableSamplesType;
             }
 
@@ -137,7 +137,7 @@ const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback,
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    fetchLuceneQuery(filters, sessionId, 0, (json)=>{console.log(json); handleSubmitCallback(json)}, () => {handleFailureCallback()});
+    fetchLuceneQuery(filters, sessionId, trackGUID, 0, (json)=>{console.log(json); handleSubmitCallback(json)}, () => {handleFailureCallback()});
     setOpen(false);
   };
 
