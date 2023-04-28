@@ -1,16 +1,14 @@
 import React, { useState } from "react";
 import Button from "@material-ui/core/Button";
 import FilterForm from "./FilterForm";
+import { truncateToValidGUID } from '../../utils';
 
 
 export default function Search(props: {sessionId: string, trackId: string, handleSubmitCallback: any, handleFailureCallback: any}) {
   const [open, setOpen] = useState(false);
 
   // The code expects a proper GUID, yet the trackId is a string containing the GUID + filename
-  var trackGUID = props.trackId
-  if (props.trackId && props.trackId.length > 36) {
-      trackGUID = props.trackId.substring(0, 36)
-  }
+  const trackGUID = truncateToValidGUID(props.trackId)
 
   const handleOpen = () => {
     setOpen(true);

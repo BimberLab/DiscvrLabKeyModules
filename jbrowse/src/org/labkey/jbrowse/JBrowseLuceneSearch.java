@@ -236,13 +236,16 @@ public class JBrowseLuceneSearch
                     fieldName = matcher.group().substring(0, matcher.group().length() - 1);
                 }
 
-                if (fieldName == "variableSamples") {
+                if ("variableSamples".equals(fieldName)) {
                     queryString = templateReplace(queryString);
                 }
 
-                if(stringQueryParserFields.contains(fieldName)) {
+                if (stringQueryParserFields.contains(fieldName))
+                {
                     query = queryParser.parse(queryString);
-                } else if(numericQueryParserFields.contains(fieldName)) {
+                }
+                else if(numericQueryParserFields.contains(fieldName))
+                {
                     try {
                         query = numericQueryParser.parse(queryString, "");
                     }
@@ -282,7 +285,6 @@ public class JBrowseLuceneSearch
             }
 
             results.put("data", data);
-            indexReader.close();
 
             //TODO: we should probably stream this
             return results;

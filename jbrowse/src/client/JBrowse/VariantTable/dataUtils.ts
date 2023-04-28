@@ -63,7 +63,7 @@ export function filterFeatures(features, activeSamples, filters) {
   let processedFilters = deserializeFilters(JSON.parse(filters))
 
   features.forEach((feature) => {
-    if(passesSampleFilters(feature, processedActiveSamples) && passesInfoFilters(feature, processedFilters)) {
+    if (passesSampleFilters(feature, processedActiveSamples) && passesInfoFilters(feature, processedFilters)) {
       ret.push(feature)
     }
   })
