@@ -285,6 +285,7 @@ function generateLuceneString(field, operator, value) {
 
   switch (operator) {
     case '=':
+    case 'equals':
       luceneQueryString = `${field}:${value}`;
       break;
     case '!=':
