@@ -19,11 +19,11 @@ const parseCellValue = (cellValue) => (cellValue.valueOf() as string).split(",")
   return Number(str);
 })
 
-const multiValueComparator: GridComparatorFn = (v1, v2) => {
+export const multiValueComparator: GridComparatorFn = (v1, v2) => {
   return arrayMax(parseCellValue(v1)) - arrayMax(parseCellValue(v2))
 }
 
-const multiModalOperator = (operator: GridFilterOperator) => {
+export const multiModalOperator = (operator: GridFilterOperator) => {
   const getApplyFilterFn = (
     filterItem: GridFilterItem,
     column: GridStateColDef,
@@ -90,3 +90,16 @@ export const columns: GridColumns = [
   { field: 'start', headerName: 'Start Location', width: 50, type: "string", flex: 1, headerAlign: 'left' },
   { field: 'end', headerName: 'End Location', width: 50, type: "string", flex: 1, headerAlign: 'left' }
 ]
+
+export const fieldToReadableName = {
+  chrom: 'Chromosome',
+  pos: 'Position',
+  variableSamples: 'Samples',
+  ref: 'Reference',
+  alt: 'Alternative Allele',
+  af: 'Allele Frequency',
+  variant_type: 'Type',
+  impact: 'Impact',
+  overlapping_genes: 'Overlapping Genes',
+  cadd_ph: 'CADD Score',
+};
