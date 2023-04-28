@@ -219,6 +219,7 @@ const VariantTableWidget = observer(props => {
               <Grid key="searchButton" item xs="auto">
                 <Search
                   sessionId={sessionId}
+                  trackId={trackId}
                   handleSubmitCallback={(data) => handleSearch(data)}
                   handleFailureCallback={() => {}}
                 />

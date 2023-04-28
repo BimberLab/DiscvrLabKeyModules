@@ -44,7 +44,7 @@ const numericType = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"
 const noneType = [];
 const impactType = ["LOW", "MODERATE", "HIGH"];
 
-const FilterForm = ({ open, setOpen, sessionId, handleSubmitCallback, handleFailureCallback }) => {
+const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback, handleFailureCallback }) => {
   const [filters, setFilters] = useState([{ field: "None", operator: "", value: "" }]);
 
   const [availableOperators, setAvailableOperators] = useState<any>({
@@ -93,7 +93,7 @@ const FilterForm = ({ open, setOpen, sessionId, handleSubmitCallback, handleFail
     async function fetch() {
       const queryParam = new URLSearchParams(window.location.search)
 
-      fetchFieldTypeInfo(sessionId,
+      fetchFieldTypeInfo(sessionId, trackGUID,
         (res) => {
           const availableOperators = Object.keys(res.data).reduce((acc, field) => {
             let fieldType;

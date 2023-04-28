@@ -214,10 +214,15 @@ export function navigateToTable(sessionId, locString, trackId, track?: any) {
     window.location.href = ActionURL.buildURL("jbrowse", "variantTable.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
 }
 
-export function navigateToBrowser(sessionId, locString, trackId?: string, track?: any) {
+export function navigateToFreeTextSearch(sessionId, trackGUID) {
+    // TODO: update this to use a different action. Also evaluate how to serialize filters
+    window.location.href = ActionURL.buildURL("jbrowse", "variantTable.view", null, {session: sessionId, trackId: trackGUID})
+}
+
+export function navigateToBrowser(sessionId, locString, trackGUID?: string, track?: any) {
     const sampleFilterURL = serializeSampleFilters(track)
     const infoFilterURL = serializeInfoFilters(track)
-    window.location.href = ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackId: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
+    window.location.href = ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackGUID: trackGUID, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
 }
 
 function serializeSampleFilters(track) {
@@ -361,15 +366,15 @@ export async function fetchLuceneQuery(filters, sessionId, offset, successCallba
 }
 
 function createEncodedFilterString(filters: Array<{field: string; operator: string; value: string}>) {
-  const luceneStrings = filters.map(val => generateLuceneString(val.field, val.operator, val.value));
-  const concatenatedString = luceneStrings.join('&');
-  const encodedString = encodeURIComponent(concatenatedString);
-  return encodedString;
+    const luceneStrings = filters.map(val => generateLuceneString(val.field, val.operator, val.value));
+    const concatenatedString = luceneStrings.join('&');
+
+    return encodeURIComponent(concatenatedString);
 }
 
-export async function fetchFieldTypeInfo(sessionId, successCallback) {
-    if (!sessionId) {
-        console.log("Lucene fetch field type info: no session ID")
+export async function fetchFieldTypeInfo(sessionId, trackId, successCallback) {
+    if (!sessionId || !trackId) {
+        console.error("Lucene fetch field type info: sessionId or trackId not provided")
         return
     }
 
@@ -385,6 +390,6 @@ export async function fetchFieldTypeInfo(sessionId, successCallback) {
             console.log("Fetch field type info failure:", res.status)
             handleFailure("There was an error: " + res.status, sessionId)
         },
-        params: {"sessionId": sessionId},
+        params: {sessionId: sessionId, trackId: trackId},
     });
 }
