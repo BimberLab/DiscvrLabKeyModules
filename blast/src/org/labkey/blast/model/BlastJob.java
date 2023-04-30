@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -105,7 +106,14 @@ public class BlastJob implements Serializable
         if (params == null)
             _params = null;
 
-        _params = new HashMap<>(new JSONObject(params).toMap());
+        try
+        {
+            _params = new HashMap<>(new JSONObject(params).toMap());
+        }
+        catch (JSONException e)
+        {
+            _log.error("Unable to parse BlastJob config for: " + _objectid + " in container: " + ContainerManager.getForId(_container).getPath() + ", was: " + _params);
+        }
     }
 
     public void addParam(String name, String value)
