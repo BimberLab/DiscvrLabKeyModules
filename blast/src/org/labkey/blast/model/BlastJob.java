@@ -112,7 +112,8 @@ public class BlastJob implements Serializable
         }
         catch (JSONException e)
         {
-            _log.error("Unable to parse BlastJob config for: " + _objectid + " in container: " + ContainerManager.getForId(_container).getPath() + ", was: " + _params);
+            String containerPath = getContainer() == null || ContainerManager.getForId(getContainer()) == null ? "<MISSING: " + getContainer() + ">" : ContainerManager.getForId(getContainer()).getPath();
+            _log.error("Unable to parse BlastJob config for: " + _objectid + " in container: " + containerPath + ", was: " + _params);
         }
     }
 
@@ -249,7 +250,7 @@ public class BlastJob implements Serializable
             throw new UnsupportedOperationException("this can only be called from the webserver");
         }
 
-        Container c = ContainerManager.getForId(_container);
+        Container c = ContainerManager.getForId(getContainer());
         if (c == null)
         {
             return null;
