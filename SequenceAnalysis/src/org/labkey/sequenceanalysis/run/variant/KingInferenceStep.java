@@ -77,6 +77,9 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
         plinkArgs.add(inputVCF.getPath());
 
         plinkArgs.add("--make-bed");
+        
+        // Added since KING is designed for plink1.9. This avoids the "Too many first alleles as the major allele" error.
+        plinkArgs.add("--maj-ref");        
 
         boolean limitToChromosomes = getProvider().getParameterByName("limitToChromosomes").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
         if (limitToChromosomes)

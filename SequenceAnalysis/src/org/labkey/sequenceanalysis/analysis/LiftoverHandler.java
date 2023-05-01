@@ -307,7 +307,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
             else
             {
                 SelectVariantsWrapper wrapper = new SelectVariantsWrapper(job.getLogger());
-                wrapper.execute(sourceGenome.getWorkingFastaFile(), currentVCF, outputFile, List.of("--sites_only"));
+                wrapper.execute(sourceGenome.getWorkingFastaFile(), currentVCF, outputFile, List.of("--sites-only-vcf-output"));
             }
             currentVCF = outputFile;
 

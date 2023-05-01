@@ -295,7 +295,18 @@ public class ChainFileValidator
                 @Override
                 public void exec(ResultSet rs) throws SQLException
                 {
-                    cachedReferences.put(rs.getString("name"), rs.getString("name"));
+                    String name = rs.getString("name");
+                    cachedReferences.put(name, name);
+
+                    // Always store the numeric version, if present:
+                    if (name.startsWith("chr0"))
+                    {
+                        cachedReferences.put(name.replaceFirst("chr0", ""), name);
+                    }
+                    else if (name.startsWith("chr"))
+                    {
+                        cachedReferences.put(name.replaceFirst("chr", ""), name);
+                    }
 
                     if (StringUtils.trimToNull(rs.getString("genbank")) != null)
                     {
@@ -338,6 +349,22 @@ public class ChainFileValidator
 
         //UCSC is a main source of chain files, so deal with their quirks:
         // https://genome.ucsc.edu/cgi-bin/hgGateway
+        if (refName.startsWith("chr0"))
+        {
+            // Allow chr01, chr1 -> 1
+            String toTest = refName.replaceFirst("chr0", "");
+            if (cachedReferences.containsKey(toTest))
+            {
+                return cachedReferences.get(toTest);
+            }
+
+            toTest = refName.replaceFirst("chr0", "chr");
+            if (cachedReferences.containsKey(toTest))
+            {
+                return cachedReferences.get(toTest);
+            }
+        }
+
         if (refName.startsWith("chr"))
         {
             String toTest = refName.replaceFirst("chr", "");
