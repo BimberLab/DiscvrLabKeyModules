@@ -232,7 +232,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
                     }
 
                     int minAlignmentLength = 0;
-                    if (params.get("minAlignmentLength") != null)
+                    if (!params.isNull("minAlignmentLength"))
                     {
                         minAlignmentLength = params.getInt("minAlignmentLength");
                     }

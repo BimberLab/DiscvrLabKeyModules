@@ -257,7 +257,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
         for (String key : json.keySet())
         {
-            ret.put(key, json.opt(key) == null ? null : String.valueOf(json.get(key)));
+            ret.put(key, json.isNull(key) ? null : String.valueOf(json.get(key)));
         }
 
         return ret;

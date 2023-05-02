@@ -202,7 +202,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 throw new PipelineJobException("No genome ID found for inputs");
             }
 
-            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.forceSitesFile") != null)
+            if (!ctx.getParams().isNull("variantCalling.GenotypeGVCFs.forceSitesFile"))
             {
                 int dataId = ctx.getParams().getInt("variantCalling.GenotypeGVCFs.forceSitesFile");
                 ExpData data = ExperimentService.get().getExpData(dataId);
@@ -215,7 +215,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 ctx.getSequenceSupport().cacheExpData(data);
             }
 
-            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.exclude_intervals") != null)
+            if (!ctx.getParams().isNull("variantCalling.GenotypeGVCFs.exclude_intervals"))
             {
                 int dataId = ctx.getParams().getInt("variantCalling.GenotypeGVCFs.exclude_intervals");
                 ExpData data = ExperimentService.get().getExpData(dataId);
@@ -306,7 +306,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
 
         private String getBasename(JobContext ctx)
         {
-            String basename = ctx.getParams().get("variantCalling.GenotypeGVCFs.fileBaseName") != null ? ctx.getParams().getString("variantCalling.GenotypeGVCFs.fileBaseName") : "CombinedGenotypes";
+            String basename = !ctx.getParams().isNull("variantCalling.GenotypeGVCFs.fileBaseName") ? ctx.getParams().getString("variantCalling.GenotypeGVCFs.fileBaseName") : "CombinedGenotypes";
             basename = basename.replaceAll(".vcf.gz$", "");
             basename = basename.replaceAll(".vcf$", "");
 
@@ -363,7 +363,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             }
 
             File forceCallSitesFile = null;
-            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.forceSitesFile") != null)
+            if (!ctx.getParams().isNull("variantCalling.GenotypeGVCFs.forceSitesFile"))
             {
                 forceCallSitesFile = ctx.getSequenceSupport().getCachedData(ctx.getParams().getInt("variantCalling.GenotypeGVCFs.forceSitesFile"));
                 if (!forceCallSitesFile.exists())
@@ -375,7 +375,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             }
 
             int maxSamplesPerWorkspace = 500;
-            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.maxSamplesPerWorkspace") != null)
+            if (!ctx.getParams().isNull("variantCalling.GenotypeGVCFs.maxSamplesPerWorkspace"))
             {
                 maxSamplesPerWorkspace = ctx.getParams().getInt("variantCalling.GenotypeGVCFs.maxSamplesPerWorkspace");
             }
@@ -629,7 +629,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
 
             GenotypeGVCFsWrapper wrapper = new GenotypeGVCFsWrapper(job.getLogger());
             List<String> toolParams = new ArrayList<>();
-            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf") != null)
+            if (!ctx.getParams().isNull("variantCalling.GenotypeGVCFs.stand_call_conf"))
             {
                 toolParams.add("-stand-call-conf");
                 toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.stand_call_conf").toString());
@@ -642,13 +642,13 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             toolParams.add("-AX");
             toolParams.add("ExcessHet");
 
-            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.maxGenotypeCount") != null)
+            if (!ctx.getParams().isNull("variantCalling.GenotypeGVCFs.maxGenotypeCount"))
             {
                 toolParams.add("-max-genotype-count");
                 toolParams.add(String.valueOf(ctx.getParams().get("variantCalling.GenotypeGVCFs.maxGenotypeCount")));
             }
 
-            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.exclude_intervals") != null)
+            if (!ctx.getParams().isNull("variantCalling.GenotypeGVCFs.exclude_intervals"))
             {
                 toolParams.add("-XL");
                 int dataId = Integer.parseInt(ctx.getParams().get("variantCalling.GenotypeGVCFs.exclude_intervals").toString());
@@ -663,7 +663,7 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
                 toolParams.add(bed.getPath());
             }
 
-            if (ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles") != null)
+            if (!ctx.getParams().isNull("variantCalling.GenotypeGVCFs.max_alternate_alleles"))
             {
                 toolParams.add("--max-alternate-alleles");
                 toolParams.add(ctx.getParams().get("variantCalling.GenotypeGVCFs.max_alternate_alleles").toString());
