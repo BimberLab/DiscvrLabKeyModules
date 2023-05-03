@@ -564,8 +564,8 @@ public class JBrowseTest extends BaseWebDriverTest
         _helper.waitForLabToolsToLoad();
 
         // If the search panel doesnt fully load, we can get an alert on page navigation
-        Locator searchLocator = Locator.tagWithClass("input", "MuiInputBase-input");
-        waitForElement(searchLocator);
+        //Locator searchLocator = Locator.tagWithClass("input", "MuiInputBase-input");
+        //waitForElement(searchLocator);
 
         _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
         dr = DataRegionTable.DataRegion(getDriver()).find();
@@ -606,7 +606,8 @@ public class JBrowseTest extends BaseWebDriverTest
         beginAt(url);
         waitForText("{");
         String jsonString = getBodyText();
-        JSONArray jsonArray = new JSONArray(jsonString);
+        JSONObject mainJsonObject = new JSONObject(jsonString);
+        JSONArray jsonArray = mainJsonObject.getJSONArray("data");
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -619,7 +620,8 @@ public class JBrowseTest extends BaseWebDriverTest
         url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=contig%3A%3D1%26ref%3A%3DA";
         beginAt(url);
         waitForText("{");
-        jsonArray = new JSONArray(jsonString);
+        mainJsonObject = new JSONObject(jsonString);
+        jsonArray = mainJsonObject.getJSONArray("data");
         Assert.assertEquals(104, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);

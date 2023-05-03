@@ -110,7 +110,7 @@ const VariantTableWidget = observer(props => {
       const queryParam = new URLSearchParams(window.location.search)
       const searchString = queryParam.get('searchString');
 
-      await fetchFieldTypeInfo(sessionId, trackId,
+      await fetchFieldTypeInfo(sessionId, trackGUID,
         (res) => {
           let columns: GridColumns = [];
 
