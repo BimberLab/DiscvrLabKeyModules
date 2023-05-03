@@ -34,6 +34,9 @@ import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -174,8 +177,18 @@ public class JBrowseLuceneSearch
         return result;
     }
 
-    public JSONObject doSearch(final String searchString, final int pageSize, final int offset) throws IOException, ParseException
+    private String tryUrlDecode(String input) {
+        try {
+            return URLDecoder.decode(input, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException | IllegalArgumentException e) {
+            return input;
+        }
+    }
+
+
+    public JSONObject doSearch(String searchString, final int pageSize, final int offset) throws IOException, ParseException
     {
+        searchString = tryUrlDecode(searchString);
         File indexPath = _jsonFile.getExpectedLocationOfLuceneIndex(true);
         Map<String, LuceneFieldDescriptor> fields = getIndexedFields();
 
