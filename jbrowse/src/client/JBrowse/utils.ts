@@ -279,7 +279,7 @@ function generateLuceneString(field, operator, value) {
     return `impact:${operator}`;
   }
 
-  if(field === 'variableSamples') {
+  if(field === 'variableSamples' && operator == "in set") {
     return `variableSamples:~${value}~`
   }
 

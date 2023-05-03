@@ -2,6 +2,7 @@ import type { Row } from './types';
 import { passesInfoFilters, passesSampleFilters } from '../utils';
 import { deserializeFilters } from '../Browser/plugins/ExtendedVariantPlugin/InfoFilterWidget/filterUtil';
 import ExtendedVcfFeature from '../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter/ExtendedVcfFeature';
+import { fieldToReadableName } from './constants';
 
 const prepareInfoField = (rawFeature: ExtendedVcfFeature, propKey: string) => {
     //const info = rawFeature.getInfoFieldMeta(propKey)
@@ -14,24 +15,33 @@ const prepareInfoField = (rawFeature: ExtendedVcfFeature, propKey: string) => {
     }
 }
 
+function replaceKeysWithReadableNames(obj: any): any {
+  const newObj: any = {};
+
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      const readableKey = fieldToReadableName[key] || key;
+      newObj[readableKey] = obj[key];
+    }
+  }
+
+  return newObj;
+}
+
 export function APIDataToRows(data: any, trackId: string): Row[] {
-  return data.map((obj) => ({
-    id: obj.genomicPosition,
-    chrom: obj.CHROM || "",
-    pos: obj.genomicPosition || "",
-    start: obj.start || "",
-    end: obj.end || "",
-    contig: obj.contig || "",
-    ref: obj.REF || "",
-    alt: obj.ALT || "",
-    af: obj.AF || "",
-    variant_type: parseAnnField(data.ANN, 1, 'custom') || "",
-    impact: obj.impact || "",
-    overlapping_genes: parseAnnField(data.ANN, 3, null),
-    cadd_ph: obj.CADD_PH || "",
-    samples: obj.Samples || "",
-    trackId: trackId
-  }));
+  let ret = data.map((obj: any) => {
+
+    if ("ANN" in obj) {
+      obj["variant_type"] = parseAnnField(obj.ANN, 1, 'custom')
+      obj["overlapping_genes"] = parseAnnField(obj.ANN, 3, null)
+    }
+
+    obj["id"] = obj.genomicPosition;
+    obj["trackId"] = trackId;
+    return obj;
+  })
+
+  return ret
 }
 
 // Takes a list of ANN annotations and retrieves all unique genes from it.
