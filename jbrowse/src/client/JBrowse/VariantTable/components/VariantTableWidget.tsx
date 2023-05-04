@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react';
-import { GridColumns, GridComparatorFn, getGridNumericColumnOperators, GridFilterOperator, GridFilterItem, GridStateColDef, GridCellParams } from '@mui/x-data-grid';
+import { GridColumns, getGridNumericColumnOperators } from '@mui/x-data-grid';
 import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { Widget } from '@jbrowse/core/util';
@@ -9,6 +9,8 @@ import { DataGrid, GridColDef, GridRenderCellParams, GridToolbar } from '@mui/x-
 import { APIDataToRows } from '../dataUtils';
 import ArrowPagination from './ArrowPagination';
 import { fieldToReadableName, multiValueComparator, multiModalOperator } from '../constants';
+import FilterForm from "./FilterForm"
+
 
 import '../VariantTable.css';
 import '../../jbrowse.css';
@@ -157,11 +159,7 @@ const VariantTableWidget = observer(props => {
         })
 
       if (searchString) {
-<<<<<<< HEAD
-        await fetchLuceneQuery(queryParam.get('searchString'), sessionId, queryParam.get('offset'),
-=======
-        fetchLuceneQuery(queryParam.get('searchString'), sessionId, trackGUID, queryParam.get('offset'),
->>>>>>> 38da686e (Update table widget to always pass a proper GUID)
+        await fetchLuceneQuery(queryParam.get('searchString'), sessionId, trackGUID, queryParam.get('offset'),
           (res) => {
             setFeatures(APIDataToRows(res.data, trackId))
             setDataLoaded(true)
@@ -170,7 +168,6 @@ const VariantTableWidget = observer(props => {
             setDataLoaded(true)
           })
       }
-
     }
 
     fetch()
@@ -269,36 +266,31 @@ const VariantTableWidget = observer(props => {
       }
 
       <div style={{ marginBottom: "10px" }}>
-        <Grid container spacing={1} justifyContent="space-between" alignItems="center">
-          <Grid item>
-            <Grid container spacing={1} justifyContent="flex-start" alignItems="center">
-              <Grid key="searchButton" item xs="auto">
-                <Search
-                  sessionId={sessionId}
-                  trackId={trackId}
-                  handleSubmitCallback={(data) => handleSearch(data)}
-                  handleFailureCallback={() => {}}
-                />
-              </Grid>
-
-              <Grid key="genomeViewButton" item xs="auto">
+        <Grid container spacing={1} justifyContent="center" alignItems="center">
+          <Grid item xs={12} md={6}>
+            <FilterForm
+              open
+              setOpen={() => {}}
+              sessionId={sessionId}
+              trackGUID={trackGUID}
+              handleSubmitCallback={(data) => handleSearch(data)}
+              handleFailureCallback={() => {}}
+              externalActionComponent={
                 <Button
                   disabled={!isValidLocString}
-                  style={{ marginTop: "8px" }}
                   color="primary"
                   variant="contained"
                   onClick={() => handleMenu("browserRedirect")}
                 >
                   View in Genome Browser
                 </Button>
-              </Grid>
-            </Grid>
-          </Grid>
-
-          <Grid key="arrowPagination" item xs="auto">
-            <ArrowPagination
-              offset={currentOffset}
-              onOffsetChange={handleOffsetChange}
+              }
+              arrowPagination={
+                <ArrowPagination
+                  offset={currentOffset}
+                  onOffsetChange={handleOffsetChange}
+                />
+              }
             />
           </Grid>
         </Grid>

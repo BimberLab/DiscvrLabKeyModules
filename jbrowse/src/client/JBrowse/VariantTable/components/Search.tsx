@@ -19,7 +19,7 @@ export default function Search(props: {sessionId: string, trackId: string, handl
       <Button style={{ marginTop:"8px"}} variant="contained" color="primary" onClick={handleOpen}>
         Search
       </Button>
-      <FilterForm open={open} setOpen={setOpen} sessionId={props.sessionId} trackGUID={trackGUID} handleSubmitCallback={props.handleSubmitCallback} handleFailureCallback={props.handleFailureCallback}/>
+      {/*<FilterForm open={open} setOpen={setOpen} sessionId={props.sessionId} trackGUID={trackGUID} handleSubmitCallback={props.handleSubmitCallback} handleFailureCallback={props.handleFailureCallback}/>*/}
     </>
   );
 };
