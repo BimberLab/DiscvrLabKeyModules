@@ -368,13 +368,19 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, su
             failureCallback()
             handleFailure("There was an error: " + res.status, sessionId)
         },
-        params: {"searchString": createEncodedFilterString(filters), "sessionId": sessionId, "trackId": trackGUID, "offset": offset},
+        params: {"searchString": createEncodedFilterString(filters, true), "sessionId": sessionId, "trackId": trackGUID, "offset": offset},
     });
 }
 
-function createEncodedFilterString(filters: Array<{field: string; operator: string; value: string}>) {
-    const luceneStrings = filters.map(val => generateLuceneString(val.field, val.operator, val.value));
-    const concatenatedString = luceneStrings.join('&');
+export function createEncodedFilterString(filters: Array<{field: string; operator: string; value: string}>, lucenify: boolean) {
+    let ret: any = []
+
+    if(lucenify) {
+        ret = filters.map(val => generateLuceneString(val.field, val.operator, val.value));
+    } else {
+        ret = filters.map(val => val.field + "," + val.operator + "," + val.value)
+    }
+    const concatenatedString = ret.join('&');
 
     return encodeURIComponent(concatenatedString);
 }

@@ -19,3 +19,7 @@
 .menuItem {
     height: 100%;
 }
+
+.footer-content{
+    display: none;
+}

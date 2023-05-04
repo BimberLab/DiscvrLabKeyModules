@@ -159,7 +159,7 @@ public class JBrowseLuceneSearch
         Map<String, String> variableMap = new HashMap<>();
 
         // TODO define and fetch this map
-        variableMap.put("ONPRC", "m00001 OR m000004 OR m00008");
+        variableMap.put("ONPRC", "m07952 OR m07528 OR m07431");
 
         String result = searchString;
         Pattern pattern = Pattern.compile("~(.*?)~");
@@ -223,7 +223,7 @@ public class JBrowseLuceneSearch
 
             StandardQueryParser numericQueryParser = new StandardQueryParser();
             numericQueryParser.setAnalyzer(analyzer);
-            PointsConfig pointsConfig = new PointsConfig(new DecimalFormat(), Double.class);
+            PointsConfig pointsConfig = new PointsConfig(new DecimalFormat(), Integer.class);
             Map<String, PointsConfig> pointsConfigMap = new HashMap<>();
             numericQueryParserFields.forEach(fieldName -> pointsConfigMap.put(fieldName, pointsConfig));
             numericQueryParser.setPointsConfigMap(pointsConfigMap);
