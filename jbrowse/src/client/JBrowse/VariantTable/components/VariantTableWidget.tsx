@@ -263,7 +263,7 @@ const VariantTableWidget = observer(props => {
 
       <div style={{ marginBottom: "10px" }}>
         <Grid container spacing={1} justifyContent="center" alignItems="center">
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={12}>
             <FilterForm
               open
               setOpen={() => {}}

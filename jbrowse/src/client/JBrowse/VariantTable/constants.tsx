@@ -93,6 +93,7 @@ export const columns: GridColumns = [
 
 export const fieldToReadableName = {
   chrom: 'Chromosome',
+  contig: 'Chromosome',
   pos: 'Position',
   variableSamples: 'Samples',
   ref: 'Reference',
