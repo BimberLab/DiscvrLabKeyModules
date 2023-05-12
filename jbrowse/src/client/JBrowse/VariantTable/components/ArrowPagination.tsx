@@ -24,7 +24,7 @@ const ArrowPagination: React.FC<ArrowPaginationProps> = ({ offset, onOffsetChang
       <IconButton onClick={handleLeftClick}>
         <ArrowBackIosIcon />
       </IconButton>
-      <span><strong>Page: {offset}</strong></span>
+      <span style={{marginTop: "4px"}}><strong>Page: {offset}</strong></span>
       <IconButton onClick={handleRightClick}>
         <ArrowForwardIosIcon />
       </IconButton>
