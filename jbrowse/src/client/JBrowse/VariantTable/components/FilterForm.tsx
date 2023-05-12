@@ -61,8 +61,8 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const stringType = ["equals", "contains", "in", "starts with", "ends with", "is empty", "is not empty"];
-const variableSamplesType = ["in set", "contains", "in", "starts with", "ends with", "is empty", "is not empty"];
+const stringType = ["equals", "contains", "starts with", "ends with", "is empty", "is not empty"];
+const variableSamplesType = ["in set", "variable in", "not variable in", "variable in all of", "variable in any of", "not variable in any of", "not variable in one of", "is empty", "is not empty"];
 const numericType = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"];
 const noneType = [];
 const impactType = ["LOW", "MODERATE", "HIGH"];
@@ -137,7 +137,7 @@ const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback,
                 fieldType = numericType;
                 break;
               case 'Impact':
-                fieldType = impactType;
+                fieldType = stringType;
                 break;
               case 'None':
               default:
