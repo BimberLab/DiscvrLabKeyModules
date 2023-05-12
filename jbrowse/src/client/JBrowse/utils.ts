@@ -275,55 +275,74 @@ export function getGenotypeURL(trackId, contig, start, end) {
 function generateLuceneString(field, operator, value) {
   let luceneQueryString = '';
 
-  if (field === 'IMPACT') {
-    return `impact:${operator}`;
-  }
-
-  if(field === 'variableSamples' && operator == "in set") {
-    return `variableSamples:~${value}~`
+  if (field === 'variableSamples' && operator == "in set") {
+    return `variableSamples:~${value}~`;
   }
 
   switch (operator) {
-    case '=':
-    case 'equals':
-      luceneQueryString = `${field}:${value}`;
-      break;
-    case '!=':
-      luceneQueryString = `*:* -${field}:${value}`;
-      break;
-    case '>':
-      luceneQueryString = `${field}:[${value + 1} TO *]`;
-      break;
-    case '>=':
-      luceneQueryString = `${field}:[${value} TO *]`;
-      break;
-    case '<':
-      luceneQueryString = `${field}:[* TO ${value - 1}]`;
-      break;
-    case '<=':
-      luceneQueryString = `${field}:[* TO ${value}]`;
-      break;
-    case 'contains':
-      luceneQueryString = `${field}:*${value}*`;
-      break;
-    case 'in':
-      luceneQueryString = `${field}:(${value.join(' OR ')})`;
-      break;
-    case 'starts with':
-      luceneQueryString = `${field}:${value}*`;
-      break;
-    case 'ends with':
-      luceneQueryString = `${field}:*${value}`;
-      break;
-    case 'is empty':
-      luceneQueryString = `*:* -${field}:*`;
-      break;
-    case 'is not empty':
-      luceneQueryString = `${field}:*`;
-      break;
+    case '=': // Exact match for numeric fields
+        luceneQueryString = `${field}:[${value} TO ${value}]`;
+        break;
+    case 'equals': // Exact match for string fields
+        luceneQueryString = `${field}:${value}`;
+        break;
+    case '!=': // Not equal to, for numeric fields
+        luceneQueryString = `${field}:[* TO ${value - 0.000001}] OR ${field}:[${value + 0.000001} TO *]`;
+        break;
+    case '>': // Greater than for numeric fields
+        luceneQueryString = `${field}:[${value + 0.000001} TO *]`;
+        break;
+    case '>=': // Greater than or equal to for numeric fields
+        luceneQueryString = `${field}:[${value} TO *]`;
+        break;
+    case '<': // Less than for numeric fields
+        luceneQueryString = `${field}:[* TO ${value - 0.000001}]`;
+        break;
+    case '<=': // Less than or equal to for numeric fields
+        luceneQueryString = `${field}:[* TO ${value}]`;
+        break;
+    case 'contains': // Substring search for string fields
+        luceneQueryString = `${field}:*${value}*`;
+        break;
+    case 'starts with': // Starts with for string fields
+        luceneQueryString = `${field}:${value}*`;
+        break;
+    case 'ends with': // Ends with for string fields
+        luceneQueryString = `${field}:*${value}`;
+        break;
+    case 'is empty': // Field is empty
+        luceneQueryString = `*:* -${field}:*`;
+        break;
+    case 'is not empty': // Field is not empty
+        luceneQueryString = `${field}:*`;
+        break;
+    case 'variable in': // Variable in for multi-valued fields
+        luceneQueryString = `${field}:${value}`;
+        break;
+    case 'not variable in': // Not variable in for multi-valued fields
+        luceneQueryString = `*:* -${field}:${value}`;
+        break;
     default:
-      throw new Error(`Invalid operator: ${operator}`);
-  }
+        // Operators that require multiple values
+        const values = value.split(',');
+
+        switch (operator) {
+        case 'variable in all of': // Variable in all of the provided values
+            luceneQueryString = values.map(v => `+${field}:${v}`).join(' ');
+            break;
+        case 'variable in any of': // Variable in any of the provided values
+            luceneQueryString = values.map(v => `${field}:${v}`).join(' OR ');
+            break;
+        case 'not variable in any of': // Not variable in any of the provided values
+            luceneQueryString = values.map(v => `*:* -${field}:${v}`).join(' AND ');
+            break;
+        case 'not variable in one of': // Not variable in one of the provided values
+            luceneQueryString = values.map(v => `*:* -${field}:${v}`).join(' OR ');
+            break;
+        default:
+            throw new Error(`Invalid operator: ${operator}`);
+        }
+    }
 
   return luceneQueryString;
 }

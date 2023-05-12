@@ -159,7 +159,7 @@ public class JBrowseLuceneSearch
         Map<String, String> variableMap = new HashMap<>();
 
         // TODO define and fetch this map
-        variableMap.put("ONPRC", "m07952 OR m07528 OR m07431");
+        variableMap.put("ONPRC", "(m07952 OR m07528 OR m07431)");
 
         String result = searchString;
         Pattern pattern = Pattern.compile("~(.*?)~");
@@ -220,6 +220,7 @@ public class JBrowseLuceneSearch
             // The numericQueryParser can perform range queries, but numeric fields they can't be indexed alongside
             // lexicographic  fields, so they get split into a separate parser
             MultiFieldQueryParser queryParser = new MultiFieldQueryParser(stringQueryParserFields.toArray(new String[stringQueryParserFields.size()]), new StandardAnalyzer());
+            queryParser.setAllowLeadingWildcard(true);
 
             StandardQueryParser numericQueryParser = new StandardQueryParser();
             numericQueryParser.setAnalyzer(analyzer);
