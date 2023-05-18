@@ -184,6 +184,7 @@ const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback,
         })
 
         let initialFilters: any[] = [];
+
         if (searchString) {
           const decodedSearchString = decodeURIComponent(searchString);
           const searchStringsArray = decodedSearchString.split("&");
@@ -195,12 +196,11 @@ const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback,
             })
             .filter(({ field }) => availableOperators.hasOwnProperty(field));
 
-          
           console.log("initial filters: ", initialFilters)
           setFilters(initialFilters)
-
-          handleQuery(initialFilters)
         }
+
+        handleQuery(initialFilters)
     }
 
     fetch()
@@ -208,25 +208,21 @@ const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback,
 
   }, [])
 
-  function handleQuery(initialFilters) {
-    const encodedSearchString = createEncodedFilterString(filters, false);
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set("searchString", encodedSearchString);
-    window.history.pushState(null, "", currentUrl.toString());
-
-    console.log("filters in handleQuery: ", filters)
-
-    if(initialFilters) {
-      fetchLuceneQuery(initialFilters, sessionId, trackGUID, 0, (json)=>{console.log(json); handleSubmitCallback(json)}, () => {handleFailureCallback()});
-    } else {
-      fetchLuceneQuery(filters, sessionId, trackGUID, 0, (json)=>{console.log(json); handleSubmitCallback(json)}, () => {handleFailureCallback()});
+  function handleQuery(passedFilters) {
+    if(passedFilters.length != 0) {
+      const encodedSearchString = createEncodedFilterString(passedFilters, false);
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.set("searchString", encodedSearchString);
+      window.history.pushState(null, "", currentUrl.toString());
     }
+
+    fetchLuceneQuery(passedFilters, sessionId, trackGUID, 0, (json)=>{console.log(json); handleSubmitCallback(json)}, () => {handleFailureCallback()});
     setOpen(false);
   }
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    handleQuery(undefined);
+    handleQuery(filters);
   };
 
   return (

@@ -158,16 +158,25 @@ const VariantTableWidget = observer(props => {
           setColumns(columns)
         })
 
+<<<<<<< HEAD
       if (searchString) {
         await fetchLuceneQuery(queryParam.get('searchString'), sessionId, trackGUID, queryParam.get('offset'),
+=======
+        /*await fetchLuceneQuery(queryParam.get('searchString'), sessionId, trackGUID, queryParam.get('offset'),
+>>>>>>> 801442b9 (Add "all" query and pos sorting)
           (res) => {
+            console.log("AYYYYY")
             setFeatures(APIDataToRows(res.data, trackId))
             setDataLoaded(true)
           },
           () => {
             setDataLoaded(true)
+<<<<<<< HEAD
           })
       }
+=======
+          })*/
+>>>>>>> 801442b9 (Add "all" query and pos sorting)
     }
 
     fetch()

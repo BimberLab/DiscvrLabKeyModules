@@ -22,8 +22,11 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.json.JSONArray;
@@ -231,10 +234,14 @@ public class JBrowseLuceneSearch
 
             BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
 
+            if (searchString.equals("all")) {
+                booleanQueryBuilder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
+            }
+
             // Split input into tokens, 1 token per query separated by &
             StringTokenizer tokenizer = new StringTokenizer(searchString, "&");
 
-            while (tokenizer.hasMoreTokens())
+            while (tokenizer.hasMoreTokens() && !searchString.equals("all"))
             {
                 String queryString = tokenizer.nextToken();
                 Query query = null;
@@ -280,7 +287,15 @@ public class JBrowseLuceneSearch
             // We then iterate over the range of documents we want based on the offset. This does grow in memory
             // linearly with the number of documents, but my understanding is that these are just score,id pairs
             // rather than full documents, so mem usage *should* still be pretty low.
-            TopDocs topDocs = indexSearcher.search(query, pageSize * (offset + 1));
+            //TopDocs topDocs = indexSearcher.search(query, pageSize * (offset + 1));
+
+            // Define sort field
+            SortField sortField = new SortField("pos", SortField.Type.INT, false);
+            Sort sort = new Sort(sortField);
+
+            // Perform the search with sorting
+            TopFieldDocs topDocs = indexSearcher.search(query, pageSize * (offset + 1), sort);
+
 
             JSONObject results = new JSONObject();
 
@@ -292,6 +307,7 @@ public class JBrowseLuceneSearch
                 JSONObject elem = new JSONObject();
 
                 indexSearcher.doc(topDocs.scoreDocs[i].doc).forEach(field -> {
+
                     elem.put(field.name(), field.stringValue());
                 });
 
