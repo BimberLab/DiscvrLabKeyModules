@@ -348,6 +348,7 @@ function generateLuceneString(field, operator, value) {
 }
 
 export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, successCallback, failureCallback) {
+    console.log("Running fetchLuceneQuery, FILTERS")
     console.log(filters)
 
     if (!offset) {
@@ -384,6 +385,8 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, su
         },
         failure: function(res){
             console.log("Lucene query failure:", res.status)
+            console.log(res.response)
+            console.log(res.statusText)
             failureCallback()
             handleFailure("There was an error: " + res.status, sessionId)
         },
@@ -393,6 +396,12 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, su
 
 export function createEncodedFilterString(filters: Array<{field: string; operator: string; value: string}>, lucenify: boolean) {
     let ret: any = []
+
+    if(filters.length == 0) {
+        console.log("EMPTY FILTERS, RETURNING ALL!")
+        console.log(filters)
+        return "all"
+    }
 
     if(lucenify) {
         ret = filters.map(val => generateLuceneString(val.field, val.operator, val.value));
