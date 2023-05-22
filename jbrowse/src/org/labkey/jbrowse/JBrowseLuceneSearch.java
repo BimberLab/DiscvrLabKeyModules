@@ -6,10 +6,12 @@ import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.Document;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.IndexableField;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -206,6 +208,9 @@ public class JBrowseLuceneSearch
 
             List<String> stringQueryParserFields = new ArrayList<>();
             List<String> numericQueryParserFields = new ArrayList<>();
+            PointsConfig intPointsConfig = new PointsConfig(new DecimalFormat(), Integer.class);
+            PointsConfig floatPointsConfig = new PointsConfig(new DecimalFormat(), Float.class);
+            Map<String, PointsConfig> pointsConfigMap = new HashMap<>();
 
             // Iterate fields and split them into fields for the queryParser and the numericQueryParser
             for (Map.Entry<String, LuceneFieldDescriptor> entry : fields.entrySet())
@@ -216,7 +221,14 @@ public class JBrowseLuceneSearch
                 switch(descriptor._type)
                 {
                     case Flag, String, Character -> stringQueryParserFields.add(field);
-                    case Float, Integer -> numericQueryParserFields.add(field);
+                    case Float -> {
+                        numericQueryParserFields.add(field);
+                        pointsConfigMap.put(field, floatPointsConfig);
+                    }
+                    case Integer -> {
+                        numericQueryParserFields.add(field);
+                        pointsConfigMap.put(field, intPointsConfig);
+                    }
                 }
             }
 
@@ -227,9 +239,6 @@ public class JBrowseLuceneSearch
 
             StandardQueryParser numericQueryParser = new StandardQueryParser();
             numericQueryParser.setAnalyzer(analyzer);
-            PointsConfig pointsConfig = new PointsConfig(new DecimalFormat(), Integer.class);
-            Map<String, PointsConfig> pointsConfigMap = new HashMap<>();
-            numericQueryParserFields.forEach(fieldName -> pointsConfigMap.put(fieldName, pointsConfig));
             numericQueryParser.setPointsConfigMap(pointsConfigMap);
 
             BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
@@ -296,7 +305,6 @@ public class JBrowseLuceneSearch
             // Perform the search with sorting
             TopFieldDocs topDocs = indexSearcher.search(query, pageSize * (offset + 1), sort);
 
-
             JSONObject results = new JSONObject();
 
             // Iterate over the doc list, (either to the total end or until the page ends) grab the requested docs,
@@ -305,11 +313,19 @@ public class JBrowseLuceneSearch
             for (int i = pageSize * offset; i < Math.min(pageSize * (offset + 1), topDocs.scoreDocs.length); i++)
             {
                 JSONObject elem = new JSONObject();
+                Document doc = indexSearcher.doc(topDocs.scoreDocs[i].doc);
 
-                indexSearcher.doc(topDocs.scoreDocs[i].doc).forEach(field -> {
-
-                    elem.put(field.name(), field.stringValue());
-                });
+                for (IndexableField field : doc.getFields()) {
+                    String fieldName = field.name();
+                    String[] fieldValues = doc.getValues(fieldName);
+                    if (fieldValues.length > 1) {
+                        // If there is more than one value, put the array of values into the JSON object.
+                        elem.put(fieldName, fieldValues);
+                    } else {
+                        // If there is only one value, just put this single value into the JSON object.
+                        elem.put(fieldName, fieldValues[0]);
+                    }
+                }
 
                 data.add(elem);
             }
