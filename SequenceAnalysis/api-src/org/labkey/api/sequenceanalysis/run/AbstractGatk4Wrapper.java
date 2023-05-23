@@ -48,21 +48,6 @@ abstract public class AbstractGatk4Wrapper extends AbstractCommandWrapper
         _maxRamOverride = maxRamOverride;
     }
 
-    public void addJava8HomeToEnvironment()
-    {
-        //since GATK requires java8, set JAVA_HOME to match this:
-        File java8 = new File(SequencePipelineService.get().getJava8FilePath()).getParentFile();
-        if (java8.getParentFile() == null)
-        {
-            getLogger().debug("unexpected path to java8, cannot determine JAVA_HOME: " + java8.getPath());
-            return;
-        }
-
-        String javaDir = java8.getParentFile().getPath();
-        getLogger().debug("setting JAVA_HOME to java8 location: " + javaDir);
-        addToEnvironment("JAVA_HOME", javaDir);
-    }
-
     public boolean jarExists()
     {
         return getJAR(false) != null;
@@ -80,7 +65,7 @@ abstract public class AbstractGatk4Wrapper extends AbstractCommandWrapper
     public String getVersionString() throws PipelineJobException
     {
         List<String> args = new ArrayList<>();
-        args.add(SequencePipelineService.get().getJava8FilePath());
+        args.add(SequencePipelineService.get().getJavaFilepath());
         args.addAll(SequencePipelineService.get().getJavaOpts(_maxRamOverride));
         args.add("-jar");
         args.add(getJAR().getPath());
@@ -102,7 +87,7 @@ abstract public class AbstractGatk4Wrapper extends AbstractCommandWrapper
     public List<String> getBaseArgs(@Nullable String toolName)
     {
         List<String> args = new ArrayList<>();
-        args.add(SequencePipelineService.get().getJava8FilePath());
+        args.add(SequencePipelineService.get().getJavaFilepath());
         args.addAll(SequencePipelineService.get().getJavaOpts(_maxRamOverride));
         args.add("-jar");
         args.add(getJAR().getPath());
