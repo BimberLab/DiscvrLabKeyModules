@@ -35,8 +35,11 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.security.User;
 import org.labkey.jbrowse.model.JBrowseSession;
+import org.labkey.api.jbrowse.AbstractJBrowseFieldCustomizer;
+import org.labkey.api.jbrowse.JBrowseFieldCustomizer;
+import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.jbrowse.model.JsonFile;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -44,15 +47,12 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import static java.lang.Integer.parseInt;
 
 public class JBrowseLuceneSearch
 {
@@ -92,30 +92,18 @@ public class JBrowseLuceneSearch
         return new JBrowseLuceneSearch(session, track);
     }
 
-    private static class LuceneFieldDescriptor
-    {
-        private final String _luceneFieldName;
-        private final VCFHeaderLineType _type;
-
-        public LuceneFieldDescriptor(String luceneFieldName, VCFHeaderLineType type)
-        {
-            _luceneFieldName = luceneFieldName;
-            _type = type;
-        }
-    }
-
     private static final String VARIABLE_SAMPLES = "variableSamples";
 
-    private Map<String, LuceneFieldDescriptor> getIndexedFields()
+    private Map<String, JBrowseFieldDescriptor> getIndexedFields()
     {
-        Map<String, LuceneFieldDescriptor> ret = new HashMap<>() {{
-            put("contig", new LuceneFieldDescriptor("contig", VCFHeaderLineType.String));
-            put("ref", new LuceneFieldDescriptor("ref", VCFHeaderLineType.String));
-            put("alt", new LuceneFieldDescriptor("alt", VCFHeaderLineType.String));
-            put("start", new LuceneFieldDescriptor("start", VCFHeaderLineType.Integer));
-            put("end", new LuceneFieldDescriptor("end", VCFHeaderLineType.Integer));
-            put("genomicPosition", new LuceneFieldDescriptor("genomicPosition", VCFHeaderLineType.Integer));
-            put("variableSamples", new LuceneFieldDescriptor("variableSamples", VCFHeaderLineType.Character));
+        Map<String, JBrowseFieldDescriptor> ret = new HashMap<>() {{
+            put("contig", new JBrowseFieldDescriptor("contig", "This is the chromosome/contig", true, true, VCFHeaderLineType.String, 1).label("Chromosome"));
+            put("ref", new JBrowseFieldDescriptor("ref", "The reference allele", true, true, VCFHeaderLineType.String, 3).label("Ref Allele"));
+            put("alt", new JBrowseFieldDescriptor("alt", "The alternate allele", true, true, VCFHeaderLineType.String, 5).label("Alt Allele"));
+            put("start", new JBrowseFieldDescriptor("start", "The start position of this variant", true, true, VCFHeaderLineType.Integer, 2).label("Start"));
+            put("end", new JBrowseFieldDescriptor("end", "The end position of this variant", true, true, VCFHeaderLineType.Integer, 4).label("End"));
+            put("genomicPosition", new JBrowseFieldDescriptor("genomicPosition", "", false, true, VCFHeaderLineType.Integer, 6).hidden(true).label("Genomic Position"));
+            put("variableSamples", new JBrowseFieldDescriptor(VARIABLE_SAMPLES, "All samples with this variant", true, true, VCFHeaderLineType.Character, 7).multiValued(true));
         }};
 
         File vcf = _jsonFile.getTrackFile();
@@ -134,7 +122,7 @@ public class JBrowseLuceneSearch
                 }
 
                 VCFInfoHeaderLine info = header.getInfoHeaderLine(fn);
-                ret.put(fn, new LuceneFieldDescriptor(fn, info.getType()));
+                ret.put(fn, new JBrowseFieldDescriptor(fn, info.getDescription(), false, true, info.getType(), 8));
             }
         }
 
@@ -142,18 +130,12 @@ public class JBrowseLuceneSearch
     }
 
     public JSONObject returnIndexedFields() {
-        Map<String, LuceneFieldDescriptor> fields = getIndexedFields();
+        Map<String, JBrowseFieldDescriptor> fields = getIndexedFields();
         JSONObject results = new JSONObject();
         JSONArray data = new JSONArray();
 
-        for (Map.Entry<String, LuceneFieldDescriptor> entry : fields.entrySet()) {
-            String field = entry.getKey();
-            LuceneFieldDescriptor descriptor = entry.getValue();
-            JSONObject fieldDescriptorJSON = new JSONObject();
-            fieldDescriptorJSON.put("name", field);
-            fieldDescriptorJSON.put("type", descriptor._type.toString());
-
-            data.put(fieldDescriptorJSON);
+        for (Map.Entry<String, JBrowseFieldDescriptor> entry : fields.entrySet()) {
+            data.put(entry.getValue().toJSON());
         }
 
         results.put("fields", data);
@@ -195,7 +177,7 @@ public class JBrowseLuceneSearch
     {
         searchString = tryUrlDecode(searchString);
         File indexPath = _jsonFile.getExpectedLocationOfLuceneIndex(true);
-        Map<String, LuceneFieldDescriptor> fields = getIndexedFields();
+        Map<String, JBrowseFieldDescriptor> fields = getIndexedFields();
 
         // Open directory of lucene path, get a directory reader, and create the index search manager
         try (
@@ -213,12 +195,12 @@ public class JBrowseLuceneSearch
             Map<String, PointsConfig> pointsConfigMap = new HashMap<>();
 
             // Iterate fields and split them into fields for the queryParser and the numericQueryParser
-            for (Map.Entry<String, LuceneFieldDescriptor> entry : fields.entrySet())
+            for (Map.Entry<String, JBrowseFieldDescriptor> entry : fields.entrySet())
             {
                 String field = entry.getKey();
-                LuceneFieldDescriptor descriptor = entry.getValue();
+                JBrowseFieldDescriptor descriptor = entry.getValue();
 
-                switch(descriptor._type)
+                switch(descriptor.getType())
                 {
                     case Flag, String, Character -> stringQueryParserFields.add(field);
                     case Float -> {
@@ -334,6 +316,25 @@ public class JBrowseLuceneSearch
 
             //TODO: we should probably stream this
             return results;
+        }
+    }
+
+    public static class DefaultJBrowseCustomizer extends AbstractJBrowseFieldCustomizer
+    {
+        public DefaultJBrowseCustomizer()
+        {
+            super(ModuleLoader.getInstance().getModule(JBrowseModule.class));
+        }
+
+        @Override
+        public void customizeField(JBrowseFieldDescriptor field)
+        {
+            switch (field.getFieldName())
+            {
+                case "AF":
+                    field.label("Allele Frequency");
+                    break;
+            }
         }
     }
 }

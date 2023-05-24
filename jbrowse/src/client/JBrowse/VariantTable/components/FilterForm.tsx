@@ -9,7 +9,7 @@ import InputLabel from "@material-ui/core/InputLabel";
 import CardActions from "@material-ui/core/CardActions";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
-import { fetchLuceneQuery, fetchFieldTypeInfo, createEncodedFilterString } from "../../utils"
+import { fetchLuceneQuery, createEncodedFilterString } from "../../utils"
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -87,20 +87,10 @@ const numericType = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"
 const noneType = [];
 const impactType = ["LOW", "MODERATE", "HIGH"];
 
-const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback, handleFailureCallback, externalActionComponent, arrowPagination }) => {
-  const [filters, setFilters] = useState([{ field: "", operator: "", value: "" }]);
+const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback, handleFailureCallback, fieldTypeInfo, externalActionComponent, arrowPagination }) => {
+  const availableOperators = fieldTypeInfoToOperators(fieldTypeInfo);
 
-  const [availableOperators, setAvailableOperators] = useState<any>({
-    variableSamples: { type: variableSamplesType },
-    ref: { type: stringType },
-    alt: { type: stringType },
-    start: { type: numericType },
-    end: { type: numericType },
-    genomicPosition: { type: numericType },
-    contig: { type: stringType },
-  });
-
-  const [dataLoaded, setDataLoaded] = useState(false)
+  const [filters, setFilters] = useState(searchStringToInitialFilters(availableOperators) ?? [{ field: "", operator: "", value: "" }]);
 
   const classes = useStyles();
 
@@ -131,6 +121,7 @@ const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback,
     );
   };
 
+<<<<<<< HEAD
   // API call to retrieve the fields and build the form
   useEffect(() => {
     async function fetch() {
@@ -182,31 +173,75 @@ const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback,
           setAvailableOperators(availableOperators)
           setDataLoaded(true)
         })
+=======
+  function fieldTypeInfoToOperators(fieldTypeInfo) {
+    const operators = Object.keys(fieldTypeInfo).reduce((acc, idx) => {
+      const fieldObj = fieldTypeInfo[idx];
+      const field = fieldObj.name;
+          const type = fieldObj.type;
 
-        let initialFilters: any[] = [];
+          let fieldType;
 
-        if (searchString) {
-          const decodedSearchString = decodeURIComponent(searchString);
-          const searchStringsArray = decodedSearchString.split("&");
-          console.log("search strings array: ", searchStringsArray)
-          initialFilters = searchStringsArray
-            .map((item) => {
-            const [field, operator, value] = item.split(",");
-            return { field, operator, value };
-            })
-            .filter(({ field }) => availableOperators.hasOwnProperty(field));
+          switch (type) {
+            case 'Flag':
+            case 'String':
+            case 'Character':
+              fieldType = stringType;
+              break;
+            case 'Float':
+            case 'Integer':
+              fieldType = numericType;
+              break;
+            case 'Impact':
+              fieldType = stringType;
+              break;
+            case 'None':
+            default:
+              fieldType = noneType;
+              break;
+          }
 
-          console.log("initial filters: ", initialFilters)
-          setFilters(initialFilters)
-        }
+          acc[field] = { type: fieldType };
 
-        handleQuery(initialFilters)
+          if(field == "variableSamples") {
+            acc[field] = { type: variableSamplesType };
+          }
+
+          return acc;
+        }, {}) ?? [];
+
+    return operators
+  }
+>>>>>>> d9ba7905 (Server-driven column model)
+
+  function searchStringToInitialFilters(operators) {
+    const queryParam = new URLSearchParams(window.location.search)
+    const searchString = queryParam.get("searchString");
+
+    let initialFilters: any[] | undefined = undefined;
+
+    if (searchString) {
+      const decodedSearchString = decodeURIComponent(searchString);
+      const searchStringsArray = decodedSearchString.split("&");
+      console.log("search strings array: ", searchStringsArray)
+      initialFilters = searchStringsArray
+        .map((item) => {
+        const [field, operator, value] = item.split(",");
+        return { field, operator, value };
+        })
+        .filter(({ field }) => operators.hasOwnProperty(field));
+    }
+
+    return initialFilters
+  }
+
+  useEffect(() => {
+    async function fetch() {
+      handleQuery(filters)
     }
 
     fetch()
-
-
-  }, [])
+  }, [filters])
 
   function handleQuery(passedFilters) {
     if(passedFilters.length != 0) {
