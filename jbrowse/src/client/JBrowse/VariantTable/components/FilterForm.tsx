@@ -9,7 +9,7 @@ import InputLabel from "@material-ui/core/InputLabel";
 import CardActions from "@material-ui/core/CardActions";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
-import { fetchLuceneQuery, fetchFieldTypeInfo, createEncodedFilterString } from "../../utils"
+import { fetchLuceneQuery, createEncodedFilterString } from "../../utils"
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -87,20 +87,10 @@ const numericType = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"
 const noneType = [];
 const impactType = ["LOW", "MODERATE", "HIGH"];
 
-const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback, handleFailureCallback, externalActionComponent, arrowPagination }) => {
-  const [filters, setFilters] = useState([{ field: "", operator: "", value: "" }]);
+const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback, handleFailureCallback, fieldTypeInfo, externalActionComponent, arrowPagination }) => {
+  const availableOperators = fieldTypeInfoToOperators(fieldTypeInfo);
 
-  const [availableOperators, setAvailableOperators] = useState<any>({
-    variableSamples: { type: variableSamplesType },
-    ref: { type: stringType },
-    alt: { type: stringType },
-    start: { type: numericType },
-    end: { type: numericType },
-    genomicPosition: { type: numericType },
-    contig: { type: stringType },
-  });
-
-  const [dataLoaded, setDataLoaded] = useState(false)
+  const [filters, setFilters] = useState(searchStringToInitialFilters(availableOperators) ?? [{ field: "", operator: "", value: "" }]);
 
   const classes = useStyles();
 
@@ -131,77 +121,73 @@ const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback,
     );
   };
 
-  // API call to retrieve the fields and build the form
+  function fieldTypeInfoToOperators(fieldTypeInfo) {
+    const operators = Object.keys(fieldTypeInfo).reduce((acc, idx) => {
+      const fieldObj = fieldTypeInfo[idx];
+      const field = fieldObj.name;
+          const type = fieldObj.type;
+
+          let fieldType;
+
+          switch (type) {
+            case 'Flag':
+            case 'String':
+            case 'Character':
+              fieldType = stringType;
+              break;
+            case 'Float':
+            case 'Integer':
+              fieldType = numericType;
+              break;
+            case 'Impact':
+              fieldType = stringType;
+              break;
+            case 'None':
+            default:
+              fieldType = noneType;
+              break;
+          }
+
+          acc[field] = { type: fieldType };
+
+          if(field == "variableSamples") {
+            acc[field] = { type: variableSamplesType };
+          }
+
+          return acc;
+        }, {}) ?? [];
+
+    return operators
+  }
+
+  function searchStringToInitialFilters(operators) {
+    const queryParam = new URLSearchParams(window.location.search)
+    const searchString = queryParam.get("searchString");
+
+    let initialFilters: any[] | undefined = undefined;
+
+    if (searchString) {
+      const decodedSearchString = decodeURIComponent(searchString);
+      const searchStringsArray = decodedSearchString.split("&");
+      console.log("search strings array: ", searchStringsArray)
+      initialFilters = searchStringsArray
+        .map((item) => {
+        const [field, operator, value] = item.split(",");
+        return { field, operator, value };
+        })
+        .filter(({ field }) => operators.hasOwnProperty(field));
+    }
+
+    return initialFilters
+  }
+
   useEffect(() => {
     async function fetch() {
-      const queryParam = new URLSearchParams(window.location.search)
-      const searchString = queryParam.get("searchString");
-
-      await fetchFieldTypeInfo(sessionId, trackGUID,
-        (res) => {
-          const availableOperators = Object.keys(res.fields).reduce((acc, idx) => {
-            const fieldObj = res.fields[idx];
-            const field = fieldObj.name;
-            const type = fieldObj.type;
-
-            let fieldType;
-
-            switch (type) {
-              case 'Flag':
-              case 'String':
-              case 'Character':
-                fieldType = stringType;
-                break;
-              case 'Float':
-              case 'Integer':
-                fieldType = numericType;
-                break;
-              case 'Impact':
-                fieldType = stringType;
-                break;
-              case 'None':
-              default:
-                fieldType = noneType;
-                break;
-            }
-
-            acc[field] = { type: fieldType };
-
-            if(field == "variableSamples") {
-              acc[field] = { type: variableSamplesType };
-            }
-
-            return acc;
-          }, {}); 
-
-          setAvailableOperators(availableOperators)
-          setDataLoaded(true)
-        })
-
-        let initialFilters: any[] = [];
-
-        if (searchString) {
-          const decodedSearchString = decodeURIComponent(searchString);
-          const searchStringsArray = decodedSearchString.split("&");
-          console.log("search strings array: ", searchStringsArray)
-          initialFilters = searchStringsArray
-            .map((item) => {
-            const [field, operator, value] = item.split(",");
-            return { field, operator, value };
-            })
-            .filter(({ field }) => availableOperators.hasOwnProperty(field));
-
-          console.log("initial filters: ", initialFilters)
-          setFilters(initialFilters)
-        }
-
-        handleQuery(initialFilters)
+      handleQuery(filters)
     }
 
     fetch()
-
-
-  }, [])
+  }, [filters])
 
   function handleQuery(passedFilters) {
     if(passedFilters.length != 0) {

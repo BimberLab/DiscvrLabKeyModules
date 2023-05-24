@@ -2,7 +2,6 @@ import type { Row } from './types';
 import { passesInfoFilters, passesSampleFilters } from '../utils';
 import { deserializeFilters } from '../Browser/plugins/ExtendedVariantPlugin/InfoFilterWidget/filterUtil';
 import ExtendedVcfFeature from '../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter/ExtendedVcfFeature';
-import { fieldToReadableName } from './constants';
 
 const prepareInfoField = (rawFeature: ExtendedVcfFeature, propKey: string) => {
     //const info = rawFeature.getInfoFieldMeta(propKey)
@@ -13,19 +12,6 @@ const prepareInfoField = (rawFeature: ExtendedVcfFeature, propKey: string) => {
     else {
         return(rawVal)
     }
-}
-
-function replaceKeysWithReadableNames(obj: any): any {
-  const newObj: any = {};
-
-  for (const key in obj) {
-    if (obj.hasOwnProperty(key)) {
-      const readableKey = fieldToReadableName[key] || key;
-      newObj[readableKey] = obj[key];
-    }
-  }
-
-  return newObj;
 }
 
 export function APIDataToRows(data: any, trackId: string): Row[] {

@@ -7,6 +7,8 @@ import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Container;
 import org.labkey.api.jbrowse.DemographicsSource;
 import org.labkey.api.jbrowse.GroupsProvider;
+import org.labkey.api.jbrowse.JBrowseFieldCustomizer;
+import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
 import org.labkey.api.jbrowse.JBrowseService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -37,6 +39,7 @@ public class JBrowseServiceImpl extends JBrowseService
 
     private final Set<DemographicsSource> _sources = new HashSet<>();
     private final List<GroupsProvider> _providers = new ArrayList<>();
+    private final List<JBrowseFieldCustomizer> _customizers = new ArrayList<>();
 
     private JBrowseServiceImpl()
     {
@@ -98,6 +101,12 @@ public class JBrowseServiceImpl extends JBrowseService
         _providers.add(provider);
     }
 
+    @Override
+    public void registerFieldCustomizer(JBrowseFieldCustomizer customizer)
+    {
+        _customizers.add(customizer);
+    }
+
     public Map<String, Map<String, Object>> resolveSubjects(List<String> subjects, User u, Container c)
     {
         Map<String, Map<String, Object>> ret = new HashMap<>();
@@ -126,6 +135,18 @@ public class JBrowseServiceImpl extends JBrowseService
         }
 
         return ret;
+    }
+
+    public void customizeField(User u, Container c, JBrowseFieldDescriptor field) {
+        // NOTE: providers will be registered on module startup, which will be in dependency order.
+        // Process them here in reverse dependency order, so we prioritize end modules
+        List<JBrowseFieldCustomizer> customizers = new ArrayList<>(_customizers);
+        Collections.reverse(customizers);
+        for (JBrowseFieldCustomizer fc : customizers) {
+            if (fc.isAvailable(c, u)) {
+                fc.customizeField(field);
+            }
+        }
     }
 
     /***

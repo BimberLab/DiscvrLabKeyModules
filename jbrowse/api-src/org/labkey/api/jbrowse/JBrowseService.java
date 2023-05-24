@@ -36,4 +36,6 @@ abstract public class JBrowseService
     abstract public void registerDemographicsSource(DemographicsSource source);
 
     abstract public void registerGroupsProvider(GroupsProvider provider);
+
+    abstract public void registerFieldCustomizer(JBrowseFieldCustomizer customizer);
 }

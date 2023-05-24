@@ -8,7 +8,7 @@ import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline';
 import { DataGrid, GridColDef, GridRenderCellParams, GridToolbar } from '@mui/x-data-grid';
 import { APIDataToRows } from '../dataUtils';
 import ArrowPagination from './ArrowPagination';
-import { fieldToReadableName, multiValueComparator, multiModalOperator } from '../constants';
+import { multiValueComparator, multiModalOperator } from '../constants';
 import FilterForm from "./FilterForm"
 
 
@@ -90,6 +90,8 @@ const VariantTableWidget = observer(props => {
   const [features, setFeatures] = useState<Row[]>([])
   const [columns, setColumns] = useState<GridColumns>([])
 
+  const [fieldTypeInfo, setFieldTypeInfo] = useState([]);
+
   // Active widget ID list to force rerender when a JBrowseUIButton is clicked
   const [activeWidgetList, setActiveWidgetList] = useState<string[]>([])
 
@@ -114,7 +116,7 @@ const VariantTableWidget = observer(props => {
 
       await fetchFieldTypeInfo(sessionId, trackGUID,
         (res) => {
-          let columns: GridColumns = [];
+          let columns: any = [];
 
           for(const fieldObj of res.fields) {
             const field = fieldObj.name;
@@ -134,35 +136,24 @@ const VariantTableWidget = observer(props => {
                 break;
             }
 
-            let column: any = { field: field, headerName: fieldToReadableName[field] ?? field, width: muiFieldType == "string" ? 150 : 50, type: type as string, flex: 1, headerAlign: 'left', hide: fieldToReadableName[field] ? false : true }
+            let column: any = { field: field, headerName: fieldObj.label ?? field, width: fieldObj.colWidth ?? (muiFieldType == "string" ? 150 : 50), type: muiFieldType, flex: 1, headerAlign: 'left', hide: fieldObj.isHidden }
 
             if (field == "af") {
-              column = { 
-                field: 'af', 
-                headerName: 'Allele Frequency',
-                width: 50,
-                type: "number",
-                flex: 1,
-                headerAlign: 'left',
-                sortComparator: multiValueComparator,
-                filterOperators: getGridNumericColumnOperators().map(op => multiModalOperator(op))
-              }
+              column.sortComparator = multiValueComparator
+              column.filterOperators = getGridNumericColumnOperators().map(op => multiModalOperator(op))
             }
+
+            column.orderKey = fieldObj.orderKey;
 
             columns.push(column)
           }
-          setColumns(columns)
-        })
 
-        /*await fetchLuceneQuery(queryParam.get('searchString'), sessionId, trackGUID, queryParam.get('offset'),
-          (res) => {
-            console.log("AYYYYY")
-            setFeatures(APIDataToRows(res.data, trackId))
-            setDataLoaded(true)
-          },
-          () => {
-            setDataLoaded(true)
-          })*/
+          columns.sort((a, b) => a.orderKey - b.orderKey);
+          const columnsWithoutOrderKey = columns.map(({ orderKey, ...rest }) => rest);
+
+          setColumns(columnsWithoutOrderKey);
+          setFieldTypeInfo(res.fields)
+        })
     }
 
     fetch()
@@ -270,6 +261,7 @@ const VariantTableWidget = observer(props => {
               trackGUID={trackGUID}
               handleSubmitCallback={(data) => handleSearch(data)}
               handleFailureCallback={() => {}}
+              fieldTypeInfo={fieldTypeInfo}
               externalActionComponent={
                 <Button
                   disabled={!isValidLocString}

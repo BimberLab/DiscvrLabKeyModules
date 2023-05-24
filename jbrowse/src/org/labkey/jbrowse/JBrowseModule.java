@@ -79,6 +79,7 @@ public class JBrowseModule extends ExtendedSimpleModule
     {
         addController(JBrowseController.NAME, JBrowseController.class);
         JBrowseService.setInstance(JBrowseServiceImpl.get());
+        JBrowseService.get().registerFieldCustomizer(new JBrowseLuceneSearch.DefaultJBrowseCustomizer());
     }
 
     @Override
