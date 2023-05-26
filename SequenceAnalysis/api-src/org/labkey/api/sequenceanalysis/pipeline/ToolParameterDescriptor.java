@@ -141,12 +141,12 @@ public class ToolParameterDescriptor
         return typeName + "." + provider.getName() + "." + getName() + (stepIdx == 0 ? "" : "." + stepIdx);
     }
 
-    public String extractValue(PipelineJob job, PipelineStepProvider provider, int stepIdx)
+    public String extractValue(PipelineJob job, PipelineStepProvider<?> provider, int stepIdx)
     {
         return extractValue(job, provider, stepIdx, String.class);
     }
 
-    public List<Object> extractAllValues(PipelineJob job, PipelineStepProvider provider)
+    public List<Object> extractAllValues(PipelineJob job, PipelineStepProvider<?> provider)
     {
         List<Object> ret = new ArrayList<>();
         String prefix = getJsonParamName(provider, 0);
@@ -177,12 +177,12 @@ public class ToolParameterDescriptor
      * to perform last minute transforms, such as converted a boolean (which is better in the UI as a checkbox)
      * to 1 or 0
      */
-    public String extractValueForCommandLine(PipelineJob job, PipelineStepProvider provider, int stepIdx) throws PipelineJobException
+    public String extractValueForCommandLine(PipelineJob job, PipelineStepProvider<?> provider, int stepIdx) throws PipelineJobException
     {
         return extractValue(job, provider, stepIdx);
     }
 
-    public <ParamType> ParamType extractValue(PipelineJob job, PipelineStepProvider provider, int stepIdx, Class<ParamType> clazz)
+    public <ParamType> ParamType extractValue(PipelineJob job, PipelineStepProvider<?> provider, int stepIdx, Class<ParamType> clazz)
     {
         return this.extractValue(job, provider, stepIdx, clazz, null);
     }
