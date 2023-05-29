@@ -95,7 +95,7 @@ public class FilterReadsStep extends AbstractPipelineStep implements Preprocessi
     {
         public GenomeParam()
         {
-            super(null, GENOME, "Choose Genome", "Select a previously saved reference genome from the list.", "ldk-simplelabkeycombo", new JSONObject()
+            super(null, GENOME, "Choose Genome", "Select a previously saved reference genome from the list.", "ldk-simplelabkeycombo", null, new JSONObject()
             {{
                 put("width", 450);
                 put("schemaName", "sequenceanalysis");
@@ -105,7 +105,7 @@ public class FilterReadsStep extends AbstractPipelineStep implements Preprocessi
                 put("displayField", "name");
                 put("valueField", "rowid");
                 put("allowBlank", false);
-            }}, null);
+            }});
         }
 
         @Override
