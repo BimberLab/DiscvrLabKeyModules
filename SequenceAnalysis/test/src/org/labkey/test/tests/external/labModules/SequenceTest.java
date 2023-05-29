@@ -560,6 +560,9 @@ public class SequenceTest extends BaseWebDriverTest
             fieldsetMap.put(name, _ext4Helper.queryOne("fieldset[title='" + name + "']", Ext4CmpRef.class));
         }
 
+        // This step has genome as required, so remove:
+        waitAndClick(Locator.id(fieldsetMap.get("Filter Reads Matching Reference").down("ldk-linkbutton[text='Remove']", Ext4CmpRef.class).getId()).append(Locator.tag("a")));
+
         waitAndClick(Locator.id(fieldsetMap.get("Downsample Reads").down("ldk-linkbutton[text='Move Down']", Ext4CmpRef.class).getId()).append(Locator.tag("a")));
         isTextBefore("Head Crop", "Downsample Reads");
 
@@ -671,7 +674,7 @@ public class SequenceTest extends BaseWebDriverTest
         assertEquals(invalidJSONError, analysisDescription, params.get("jobDescription"));
         assertEquals(invalidJSONError, jobName, params.get("jobName"));
 
-        assertEquals(invalidJSONError, "IlluminaAdapterTrimming;AdapterTrimming;AvgQualFilter;CropReads;FASTQC;DownsampleReads;PrintReadsContaining;FilterMatchingReads;LeadingTrim;Flash;MaxInfoTrim;SlidingWindowTrim;ReadCropping;ReadLengthFilter;TrailingTrim", params.get("fastqProcessing"));
+        assertEquals(invalidJSONError, "IlluminaAdapterTrimming;AdapterTrimming;AvgQualFilter;CropReads;FASTQC;DownsampleReads;PrintReadsContaining;LeadingTrim;Flash;MaxInfoTrim;SlidingWindowTrim;ReadCropping;ReadLengthFilter;TrailingTrim", params.get("fastqProcessing"));
         assertEquals(invalidJSONError, overlapLength.toString(), params.get("fastqProcessing.AdapterTrimming.overlapLength").toString());
         assertEquals(invalidJSONError, errorRate.toString(), params.get("fastqProcessing.AdapterTrimming.errorRate").toString());
         assertEquals(invalidJSONError, minReadLength, params.get("fastqProcessing.AdapterTrimming.minLength").toString());
