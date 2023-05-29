@@ -552,7 +552,7 @@ public class SequenceTest extends BaseWebDriverTest
         waitForElementToDisappear(Ext4Helper.Locators.window("Add Steps"));
 
         Map<String, Ext4CmpRef> fieldsetMap = new HashMap<>();
-        String[] setNames = {"Adapter Trimming (Trimmomatic)", "Average Quality Filter", "Crop Reads", "Downsample Reads", "Head Crop", "Quality Trimming (Adaptive)", "Quality Trimming (Sliding Window)", "Read Length Filter"};
+        String[] setNames = {"Adapter Trimming (Trimmomatic)", "Average Quality Filter", "Crop Reads", "Downsample Reads", "Filter Reads Matching Reference", "Head Crop", "Quality Trimming (Adaptive)", "Quality Trimming (Sliding Window)", "Read Length Filter"};
         isPresentInThisOrder(setNames);
 
         for (String name : setNames)
