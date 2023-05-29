@@ -39,7 +39,7 @@ public class FilterReadsStep extends AbstractPipelineStep implements Preprocessi
     {
         public Provider()
         {
-            super("PrintReadsContaining", "Filter Reads Matching Reference", "FilterMatchingReads", "This step aligns input reads against a reference using BWA-mem and will only return read pairs without a passing hit in either read.", Arrays.asList(
+            super("FilterMatchingReads", "Filter Reads Matching Reference", "BWA-mem/samtools", "This step aligns input reads against a reference using BWA-mem and will only return read pairs without a passing hit in either read.", Arrays.asList(
                     new GenomeParam(),
                     ToolParameterDescriptor.create(MIN_QUAL, "Min MAPQ", "Only alignments with MAPQ greater than this value will be considered", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
