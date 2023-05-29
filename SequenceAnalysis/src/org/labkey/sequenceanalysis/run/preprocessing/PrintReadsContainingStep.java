@@ -26,7 +26,7 @@ import java.util.List;
 
 public class PrintReadsContainingStep extends AbstractCommandPipelineStep<PrintReadsContainingStep.Wrapper> implements PreprocessingStep
 {
-        public PrintReadsContainingStep(PipelineStepProvider provider, PipelineContext ctx)
+        public PrintReadsContainingStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new PrintReadsContainingStep.Wrapper(ctx.getLogger()));
     }
