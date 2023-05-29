@@ -14,11 +14,13 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.run.alignment.BWAMemWrapper;
 import org.labkey.sequenceanalysis.run.analysis.UnmappedReadExportHandler;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -75,6 +77,8 @@ public class FilterReadsStep extends AbstractPipelineStep implements Preprocessi
         AlignmentOutputImpl alignmentOutput = new AlignmentOutputImpl();
         String basename = SequenceAnalysisService.get().getUnzippedBaseName(inputFile.getName()) + ".filterAlign";
         wrapper.performMemAlignment(getPipelineCtx().getJob(), alignmentOutput, inputFile, inputFile2, outputDir, genome, basename, bwaArgs);
+
+        SequencePipelineService.get().ensureBamIndex(inputFile, getPipelineCtx().getLogger(), true);
         
         output.addIntermediateFile(alignmentOutput.getBAM());
         output.addIntermediateFile(new File(alignmentOutput.getBAM().getPath() + ".bai"));
