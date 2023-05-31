@@ -200,7 +200,7 @@ public class ToolParameterDescriptor
             jobParams = new JSONObject(job.getParameters());
         }
 
-        if (jobParams.has(key))
+        if (jobParams.has(key) && !jobParams.isNull(key))
         {
             Object val = jobParams.get(key);
             if (val == JSONObject.NULL) {
