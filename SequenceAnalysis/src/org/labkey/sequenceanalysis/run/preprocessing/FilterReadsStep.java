@@ -78,7 +78,7 @@ public class FilterReadsStep extends AbstractPipelineStep implements Preprocessi
         String basename = SequenceAnalysisService.get().getUnzippedBaseName(inputFile.getName()) + ".filterAlign";
         wrapper.performMemAlignment(getPipelineCtx().getJob(), alignmentOutput, inputFile, inputFile2, outputDir, genome, basename, bwaArgs);
 
-        SequencePipelineService.get().ensureBamIndex(inputFile, getPipelineCtx().getLogger(), true);
+        SequencePipelineService.get().ensureBamIndex(alignmentOutput.getBAM(), getPipelineCtx().getLogger(), true);
         
         output.addIntermediateFile(alignmentOutput.getBAM());
         output.addIntermediateFile(new File(alignmentOutput.getBAM().getPath() + ".bai"));
