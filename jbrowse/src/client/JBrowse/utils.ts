@@ -261,7 +261,7 @@ function handleFailure(error, sessionId?, trackId?, isTable?, reloadOnFailure = 
     }
 }
 
-export function getGenotypeURL(trackId, contig, start, end) {
+export function getGenotypeURL(trackId, contig, start, end, params) {
     // NOTE: due to jbrowse/trix behavior, the trackId that gets serialized into the trix index is the actual trackGUID plus the filename.
     // Since this action expects the GUID alone, detect long filenames and subset.
     // TODO: once this behavior is fixed in jbrowse, remove this logic

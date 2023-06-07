@@ -10,13 +10,16 @@ import { APIDataToRows } from '../dataUtils';
 import ArrowPagination from './ArrowPagination';
 import { multiValueComparator, multiModalOperator } from '../constants';
 import FilterForm from "./FilterForm"
+import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache';
+import { EVAdapterClass } from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter';
+import { NoAssemblyRegion } from '@jbrowse/core/util/types';
+import { toArray } from 'rxjs/operators';
 
 
 import '../VariantTable.css';
 import '../../jbrowse.css';
-import { fetchLuceneQuery, getGenotypeURL, navigateToBrowser, truncateToValidGUID, fetchFieldTypeInfo } from '../../utils';
+import { getGenotypeURL, navigateToBrowser, truncateToValidGUID, fetchFieldTypeInfo } from '../../utils';
 import LoadingIndicator from './LoadingIndicator';
-import { Row } from '../types';
 import Search from './Search';
 
 const VariantTableWidget = observer(props => {
@@ -87,8 +90,10 @@ const VariantTableWidget = observer(props => {
 
   // Contains all features from the API call once the useEffect finished
   //const [features, setFeatures] = useState<ExtendedVcfFeature[]>([])
-  const [features, setFeatures] = useState<Row[]>([])
+  const [features, setFeatures] = useState<any[]>([])
   const [columns, setColumns] = useState<GridColumns>([])
+
+  const [adapter, setAdapter] = useState<EVAdapterClass | undefined>(undefined)
 
   const [fieldTypeInfo, setFieldTypeInfo] = useState([]);
 
@@ -168,23 +173,54 @@ const VariantTableWidget = observer(props => {
       return(<p>Unable to find track: {trackId}</p>)
   }
 
-  const showDetailsWidget = (rowIdx: number) => {
-    const feature = features[rowIdx]
-    const trackId = getConf(track, 'trackId')
-    const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])
-    const widgetId = 'Variant-' + trackId;
-    const featureWidget = session.addWidget(
-        'ExtendedVariantWidget',
-        widgetId,
-        {
-          featureData: feature,
-          trackId: trackId,
-          message: '',
-          detailsConfig: detailsConfig
-        }
-    )
+  const getAdapterInstance = async () => {
+    let adapterConfig = getConf(track, 'adapter')
+    
+    let a = (await getAdapter(
+        pluginManager,
+        sessionId,
+        adapterConfig,
+    )).dataAdapter as EVAdapterClass
 
-    session.showWidget(featureWidget)
+    setAdapter(a)
+
+    return a;
+  }
+
+  const showDetailsWidget = (rowIdx: number, params: any) => {
+    (async () => {
+        let a = adapter;
+
+        if (!a) {
+            a = await getAdapterInstance();
+        }
+        const row = features[rowIdx] as any
+        const ret = a.getFeatures({
+          refName: assembly.getCanonicalRefName(row.ref),
+          start: row.start,
+          end: row.end
+        } as NoAssemblyRegion)
+
+        const extendedFeature = await ret.pipe(toArray()).toPromise()
+        const feature = extendedFeature[0];
+
+        const trackId = getConf(track, 'trackId')
+        const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])
+        const widgetId = 'Variant-' + trackId;
+
+        const featureWidget = session.addWidget(
+            'ExtendedVariantWidget',
+            widgetId,
+            {
+              featureData: feature,
+              trackId: trackId,
+              message: '',
+              detailsConfig: detailsConfig
+            }
+        )
+
+        session.showWidget(featureWidget)
+    })();
   }
 
   const actionsCol: GridColDef = {
@@ -203,8 +239,8 @@ const VariantTableWidget = observer(props => {
                 flexDirection: 'column'
               }}
             >
-              <Box sx={{lineHeight: '20px'}}><a className={"labkey-text-link"} onClick={() => { showDetailsWidget(params.row.id) }}>Variant Details</a></Box>
-              <Box sx={{lineHeight: '20px'}}><a className={"labkey-text-link"} target="_blank" href={getGenotypeURL(params.row.trackId, params.row.chrom, params.row.start, params.row.end)}>View Genotypes</a></Box>
+              <Box sx={{lineHeight: '20px'}}><a className={"labkey-text-link"} onClick={() => { showDetailsWidget(params.row.id, params) }}>Variant Details</a></Box>
+              <Box sx={{lineHeight: '20px'}}><a className={"labkey-text-link"} target="_blank" href={getGenotypeURL(params.row.trackId, params.row.contig, params.row.start, params.row.end, params)}>View Genotypes</a></Box>
             </Box>
           </>
       )

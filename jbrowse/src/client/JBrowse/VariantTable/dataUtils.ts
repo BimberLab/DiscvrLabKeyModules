@@ -1,4 +1,3 @@
-import type { Row } from './types';
 import { passesInfoFilters, passesSampleFilters } from '../utils';
 import { deserializeFilters } from '../Browser/plugins/ExtendedVariantPlugin/InfoFilterWidget/filterUtil';
 import ExtendedVcfFeature from '../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter/ExtendedVcfFeature';
@@ -14,15 +13,14 @@ const prepareInfoField = (rawFeature: ExtendedVcfFeature, propKey: string) => {
     }
 }
 
-export function APIDataToRows(data: any, trackId: string): Row[] {
-  let ret = data.map((obj: any) => {
-
+export function APIDataToRows(data: any, trackId: string): any[] {
+  let ret = data.map((obj: any, idx: any) => {
     if ("ANN" in obj) {
       obj["variant_type"] = parseAnnField(obj.ANN, 1, 'custom')
       obj["overlapping_genes"] = parseAnnField(obj.ANN, 3, null)
     }
 
-    obj["id"] = obj.genomicPosition;
+    obj["id"] = idx;
     obj["trackId"] = trackId;
     return obj;
   })
