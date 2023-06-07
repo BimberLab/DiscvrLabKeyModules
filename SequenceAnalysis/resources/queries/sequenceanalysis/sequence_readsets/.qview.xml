@@ -11,6 +11,7 @@
        <column name="comments" />
        <column name="barcode5" />
        <column name="barcode3" />
+       <column name="concentration" />
        <column name="sampleid" />
 
        <column name="instrument_run_id" />
