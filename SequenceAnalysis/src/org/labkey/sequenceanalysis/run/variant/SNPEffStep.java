@@ -34,7 +34,7 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
 {
     public static final String GENE_PARAM = "gene_file";
 
-    public SNPEffStep(PipelineStepProvider provider, PipelineContext ctx)
+    public SNPEffStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new SnpEffWrapper(ctx.getLogger()));
     }
