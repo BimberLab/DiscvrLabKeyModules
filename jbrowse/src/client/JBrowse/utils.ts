@@ -222,7 +222,7 @@ export function navigateToFreeTextSearch(sessionId, trackGUID) {
 export function navigateToBrowser(sessionId, locString, trackGUID?: string, track?: any) {
     const sampleFilterURL = serializeSampleFilters(track)
     const infoFilterURL = serializeInfoFilters(track)
-    window.location.href = ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackGUID: trackGUID, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
+    return ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackGUID: trackGUID, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
 }
 
 function serializeSampleFilters(track) {
@@ -261,7 +261,7 @@ function handleFailure(error, sessionId?, trackId?, isTable?, reloadOnFailure = 
     }
 }
 
-export function getGenotypeURL(trackId, contig, start, end, params) {
+export function getGenotypeURL(trackId, contig, start, end) {
     // NOTE: due to jbrowse/trix behavior, the trackId that gets serialized into the trix index is the actual trackGUID plus the filename.
     // Since this action expects the GUID alone, detect long filenames and subset.
     // TODO: once this behavior is fixed in jbrowse, remove this logic
@@ -442,3 +442,70 @@ export function truncateToValidGUID(str: string) {
 
     return str;
 }
+
+export function searchStringToInitialFilters(operators) : any[] | undefined {
+    const queryParam = new URLSearchParams(window.location.search)
+    const searchString = queryParam.get("searchString");
+
+    let initialFilters: any[] | undefined = undefined;
+
+    if (searchString) {
+        const decodedSearchString = decodeURIComponent(searchString);
+        const searchStringsArray = decodedSearchString.split("&");
+        console.log("search strings array: ", searchStringsArray)
+        initialFilters = searchStringsArray
+        .map((item) => {
+        const [field, operator, value] = item.split(",");
+        return { field, operator, value };
+        })
+        .filter(({ field }) => operators.hasOwnProperty(field));
+    }
+
+    return initialFilters
+}
+
+export function fieldTypeInfoToOperators(fieldTypeInfo): any {
+    const stringType = ["equals", "contains", "starts with", "ends with", "is empty", "is not empty"];
+    const variableSamplesType = ["in set", "variable in", "not variable in", "variable in all of", "variable in any of", "not variable in any of", "not variable in one of", "is empty", "is not empty"];
+    const numericType = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"];
+    const noneType = [];
+    const impactType = ["LOW", "MODERATE", "HIGH"];
+
+    const operators = Object.keys(fieldTypeInfo).reduce((acc, idx) => {
+      const fieldObj = fieldTypeInfo[idx];
+      const field = fieldObj.name;
+          const type = fieldObj.type;
+
+          let fieldType;
+
+          switch (type) {
+            case 'Flag':
+            case 'String':
+            case 'Character':
+              fieldType = stringType;
+              break;
+            case 'Float':
+            case 'Integer':
+              fieldType = numericType;
+              break;
+            case 'Impact':
+              fieldType = stringType;
+              break;
+            case 'None':
+            default:
+              fieldType = noneType;
+              break;
+          }
+
+          acc[field] = { type: fieldType };
+
+          if(field == "variableSamples") {
+            acc[field] = { type: variableSamplesType };
+          }
+
+          return acc;
+        }, {}) ?? [];
+
+    return operators
+}
+
