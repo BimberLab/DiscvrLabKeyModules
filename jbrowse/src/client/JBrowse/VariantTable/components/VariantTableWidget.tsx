@@ -197,11 +197,9 @@ const VariantTableWidget = observer(props => {
             a = await getAdapterInstance();
         }
         const row = features[rowIdx] as any
-        console.log(row.start)
-        console.log(row.end+1)
         const ret = a.getFeatures({
           refName: assemblyName,
-          start: 0,
+          start: row.start,
           end: row.end
         } as NoAssemblyRegion)
 
