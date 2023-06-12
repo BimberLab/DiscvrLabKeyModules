@@ -45,7 +45,7 @@ const VariantTableWidget = observer(props => {
   }
 
   function handleQuery(passedFilters) {
-    if(passedFilters.length != 0) {
+    if (!passedFilters || passedFilters.length != 0) {
       const encodedSearchString = createEncodedFilterString(passedFilters, false);
       const currentUrl = new URL(window.location.href);
       currentUrl.searchParams.set("searchString", encodedSearchString);

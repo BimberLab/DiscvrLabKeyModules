@@ -103,7 +103,7 @@ public class JBrowseLuceneSearch
             put("start", new JBrowseFieldDescriptor("start", "The start position of this variant", true, true, VCFHeaderLineType.Integer, 2).label("Start"));
             put("end", new JBrowseFieldDescriptor("end", "The end position of this variant", true, true, VCFHeaderLineType.Integer, 4).label("End"));
             put("genomicPosition", new JBrowseFieldDescriptor("genomicPosition", "", false, true, VCFHeaderLineType.Integer, 6).hidden(true).label("Genomic Position"));
-            put("variableSamples", new JBrowseFieldDescriptor(VARIABLE_SAMPLES, "All samples with this variant", true, true, VCFHeaderLineType.Character, 7).multiValued(true));
+            put("variableSamples", new JBrowseFieldDescriptor(VARIABLE_SAMPLES, "All samples with this variant", true, true, VCFHeaderLineType.Character, 7).multiValued(true).label("Samples With Variant"));
         }};
 
         File vcf = _jsonFile.getTrackFile();

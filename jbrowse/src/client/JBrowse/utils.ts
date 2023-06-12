@@ -397,7 +397,7 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, su
 export function createEncodedFilterString(filters: Array<{field: string; operator: string; value: string}>, lucenify: boolean) {
     let ret: any = []
 
-    if(filters.length == 0) {
+    if(!filters || filters.length == 0) {
         console.log("EMPTY FILTERS, RETURNING ALL!")
         console.log(filters)
         return "all"
