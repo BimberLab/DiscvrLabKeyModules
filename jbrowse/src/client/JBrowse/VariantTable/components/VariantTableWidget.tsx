@@ -44,7 +44,11 @@ const VariantTableWidget = observer(props => {
   }
 
   function handleQuery(passedFilters) {
+<<<<<<< HEAD
     if(!passedFilters || passedFilters.length != 0) {
+=======
+    if (!passedFilters || passedFilters.length != 0) {
+>>>>>>> 0e53f7f1 (Update JBrowseTest to use correct genome)
       const encodedSearchString = createEncodedFilterString(passedFilters, false);
       const currentUrl = new URL(window.location.href);
       currentUrl.searchParams.set("searchString", encodedSearchString);

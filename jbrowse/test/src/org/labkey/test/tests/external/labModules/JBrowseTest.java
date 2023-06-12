@@ -38,8 +38,10 @@ import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.PasswordUtil;
 import org.labkey.test.util.PortalHelper;
+import org.labkey.test.util.ext4cmp.Ext4CmpRef;
 import org.labkey.test.util.ext4cmp.Ext4ComboRef;
 import org.labkey.test.util.ext4cmp.Ext4FieldRef;
+import org.labkey.test.util.ext4cmp.Ext4GridRef;
 import org.labkey.test.util.external.labModules.LabModuleHelper;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
@@ -63,6 +65,9 @@ import java.util.stream.Collectors;
 @Category({External.class, LabModule.class})
 public class JBrowseTest extends BaseWebDriverTest
 {
+    private static final String JB_GENOME_NAME = "JB_GRCh37";
+    private boolean _searchWebpartAdded = false;
+
     protected LabModuleHelper _helper = new LabModuleHelper(this);
 
     @Override
@@ -492,7 +497,7 @@ public class JBrowseTest extends BaseWebDriverTest
         _containerHelper.enableModule("JBrowse");
 
         //create genome and add resources.
-        Integer genomeId = SequenceTest.createReferenceGenome(this, 1);
+        Integer genomeId = SequenceTest.createMac239ReferenceGenome(this, 1);
         createGenomeFeatures(genomeId);
 
         SequenceTest.addReferenceGenomeTracks(this, getProjectName(), SequenceTest.TEST_GENOME_NAME, genomeId, 1);
@@ -532,7 +537,11 @@ public class JBrowseTest extends BaseWebDriverTest
             return;
         }
 
-        SequenceTest.addOutputFile(this, _mGapTestVcf, SequenceTest.TEST_GENOME_NAME, "TestVCF", "VCF File", "This is an output file to test VCF full-text search", false);
+        String seq = SequenceTest.readSeqFromFile(_grch37Genome);
+        SequenceTest.ensureRefSeqExists(this, "1", seq);
+        SequenceTest.createReferenceGenome(this, 1, JB_GENOME_NAME, "1");
+
+        SequenceTest.addOutputFile(this, _mGapTestVcf, JB_GENOME_NAME, "TestVCF", "VCF File", "This is an output file to test VCF full-text search", false);
 
         //create session w/ some of these, verify
         log("creating initial jbrowse session");
@@ -564,8 +573,11 @@ public class JBrowseTest extends BaseWebDriverTest
         _helper.waitForLabToolsToLoad();
 
         // If the search panel doesnt fully load, we can get an alert on page navigation
-        //Locator searchLocator = Locator.tagWithClass("input", "MuiInputBase-input");
-        //waitForElement(searchLocator);
+        if (_searchWebpartAdded)
+        {
+            Locator searchLocator = Locator.tagWithClass("input", "MuiInputBase-input");
+            waitForElement(searchLocator);
+        }
 
         _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
         dr = DataRegionTable.DataRegion(getDriver()).find();
@@ -583,9 +595,18 @@ public class JBrowseTest extends BaseWebDriverTest
         dr.checkCheckbox(dr.getRowIndex("File Id", "TestVCF"));
         dr.clickHeaderMenu("More Actions", false, "Modify Track Config");
         new Window.WindowFinder(getDriver()).withTitle("Modify Track Config").waitFor();
+        Ext4CmpRef.waitForComponent(this, "grid");
+        Ext4GridRef grid = _ext4Helper.queryOne("grid", Ext4GridRef.class);
         waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Add"));
         waitAndClick(Ext4Helper.Locators.menuItem("Create Full Text Index?"));
         waitForElement(Locator.tagWithText("div", "createFullTextIndex"));
+        grid.completeEdit();
+
+        waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Add"));
+        waitAndClick(Ext4Helper.Locators.menuItem("Info Fields For Full Text Search"));
+        waitForElement(Locator.tagWithText("div", "infoFieldsForFullTextSearch"));
+        grid.setGridCell(2, "value", "AF,AC,CADD_PH,CLN_ALLELE,OMIMD");
+
         waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
         new Window.WindowFinder(getDriver()).withTitle("Success").waitFor();
         waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
@@ -617,7 +638,7 @@ public class JBrowseTest extends BaseWebDriverTest
         // contig := 1
         // ref := A
         // should be 104 results and each should be ref = A
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=contig%3A%3D1%26ref%3A%3DA";
+        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=contig%3A%3D1%26ref%3A%3DA&pageSize=200";
         beginAt(url);
         waitForText("{");
         mainJsonObject = new JSONObject(jsonString);
@@ -642,6 +663,7 @@ public class JBrowseTest extends BaseWebDriverTest
     }
 
     public static final File _mGapTestVcf = new File(TestFileUtils.getLabKeyRoot(), "server/modules/DiscvrLabKeyModules/jbrowse/resources/web/jbrowse/mgap/mGap.v2.1.subset.vcf.gz");
+    public static final File _grch37Genome = new File(TestFileUtils.getLabKeyRoot(), "server/modules/DiscvrLabKeyModules/jbrowse/resources/web/jbrowse/mgap/GRCh37_small.fasta");
 
     private void testOutputFileProcessing() throws Exception
     {
@@ -773,6 +795,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         PortalHelper portalHelper = new PortalHelper(this);
         portalHelper.addSideWebPart("JBrowse Search");
+        _searchWebpartAdded = true;
 
         waitForElement(Locator.tagWithText("p", "No session Id provided. Please have your site admin use the customize icon to set the session ID for this webpart."));
         portalHelper.clickWebpartMenuItem("JBrowse Search", false, "Customize");
@@ -828,7 +851,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForTableLoadingToDisappear();
 
         // Test default
-        testColumns("1", "116981270", "A", "T", "0.029", "intron_variant", "HIGH",
+        testColumns("1", "1", "A", "T", "0.029", "intron_variant", "HIGH",
                 "NTNG1", "7.292");
 
         // Test sorting
@@ -836,10 +859,10 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(referenceSort);
         WebElement elem = referenceSort.findElement(getDriver());
         elem.click();
-        waitForElement(Locator.tagWithText("div", "116985082"));
+        waitForElement(Locator.tagWithText("div", "3813"));
         elem.click();
-        waitForElementToDisappear(Locator.tagWithText("div", "116985082"));
-        waitForElement(Locator.tagWithText("div", "117000545"));
+        waitForElementToDisappear(Locator.tagWithText("div", "3813"));
+        waitForElement(Locator.tagWithText("div", "19276"));
 
         Locator sortedTopRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
         waitForElement(sortedTopRow);
@@ -862,7 +885,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         Locator filteredTopRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
         waitForElement(filteredTopRow);
-        testColumns("1", "116987527", "GGCAT", "G",
+        testColumns("1", "6258", "GGCAT", "G",
                 "0.029", "intron_variant", "", "NTNG1", "");
 
         // Test the table responding to the filtering backend by using the infoFilterWidget
@@ -878,7 +901,7 @@ public class JBrowseTest extends BaseWebDriverTest
         value.sendKeys("0.0009728");
         waitAndClick(Locator.tagWithText("button", "Apply"));
         waitForElementToDisappear(Locator.tagWithText("div", "GGCAT"));
-        testColumns("1", "116989670", "ATGGCTCCTG", "A",
+        testColumns("1", "8401", "ATGGCTCCTG", "A",
                 "0.0009728", "intron_variant", "", "NTNG1", "3.911");
 
         // Test navigating back to table with InfoFilters intact
@@ -956,7 +979,7 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116999734..116999776");
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
-        waitForElement(Locator.tagWithText("div", "116999755"));
+        waitForElement(Locator.tagWithText("div", "18486"));
 
         beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=");
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
@@ -992,7 +1015,7 @@ public class JBrowseTest extends BaseWebDriverTest
     private void testVariantTableComparators() throws Exception {
         beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116589678..117411688");
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
-        waitForElement(Locator.tagWithText("div", "116981270")); //proxy for grid loading
+        waitForElement(Locator.tagWithText("div", "1")); //proxy for grid loading
 
         // Test filtering AF with wrapped comparators
         waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
@@ -1001,17 +1024,17 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(columnSelector);
         Locator afOption = Locator.tagWithAttributeContaining("option", "value", "af");
         waitAndClick(afOption);
-        waitForElementToDisappear(Locator.tagWithText("div", "116981270"));
+        waitForElementToDisappear(Locator.tagWithText("div", "1"));
 
         Locator valueSelector = Locator.tagWithAttributeContaining("input", "placeholder", "Filter value");
         waitAndClick(valueSelector);
         WebElement valueSelectorElem = valueSelector.findElement(getDriver());
         valueSelectorElem.sendKeys("0");
-        waitForElement(Locator.tagWithText("div", "116985775"));
+        waitForElement(Locator.tagWithText("div", "4506"));
 
         Locator filteredTopRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
         waitForElement(filteredTopRow);
-        testColumns("1", "116985775", "GAAAA", "GAA, GAAA, GAAAAA, G, GA, GAAAAAA, GTTAAAA",
+        testColumns("1", "4506", "GAAAA", "GAA, GAAA, GAAAAA, G, GA, GAAAAAA, GTTAAAA",
                 "0.008258, 0.44, 0.17, 0.036, 0.005367, 0.019, 0", "intron_variant", "", "NTNG1", "");
         waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
     }
