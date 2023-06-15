@@ -211,8 +211,19 @@ export const FIELD_NAME_MAP = {
     }
 }
 
-export const INFO_FIELD_GROUPS = {
-    predictedFunction: {
+interface SectionContig {
+    title: string,
+    description?: string,
+    tags?: string[]
+}
+
+export const INFO_FIELD_GROUPS: {
+    predictedFunction: SectionContig,
+    regulatory: SectionContig,
+    comparative: SectionContig,
+    phenotypicData: SectionContig
+} = {
+    predictedFunction : {
         title: 'Predicted Function',
         description: 'Annotations related to prediction of functional impact or coding potential.',
         tags: ['CADD_PH', 'SD', 'SM', 'SX', 'NE', 'NF', 'NG', 'NH', 'NK', 'NL', 'NMD', 'NC', 'NJ', 'LOF', 'FC', 'FE']

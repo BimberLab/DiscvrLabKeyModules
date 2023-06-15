@@ -1,6 +1,6 @@
 import {colorSchemes} from "./colorSchemes"
 import {style as styles} from "./style";
-import {getSession} from '@jbrowse/core/util'
+import {getSession, AbstractSessionModel } from '@jbrowse/core/util'
 import {readConfObject} from '@jbrowse/core/configuration'
 import {generateSchemeJexl} from "./colorUtil";
 
@@ -32,7 +32,7 @@ export default jbrowse => {
             track.displays[0].renderer.palette.set(palette)
             track.displays[0].renderer.color1.set(generateSchemeJexl(palette))
 
-            getSession(model).hideWidget(model)
+            (getSession(model) as AbstractSessionModel).hideWidget(model)
         }
 
         const menuItems = (

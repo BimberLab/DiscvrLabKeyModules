@@ -19,7 +19,7 @@ export default jbrowse => {
     const { FeatureDetails, BaseCard } = jbrowse.jbrequire('@jbrowse/core/BaseFeatureWidget/BaseFeatureDetail')
 
     function round(value, decimals) {
-        return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+        return Number(Math.round(Number(value+'e'+decimals)) + 'e-'+decimals);
     }
 
     function makeAnnTable(data, classes){
@@ -222,7 +222,7 @@ export default jbrowse => {
             }
 
             for (let entry in gtCounts){
-                let rounded = round(gtCounts[entry]/gtTotal*100, decimal)
+                let rounded:any = round(gtCounts[entry]/gtTotal*100, decimal)
                 if (rounds !== 100){
                     rounded = "~" + rounded
                 }

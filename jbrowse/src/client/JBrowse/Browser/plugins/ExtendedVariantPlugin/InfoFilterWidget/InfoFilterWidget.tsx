@@ -1,7 +1,7 @@
 import {style as styles} from "./style";
 import {filterMap} from "./filters"
 import {readConfObject} from '@jbrowse/core/configuration'
-import {getSession} from '@jbrowse/core/util'
+import { AbstractSessionModel, getSession } from '@jbrowse/core/util';
 
 import {
     Box,
@@ -72,12 +72,12 @@ export default jbrowse => {
             }
 
             track.displays[0].renderer.infoFilters.set([...infoFilters])
-            getSession(model).hideWidget(model)
+            (getSession(model) as AbstractSessionModel).hideWidget(model)
         }
 
         const clearFilters = (event) => {
             track.displays[0].renderer.infoFilters.set([])
-            getSession(model).hideWidget(model)
+            (getSession(model) as AbstractSessionModel).hideWidget(model)
         }
 
         const filterChangeHandler = (rowIdx, filterStr) => {
