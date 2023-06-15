@@ -11,7 +11,9 @@
     "build-prod": "npm run clean && cross-env NODE_ENV=production PROD_SOURCE_MAP=source-map LK_MODULE_CONTAINER=DiscvrLabKeyModules LK_MODULE=jbrowse webpack --config config/prod.config.js --progress --profile",
     "clean": "rimraf resources/web/gen && rimraf resources/web/jbrowse/gen && rimraf resources/views/gen && rimraf resources/views/browser*",
     "test": "cross-env NODE_ENV=test jest",
-    "jb-pkg": "pkg ./node_modules/@jbrowse/cli --out-path ./resources/external/jb-cli"
+    "jb-pkg": "pkg ./node_modules/@jbrowse/cli --out-path ./resources/external/jb-cli",
+    "vcffeature-hack": "node ./tools/fixVcfFeature.js",
+    "postinstall": "npm run vcffeature-hack"
   },
   "peerDependencies": {
 
@@ -44,7 +46,8 @@
     "typescript": "^4.9.4",
     "util": "^0.12.0",
     "vm-browserify": "^1.1.2",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "fs": "^0.0.1-security"
   },
   "devDependencies": {
     "@labkey/build": "6.9.0",
