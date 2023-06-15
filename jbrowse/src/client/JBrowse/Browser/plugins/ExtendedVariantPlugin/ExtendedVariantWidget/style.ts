@@ -1,5 +1,5 @@
 var _styles = require("@material-ui/core/styles")
-export const style = (0, _styles.makeStyles)(function (theme) {
+export const style = (_styles.makeStyles)(function (theme) {
     return {
         table: {
             padding: 0,

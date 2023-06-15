@@ -17,7 +17,7 @@ function makeTitle(key){
 
 const SchemeComponent = observer(props => {
    const classes = styles()
-   let scheme = props.scheme
+   let scheme = props.scheme as any
    let tableHeader = <></>
    let table = <></>
    const lastRow =
@@ -30,12 +30,11 @@ const SchemeComponent = observer(props => {
                sx={{
                  width: 10,
                  height: 10,
-                 backgroundColor: 'gray',
                  position: 'relative',
                  left: '50%',
                  right: '50%'
                }}
-               fill='gray'
+               bgcolor='gray'
              />
          </TableCell>
       </TableRow>
@@ -63,12 +62,11 @@ const SchemeComponent = observer(props => {
                      sx={{
                        width: 10,
                        height: 10,
-                       backgroundColor: '#'+gradient[i].hex,
                        position: 'relative',
                        left: '50%',
                        right: '50%'
                      }}
-                     fill={'#'+gradient[i].hex}
+                     bgcolor={'#'+gradient[i].hex}
                    />
                 </TableCell>
             </TableRow>)
@@ -96,12 +94,11 @@ const SchemeComponent = observer(props => {
                   sx={{
                     width: 10,
                     height: 10,
-                    backgroundColor: val,
                     position: 'relative',
                     left: '50%',
                     right: '50%'
                   }}
-                  fill={val}
+                  bgcolor={val as string}
                 />
             </TableCell>
          </TableRow>

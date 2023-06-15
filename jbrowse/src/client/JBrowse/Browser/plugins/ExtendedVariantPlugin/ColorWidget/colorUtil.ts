@@ -40,7 +40,7 @@ export function generateGradient(hex1, hex2, steps, maxVal){
 }
 
 export function generateNumJexl(scheme){
-   // scheme: an object from colorSchemes.js
+   // scheme: an object from colorSchemes.ts
    // creates a jexl string that returns colors in a gradient based on schema passed
    let jexl = "jexl"
    let gradientSteps = generateGradient(scheme.options["minVal"], scheme.options["maxVal"], scheme.gradientSteps, scheme.maxVal)
@@ -65,7 +65,7 @@ export function generateNumJexl(scheme){
 }
 
 export function generateOptJexl(scheme){
-   // scheme: an object from colorSchemes.js
+   // scheme: an object from colorSchemes.ts
    // creates a jexl string that returns colors based on scheme passed
    let jexl = "jexl"
    Object.entries(scheme.options).map(([key, val]) =>
