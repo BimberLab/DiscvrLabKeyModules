@@ -1,9 +1,9 @@
-import {style as styles} from "./style";
-import {getSession} from '@jbrowse/core/util'
-import {readConfObject} from '@jbrowse/core/configuration'
+import { style as styles } from './style';
+import { AbstractSessionModel, getSession } from '@jbrowse/core/util';
+import { readConfObject } from '@jbrowse/core/configuration';
 
-import {Box, Button, FormControl, TextField} from '@material-ui/core'
-import {useState} from 'react'
+import { Box, Button, FormControl, TextField } from '@material-ui/core';
+import { useState } from 'react';
 
 export default jbrowse => {
 
@@ -45,12 +45,12 @@ export default jbrowse => {
 
         const handleSampleFilterSubmit = (event) => {
             track.displays[0].renderer.activeSamples.set(parseSampleCSV(sampleFilter))
-            getSession(model).hideWidget(model)
+            (getSession(model) as AbstractSessionModel).hideWidget(model)
         }
 
         const clearFilters = (event) => {
             track.displays[0].renderer.activeSamples.set('')
-            getSession(model).hideWidget(model)
+            (getSession(model) as AbstractSessionModel).hideWidget(model)
         }
 
         return(

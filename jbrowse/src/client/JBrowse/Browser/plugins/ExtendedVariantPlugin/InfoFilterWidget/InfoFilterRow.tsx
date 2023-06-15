@@ -56,23 +56,16 @@ const InfoFilterRow = observer(props => {
     const getValueComponent = ((filterObj) => {
         const fieldDef = filterMap[filterObj.field]
         if (fieldDef.dataType === 'number') {
-            const inputProps = { inputMode: "numeric" }
-
-            //TODO: why doesnt the browser respect this?
-            if (fieldDef.minValue !== undefined) {
-                inputProps.min = Number(fieldDef.minValue)
-            }
-
-            if (fieldDef.maxValue !== undefined) {
-                inputProps.max = Number(fieldDef.maxValue)
-            }
-
             return (
                     <FormControl className={classes.numValueControl}>
                         <TextField
                                 id="standard-number"
                                 type="number"
-                                inputProps={inputProps}
+                                inputProps={{
+                                    inputMode: "numeric",
+                                    min: fieldDef.minValue ? Number(fieldDef.minValue) : undefined,
+                                    max: fieldDef.maxValue ? Number(fieldDef.maxValue) : undefined
+                                }}
                                 value={filterObj.value}
                                 required={true}
                                 error={hasSubmitted && !filterObj.value}

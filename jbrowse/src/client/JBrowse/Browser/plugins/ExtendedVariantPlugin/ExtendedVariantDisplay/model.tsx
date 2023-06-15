@@ -50,7 +50,7 @@ export default jbrowse => {
 
          selectFeature(feature){
             const session = getSession(self)
-            const track = getContainingTrackWithConfig(self);
+            const track = getContainingTrackWithConfig(self)
 
             const trackId = getConf(track, 'trackId')
             const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])
@@ -79,7 +79,7 @@ export default jbrowse => {
             icon: FilterListIcon,
             onClick: () => {
                const session = getSession(self)
-               const track = getContainingTrackWithConfig(self);
+               const track = getContainingTrackWithConfig(self)
                const widgetId = 'Variant-' + getConf(track, 'trackId');
                const filterWidget = session.addWidget(
                   'InfoFilterWidget',
@@ -94,7 +94,7 @@ export default jbrowse => {
             icon: PaletteIcon,
             onClick: () => {
                const session = getSession(self)
-               const track = getContainingTrackWithConfig(self);
+               const track = getContainingTrackWithConfig(self)
                const widgetId = 'Variant-' + getConf(track, 'trackId');
                const colorWidget = session.addWidget(
                   'ColorWidget',
@@ -110,7 +110,7 @@ export default jbrowse => {
             icon: FilterListIcon,
             onClick: () => {
                const session = getSession(self)
-               const track = getContainingTrackWithConfig(self);
+               const track = getContainingTrackWithConfig(self)
                const widgetId = 'Variant-' + getConf(track, 'trackId');
                const sampleFilterWidget = session.addWidget(
                   'SampleFilterWidget',
@@ -209,7 +209,7 @@ export default jbrowse => {
                   {
                      label: 'View As Table',
                      onClick: () => {
-                        const track = getContainingTrackWithConfig(self);
+                        const track = getContainingTrackWithConfig(self)
                         const view = getContainingView(self) as LinearGenomeViewModel
                         
                         const region = view.getSelectedRegions(undefined, undefined)[0]
