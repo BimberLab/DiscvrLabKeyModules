@@ -1,4 +1,4 @@
-import { default as VcfFeature } from './VcfFeature'
+import { VcfFeature } from '@jbrowse/plugin-variants'
 import VcfParser from '@gmod/vcf'
 
 export default class ExtendedVcfFeature extends VcfFeature {
