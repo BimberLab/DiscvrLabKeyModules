@@ -5,7 +5,7 @@ import { ObservableCreate } from '@jbrowse/core/util/rxjs';
 import { Feature } from '@jbrowse/core/util/simpleFeature';
 import ExtendedVcfFeature from './ExtendedVcfFeature';
 import { default as VcfTabixAdapter } from '@jbrowse/plugin-variants/src/VcfTabixAdapter/VcfTabixAdapter';
-import { VcfFeature } from '@jbrowse/plugin-variants';
+import { default as VcfFeature } from './VcfFeature';
 
 export default class extends VcfTabixAdapter {
     protected featureCache = new QuickLRU({ maxSize: 20 })
