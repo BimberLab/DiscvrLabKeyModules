@@ -25,8 +25,8 @@ export default jbrowse => {
     function makeAnnTable(data, classes){
         const geneNames = []
         const tableBodyRows = []
-        for (let i in data){
-            let line = data[i].split('|')
+        for (let lineStr of data){
+            let line = lineStr.split('|')
             if (line[10]){
                 line[10] = <div>{line[10]}</div>
             }
@@ -66,9 +66,9 @@ export default jbrowse => {
 
     function makeDisplays(feat, displays, classes, infoMap){
         const propertyJSX = []
-        for (let display in displays){
+        for (let display of displays){
             const tempProp = []
-            for (let propertyName of displays[display].properties){
+            for (let propertyName of display.properties){
                 // This value is not in the header, and is probably injected programmatically, so skip:
                 if (!infoMap[propertyName]) {
                     continue
@@ -157,8 +157,8 @@ export default jbrowse => {
             const alleleCounts = {}
             let alleleTotal = 0
             alleleCounts[ref] = 0
-            for (let i in alt){
-                alleleCounts[alt[i]] = 0
+            for (let allele of alt){
+                alleleCounts[allele] = 0
             }
             const gtCounts = {}
             let gtTotal = 0
@@ -167,29 +167,30 @@ export default jbrowse => {
             const regex = /\/|\|/
             for (let sample in samples){
                 const gt = samples[sample]["GT"]
-                for (let entry in gt){
+                for (let genotype of gt){
                     const nc = "No Call"
-                    if (gt[entry] === "./." || gt[entry] === ".|."){
+                    if (genotype === "./." || genotype === ".|."){
                         gtCounts[nc] = gtCounts[nc] ? gtCounts[nc] + 1 : 1
                         gtTotal = gtTotal + 1
                     }
                     else {
-                        const gtKey = gt[entry].split(regex)
+                        const genotypes = genotype.split(regex)
                         const alleles = [ref].concat(alt)
 
                         // Calculate per-base values:
-                        for (let gtVal in gtKey){
-                            gtKey[gtVal] = alleles[gtKey[gtVal]]
-                            if (!gtKey[gtVal]) {
-                                console.error('Unable to parse genotype: ' + gt[0])
+                        for (let gtIdx = 0; gtIdx < genotypes.length; gtIdx++){
+                            if (!alleles[genotypes[gtIdx]]) {
+                                console.error('Unable to parse genotype: ' + genotype)
+                                continue
                             }
 
-                            alleleCounts[gtKey[gtVal]] = alleleCounts[gtKey[gtVal]] + 1 // tick up allele count
+                            genotypes[gtIdx] = alleles[genotypes[gtIdx]]
+                            alleleCounts[genotypes[gtIdx]] = alleleCounts[genotypes[gtIdx]] + 1 // tick up allele count
                             alleleTotal = alleleTotal + 1
                         }
 
                         // Then by genotype:
-                        const genotypeString = gtKey.join("/")
+                        const genotypeString = genotypes.join("/")
                         gtCounts[genotypeString] = gtCounts[genotypeString] ? gtCounts[genotypeString] + 1 : 1
                         gtTotal = gtTotal + 1
                     }
