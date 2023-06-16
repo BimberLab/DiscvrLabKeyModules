@@ -47,8 +47,12 @@ convertEs6ToCommonJS('wrap-ansi')
 convertEs6ToCommonJS('string-width')
 
 try {
-    execSync('npx pkg --outdir=./resources/external/jb-cli ./buildcli/node_modules/@jbrowse/cli')
+    var output = execSync('npx pkg --debug --outdir=./resources/external/jb-cli ./buildcli/node_modules/@jbrowse/cli')
 } catch (err) {
+    console.log('Error running pkg')
+    console.log('output', err)
+    console.log('sdterr', err.stderr.toString())
+
     throw new Error('ERROR: ' + err.message)
 }
 
