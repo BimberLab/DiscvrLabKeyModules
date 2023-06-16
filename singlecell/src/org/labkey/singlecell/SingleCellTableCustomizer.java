@@ -78,6 +78,21 @@ public class SingleCellTableCustomizer extends AbstractTableCustomizer
             ti.addColumn(newCol);
         }
 
+        String prototypeId = "prototypeId";
+        if (ti.getColumn(prototypeId) == null)
+        {
+            SQLFragment sql = new SQLFragment("(SELECT max(o.rowId) as expr FROM " + SingleCellSchema.SEQUENCE_SCHEMA_NAME + "." + SingleCellSchema.TABLE_OUTPUTFILES + " o WHERE o.category = 'Seurat Object Prototype' AND o.readset = " + ExprColumn.STR_TABLE_ALIAS + ".readsetId)");
+            ExprColumn newCol = new ExprColumn(ti, prototypeId, sql, JdbcType.INTEGER, ti.getColumn("readsetId"));
+            newCol.setLabel("Seurat Prototype");
+
+            UserSchema us = QueryService.get().getUserSchema(ti.getUserSchema().getUser(), (ti.getUserSchema().getContainer().isWorkbook() ? ti.getUserSchema().getContainer().getParent() : ti.getUserSchema().getContainer()), SingleCellSchema.SEQUENCE_SCHEMA_NAME);
+            newCol.setFk(QueryForeignKey.from(us, null)
+                    .table(SingleCellSchema.TABLE_OUTPUTFILES)
+                    .key("rowid")
+                    .display("name"));
+            ti.addColumn(newCol);
+        }
+
         LDKService.get().applyNaturalSort(ti, "plateId");
     }
 

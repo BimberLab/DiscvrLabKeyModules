@@ -15,7 +15,24 @@ GenerateAveragedData <- function(seuratObj, groupFields, addMetadata) {
         stop('When addMetadata=TRUE, cDNA_ID must be part of groupFields')
     }
 
-    a <- CellMembrane::PseudobulkSeurat(seuratObj, groupFields = groupFields, assays = assayName)
+    if (!all(is.null(additionalFieldsToAggregate))) {
+        if (any(grepl(additionalFieldsToAggregate, pattern = '\\*'))) {
+            additionalFieldsToAggregateExpanded <- c()
+            for (fn in additionalFieldsToAggregate) {
+                if (grepl(fn, pattern = '\\*')) {
+                    matchingCols <- grep(names(seuratObj@meta.data), pattern = fn, value = T)
+                    print(paste0('Expanding ', fn, ' into: ', paste0(matchingCols, collapse = ', ')))
+                    additionalFieldsToAggregateExpanded <- c(additionalFieldsToAggregateExpanded, matchingCols)
+                } else {
+                    additionalFieldsToAggregateExpanded <- c(additionalFieldsToAggregateExpanded, fn)
+                }
+
+                additionalFieldsToAggregate <- unique(additionalFieldsToAggregateExpanded)
+            }
+        }
+    }
+
+    a <- CellMembrane::PseudobulkSeurat(seuratObj, groupFields = groupFields, assays = assayName, additionalFieldsToAggregate = additionalFieldsToAggregate)
 
     if (addMetadata) {
         a <- Rdiscvr::QueryAndApplyMetadataUsingCDNA(a)

@@ -223,9 +223,7 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/flash || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf FLASH-1.2.11.tar.gz
-    rm -Rf FLASH-1.2.11.tar
-    rm -Rf FLASH-1.2.11
+    rm -Rf FLASH-1.2.11*
     rm -Rf $LKTOOLS_DIR/flash
 
     wget $WGET_OPTS http://ccb.jhu.edu/software/FLASH/FLASH-1.2.11-Linux-x86_64.tar.gz
@@ -540,7 +538,7 @@ cd $LKSRC_DIR
 if [[ ! -e ${LKTOOLS_DIR}/tabix || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf tabix-0.2.6*
+    rm -Rf tabix-*
     rm -Rf $LKTOOLS_DIR/tabix
     rm -Rf $LKTOOLS_DIR/bgzip
 
@@ -688,8 +686,7 @@ cd $LKSRC_DIR
 if [[ ! -e $LKTOOLS_DIR/picard.jar || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
-    rm -Rf picard-tools-*
-    rm -Rf snappy-java-1.0.3-rc3.jar
+    rm -Rf picard*
     rm -Rf $LKTOOLS_DIR/picard-tools
     rm -Rf $LKTOOLS_DIR/picard*
     rm -Rf $LKTOOLS_DIR/htsjdk-*
@@ -716,9 +713,7 @@ if [[ ! -e ${LKTOOLS_DIR}/bowtie || ! -e ${LKTOOLS_DIR}/bowtie-build || ! -z $FO
 then
     echo "Cleaning up previous installs"
 
-    #old version
-    rm -Rf bowtie-0.12.8*
-    rm -Rf bowtie-1.0.1*
+    rm -Rf bowtie-*
     rm -Rf $LKTOOLS_DIR/bowtie
     rm -Rf $LKTOOLS_DIR/bowtie-build
 
@@ -747,7 +742,7 @@ then
     echo "Cleaning up previous installs"
 
     #old version
-    rm -Rf bowtie2-*
+    rm -Rf bowtie2*
     rm -Rf $LKTOOLS_DIR/bowtie2
     rm -Rf $LKTOOLS_DIR/bowtie2-*
 
@@ -860,7 +855,7 @@ then
     PIP_VERSION=`$PIP_EXE -V | cut -d '(' -f 2 | sed 's/python //' | cut -c 1 2>1`
     if [[ $PIP_VERSION == '2' ]];then
       echo 'Using python 2 compatible cutadapt'
-      wget https://pypi.python.org/packages/source/c/cutadapt/cutadapt-1.8.1.tar.gz
+      wget $WGET_OPTS https://pypi.python.org/packages/source/c/cutadapt/cutadapt-1.8.1.tar.gz
       gunzip cutadapt-1.8.1.tar.gz
       tar -xf cutadapt-1.8.1.tar
       gzip cutadapt-1.8.1.tar
@@ -1030,9 +1025,7 @@ cd $LKSRC_DIR
 
 if [[ ! -e ${LKTOOLS_DIR}/clustalw2 || ! -z $FORCE_REINSTALL ]];
 then
-    rm -Rf clustalw-2.1.tar.gz
-    rm -Rf clustalw-2.1.tar
-    rm -Rf clustalw-2.1
+    rm -Rf clustalw-*
     rm -Rf $LKTOOLS_DIR/clustalw2
 
     wget $WGET_OPTS http://www.clustal.org/download/current/clustalw-2.1.tar.gz
@@ -1063,9 +1056,7 @@ cd $LKSRC_DIR
 
 if [[ ! -e ${LKTOOLS_DIR}/muscle || ! -z $FORCE_REINSTALL ]];
 then
-    rm -Rf muscle3.8.31_i86linux64.tar.gz
-    rm -Rf muscle3.8.31_i86linux64.tar
-    rm -Rf muscle3.8.31_i86linux64
+    rm -Rf muscle3*
     rm -Rf $LKTOOLS_DIR/muscle
 
     wget $WGET_OPTS https://www.drive5.com/muscle/downloads3.8.31/muscle3.8.31_i86linux64.tar.gz
@@ -1122,11 +1113,38 @@ then
     rm -Rf lofreq_star*
     rm -Rf $LKTOOLS_DIR/lofreq_star*
 
-    wget https://github.com/CSB5/lofreq/raw/master/dist/lofreq_star-2.1.4_linux-x86-64.tgz
+    wget $WGET_OPTS https://github.com/CSB5/lofreq/raw/master/dist/lofreq_star-2.1.4_linux-x86-64.tgz
     tar -xf lofreq_star-2.1.4_linux-x86-64.tgz
 
     install ./lofreq_star-2.1.4_linux-x86-64/bin/lofreq* $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi
 
+
+#
+#Genrich
+#
+
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Installing Genrich"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/Genrich || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf Genrich*
+    rm -Rf v0.6.1*
+    rm -Rf $LKTOOLS_DIR/Genrich*
+
+    wget $WGET_OPTS https://github.com/jsh58/Genrich/archive/refs/tags/v0.6.1.tar.gz
+    tar -xf v0.6.1.tar.gz
+    cd Genrich-0.6.1
+    make
+
+    install ./Genrich $LKTOOLS_DIR/
 else
     echo "Already installed"
 fi
@@ -1139,9 +1157,13 @@ then
     chown -R ${LK_USER} $LKSRC_DIR
 fi
 
-if [ ! -z $CLEAN_SRC ]; then
+if [ ! -z $CLEAN_SRC ];
+then
     echo "Cleaning up tool_src"
     rm -Rf $LKSRC_DIR
+else
+  echo "Contents of tool_src:"
+  ls $LKSRC_DIR
 fi
 
 echo ""

@@ -167,7 +167,8 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
                     origIdx = new File(f.getPath() + ".tbi");
                     if (!origIdx.exists())
                     {
-                        throw new PipelineJobException("expected index doesn't exist: " + origIdx.getPath());
+                        ctx.getLogger().warn("Expected index does not exist, creating: " + origIdx.getPath());
+                        SequenceAnalysisService.get().ensureVcfIndex(f, ctx.getLogger());
                     }
 
                     movedIdx = new File(localWorkDir, destFile.getName() + ".tbi");

@@ -113,7 +113,7 @@ public class BlastJob implements Serializable
         catch (JSONException e)
         {
             String containerPath = getContainer() == null || ContainerManager.getForId(getContainer()) == null ? "<MISSING: " + getContainer() + ">" : ContainerManager.getForId(getContainer()).getPath();
-            _log.error("Unable to parse BlastJob config for: " + _objectid + " in container: " + containerPath + ", was: " + _params);
+            _log.error("Unable to parse BlastJob config for: " + _objectid + " in container: " + containerPath + ", was: " + params, e);
         }
     }
 
