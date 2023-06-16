@@ -192,7 +192,9 @@ public class SequencePipelineSettings
         model.setLibraryType(o.optString("librarytype"));
         model.setName(o.optString("readsetname"));
         if (StringUtils.trimToNull(o.optString("readset")) != null)
-            model.setRowId(getInt(o.getString("readset")));
+        {
+            model.setRowId(getInt(o.get("readset")));
+        }
 
         if (StringUtils.trimToNull(o.optString("instrument_run_id")) != null)
         {
@@ -275,7 +277,7 @@ public class SequencePipelineSettings
         return null;
     }
 
-    private Integer getInt(String v)
+    private Integer getInt(Object v)
     {
         return ConvertHelper.convert(v, Integer.class);
     }

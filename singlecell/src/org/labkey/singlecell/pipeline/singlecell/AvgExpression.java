@@ -34,7 +34,13 @@ public class AvgExpression extends AbstractRDiscvrStep
                     }}, true),
                     SeuratToolParameter.create("assayName", "Assay Name", "The assay to use", "textfield", new JSONObject(){{
 
-                    }}, "RNA")
+                    }}, "RNA"),
+                    SeuratToolParameter.create("additionalFieldsToAggregate", "Additional Field(s) to Aggregate", "Each field in this list must match a meta.data field. That field will be aggregated per group, and the mean reported in meta.data of the pseudobulk output object. Note: this also supports wildcards (which must contain asterisk). Any term containing asterisk will be interpreted as a regex and passed to grep() to find matching meta.data fields.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+                        put("allowBlank", true);
+                        put("height", 150);
+                        put("delimiter", ",");
+                        put("stripCharsRe", "/['\"]/g");
+                    }}, "*UCell$").delimiter(",")
             ), null, null);
         }
 

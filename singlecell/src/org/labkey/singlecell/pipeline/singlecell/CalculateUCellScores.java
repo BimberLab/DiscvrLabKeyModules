@@ -27,7 +27,10 @@ public class CalculateUCellScores extends AbstractRiraStep
                     }}, false),
                     SeuratToolParameter.create("assayName", "Assay Name", "Passed directly to UCell::AddModuleScore_UCell.", "textfield", new JSONObject(){{
 
-                    }}, "RNA")
+                    }}, "RNA"),
+                    SeuratToolParameter.create("forceRecalculate", "Force Recalculate", "If checked, the UCell score will always be re-calculated.", "checkbox", new JSONObject(){{
+
+                    }}, false)
             ), null, null);
         }
 

@@ -4152,25 +4152,27 @@ public class SequenceAnalysisController extends SpringActionController
                     }
 
                     Map<String, Object> params = new CaseInsensitiveHashMap<>();
-                    if (o.get("name") == null)
+                    if (o.isNull("name"))
                     {
                         errors.reject(ERROR_MSG, "Missing name for file: " + file.getName());
                         return null;
                     }
 
-                    if (o.get("libraryId") == null)
+                    if (o.isNull("libraryId"))
                     {
                         errors.reject(ERROR_MSG, "Missing genome Id for file: " + file.getName());
                         return null;
                     }
 
                     params.put("name", o.getString("name"));
-                    params.put("description", o.getString("description"));
+                    params.put("description", o.optString("description"));
 
-                    params.put("library_id", o.getInt("libraryId"));
-                    if (StringUtils.trimToNull(o.getString("readset")) != null)
+                    params.put("library_id", o.optInt("libraryId"));
+                    if (!o.isNull("readset") && StringUtils.trimToNull(o.optString("readset")) != null)
+                    {
                         params.put("readset", o.getInt("readset"));
-                    params.put("category", o.getString("category"));
+                    }
+                    params.put("category", o.optString("category"));
 
                     params.put("container", getContainer().getId());
                     params.put("created", new Date());

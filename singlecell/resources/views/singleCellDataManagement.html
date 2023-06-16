@@ -62,10 +62,11 @@
                     },{
                         name: 'Readsets Not Archived to SRA',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
-                            schemaName: 'sequenceanalysis',
-                            queryName: 'sequence_readsets',
-                            'query.totalForwardReads~isnonblank': null,
-                            'query.isArchived~eq': 0}
+                                    schemaName: 'sequenceanalysis',
+                                    queryName: 'sequence_readsets',
+                                    'query.totalForwardReads~isnonblank': null,
+                                    'query.isArchived~eq': 0
+                                }
                         )
                     }, {
                         name: 'Analyses Using Old Readsets',
@@ -74,7 +75,7 @@
                             queryName: 'sequence_analyses',
                             'query.readset/status~isnonblank': null
                         })
-                    },{
+                    }, {
                         name: 'Orphan 10x Run Summaries',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
                             schemaName: 'sequenceanalysis',
@@ -82,17 +83,25 @@
                             'query.category~eq': '10x Run Summary',
                             'query.readset/totalOutputs~eq': 1
                         })
-                    },{
+                    }, {
                         name: 'Stale Seurat Object Prototypes',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
                             schemaName: 'singlecell',
                             queryName: 'stalePrototypes'
                         })
-                    },{
+                    }, {
                         name: 'Duplicate Seurat Object Prototypes',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
                             schemaName: 'singlecell',
                             queryName: 'duplicatePrototypes'
+                        })
+                    }, {
+                        name: 'cDNA Libraries with QC',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'outputfiles',
+                            'query.category~eq': 'Seurat Object Prototype',
+                            'query.columns': 'rowid,name,description,readset,readset/subjectid,library_id,category,analysis_id,dataid/RowId,runid/jobid,fileSets,workbook,metrics/Fraction Reads in Cells::metricValue,metrics/MeanSaturation$PRNA::metricValue,metrics/TotalCells::metricValue,metrics/FractionDiscordantHashing::metricValue,metrics/FractionFailedHashing::metricValue'
                         })
                     },{
                         name: 'List of Single-cell Datasets',

@@ -2422,6 +2422,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             sequencePanel: this,
                             targetGrid: grid,
                             readsetStore: this.readsetStore,
+                            modal: true,
                             title: 'Infer Readset Id',
                             bodyStyle: 'padding: 5px;',
                             width: 500,
