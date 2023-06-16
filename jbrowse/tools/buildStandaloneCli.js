@@ -2,9 +2,9 @@
 // See also: https://nodejs.org/api/single-executable-applications.html
 // This should be replaced once a better solution is available
 const fs = require('fs');
-const { execSync } = require('child_process');
+const { exec, execSync } = require('child_process');
 
-async function convertEs6ToCommonJS(packageName) {
+function convertEs6ToCommonJS(packageName) {
     const sourceFile = './buildCli/node_modules/@isaacs/cliui/node_modules/' + packageName + '/index.js';
     const origFile = sourceFile + '.orig';
     if (fs.existsSync(origFile)) {
@@ -46,14 +46,23 @@ convertEs6ToCommonJS('strip-ansi')
 convertEs6ToCommonJS('wrap-ansi')
 convertEs6ToCommonJS('string-width')
 
-try {
-    var output = execSync('npx pkg --debug --outdir=./resources/external/jb-cli ./buildcli/node_modules/@jbrowse/cli')
-} catch (err) {
-    console.log('Error running pkg')
-    console.log('output', err)
-    console.log('sdterr', err.stderr.toString())
+const child = exec('npx pkg --outdir=./resources/external/jb-cli ./buildCli/node_modules/@jbrowse/cli', (err, stdout, stderr) => {
+    if (err) {
+        throw new Error('Unable to run pkg: ' + err)
+    }
+});
 
-    throw new Error('ERROR: ' + err.message)
-}
+child.stdout.setEncoding('utf8');
+child.stdout.on('data', function(data) {
+    console.log('stdout: ' + data);
+});
 
+child.stderr.setEncoding('utf8');
+child.stderr.on('data', function(data) {
+    console.log('stderr: ' + data);
+});
+
+child.on('close', function(code) {
+    console.log('closing pkg: ' + code);
+});
 
