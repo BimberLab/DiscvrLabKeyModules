@@ -1,8 +1,8 @@
-import {style as styles} from "./style";
-import {filterMap} from "./filters"
-import {readConfObject} from '@jbrowse/core/configuration'
-import {getSession} from '@jbrowse/core/util'
-
+import { style as styles } from './style';
+import { filterMap } from './filters';
+import { readConfObject } from '@jbrowse/core/configuration';
+import { getSession } from '@jbrowse/core/util';
+import React from 'react';
 import {
     Box,
     Button,
@@ -20,20 +20,20 @@ import {
     Popper,
     Table,
     TableBody
-} from '@material-ui/core'
+} from '@material-ui/core';
 
-import InfoFilterRow from "./InfoFilterRow";
+import InfoFilterRow from './InfoFilterRow';
+import { SessionWithWidgets } from '@jbrowse/core/util/types';
+import { observer } from 'mobx-react';
 
 export default jbrowse => {
-    const { observer, PropTypes: MobxPropTypes } = jbrowse.jbrequire('mobx-react')
-    const React = jbrowse.jbrequire('react')
 
     function FilterForm(props){
         const classes = styles()
         const { model } = props
         let track = model.track
 
-        const displays = readConfObject(track, ['displays'])
+        const displays = readConfObject(track, 'displays')
         const initialFilters = displays[0].renderer.infoFilters || []
 
         const [infoFilters, setInfoFilters] = React.useState(initialFilters)
@@ -72,12 +72,14 @@ export default jbrowse => {
             }
 
             track.displays[0].renderer.infoFilters.set([...infoFilters])
-            getSession(model).hideWidget(model)
+            const m = getSession(model) as SessionWithWidgets
+            m.hideWidget(model)
         }
 
         const clearFilters = (event) => {
             track.displays[0].renderer.infoFilters.set([])
-            getSession(model).hideWidget(model)
+            const m = getSession(model) as SessionWithWidgets
+            m.hideWidget(model)
         }
 
         const filterChangeHandler = (rowIdx, filterStr) => {

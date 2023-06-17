@@ -1,14 +1,13 @@
-import {style as styles} from "./style";
-import {getSession} from '@jbrowse/core/util'
-import {readConfObject} from '@jbrowse/core/configuration'
+import { style as styles } from './style';
+import { getSession } from '@jbrowse/core/util';
+import { readConfObject } from '@jbrowse/core/configuration';
 
-import {Box, Button, FormControl, TextField} from '@material-ui/core'
-import {useState} from 'react'
+import { Box, Button, FormControl, TextField } from '@material-ui/core';
+import React, { useState } from 'react';
+import { SessionWithWidgets } from '@jbrowse/core/util/types';
+import { observer } from 'mobx-react';
 
 export default jbrowse => {
-
-    const { observer, PropTypes: MobxPropTypes } = jbrowse.jbrequire('mobx-react')
-    const React = jbrowse.jbrequire('react')
 
     function parseSampleCSV(val) {
         if (!val) {
@@ -45,12 +44,14 @@ export default jbrowse => {
 
         const handleSampleFilterSubmit = (event) => {
             track.displays[0].renderer.activeSamples.set(parseSampleCSV(sampleFilter))
-            getSession(model).hideWidget(model)
+            const m = getSession(model) as SessionWithWidgets
+            m.hideWidget(model)
         }
 
         const clearFilters = (event) => {
             track.displays[0].renderer.activeSamples.set('')
-            getSession(model).hideWidget(model)
+            const m = getSession(model) as SessionWithWidgets
+            m.hideWidget(model)
         }
 
         return(
@@ -63,7 +64,7 @@ export default jbrowse => {
                                 id="outlined-multiline-static"
                                 label="Enter samples..."
                                 multiline
-                                rows={4}
+                                minRows={4}
                                 defaultValue={sampleFilter}
                                 variant="outlined"
                                 onChange={handleSampleFilterChange}

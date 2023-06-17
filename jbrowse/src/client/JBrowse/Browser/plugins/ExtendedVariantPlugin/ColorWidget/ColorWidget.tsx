@@ -1,17 +1,16 @@
-import {colorSchemes} from "./colorSchemes"
-import {style as styles} from "./style";
-import {getSession} from '@jbrowse/core/util'
-import {readConfObject} from '@jbrowse/core/configuration'
-import {generateSchemeJexl} from "./colorUtil";
+import { colorSchemes } from './colorSchemes';
+import { style as styles } from './style';
+import { getSession } from '@jbrowse/core/util';
+import { readConfObject } from '@jbrowse/core/configuration';
+import { generateSchemeJexl } from './colorUtil';
 
-import {Button, FormControl, InputLabel, MenuItem, Select} from '@material-ui/core'
-import {useState} from 'react'
-import SchemeTable from './SchemeComponent'
+import { Button, FormControl, InputLabel, MenuItem, Select } from '@material-ui/core';
+import React, { useState } from 'react';
+import SchemeTable from './SchemeComponent';
+import { SessionWithWidgets } from '@jbrowse/core/util/types';
+import { observer } from 'mobx-react';
 
 export default jbrowse => {
-
-    const { observer, PropTypes: MobxPropTypes } = jbrowse.jbrequire('mobx-react')
-    const React = jbrowse.jbrequire('react')
     function ColorSchemePicker(props){
         const classes = styles()
         const { model } = props
@@ -32,7 +31,8 @@ export default jbrowse => {
             track.displays[0].renderer.palette.set(palette)
             track.displays[0].renderer.color1.set(generateSchemeJexl(palette))
 
-            getSession(model).hideWidget(model)
+            const m = getSession(model) as SessionWithWidgets
+            m.hideWidget(model)
         }
 
         const menuItems = (
