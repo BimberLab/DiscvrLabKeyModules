@@ -44,10 +44,10 @@ import org.openqa.selenium.Keys;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.Color;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collector;
@@ -117,19 +117,19 @@ public class JBrowseTest extends BaseWebDriverTest
 
         // We expect IMPACT to be the default scheme
         assertElementPresent(Locator.tagWithText("td", "HIGH"));
-        waitForElement(Locator.tagWithAttribute("div", "fill", "red"));
+        assertBoxWithColorPresent("#ff0000"); // red
         waitForElement(Locator.tagWithAttribute("polygon", "fill", "red"));
 
         assertElementPresent(Locator.tagWithText("td", "MODERATE"));
-        assertElementPresent(Locator.tagWithAttribute("div", "fill", "goldenrod"));
+        assertBoxWithColorPresent("#DAA520");  //"goldenrod"
         assertElementPresent(Locator.tagWithAttribute("polygon", "fill", "goldenrod"));
 
         assertElementPresent(Locator.tagWithText("td", "LOW"));
-        assertElementPresent(Locator.tagWithAttribute("div", "fill", "#049931"));
+        assertBoxWithColorPresent("#049931");
         assertElementPresent(Locator.tagWithAttribute("polygon", "fill", "#049931"));
 
         assertElementPresent(Locator.tagWithText("td", "Other"));
-        assertElementPresent(Locator.tagWithAttribute("div", "fill", "gray"));
+        assertBoxWithColorPresent("#808080"); //gray
         assertElementPresent(Locator.tagWithAttribute("polygon", "fill", "gray"));
 
         // Now toggle to Allele Freq.:
@@ -142,6 +142,18 @@ public class JBrowseTest extends BaseWebDriverTest
         clickDialogButton("Apply");
 
         waitForElement(Locator.tagWithAttribute("polygon", "fill", "#2425E0"));
+    }
+
+    private void assertBoxWithColorPresent(final String expectedColor)
+    {
+        Locator l = Locator.tagWithClass("td", "MuiTableCell-root").child(Locator.tagWithClass("div", "MuiBox-root"));
+        waitForElement(l);
+
+        List<WebElement> els = getDriver().findElements(l);
+        Assert.assertTrue("Unable to find box", els.stream().anyMatch(el -> {
+            String hex = Color.fromString(el.getCssValue("background-color")).asHex();
+            return expectedColor.equalsIgnoreCase(hex);
+        }));
     }
 
     private void clickDialogButton(String text)
@@ -178,7 +190,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.tagWithText("li", "Predicted Impact"));
 
         waitForElement(Locator.tagWithText("td", "HIGH"));
-        waitForElement(Locator.tagWithAttribute("div", "fill", "red"));
+        assertBoxWithColorPresent("#ff0000"); //red
         clickDialogButton("Apply");
 
         // Indicates the IMPACT scheme applies:
@@ -195,11 +207,11 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.tagWithId("div", "category-select"));
         waitAndClick(Locator.xpath("//li[@data-value = 'AF']"));
         assertElementPresent(Locator.tagWithText("td", "0.000 to 0.100"));
-        assertElementPresent(Locator.tagWithAttribute("div", "fill", "#0C28F9"));
+        assertBoxWithColorPresent("#0C28F9");
         assertElementPresent(Locator.tagWithText("td", "0.900 to 1.000"));
-        assertElementPresent(Locator.tagWithAttribute("div", "fill", "#E10F19"));
+        assertBoxWithColorPresent("#E10F19");
         assertElementPresent(Locator.tagWithText("td", "Other"));
-        assertElementPresent(Locator.tagWithAttribute("div", "fill", "gray"));
+        assertBoxWithColorPresent("#808080"); //gray
 
         clickDialogButton("Apply");
         waitForElement(Locator.tagWithAttribute("polygon", "fill", "#9A1764"));

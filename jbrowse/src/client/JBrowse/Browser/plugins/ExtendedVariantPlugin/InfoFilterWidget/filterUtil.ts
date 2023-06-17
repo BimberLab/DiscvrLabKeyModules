@@ -63,10 +63,11 @@ export function deserializeFilters(filters) {
         }
 
         const filterProps = filter.split(":")
-        const fieldObj = {
+        let fieldObj = {
             field: filterProps[0],
             operator: filterProps[1],
-            value: filterProps[2]
+            value: filterProps[2],
+            jexlExpression: null
         }
 
         const fieldDef = filterMap[fieldObj.field]
