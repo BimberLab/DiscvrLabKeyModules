@@ -13,8 +13,8 @@
     "test": "cross-env NODE_ENV=test jest",
     "vcffeature-hack": "node ./tools/fixVcfFeature.js",
     "postinstall": "npm run vcffeature-hack",
-    "prepareCli": "rimraf ./buildCli && npm install @jbrowse/cli --prefix ./buildCli",
-    "jb-pkg": "npm run prepareCli && node ./tools/buildStandaloneCli.js && rimraf ./buildCli"
+    "prepareCli": "rimraf ./buildCli && rimraf ./resources/external/jb-cli && npm install @jbrowse/cli@1.7.4 --prefix ./buildCli",
+    "jb-pkg": "npm run prepareCli && npx pkg --outdir=./resources/external/jb-cli ./buildCli/node_modules/@jbrowse/cli && rimraf ./buildCli"
   },
   "peerDependencies": {
 

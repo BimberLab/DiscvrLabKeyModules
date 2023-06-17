@@ -54,12 +54,12 @@ const child = exec('npx pkg --outdir=./resources/external/jb-cli ./buildCli/node
 
 child.stdout.setEncoding('utf8');
 child.stdout.on('data', function(data) {
-    console.log('stdout: ' + data);
+    console.log(data);
 });
 
 child.stderr.setEncoding('utf8');
 child.stderr.on('data', function(data) {
-    console.log('stderr: ' + data);
+    console.log(data);
 });
 
 child.on('close', function(code) {
