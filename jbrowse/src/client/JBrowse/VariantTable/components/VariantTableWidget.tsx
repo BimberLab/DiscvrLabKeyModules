@@ -89,7 +89,7 @@ const VariantTableWidget = observer(props => {
   // API call to retrieve the requested features.
   useEffect(() => {
     async function fetch() {
-      let adapterConfig = getConf(track, 'adapter')
+      let adapterConfig = getConf(track, ['adapter'])
 
       let adapter = (await getAdapter(
           pluginManager,
@@ -120,13 +120,13 @@ const VariantTableWidget = observer(props => {
     if (pluginManager && parsedLocString && isValidLocString) {
       setSampleFilterWidget(session.addWidget(
         'SampleFilterWidget',
-        'Sample-Variant-' + getConf(track, 'trackId'),
+        'Sample-Variant-' + getConf(track, ['trackId']),
         { track: track.configuration }
       ))
 
       setInfoFilterWidget(session.addWidget(
         'InfoFilterWidget',
-        'Info-Variant-' + getConf(track, 'trackId'),
+        'Info-Variant-' + getConf(track, ['trackId']),
         { track: track.configuration }
       ))
 
@@ -157,7 +157,7 @@ const VariantTableWidget = observer(props => {
 
   const showDetailsWidget = (rowIdx: number) => {
     const feature = features[rowIdx]
-    const trackId = getConf(track, 'trackId')
+    const trackId = getConf(track, ['trackId'])
     const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])
     const widgetId = 'Variant-' + trackId;
     const featureWidget = session.addWidget(

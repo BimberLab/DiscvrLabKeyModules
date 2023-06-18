@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { JBrowseLinearGenomeView } from '@jbrowse/react-linear-genome-view';
+import { JBrowseLinearGenomeView, ViewModel } from '@jbrowse/react-linear-genome-view';
 import { createTheme, makeStyles } from '@material-ui/core/styles';
 import LogSession from './plugins/LogSession/index';
 import ExtendedVariantPlugin from './plugins/ExtendedVariantPlugin/index';
@@ -51,7 +51,7 @@ function View(){
         //TODO: can we make this expand to full page height?
         <div style={{height: "100%"}}>
             <ErrorBoundary>
-                <JBrowseLinearGenomeView viewState={state} />
+                <JBrowseLinearGenomeView viewState={state as ViewModel} />
                 <JBrowseFooter viewState={state} bgColor={bgColor}/>
             </ErrorBoundary>
         </div>
