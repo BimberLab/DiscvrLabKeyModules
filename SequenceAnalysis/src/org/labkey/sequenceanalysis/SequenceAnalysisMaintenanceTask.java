@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
+import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -327,7 +329,15 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                         if (!gz.exists())
                         {
                             ReferenceGenomeImpl genome = new ReferenceGenomeImpl(fasta, fastaData, libraryId, null);
-                            log.error("GZipped genome missing for: " + genome.getGenomeId());
+
+                            // NOTE: we can hit a race condition in automated testing where a genome is newly created during a test, and the maintenance task runs concurrent with that test.
+                            // This is a check to reduce the log level, which thereby prevents the test from erroring
+                            Date created = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("created"), new SimpleFilter(FieldKey.fromString("rowId"), libraryId), null).getObject(Date.class);
+                            long timeSinceCreated = new Date().getTime() - created.getTime();
+                            // 1000*60*20 = 20 minutes
+                            Level l = timeSinceCreated > 1200000 ? Level.ERROR : Level.WARN;
+
+                            log.log(l, "GZipped genome missing for: " + genome.getGenomeId());
 
                             if (SystemUtils.IS_OS_WINDOWS)
                             {
