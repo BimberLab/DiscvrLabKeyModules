@@ -100,6 +100,7 @@ const VariantTableWidget = observer(props => {
 
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [filters, setFilters] = useState([]);
+  const [fieldTypeInfo, setFieldTypeInfo] = useState([]);
 
   const [adapter, setAdapter] = useState<EVAdapterClass | undefined>(undefined)
 
@@ -160,6 +161,7 @@ const VariantTableWidget = observer(props => {
           setColumns(columnsWithoutOrderKey);
           const operators = fieldTypeInfoToOperators(res.fields)
           setAvailableOperators(operators)
+          setFieldTypeInfo(res.fields)
           handleQuery(searchStringToInitialFilters(operators))
         })
     }
@@ -273,6 +275,7 @@ const VariantTableWidget = observer(props => {
                    setFilters={setFilters}
                    handleFailureCallback={() => {}}
                    availableOperators={availableOperators}
+                   fieldTypeInfo={fieldTypeInfo}
   />
   );
 

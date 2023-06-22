@@ -283,9 +283,6 @@ function generateLuceneString(field, operator, value) {
     case '=': // Exact match for numeric fields
         luceneQueryString = `${field}:[${value} TO ${value}]`;
         break;
-    case 'equals': // Exact match for string fields
-        luceneQueryString = `${field}:${value}`;
-        break;
     case '!=': // Not equal to, for numeric fields
         luceneQueryString = `${field}:[* TO ${value - 0.000001}] OR ${field}:[${value + 0.000001} TO *]`;
         break;
@@ -301,8 +298,17 @@ function generateLuceneString(field, operator, value) {
     case '<=': // Less than or equal to for numeric fields
         luceneQueryString = `${field}:[* TO ${value}]`;
         break;
+    case 'equals': // Exact match for string fields
+        luceneQueryString = `${field}:${value}`;
+        break;
     case 'contains': // Substring search for string fields
         luceneQueryString = `${field}:*${value}*`;
+        break;
+    case 'does not equal': // Not equal to for string fields
+        luceneQueryString = `-${field}:${value}`;
+        break;
+    case 'does not contain': // Does not contain for string fields
+        luceneQueryString = `-${field}:*${value}*`;
         break;
     case 'starts with': // Starts with for string fields
         luceneQueryString = `${field}:${value}*`;
@@ -465,7 +471,7 @@ export function searchStringToInitialFilters(operators) : any[] | undefined {
 }
 
 export function fieldTypeInfoToOperators(fieldTypeInfo): any {
-    const stringType = ["equals", "contains", "starts with", "ends with", "is empty", "is not empty"];
+    const stringType = ["equals", "does not equal", "contains", "does not contain", "starts with", "ends with", "is empty", "is not empty"];
     const variableSamplesType = ["in set", "variable in", "not variable in", "variable in all of", "variable in any of", "not variable in any of", "not variable in one of", "is empty", "is not empty"];
     const numericType = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"];
     const noneType = [];

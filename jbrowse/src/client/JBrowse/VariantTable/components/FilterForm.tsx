@@ -82,7 +82,7 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const FilterForm = (props) => {
-  const { availableOperators, handleQuery, setFilters, handleClose } = props
+  const { availableOperators, handleQuery, setFilters, handleClose, fieldTypeInfo } = props
 
   const [filters, localSetFilters] = useState(searchStringToInitialFilters(availableOperators) ?? [{ field: "", operator: "", value: "" }]);
 
@@ -108,7 +108,7 @@ const FilterForm = (props) => {
     return filter;
   });
 
-  localSetFilters(newFilters);
+  localSetFilters(newFilters)
   setFilters(newFilters);
 };
 
@@ -144,12 +144,12 @@ const FilterForm = (props) => {
                     handleFilterChange(index, "field", event.target.value)
                   }
                 >
-                  <MenuItem value="None">
+                  <MenuItem value="">
                     <em>None</em>
                   </MenuItem>
                   {Object.keys(availableOperators).map((field) => (
                     <MenuItem key={field} value={field}>
-                      {field}
+                      {fieldTypeInfo.find(obj => obj.name === field).label ?? field}
                     </MenuItem>
                   ))}
                 </Select>
