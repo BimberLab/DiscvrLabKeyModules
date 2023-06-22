@@ -19,6 +19,12 @@ for (datasetId in names(seuratObjects)) {
       addErrorMessage(paste0('Missing cell hashing calls for dataset: ', datasetId))
     }
 
+    fractionSinglet <- (sum(seuratObj@meta.data$HTO.Classification %in% c('Singlet', 'NotUsed')) / nrow(seuratObj@meta.data))
+    metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionSinglet', metricvalue = fractionSinglet))
+
+    fractionDoublet <- (sum(seuratObj@meta.data$HTO.Classification == 'Doublet') / nrow(seuratObj@meta.data))
+    metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionDoublet', metricvalue = fractionDoublet))
+
     fractionFailedHashing <- 1 - (sum(seuratObj@meta.data$HTO.Classification %in% c('Singlet', 'Doublet')) / nrow(seuratObj@meta.data))
     metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'FractionFailedHashing', metricvalue = fractionFailedHashing))
 

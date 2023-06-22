@@ -38,9 +38,9 @@ public class ScatterGatherUtils
     {
         for (String param : Arrays.asList("exclude_intervals", "forceSitesFile"))
         {
-            if (ctx.getParams().get("variantCalling.GenotypeGVCFs." + param) != null)
+            if (!ctx.getParams().isNull("variantCalling.GenotypeGVCFs." + param))
             {
-                File inputFile = ctx.getSequenceSupport().getCachedData(ctx.getParams().getInt("variantCalling.GenotypeGVCFs." + param));
+                File inputFile = ctx.getSequenceSupport().getCachedData(ctx.getParams().optInt("variantCalling.GenotypeGVCFs." + param));
                 if (!inputFile.exists())
                 {
                     throw new PipelineJobException("Unable to find file: " + inputFile.getPath());

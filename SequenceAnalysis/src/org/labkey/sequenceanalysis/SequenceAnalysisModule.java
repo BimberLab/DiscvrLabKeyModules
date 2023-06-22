@@ -79,6 +79,7 @@ import org.labkey.sequenceanalysis.run.alignment.StarWrapper;
 import org.labkey.sequenceanalysis.run.alignment.VulcanWrapper;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
 import org.labkey.sequenceanalysis.run.analysis.ExportOverlappingReadsAnalysis;
+import org.labkey.sequenceanalysis.run.analysis.GenrichStep;
 import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.ImmunoGenotypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.LofreqAnalysis;
@@ -113,6 +114,7 @@ import org.labkey.sequenceanalysis.run.preprocessing.CutadaptCropWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.CutadaptWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.DownsampleFastqWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.FastqcProcessingStep;
+import org.labkey.sequenceanalysis.run.preprocessing.FilterReadsStep;
 import org.labkey.sequenceanalysis.run.preprocessing.FlashPipelineStep;
 import org.labkey.sequenceanalysis.run.preprocessing.PrintReadsContainingStep;
 import org.labkey.sequenceanalysis.run.preprocessing.TagPcrSummaryStep;
@@ -224,6 +226,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.CropReadsProvider());
         SequencePipelineService.get().registerPipelineStep(new FlashPipelineStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new PrintReadsContainingStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new FilterReadsStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.HeadCropReadsProvider());
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.MaxInfoTrimmingProvider());
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.AdapterTrimmingProvider());
@@ -283,6 +286,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new LofreqAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PindelAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PbsvAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new GenrichStep.Provider());
 
         //SequencePipelineService.get().registerPipelineStep(new BlastUnmappedReadAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PARalyzerAnalysis.Provider());

@@ -552,13 +552,16 @@ public class SequenceTest extends BaseWebDriverTest
         waitForElementToDisappear(Ext4Helper.Locators.window("Add Steps"));
 
         Map<String, Ext4CmpRef> fieldsetMap = new HashMap<>();
-        String[] setNames = {"Adapter Trimming (Trimmomatic)", "Average Quality Filter", "Crop Reads", "Downsample Reads", "Head Crop", "Quality Trimming (Adaptive)", "Quality Trimming (Sliding Window)", "Read Length Filter"};
+        String[] setNames = {"Adapter Trimming (Trimmomatic)", "Average Quality Filter", "Crop Reads", "Downsample Reads", "Filter Reads Matching Reference", "Head Crop", "Quality Trimming (Adaptive)", "Quality Trimming (Sliding Window)", "Read Length Filter"};
         isPresentInThisOrder(setNames);
 
         for (String name : setNames)
         {
             fieldsetMap.put(name, _ext4Helper.queryOne("fieldset[title='" + name + "']", Ext4CmpRef.class));
         }
+
+        // This step has genome as required, so remove:
+        waitAndClick(Locator.id(fieldsetMap.get("Filter Reads Matching Reference").down("ldk-linkbutton[text='Remove']", Ext4CmpRef.class).getId()).append(Locator.tag("a")));
 
         waitAndClick(Locator.id(fieldsetMap.get("Downsample Reads").down("ldk-linkbutton[text='Move Down']", Ext4CmpRef.class).getId()).append(Locator.tag("a")));
         isTextBefore("Head Crop", "Downsample Reads");

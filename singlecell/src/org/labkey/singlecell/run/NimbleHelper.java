@@ -103,7 +103,7 @@ public class NimbleHelper
         int maxHitsToReport = getProvider().getParameterByName(MAX_HITS_TO_REPORT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 4);
         for (int i = 0; i < json.length(); i++)
         {
-            ret.add(new NimbleGenome(json.getString(i), maxHitsToReport));
+            ret.add(new NimbleGenome(json.getJSONArray(i), maxHitsToReport));
         }
 
         return ret;
@@ -564,12 +564,11 @@ public class NimbleHelper
         private final int maxHitsToReport;
         private final double scorePercent;
 
-        public NimbleGenome(String genomeStr, int maxHitsToReport) throws PipelineJobException
+        public NimbleGenome(JSONArray arr, int maxHitsToReport) throws PipelineJobException
         {
-            JSONArray arr = new JSONArray(genomeStr);
             if (arr.length() < 3)
             {
-                throw new PipelineJobException("Improper genome: " + genomeStr);
+                throw new PipelineJobException("Improper genome: " + arr.toString());
             }
 
             genomeId = arr.getInt(0);

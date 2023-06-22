@@ -24,14 +24,14 @@ public class CustomUCell extends AbstractRiraStep
         public Provider()
         {
             super("CustomUCell", "UCell (Custom)", "UCell/RIRA", "The seurat object will be subset based on the expression below, which is passed directly to Seurat's subset(subset = X).", Arrays.asList(
-                    ToolParameterDescriptor.create("geneSets", "Gene Sets(s)", "This should contain one UCell module per line, where the module is in the format (no spaces): SetName:Gene1,Gene2,Gene3. The first token is the name given to UCell and the second is a comma-delimited list of gene names.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
+                    SeuratToolParameter.create("geneSets", "Gene Sets(s)", "This should contain one UCell module per line, where the module is in the format (no spaces): SetName:Gene1,Gene2,Gene3. The first token is the name given to UCell and the second is a comma-delimited list of gene names.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("allowBlank", false);
                         put("replaceAllWhitespace", true);
                         put("height", 150);
                         put("width", 600);
                         put("delimiter", DELIM);
                         put("stripCharsRe", "/['\"]/g");
-                    }}, null),
+                    }}, null).delimiter(DELIM),
                     SeuratToolParameter.create("storeRanks", "Store Ranks", "Passed directly to UCell::AddModuleScore_UCell.", "checkbox", new JSONObject(){{
 
                     }}, false),
