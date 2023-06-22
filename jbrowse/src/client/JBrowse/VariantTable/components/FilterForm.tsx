@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import TextField from "@material-ui/core/TextField";
 import Button from "@material-ui/core/Button";
@@ -9,7 +9,7 @@ import InputLabel from "@material-ui/core/InputLabel";
 import CardActions from "@material-ui/core/CardActions";
 import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
-import { fetchLuceneQuery, createEncodedFilterString } from "../../utils"
+import { searchStringToInitialFilters } from "../../utils";
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -81,22 +81,12 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const stringType = ["equals", "contains", "starts with", "ends with", "is empty", "is not empty"];
-const variableSamplesType = ["in set", "variable in", "not variable in", "variable in all of", "variable in any of", "not variable in any of", "not variable in one of", "is empty", "is not empty"];
-const numericType = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"];
-const noneType = [];
-const impactType = ["LOW", "MODERATE", "HIGH"];
-
-const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback, handleFailureCallback, fieldTypeInfo, externalActionComponent, arrowPagination }) => {
-  const availableOperators = fieldTypeInfoToOperators(fieldTypeInfo);
+const FilterForm = (props) => {
+  const { availableOperators, handleQuery } = props
 
   const [filters, setFilters] = useState(searchStringToInitialFilters(availableOperators) ?? [{ field: "", operator: "", value: "" }]);
 
   const classes = useStyles();
-
-  const handleClose = () => {
-    setOpen(false);
-  };
 
   const handleAddFilter = () => {
     setFilters([...filters, { field: "", operator: "", value: "" }]);
@@ -121,140 +111,6 @@ const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback,
     );
   };
 
-<<<<<<< HEAD
-  // API call to retrieve the fields and build the form
-  useEffect(() => {
-    async function fetch() {
-      const queryParam = new URLSearchParams(window.location.search)
-      const searchString = queryParam.get("searchString");
-
-      await fetchFieldTypeInfo(sessionId, trackGUID,
-        (res) => {
-          const availableOperators = Object.keys(res.fields).reduce((acc, idx) => {
-            const fieldObj = res.fields[idx];
-            const field = fieldObj.name;
-            const type = fieldObj.type;
-
-            let fieldType;
-
-            switch (type) {
-              case 'Flag':
-              case 'String':
-              case 'Character':
-                fieldType = stringType;
-                break;
-              case 'Float':
-              case 'Integer':
-                fieldType = numericType;
-                break;
-              case 'Impact':
-                fieldType = stringType;
-                break;
-              case 'None':
-              default:
-                fieldType = noneType;
-                break;
-            }
-
-            acc[field] = { type: fieldType };
-
-<<<<<<< HEAD
-            if(field == "variableSamples") {
-              acc[field] = { type: variableSamplesType };
-=======
-            if (field == "variableSamples") {
-              acc[field] = variableSamplesType;
->>>>>>> 38da686e (Update table widget to always pass a proper GUID)
-            }
-
-            return acc;
-          }, {}); 
-
-          setAvailableOperators(availableOperators)
-          setDataLoaded(true)
-        })
-=======
-  function fieldTypeInfoToOperators(fieldTypeInfo) {
-    const operators = Object.keys(fieldTypeInfo).reduce((acc, idx) => {
-      const fieldObj = fieldTypeInfo[idx];
-      const field = fieldObj.name;
-          const type = fieldObj.type;
-
-          let fieldType;
-
-          switch (type) {
-            case 'Flag':
-            case 'String':
-            case 'Character':
-              fieldType = stringType;
-              break;
-            case 'Float':
-            case 'Integer':
-              fieldType = numericType;
-              break;
-            case 'Impact':
-              fieldType = stringType;
-              break;
-            case 'None':
-            default:
-              fieldType = noneType;
-              break;
-          }
-
-          acc[field] = { type: fieldType };
-
-          if(field == "variableSamples") {
-            acc[field] = { type: variableSamplesType };
-          }
-
-          return acc;
-        }, {}) ?? [];
-
-    return operators
-  }
->>>>>>> d9ba7905 (Server-driven column model)
-
-  function searchStringToInitialFilters(operators) {
-    const queryParam = new URLSearchParams(window.location.search)
-    const searchString = queryParam.get("searchString");
-
-    let initialFilters: any[] | undefined = undefined;
-
-    if (searchString) {
-      const decodedSearchString = decodeURIComponent(searchString);
-      const searchStringsArray = decodedSearchString.split("&");
-      console.log("search strings array: ", searchStringsArray)
-      initialFilters = searchStringsArray
-        .map((item) => {
-        const [field, operator, value] = item.split(",");
-        return { field, operator, value };
-        })
-        .filter(({ field }) => operators.hasOwnProperty(field));
-    }
-
-    return initialFilters
-  }
-
-  useEffect(() => {
-    async function fetch() {
-      handleQuery(filters)
-    }
-
-    fetch()
-  }, [filters])
-
-  function handleQuery(passedFilters) {
-    if(passedFilters.length != 0) {
-      const encodedSearchString = createEncodedFilterString(passedFilters, false);
-      const currentUrl = new URL(window.location.href);
-      currentUrl.searchParams.set("searchString", encodedSearchString);
-      window.history.pushState(null, "", currentUrl.toString());
-    }
-
-    fetchLuceneQuery(passedFilters, sessionId, trackGUID, 0, (json)=>{console.log(json); handleSubmitCallback(json)}, () => {handleFailureCallback()});
-    setOpen(false);
-  }
-
   const handleSubmit = (event) => {
     event.preventDefault();
     handleQuery(filters);
@@ -272,12 +128,6 @@ const FilterForm = ({ open, setOpen, sessionId, trackGUID, handleSubmitCallback,
           >
             Add Search Filter
           </Button>
-           <div className={classes.actionWrapper}>
-            {externalActionComponent && externalActionComponent}
-            <div className={classes.arrowPaginationWrapper}>
-              {arrowPagination && arrowPagination}
-            </div>
-          </div>
         </div>
 
         <div className={classes.formScroll}>
