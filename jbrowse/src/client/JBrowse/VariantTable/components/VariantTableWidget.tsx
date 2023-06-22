@@ -44,17 +44,14 @@ const VariantTableWidget = observer(props => {
   }
 
   function handleQuery(passedFilters) {
-<<<<<<< HEAD
     if(!passedFilters || passedFilters.length != 0) {
-=======
-    if (!passedFilters || passedFilters.length != 0) {
->>>>>>> 0e53f7f1 (Update JBrowseTest to use correct genome)
       const encodedSearchString = createEncodedFilterString(passedFilters, false);
       const currentUrl = new URL(window.location.href);
       currentUrl.searchParams.set("searchString", encodedSearchString);
       window.history.pushState(null, "", currentUrl.toString());
     }
 
+    setFilters(passedFilters);
     fetchLuceneQuery(passedFilters, sessionId, trackGUID, 0, (json)=>{console.log(json); handleSearch(json)}, () => {});
   }
 
@@ -102,6 +99,7 @@ const VariantTableWidget = observer(props => {
   const [columns, setColumns] = useState<GridColumns>([])
 
   const [filterModalOpen, setFilterModalOpen] = useState(false);
+  const [filters, setFilters] = useState([]);
 
   const [adapter, setAdapter] = useState<EVAdapterClass | undefined>(undefined)
 
@@ -262,6 +260,7 @@ const VariantTableWidget = observer(props => {
         components={{ Toolbar: ToolbarWithProps }}
         rowsPerPageOptions={[10,25,50,100]}
         pageSize={pageSize}
+        density="comfortable"
         onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
       />
   )
@@ -271,6 +270,7 @@ const VariantTableWidget = observer(props => {
                    sessionId={sessionId}
                    trackGUID={trackGUID}
                    handleQuery={(filters) => handleQuery(filters)}
+                   setFilters={setFilters}
                    handleFailureCallback={() => {}}
                    availableOperators={availableOperators}
   />
@@ -282,13 +282,22 @@ const VariantTableWidget = observer(props => {
       <LoadingIndicator isOpen={!dataLoaded}/>
 
       <div style={{ marginBottom: "10px" }}>
-        {/* TODO top toolbar */}
+        {filters.map((filter, index) => (
+          <Button
+            key={index}
+            onClick={() => setFilterModalOpen(true)}
+            style={{ border: "1px solid gray", margin: "5px" }}
+          >
+            {`${(filter as any).field} ${(filter as any).operator} ${(filter as any).value}`}
+          </Button>
+        ))}
+
+        <ArrowPagination
+          offset={currentOffset}
+          onOffsetChange={handleOffsetChange}
+        />
       </div>
 
-                     <ArrowPagination
-                       offset={currentOffset}
-                       onOffsetChange={handleOffsetChange}
-                     />
       {filterModal}
       {gridElement}
     </>

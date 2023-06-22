@@ -82,18 +82,18 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const FilterForm = (props) => {
-  const { availableOperators, handleQuery } = props
+  const { availableOperators, handleQuery, setFilters, handleClose } = props
 
-  const [filters, setFilters] = useState(searchStringToInitialFilters(availableOperators) ?? [{ field: "", operator: "", value: "" }]);
+  const [filters, localSetFilters] = useState(searchStringToInitialFilters(availableOperators) ?? [{ field: "", operator: "", value: "" }]);
 
   const classes = useStyles();
 
   const handleAddFilter = () => {
-    setFilters([...filters, { field: "", operator: "", value: "" }]);
+    localSetFilters([...filters, { field: "", operator: "", value: "" }]);
   };
 
   const handleRemoveFilter = (index) => {
-    setFilters(
+    localSetFilters(
       filters.filter((filter, i) => {
         return i !== index;
       })
@@ -101,19 +101,21 @@ const FilterForm = (props) => {
   };
 
   const handleFilterChange = (index, key, value) => {
-    setFilters(
-      filters.map((filter, i) => {
-        if (i === index) {
-          return { ...filter, [key]: value };
-        }
-        return filter;
-      })
-    );
-  };
+  const newFilters = filters.map((filter, i) => {
+    if (i === index) {
+      return { ...filter, [key]: value };
+    }
+    return filter;
+  });
+
+  localSetFilters(newFilters);
+  setFilters(newFilters);
+};
 
   const handleSubmit = (event) => {
     event.preventDefault();
     handleQuery(filters);
+    handleClose();
   };
 
   return (
