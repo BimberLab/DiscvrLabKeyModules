@@ -617,7 +617,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Add"));
         waitAndClick(Ext4Helper.Locators.menuItem("Info Fields For Full Text Search"));
         waitForElement(Locator.tagWithText("div", "infoFieldsForFullTextSearch"));
-        grid.setGridCell(2, "value", "AF,AC,CADD_PH,CLN_ALLELE,OMIMD");
+        grid.setGridCell(2, "value", "AF,AC,CADD_PH,CLN_ALLELE,OMIMD,IMPACT");
 
         waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
         new Window.WindowFinder(getDriver()).withTitle("Success").waitFor();

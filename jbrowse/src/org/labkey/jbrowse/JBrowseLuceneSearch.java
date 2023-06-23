@@ -47,6 +47,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -333,6 +334,9 @@ public class JBrowseLuceneSearch
             {
                 case "AF":
                     field.label("Allele Frequency");
+                    break;
+                case "IMPACT":
+                    field.label("Impact on Protein Coding").allowableValues(Arrays.asList("HIGH", "LOW", "MODERATE", "MODIFIER"));
                     break;
             }
         }

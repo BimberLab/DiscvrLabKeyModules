@@ -4,6 +4,9 @@ import htsjdk.variant.vcf.VCFHeaderLineType;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
+import java.util.Collections;
+import java.util.List;
+
 public class JBrowseFieldDescriptor {
     private final String _fieldName;
     private final VCFHeaderLineType _type;
@@ -11,11 +14,14 @@ public class JBrowseFieldDescriptor {
     private final String _description;
     private final boolean _isInDefaultColumns;
     private final boolean _isIndexed;
-
     private boolean _isMultiValued = false;
+    private List<String> _allowableValues = null;
     private boolean _isHidden = false;
     private String _colWidth = null;
     private Integer _orderKey = null;
+
+    // NOTE: this should support "jexl:xxxxxx" syntax, like other JBrowse formatting
+    private String _formatString = null;
 
     public JBrowseFieldDescriptor(String luceneFieldName, @Nullable String description, boolean isInDefaultColumns, boolean isIndexed, VCFHeaderLineType type, Integer orderKey) {
         _fieldName = luceneFieldName;
@@ -34,6 +40,16 @@ public class JBrowseFieldDescriptor {
 
     public JBrowseFieldDescriptor colWidth(String colWidth) {
         _colWidth = colWidth;
+        return this;
+    }
+
+    public JBrowseFieldDescriptor formatString(String formatString) {
+        _formatString = formatString;
+        return this;
+    }
+
+    public JBrowseFieldDescriptor allowableValues(List<String> allowableValues) {
+        _allowableValues = Collections.unmodifiableList(allowableValues);
         return this;
     }
 
@@ -114,7 +130,10 @@ public class JBrowseFieldDescriptor {
         fieldDescriptorJSON.put("isMultiValued", _isMultiValued);
         fieldDescriptorJSON.put("isHidden", _isHidden);
         fieldDescriptorJSON.put("colWidth", _colWidth);
+        fieldDescriptorJSON.put("formatString", _formatString);
         fieldDescriptorJSON.put("orderKey", _orderKey);
+        fieldDescriptorJSON.put("allowableValues", _allowableValues);
+
         return fieldDescriptorJSON;
     }
 }
