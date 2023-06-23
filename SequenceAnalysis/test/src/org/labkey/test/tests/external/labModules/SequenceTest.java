@@ -1580,6 +1580,8 @@ public class SequenceTest extends BaseWebDriverTest
         Ext4ComboRef.getForLabel(test, "Category").setValue(category);
         Ext4FieldRef.getForLabel(test, "Description").setValue(description);
         Ext4ComboRef.getForLabel(test, "Reference Genome").setComboByDisplayValue(genomeName);
+        sleep(100);
+        Assert.assertEquals("Genome name not set", Ext4ComboRef.getForLabel(test, "Reference Genome").getDisplayValue(), genomeName);
 
         Ext4FileFieldRef fileField = test._ext4Helper.queryOne("field[fieldLabel=File]", Ext4FileFieldRef.class);
         fileField.setToFile(toAdd);
