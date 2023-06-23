@@ -3,7 +3,7 @@ import { GridColumns, getGridNumericColumnOperators, GridToolbarDensitySelector,
 import FilterListIcon from '@material-ui/icons/FilterList';
 import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
-import { Modal } from '@material-ui/core';
+import { Modal, Tooltip } from '@material-ui/core';
 import { AppBar, Box, Button, Dialog, Grid, Paper, Toolbar, Typography } from '@material-ui/core';
 import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline';
 import { APIDataToRows } from '../dataUtils';
@@ -143,7 +143,7 @@ const VariantTableWidget = observer(props => {
                 break;
             }
 
-            let column: any = { field: field, headerName: fieldObj.label ?? field, width: fieldObj.colWidth ?? (muiFieldType == "string" ? 150 : 50), type: muiFieldType, flex: 1, headerAlign: 'left', hide: fieldObj.isHidden }
+            let column: any = { field: field, description: fieldObj.description , headerName: fieldObj.label ?? field, width: fieldObj.colWidth ?? (muiFieldType == "string" ? 150 : 50), type: muiFieldType, flex: 1, headerAlign: 'left', hide: fieldObj.isHidden }
 
             if (field == "af") {
               column.sortComparator = multiValueComparator
@@ -267,6 +267,14 @@ const VariantTableWidget = observer(props => {
       />
   )
 
+  const renderHeaderCell = (params) => {
+    return (
+      <Tooltip title={params.colDef.description}>
+        <div>{params.colDef.headerName}</div>
+      </Tooltip>
+    );
+  };
+
   const filterModal = (
     <FilterFormModal open={filterModalOpen} handleClose={() => setFilterModalOpen(false)} 
                    sessionId={sessionId}
@@ -276,6 +284,9 @@ const VariantTableWidget = observer(props => {
                    handleFailureCallback={() => {}}
                    availableOperators={availableOperators}
                    fieldTypeInfo={fieldTypeInfo}
+                   components={{
+                     headerCell: renderHeaderCell,
+                    }}
   />
   );
 
