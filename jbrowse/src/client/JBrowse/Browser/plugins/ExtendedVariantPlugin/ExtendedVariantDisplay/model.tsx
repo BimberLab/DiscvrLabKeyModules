@@ -221,7 +221,7 @@ export default jbrowse => {
                   {
                      label: 'Free-text Search',
                      onClick: () => {
-                        const track = getContainingTrack(self) as IAnyStateTreeNode & { configuration: AnyConfigurationModel }
+                        const track = getContainingTrackWithConfig(self)
                         const view = getContainingView(self) as LinearGenomeViewModel
 
                         const sessionId = view.id;
