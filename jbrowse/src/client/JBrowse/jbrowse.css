@@ -11,10 +11,3 @@ html {
 div[class^="makeStyles-tooltip-"] {
     font-size: 12px;
 }
-
-/* mui datagrid cell rendering styles */
-.table-cell-truncate {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}

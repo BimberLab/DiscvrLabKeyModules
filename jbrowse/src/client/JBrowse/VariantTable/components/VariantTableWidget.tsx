@@ -55,7 +55,8 @@ const VariantTableWidget = observer(props => {
 
   const TableCellWithPopover = (props: { value: any }) => {
     const { value } = props;
-    const displayValue = Array.isArray(value) ? value.join(', ') : value
+    const fullDisplayValue = value ? (Array.isArray(value) ? value.join(', ') : value) : ''
+    const [displayValue, setDisplayValue] = useState(fullDisplayValue)
 
     const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null)
     const open = Boolean(anchorEl);
@@ -83,6 +84,27 @@ const VariantTableWidget = observer(props => {
     };
 
     const renderPopover = displayValue && Array.isArray(value)
+
+    // Get screen width and set the maximum number of characters for displayValue
+    useEffect(() => {
+      const truncateDisplayValue = () => {
+        const screenWidth = window.innerWidth;
+        const maxCharacters = Math.floor(screenWidth / 12 / 10);
+
+        setDisplayValue(
+          fullDisplayValue && fullDisplayValue.length > maxCharacters
+            ? `${fullDisplayValue.substring(0, maxCharacters - 3)}...`
+            : fullDisplayValue
+        );
+      };
+
+      window.addEventListener('resize', truncateDisplayValue)
+      truncateDisplayValue()
+
+      return () => {
+        window.removeEventListener('resize', truncateDisplayValue)
+      };
+    }, [fullDisplayValue]);
 
     return (
       <div>
@@ -115,7 +137,7 @@ const VariantTableWidget = observer(props => {
             onMouseLeave={handlePopoverClose}
           >
             <Typography style={{ padding: '16px', marginTop: '16px', marginBottom: '16px', marginLeft: '16px' }}>
-              {displayValue}
+              {fullDisplayValue}
             </Typography>
           </Popover>
         }
