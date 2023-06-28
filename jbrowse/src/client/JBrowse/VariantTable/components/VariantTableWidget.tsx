@@ -1,9 +1,9 @@
 import { observer } from 'mobx-react';
-import { GridColumns, getGridNumericColumnOperators, GridToolbarDensitySelector, GridToolbarColumnsButton, DataGrid, GridColDef, GridRenderCellParams, GridToolbar, GridToolbarContainer, GridToolbarExport } from '@mui/x-data-grid';
+import { GridColumns, getGridNumericColumnOperators, GridToolbarDensitySelector, GridToolbarColumnsButton, DataGrid, GridColDef, GridRenderCellParams, GridCellParams, GridToolbarContainer, GridToolbarExport } from '@mui/x-data-grid';
 import FilterListIcon from '@material-ui/icons/FilterList';
 import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
-import { Modal, Tooltip } from '@material-ui/core';
+import { Modal, Tooltip, Popover } from '@material-ui/core';
 import { AppBar, Box, Button, Dialog, Grid, Paper, Toolbar, Typography } from '@material-ui/core';
 import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline';
 import { APIDataToRows } from '../dataUtils';
@@ -44,17 +44,26 @@ const VariantTableWidget = observer(props => {
   }
 
   function handleQuery(passedFilters) {
-    if(!passedFilters || passedFilters.length != 0) {
-      const encodedSearchString = createEncodedFilterString(passedFilters, false);
-      const currentUrl = new URL(window.location.href);
-      currentUrl.searchParams.set("searchString", encodedSearchString);
-      window.history.pushState(null, "", currentUrl.toString());
-    }
+    const encodedSearchString = createEncodedFilterString(passedFilters, false);
+    const currentUrl = new URL(window.location.href);
+    currentUrl.searchParams.set("searchString", encodedSearchString);
+    window.history.pushState(null, "", currentUrl.toString());
 
     setFilters(passedFilters);
     fetchLuceneQuery(passedFilters, sessionId, trackGUID, 0, (json)=>{console.log(json); handleSearch(json)}, () => {});
   }
 
+  /*const CustomCell = ({ value }) => {
+  const isOverflowing = value.length > 20; // Set your desired overflow threshold here
+
+  return (
+    <Tooltip title={isOverflowing ? value : ''} enterDelay={500}>
+      <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {value}
+      </div>
+    </Tooltip>
+   );
+  };*/
 
   function CustomToolbar({ setFilterModalOpen }) {
     return (
@@ -143,7 +152,7 @@ const VariantTableWidget = observer(props => {
                 break;
             }
 
-            let column: any = { field: field, description: fieldObj.description , headerName: fieldObj.label ?? field, width: fieldObj.colWidth ?? (muiFieldType == "string" ? 150 : 50), type: muiFieldType, flex: 1, headerAlign: 'left', hide: fieldObj.isHidden }
+            let column: any = { field: field, /*renderCell: (params) => (<CustomCell value={params.value} />),*/ description: fieldObj.description , headerName: fieldObj.label ?? field, minWidth: 25, width: fieldObj.colWidth ?? 50, maxWidth: 100, type: muiFieldType, flex: 1, headerAlign: 'left', align: "left", hide: fieldObj.isHidden }
 
             if (field == "af") {
               column.sortComparator = multiValueComparator
@@ -296,15 +305,21 @@ const VariantTableWidget = observer(props => {
       <LoadingIndicator isOpen={!dataLoaded}/>
 
       <div style={{ marginBottom: "10px" }}>
-        {filters.map((filter, index) => (
-          <Button
-            key={index}
-            onClick={() => setFilterModalOpen(true)}
-            style={{ border: "1px solid gray", margin: "5px" }}
-          >
-            {`${(filter as any).field} ${(filter as any).operator} ${(filter as any).value}`}
-          </Button>
-        ))}
+
+        {filters.map((filter, index) => {
+          if ((filter as any).field == "" || (filter as any).operator == "" || (filter as any).value == "" ) {
+            return null;
+          }
+          return (
+            <Button
+              key={index}
+              onClick={() => setFilterModalOpen(true)}
+              style={{ border: "1px solid gray", margin: "5px" }}
+            >
+              {`${(filter as any).field} ${(filter as any).operator} ${(filter as any).value}`}
+            </Button>
+          );
+        })}
 
         <ArrowPagination
           offset={currentOffset}

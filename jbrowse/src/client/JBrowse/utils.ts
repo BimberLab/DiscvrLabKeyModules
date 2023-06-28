@@ -403,7 +403,7 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, su
 export function createEncodedFilterString(filters: Array<{field: string; operator: string; value: string}>, lucenify: boolean) {
     let ret: any = []
 
-    if(!filters || filters.length == 0) {
+    if(!filters || filters.length == 0 || (filters.length == 1 && filters[0].field == "" && filters[0].operator == "" && filters[0].value == "")) {
         console.log("EMPTY FILTERS, RETURNING ALL!")
         console.log(filters)
         return "all"
@@ -449,25 +449,25 @@ export function truncateToValidGUID(str: string) {
     return str;
 }
 
-export function searchStringToInitialFilters(operators) : any[] | undefined {
+export function searchStringToInitialFilters(operators) : any[] {
     const queryParam = new URLSearchParams(window.location.search)
-    const searchString = queryParam.get("searchString");
+    const searchString = queryParam.get("searchString")
 
-    let initialFilters: any[] | undefined = undefined;
+    let initialFilters: any[] = [{ field: "", operator: "", value: "" }]
 
-    if (searchString) {
-        const decodedSearchString = decodeURIComponent(searchString);
-        const searchStringsArray = decodedSearchString.split("&");
+    if (searchString && searchString != "all") {
+        const decodedSearchString = decodeURIComponent(searchString)
+        const searchStringsArray = decodedSearchString.split("&")
         console.log("search strings array: ", searchStringsArray)
         initialFilters = searchStringsArray
         .map((item) => {
-        const [field, operator, value] = item.split(",");
-        return { field, operator, value };
+        const [field, operator, value] = item.split(",")
+        return { field, operator, value }
         })
-        .filter(({ field }) => operators.hasOwnProperty(field));
+        .filter(({ field }) => operators.hasOwnProperty(field))
     }
 
-    return initialFilters
+    return initialFilters 
 }
 
 export function fieldTypeInfoToOperators(fieldTypeInfo): any {
@@ -475,7 +475,6 @@ export function fieldTypeInfoToOperators(fieldTypeInfo): any {
     const variableSamplesType = ["in set", "variable in", "not variable in", "variable in all of", "variable in any of", "not variable in any of", "not variable in one of", "is empty", "is not empty"];
     const numericType = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"];
     const noneType = [];
-    const impactType = ["LOW", "MODERATE", "HIGH"];
 
     const operators = Object.keys(fieldTypeInfo).reduce((acc, idx) => {
       const fieldObj = fieldTypeInfo[idx];

@@ -79,12 +79,17 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: 'transparent',
     border: '1px solid rgba(0, 0, 0, 0.12)'
   },
+   highlighted: {
+    borderColor: 'red',
+    borderWidth: 2,
+  }
 }));
 
 const FilterForm = (props) => {
   const { availableOperators, handleQuery, setFilters, handleClose, fieldTypeInfo } = props
 
-  const [filters, localSetFilters] = useState(searchStringToInitialFilters(availableOperators) ?? [{ field: "", operator: "", value: "" }]);
+  const [filters, localSetFilters] = useState(searchStringToInitialFilters(availableOperators));
+  const [highlightedInputs, setHighlightedInputs] = useState<number[]>([]);
 
   const classes = useStyles();
 
@@ -109,13 +114,25 @@ const FilterForm = (props) => {
   });
 
   localSetFilters(newFilters)
-  setFilters(newFilters);
 };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    handleQuery(filters);
-    handleClose();
+    const highlightedInputs: number[] = [];
+
+    filters.forEach((filter, index) => {
+      if (filter.field === '' || filter.operator === '' || filter.value === '') {
+        highlightedInputs.push(index);
+      }
+    });
+
+    setHighlightedInputs(highlightedInputs);
+
+    if (highlightedInputs.length === 0) {
+      handleQuery(filters);
+      setFilters(filters);
+      handleClose();
+    }
   };
 
   return (
@@ -135,7 +152,11 @@ const FilterForm = (props) => {
         <div className={classes.formScroll}>
           {filters.map((filter, index) => (
             <div key={index} className={`${classes.filterRow}`}>
-              <FormControl className={classes.formControl}>
+                <FormControl
+                  className={`${classes.formControl} ${
+                    highlightedInputs.includes(index) ? 'highlighted' : ''
+                  }`}
+                >
                 <InputLabel id="field-label">Field</InputLabel>
                 <Select
                   labelId="field-label"
@@ -156,7 +177,11 @@ const FilterForm = (props) => {
               </FormControl>
 
               {filter.field != "ADVANCED" ?
-              <FormControl className={classes.formControl}>
+                <FormControl
+                      className={`${classes.formControl} ${
+                        highlightedInputs.includes(index) ? 'highlighted' : ''
+                      }`}
+                >
                 <InputLabel id="operator-label">Operator</InputLabel>
                 <Select
                   labelId="operator-label"
@@ -185,7 +210,11 @@ const FilterForm = (props) => {
               }
 
               {filter.operator === "in set" ? (
-                <FormControl className={`${classes.formControl} ${classes.valueInput}`}>
+                <FormControl
+                    className={`${classes.formControl} ${classes.valueInput} ${
+                      highlightedInputs.includes(index) ? 'highlighted' : ''
+                    }`}
+                  >
                   <InputLabel id="value-select-label">Value</InputLabel>
                   <Select
                     labelId="value-select-label"
@@ -198,16 +227,19 @@ const FilterForm = (props) => {
                   </Select>
                 </FormControl>
               ) : (
-                <TextField
-                  label="Value"
-                  className={`${classes.textField} ${classes.valueInput}`}
-                  value={filter.value}
-                  onChange={(event) =>
-                    handleFilterChange(index, "value", event.target.value)
-                  }
-                />
+                  <TextField
+                    label="Value"
+                    className={`${classes.textField} ${classes.valueInput} ${
+                      highlightedInputs.includes(index) ? 'highlighted' : ''
+                    }`}
+                    value={filter.value}
+                    onChange={(event) =>
+                      handleFilterChange(index, 'value', event.target.value)
+                    }
+                  />
               )}
 
+              {filters.length > 1 && (
               <Button
                 variant="contained"
                 color="primary"
@@ -215,6 +247,7 @@ const FilterForm = (props) => {
               >
                 Remove Filter
               </Button>
+              )}
             </div>
           ))}
         </div>

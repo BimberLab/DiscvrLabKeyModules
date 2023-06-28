@@ -192,7 +192,7 @@ public class JBrowseLuceneSearch
             List<String> stringQueryParserFields = new ArrayList<>();
             List<String> numericQueryParserFields = new ArrayList<>();
             PointsConfig intPointsConfig = new PointsConfig(new DecimalFormat(), Integer.class);
-            PointsConfig floatPointsConfig = new PointsConfig(new DecimalFormat(), Float.class);
+            PointsConfig doublePointsConfig = new PointsConfig(new DecimalFormat(), Double.class);
             Map<String, PointsConfig> pointsConfigMap = new HashMap<>();
 
             // Iterate fields and split them into fields for the queryParser and the numericQueryParser
@@ -206,7 +206,7 @@ public class JBrowseLuceneSearch
                     case Flag, String, Character -> stringQueryParserFields.add(field);
                     case Float -> {
                         numericQueryParserFields.add(field);
-                        pointsConfigMap.put(field, floatPointsConfig);
+                        pointsConfigMap.put(field, doublePointsConfig);
                     }
                     case Integer -> {
                         numericQueryParserFields.add(field);
