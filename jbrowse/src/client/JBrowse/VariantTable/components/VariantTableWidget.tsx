@@ -53,17 +53,59 @@ const VariantTableWidget = observer(props => {
     fetchLuceneQuery(passedFilters, sessionId, trackGUID, 0, (json)=>{console.log(json); handleSearch(json)}, () => {});
   }
 
-  /*const CustomCell = ({ value }) => {
-  const isOverflowing = value.length > 20; // Set your desired overflow threshold here
+  const TableCellWithPopover = (props: { value: any }) => {
+    const { value } = props;
+    const displayValue = Array.isArray(value) ? value.join(', ') : value
 
-  return (
-    <Tooltip title={isOverflowing ? value : ''} enterDelay={500}>
-      <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-        {value}
+    const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null)
+    const open = Boolean(anchorEl);
+
+    const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>) => {
+      setAnchorEl(event.currentTarget);
+    };
+
+    const handlePopoverClose = () => {
+      setAnchorEl(null);
+    };
+
+    const renderPopover = displayValue && Array.isArray(value)
+
+    return (
+      <div>
+        <Typography
+          aria-owns={open ? 'mouse-over-popover' : undefined}
+          aria-haspopup="true"
+          onMouseEnter={handlePopoverOpen}
+        >
+          <span className="table-cell-truncate">{displayValue}</span>
+        </Typography>
+        {renderPopover && 
+          <Popover
+            id="mouse-over-popover"
+            open={open}
+            anchorEl={anchorEl}
+            onClose={handlePopoverClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'left',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'left',
+            }}
+            PaperProps={{
+              style: { maxWidth: '80%', wordWrap: 'break-word' },
+            }}
+            onMouseLeave={handlePopoverClose}
+          >
+            <Typography>
+              {displayValue}
+            </Typography>
+          </Popover>
+        }
       </div>
-    </Tooltip>
-   );
-  };*/
+    );
+  }
 
   function CustomToolbar({ setFilterModalOpen }) {
     return (
@@ -152,7 +194,7 @@ const VariantTableWidget = observer(props => {
                 break;
             }
 
-            let column: any = { field: field, /*renderCell: (params) => (<CustomCell value={params.value} />),*/ description: fieldObj.description , headerName: fieldObj.label ?? field, minWidth: 25, width: fieldObj.colWidth ?? 50, maxWidth: 100, type: muiFieldType, flex: 1, headerAlign: 'left', align: "left", hide: fieldObj.isHidden }
+            let column: any = { field: field, renderCell: (params: any) =>  { return <TableCellWithPopover value={params.value} /> }, description: fieldObj.description , headerName: fieldObj.label ?? field, minWidth: 25, width: fieldObj.colWidth ?? 50, maxWidth: 100, type: muiFieldType, flex: 1, headerAlign: 'left', align: "left", hide: fieldObj.isHidden }
 
             if (field == "af") {
               column.sortComparator = multiValueComparator
