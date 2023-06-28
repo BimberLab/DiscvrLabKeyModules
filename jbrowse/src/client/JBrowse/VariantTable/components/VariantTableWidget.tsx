@@ -60,12 +60,26 @@ const VariantTableWidget = observer(props => {
     const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null)
     const open = Boolean(anchorEl);
 
+    const [hoverTimeout, setHoverTimeout] = React.useState<NodeJS.Timeout | null>(null);
+
     const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>) => {
-      setAnchorEl(event.currentTarget);
+      clearHoverTimeout()
+      const currentTarget = event.currentTarget;
+      const timeoutId = setTimeout(() => {
+        setAnchorEl(currentTarget);
+      }, 1000)
+      setHoverTimeout(timeoutId);
     };
 
     const handlePopoverClose = () => {
       setAnchorEl(null);
+    };
+
+    const clearHoverTimeout = () => {
+      if (hoverTimeout) {
+        clearTimeout(hoverTimeout);
+        setHoverTimeout(null);
+      }
     };
 
     const renderPopover = displayValue && Array.isArray(value)
@@ -76,8 +90,9 @@ const VariantTableWidget = observer(props => {
           aria-owns={open ? 'mouse-over-popover' : undefined}
           aria-haspopup="true"
           onMouseEnter={handlePopoverOpen}
+          onMouseLeave={clearHoverTimeout}
         >
-          <span className="table-cell-truncate">{displayValue}</span>
+          <span className='table-cell-truncate'>{displayValue}</span>
         </Typography>
         {renderPopover && 
           <Popover
@@ -96,9 +111,10 @@ const VariantTableWidget = observer(props => {
             PaperProps={{
               style: { maxWidth: '80%', wordWrap: 'break-word' },
             }}
+            onMouseEnter={clearHoverTimeout}
             onMouseLeave={handlePopoverClose}
           >
-            <Typography>
+            <Typography style={{ padding: '16px', marginTop: '16px', marginBottom: '16px', marginLeft: '16px' }}>
               {displayValue}
             </Typography>
           </Popover>
