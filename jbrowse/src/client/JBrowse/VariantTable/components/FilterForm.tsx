@@ -79,9 +79,9 @@ const useStyles = makeStyles((theme) => ({
     backgroundColor: 'transparent',
     border: '1px solid rgba(0, 0, 0, 0.12)'
   },
-   highlighted: {
-    borderColor: 'red',
-    borderWidth: 2,
+  highlighted: {
+    border: '2px solid red',
+    borderRadius: '4px'
   }
 }));
 
@@ -89,7 +89,7 @@ const FilterForm = (props) => {
   const { availableOperators, handleQuery, setFilters, handleClose, fieldTypeInfo } = props
 
   const [filters, localSetFilters] = useState(searchStringToInitialFilters(availableOperators));
-  const [highlightedInputs, setHighlightedInputs] = useState<number[]>([]);
+  const [highlightedInputs, setHighlightedInputs] = useState<{ [index: number]: { field: boolean, operator: boolean, value: boolean } }>({});
 
   const classes = useStyles();
 
@@ -116,24 +116,34 @@ const FilterForm = (props) => {
   localSetFilters(newFilters)
 };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    const highlightedInputs: number[] = [];
+const handleSubmit = (event) => {
+  event.preventDefault();
+  const highlightedInputs = {};
 
-    filters.forEach((filter, index) => {
-      if (filter.field === '' || filter.operator === '' || filter.value === '') {
-        highlightedInputs.push(index);
-      }
-    });
+  filters.forEach((filter, index) => {
+    highlightedInputs[index] = { field: false, operator: false, value: false };
 
-    setHighlightedInputs(highlightedInputs);
-
-    if (highlightedInputs.length === 0) {
-      handleQuery(filters);
-      setFilters(filters);
-      handleClose();
+    if (filter.field === '') {
+      highlightedInputs[index].field = true;
     }
-  };
+
+    if (filter.operator === '') {
+      highlightedInputs[index].operator = true;
+    }
+
+    if (filter.value === '') {
+      highlightedInputs[index].value = true;
+    }
+  });
+
+  setHighlightedInputs(highlightedInputs);
+
+  if (!Object.values(highlightedInputs).some(v => (v as any).field || (v as any).operator || (v as any).value)) {
+    handleQuery(filters);
+    setFilters(filters);
+    handleClose();
+  }
+};
 
   return (
    <Card className={classes.card} elevation={0}>
@@ -152,11 +162,7 @@ const FilterForm = (props) => {
         <div className={classes.formScroll}>
           {filters.map((filter, index) => (
             <div key={index} className={`${classes.filterRow}`}>
-                <FormControl
-                  className={`${classes.formControl} ${
-                    highlightedInputs.includes(index) ? 'highlighted' : ''
-                  }`}
-                >
+              <FormControl className={`${classes.formControl} ${highlightedInputs[index]?.field ? classes.highlighted : ''}`}>
                 <InputLabel id="field-label">Field</InputLabel>
                 <Select
                   labelId="field-label"
@@ -176,12 +182,7 @@ const FilterForm = (props) => {
                 </Select>
               </FormControl>
 
-              {filter.field != "ADVANCED" ?
-                <FormControl
-                      className={`${classes.formControl} ${
-                        highlightedInputs.includes(index) ? 'highlighted' : ''
-                      }`}
-                >
+              <FormControl className={`${classes.formControl} ${highlightedInputs[index]?.operator? classes.highlighted : ''}`}>
                 <InputLabel id="operator-label">Operator</InputLabel>
                 <Select
                   labelId="operator-label"
@@ -206,15 +207,9 @@ const FilterForm = (props) => {
 
                 </Select>
               </FormControl>
-              : null
-              }
 
               {filter.operator === "in set" ? (
-                <FormControl
-                    className={`${classes.formControl} ${classes.valueInput} ${
-                      highlightedInputs.includes(index) ? 'highlighted' : ''
-                    }`}
-                  >
+                <FormControl className={`${classes.formControl} ${highlightedInputs[index]?.value? classes.highlighted : ''}`}>
                   <InputLabel id="value-select-label">Value</InputLabel>
                   <Select
                     labelId="value-select-label"
@@ -229,9 +224,7 @@ const FilterForm = (props) => {
               ) : (
                   <TextField
                     label="Value"
-                    className={`${classes.textField} ${classes.valueInput} ${
-                      highlightedInputs.includes(index) ? 'highlighted' : ''
-                    }`}
+                    className={`${classes.formControl} ${highlightedInputs[index]?.value? classes.highlighted : ''}`}
                     value={filter.value}
                     onChange={(event) =>
                       handleFilterChange(index, 'value', event.target.value)
