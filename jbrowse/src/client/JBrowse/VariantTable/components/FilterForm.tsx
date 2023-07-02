@@ -221,15 +221,32 @@ const handleSubmit = (event) => {
                     <MenuItem value="ONPRC">ONPRC</MenuItem>
                   </Select>
                 </FormControl>
-              ) : (
-                  <TextField
-                    label="Value"
-                    className={`${classes.formControl} ${highlightedInputs[index]?.value? classes.highlighted : ''}`}
+              ) : fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length > 0 ? (
+                <FormControl className={`${classes.formControl} ${highlightedInputs[index]?.value? classes.highlighted : ''}`}>
+                  <InputLabel id="value-select-label">Value</InputLabel>
+                  <Select
+                    labelId="value-select-label"
                     value={filter.value}
                     onChange={(event) =>
-                      handleFilterChange(index, 'value', event.target.value)
+                      handleFilterChange(index, "value", event.target.value)
                     }
-                  />
+                  >
+                    {fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.map(allowableValue => (
+                      <MenuItem key={allowableValue} value={allowableValue}>
+                        {allowableValue}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              ) : (
+                <TextField
+                  label="Value"
+                  className={`${classes.formControl} ${highlightedInputs[index]?.value? classes.highlighted : ''}`}
+                  value={filter.value}
+                  onChange={(event) =>
+                    handleFilterChange(index, 'value', event.target.value)
+                  }
+                />
               )}
 
               {filters.length > 1 && (
