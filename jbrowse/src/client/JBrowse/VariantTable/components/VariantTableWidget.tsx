@@ -50,7 +50,7 @@ const VariantTableWidget = observer(props => {
     window.history.pushState(null, "", currentUrl.toString());
 
     setFilters(passedFilters);
-    fetchLuceneQuery(passedFilters, sessionId, trackGUID, 0, (json)=>{console.log(json); handleSearch(json)}, () => {});
+    fetchLuceneQuery(passedFilters, sessionId, trackGUID, currentOffset, (json)=>{console.log(json); handleSearch(json)}, () => {});
   }
 
   const TableCellWithPopover = (props: { value: any }) => {
@@ -384,8 +384,9 @@ const VariantTableWidget = observer(props => {
     <>
       <LoadingIndicator isOpen={!dataLoaded}/>
 
-      <div style={{ marginBottom: "10px" }}>
+      <div style={{ marginBottom: "10px", display: "flex", alignItems: "center" }}>
 
+      <div style={{ flex: 1 }}>
         {filters.map((filter, index) => {
           if ((filter as any).field == "" || (filter as any).operator == "" || (filter as any).value == "" ) {
             return null;
@@ -400,11 +401,14 @@ const VariantTableWidget = observer(props => {
             </Button>
           );
         })}
+      </div>
 
-        <ArrowPagination
-          offset={currentOffset}
-          onOffsetChange={handleOffsetChange}
-        />
+        <div style={{ marginLeft: "auto" }}>
+          <ArrowPagination
+            offset={currentOffset}
+            onOffsetChange={handleOffsetChange}
+          />
+        </div>
       </div>
 
       {filterModal}

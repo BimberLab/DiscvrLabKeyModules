@@ -889,7 +889,7 @@ public class JBrowseController extends SpringActionController
 
         private int _pageSize = 100;
 
-        private int offset = 0;
+        private int _offset = 0;
 
         public String getSearchString()
         {
@@ -923,12 +923,12 @@ public class JBrowseController extends SpringActionController
 
         public int getOffset()
         {
-            return offset;
+            return _offset;
         }
 
         public void setOffset(int offset)
         {
-            this.offset = offset;
+            _offset = offset;
         }
 
         public String getTrackId()

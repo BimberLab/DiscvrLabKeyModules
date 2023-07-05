@@ -361,6 +361,8 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, su
         offset = 0
     }
 
+    console.log("Offset: ", offset)
+
     if (!sessionId) {
         console.error("Lucene query: no session ID")
         failureCallback()
