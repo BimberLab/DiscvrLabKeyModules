@@ -1,11 +1,11 @@
 import { observer } from 'mobx-react';
-import { GridColumns, getGridNumericColumnOperators, GridToolbarDensitySelector, GridToolbarColumnsButton, DataGrid, GridColDef, GridRenderCellParams, GridCellParams, GridToolbarContainer, GridToolbarExport } from '@mui/x-data-grid';
+import { GridColumns, getGridNumericColumnOperators, GridToolbarDensitySelector, GridToolbarColumnsButton, DataGrid, GridColDef, GridRenderCellParams, GridToolbarContainer, GridToolbarExport } from '@mui/x-data-grid';
+import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline'
 import FilterListIcon from '@material-ui/icons/FilterList';
 import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
-import { Modal, Tooltip, Popover } from '@material-ui/core';
-import { AppBar, Box, Button, Dialog, Grid, Paper, Toolbar, Typography } from '@material-ui/core';
-import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline';
+import { Tooltip, Popover } from '@material-ui/core';
+import { Box, Button, Typography, AppBar, Dialog, Toolbar, Paper } from '@material-ui/core';
 import { APIDataToRows } from '../dataUtils';
 import ArrowPagination from './ArrowPagination';
 import { multiValueComparator, multiModalOperator } from '../constants';
@@ -15,15 +15,17 @@ import { EVAdapterClass } from '../../Browser/plugins/ExtendedVariantPlugin/Exte
 import { NoAssemblyRegion } from '@jbrowse/core/util/types';
 import { toArray } from 'rxjs/operators';
 import { fieldTypeInfoToOperators, searchStringToInitialFilters,  } from "../../utils";
+import { parseLocString } from '@jbrowse/core/util';
 
 
 import '../VariantTable.css';
 import '../../jbrowse.css';
-import { getGenotypeURL, createEncodedFilterString, navigateToBrowser, fetchLuceneQuery, fetchFieldTypeInfo, truncateToValidGUID} from '../../utils';
+import { getGenotypeURL, createEncodedFilterString, navigateToBrowserNoFilters, fetchLuceneQuery, fetchFieldTypeInfo, truncateToValidGUID} from '../../utils';
 import LoadingIndicator from './LoadingIndicator';
 
 const VariantTableWidget = observer(props => {
   const { assembly, assemblyName, trackId, locString, parsedLocString, sessionId, session, pluginManager } = props
+  const { assemblyNames, assemblyManager } = session
   const { view } = session
 
   const currentOffset = parseInt(new URLSearchParams(window.location.search).get('offset') || '0');
@@ -42,6 +44,10 @@ const VariantTableWidget = observer(props => {
   function handleSearch(data) {
     setFeatures(APIDataToRows(data.data, trackId))
   }
+
+  function handleModalClose(widget) {
+    session.hideWidget(widget)
+  } 
 
   function handleQuery(passedFilters) {
     const encodedSearchString = createEncodedFilterString(passedFilters, false);
@@ -283,15 +289,29 @@ const VariantTableWidget = observer(props => {
 
   const showDetailsWidget = (rowIdx: number, params: any) => {
     (async () => {
-        let a = adapter;
+        /*let a = adapter;
 
         if (!a) {
             a = await getAdapterInstance();
-        }
+        }*/
+        let a = await getAdapterInstance();
+
         const row = features[rowIdx] as any
+
+        const isValidRefNameForAssembly = function(refName: string, assemblyName?: string) {
+            return assemblyManager.isValidRefName(refName, assemblyNames[0])
+        }
+
+        const parsedLocString = parseLocString(row.contig + ":" + row.start + ".." + row.end, isValidRefNameForAssembly)
+        console.log("parsedLocString: ", parsedLocString)
+
+        const refName = assembly.getCanonicalRefName(parsedLocString.refName)
+        console.log("REFNAME: ", refName)
+        console.log("Start: ", row.start, " End: ", row.end)
+
         const ret = a.getFeatures({
-          refName: assemblyName,
-          start: row.start,
+          refName: refName,
+          start: row.start - 1,
           end: row.end
         } as NoAssemblyRegion)
 
@@ -337,7 +357,7 @@ const VariantTableWidget = observer(props => {
             >
               <Box sx={{lineHeight: '20px'}}><a className={"labkey-text-link"} onClick={() => { showDetailsWidget(params.row.id, params) }}>Variant Details</a></Box>
               <Box sx={{lineHeight: '20px'}}><a className={"labkey-text-link"} target="_blank" href={getGenotypeURL(params.row.trackId, params.row.contig, params.row.start, params.row.end)}>View Genotypes</a></Box>
-              <Box sx={{lineHeight: '20px'}}><a className={"labkey-text-link"} target="_blank" href={navigateToBrowser(sessionId, locString, trackId, track)}>View in Genome Browser</a></Box>
+              <Box sx={{lineHeight: '20px'}}><a className={"labkey-text-link"} target="_blank" href={navigateToBrowserNoFilters(sessionId, params.row.contig + ":" + params.row.start + ".." + params.row.end, trackId, track)}>View in Genome Browser</a></Box>
             </Box>
           </>
       )
@@ -383,6 +403,32 @@ const VariantTableWidget = observer(props => {
   return (
     <>
       <LoadingIndicator isOpen={!dataLoaded}/>
+
+      {
+        [...session.activeWidgets].map((elem) => {
+          const widget = elem[1]
+          const widgetType = pluginManager.getWidgetType(widget.type)
+          const { ReactComponent } = widgetType
+          const { visibleWidget } = session
+
+          // Note: this is based on ModalWidget.tsx from JBrowse.
+          return (
+          <Dialog onClose={() => handleModalClose(widget)} open={true} key={widget.id}>
+            <Paper>
+              <AppBar position="static">
+                <Toolbar>
+                    <Typography variant="h6">{widgetType.heading}</Typography>
+                </Toolbar>
+              </AppBar>
+              <ScopedCssBaseline>
+                <ReactComponent model={visibleWidget}/>
+              </ScopedCssBaseline>
+            </Paper>
+          </Dialog>
+          )
+        })
+      }
+
 
       <div style={{ marginBottom: "10px", display: "flex", alignItems: "center" }}>
 

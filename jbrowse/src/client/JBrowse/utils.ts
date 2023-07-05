@@ -225,6 +225,10 @@ export function navigateToBrowser(sessionId, locString, trackGUID?: string, trac
     return ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackGUID: trackGUID, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
 }
 
+export function navigateToBrowserNoFilters(sessionId, locString, trackGUID?: string, track?: any) {
+    return ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackGUID: trackGUID })
+}
+
 function serializeSampleFilters(track) {
     if (!track) {
         return undefined
