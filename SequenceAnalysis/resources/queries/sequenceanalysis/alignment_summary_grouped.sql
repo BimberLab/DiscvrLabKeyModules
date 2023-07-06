@@ -33,7 +33,7 @@ select
 --     else 'Minor'
 --   end as category,
 
-  group_concat(a.rowid) as rowids,
+  group_concat(a.rowid, ',') as rowids,
   group_concat(distinct a.haplotypesWithAllele) as haplotypesWithAllele,
 
   CAST((select sum(s.total) as total FROM sequenceanalysis.alignment_summary s WHERE s.analysis_id = a.analysis_id AND s.rowid IN (
@@ -46,7 +46,6 @@ select
     )
   ) as float) END), 2) as percent_from_locus,
   max(lastModified) as lastModified,
-  group_concat(distinct a.rowid, ',') as rowids,
   count(distinct a.rowid) as nAlignments,
   max(a.nloci) as nLoci
 
