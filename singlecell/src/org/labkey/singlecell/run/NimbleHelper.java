@@ -34,7 +34,6 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.Compress;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.SingleCellSchema;
@@ -350,13 +349,13 @@ public class NimbleHelper
             alignArgs.add(strandedness);
         }
 
-        File resultsTsvBase = new File(getPipelineCtx().getWorkingDirectory(), "results.txt");
+        File alignmentTsvBase = new File(getPipelineCtx().getWorkingDirectory(), "alignResults.txt");
 
         alignArgs.add("--reference");
         alignArgs.add(localRefJsons.stream().map(x -> "/work/" + x.getName()).collect(Collectors.joining(",")));
 
         alignArgs.add("--output");
-        alignArgs.add("/work/" + resultsTsvBase.getName());
+        alignArgs.add("/work/" + alignmentTsvBase.getName());
 
         alignArgs.add("--input");
         alignArgs.add("/work/" + localBam.getName());
@@ -366,37 +365,37 @@ public class NimbleHelper
         boolean dockerRan = runUsingDocker(alignArgs, output, "align.all");
         for (NimbleGenome genome : genomes)
         {
-            File resultsTsv = new File(getPipelineCtx().getWorkingDirectory(), "results." + genome.genomeId + ".txt");
-            if (dockerRan && !resultsTsv.exists())
+            File alignResultsTsv = new File(getPipelineCtx().getWorkingDirectory(), "alignResults." + genome.genomeId + ".txt");
+            if (dockerRan && !alignResultsTsv.exists())
             {
                 if (doneFile.exists())
                 {
                     doneFile.delete();
                 }
 
-                throw new PipelineJobException("Expected to find file: " + resultsTsv.getPath());
+                throw new PipelineJobException("Expected to find file: " + alignResultsTsv.getPath());
             }
 
-            File resultsGz = new File(resultsTsv.getPath() + ".gz");
+            File alignResultsGz = new File(alignResultsTsv.getPath() + ".gz");
             if (dockerRan)
             {
-                if (resultsGz.exists())
+                if (alignResultsGz.exists())
                 {
-                    getPipelineCtx().getLogger().debug("Deleting pre-existing gz output: " + resultsGz.getName());
-                    resultsGz.delete();
+                    getPipelineCtx().getLogger().debug("Deleting pre-existing gz output: " + alignResultsGz.getName());
+                    alignResultsGz.delete();
                 }
 
                 // NOTE: perform compression outside of nimble until nimble bugs fixed
                 getPipelineCtx().getLogger().debug("Compressing results TSV file");
-                resultsGz = Compress.compressGzip(resultsTsv);
-                resultsTsv.delete();
+                alignResultsGz = Compress.compressGzip(alignResultsTsv);
+                alignResultsTsv.delete();
             }
-            else if (!resultsGz.exists())
+            else if (!alignResultsGz.exists())
             {
-                throw new PipelineJobException("Expected to find gz file: " + resultsGz.getPath());
+                throw new PipelineJobException("Expected to find gz file: " + alignResultsGz.getPath());
             }
 
-            File log = getNimbleLogFile(resultsGz.getParentFile(), genome.genomeId);
+            File log = getNimbleLogFile(alignResultsGz.getParentFile(), genome.genomeId);
             if (!log.exists())
             {
                 throw new PipelineJobException("Expected to find file: " + log.getPath());
@@ -416,7 +415,33 @@ public class NimbleHelper
                 throw new PipelineJobException(e);
             }
 
-            resultMap.put(genome, resultsGz);
+            // Now run nimble report. Always re-run since this is fast:
+            List<String> reportArgs = new ArrayList<>();
+            reportArgs.add("python3");
+            reportArgs.add("-m");
+            reportArgs.add("nimble");
+
+            reportArgs.add("report");
+            reportArgs.add("-i");
+            reportArgs.add("/work/" + alignResultsGz.getPath());
+
+            File reportResultsGz = new File(getPipelineCtx().getWorkingDirectory(), "reportResults." + genome.genomeId + ".txt");
+            if (reportResultsGz.exists())
+            {
+                reportResultsGz.delete();
+            }
+
+            reportArgs.add("-o");
+            reportArgs.add("/work/" + reportResultsGz.getPath());
+
+            runUsingDocker(reportArgs, output, null);
+
+            if (!reportResultsGz.exists())
+            {
+                throw new PipelineJobException("Missing file: " + reportResultsGz.getPath());
+            }
+
+            resultMap.put(genome, reportResultsGz);
         }
 
         return resultMap;
@@ -434,7 +459,7 @@ public class NimbleHelper
 
     public static String DOCKER_CONTAINER_NAME = "ghcr.io/bimberlab/nimble:latest";
 
-    private boolean runUsingDocker(List<String> nimbleArgs, PipelineStepOutput output, String resumeString) throws PipelineJobException
+    private boolean runUsingDocker(List<String> nimbleArgs, PipelineStepOutput output, @Nullable String resumeString) throws PipelineJobException
     {
         File localBashScript = new File(getPipelineCtx().getWorkingDirectory(), "docker.sh");
         File dockerBashScript = new File(getPipelineCtx().getWorkingDirectory(), "dockerRun.sh");
@@ -504,26 +529,33 @@ public class NimbleHelper
             throw new PipelineJobException(e);
         }
 
-        File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), resumeString);
-        output.addIntermediateFile(doneFile);
-
-        if (doneFile.exists())
+        File doneFile = null;
+        if (resumeString != null)
         {
-            getPipelineCtx().getLogger().info("Nimble already completed, resuming: " + resumeString);
-            return false;
+            doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), resumeString);
+            output.addIntermediateFile(doneFile);
+
+            if (doneFile.exists())
+            {
+                getPipelineCtx().getLogger().info("Nimble already completed, resuming: " + resumeString);
+                return false;
+            }
         }
 
         SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(getPipelineCtx().getLogger());
         rWrapper.setWorkingDir(getPipelineCtx().getWorkingDirectory());
         rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
 
-        try
+        if (doneFile != null)
         {
-            FileUtils.touch(doneFile);
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
+            try
+            {
+                FileUtils.touch(doneFile);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
         }
 
         return true;
