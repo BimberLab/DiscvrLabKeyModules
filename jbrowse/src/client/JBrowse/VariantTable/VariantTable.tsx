@@ -10,7 +10,7 @@ import LogSession from '../Browser/plugins/LogSession/index';
 import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index';
 import VariantTableWidget from './components/VariantTableWidget';
 import { fetchSession } from '../utils';
-import { ErrorBoundary } from '@labkey/components';
+import { ErrorBoundary } from './components/ErrorBoundary'
 import LoadingIndicator from './components/LoadingIndicator';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]

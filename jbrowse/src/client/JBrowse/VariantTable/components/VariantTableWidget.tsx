@@ -56,7 +56,7 @@ const VariantTableWidget = observer(props => {
     window.history.pushState(null, "", currentUrl.toString());
 
     setFilters(passedFilters);
-    fetchLuceneQuery(passedFilters, sessionId, trackGUID, currentOffset, (json)=>{console.log(json); handleSearch(json)}, () => {});
+    fetchLuceneQuery(passedFilters, sessionId, trackGUID, currentOffset, (json)=>{console.log(json); handleSearch(json)}, (error) => {setError(error)});
   }
 
   const TableCellWithPopover = (props: { value: any }) => {
@@ -193,6 +193,8 @@ const VariantTableWidget = observer(props => {
   const [features, setFeatures] = useState<any[]>([])
   const [columns, setColumns] = useState<GridColumns>([])
 
+  const [error, setError] = useState<any>(undefined)
+
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [filters, setFilters] = useState([]);
   const [fieldTypeInfo, setFieldTypeInfo] = useState([]);
@@ -258,6 +260,9 @@ const VariantTableWidget = observer(props => {
           setAvailableOperators(operators)
           setFieldTypeInfo(res.fields)
           handleQuery(searchStringToInitialFilters(operators))
+        },
+        (error) => {
+          setError(error)
         })
     }
 
@@ -271,6 +276,10 @@ const VariantTableWidget = observer(props => {
 
   if (!track) {
       return(<p>Unable to find track: {trackId}</p>)
+  }
+
+  if (error) {
+    throw new Error(error)
   }
 
   const getAdapterInstance = async () => {

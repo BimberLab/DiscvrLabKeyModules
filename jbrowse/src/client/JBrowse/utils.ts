@@ -368,20 +368,17 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, su
     console.log("Offset: ", offset)
 
     if (!sessionId) {
-        console.error("Lucene query: no session ID")
-        failureCallback()
+        failureCallback("There was an error: " + "Lucene query: no session ID")
         return
     }
 
     if (!trackGUID) {
-        console.error("Lucene query: no track ID")
-        failureCallback()
+        failureCallback("There was an error: " + "Lucene query: no track ID")
         return
     }
 
     if (!filters) {
-        console.log("No filters!")
-        failureCallback()
+        failureCallback("There was an error: " + "Lucene query: no filters")
         return
     }
 
@@ -395,12 +392,11 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, su
             console.log("Lucene query success:", jsonRes)
             successCallback(jsonRes)
         },
-        failure: function(res){
+        failure: function(res) {
             console.log("Lucene query failure:", res.status)
             console.log(res.response)
             console.log(res.statusText)
-            failureCallback()
-            handleFailure("There was an error: " + res.status, sessionId)
+            failureCallback("There was an error: " + res.status, res.statusText, sessionId)
         },
         params: {"searchString": createEncodedFilterString(filters, true), "sessionId": sessionId, "trackId": trackGUID, "offset": offset},
     });
@@ -425,7 +421,7 @@ export function createEncodedFilterString(filters: Array<{field: string; operato
     return encodeURIComponent(concatenatedString);
 }
 
-export async function fetchFieldTypeInfo(sessionId, trackId, successCallback) {
+export async function fetchFieldTypeInfo(sessionId, trackId, successCallback, failureCallback) {
     if (!sessionId || !trackId) {
         console.error("Lucene fetch field type info: sessionId or trackId not provided")
         return
@@ -440,8 +436,7 @@ export async function fetchFieldTypeInfo(sessionId, trackId, successCallback) {
             successCallback(jsonRes)
         },
         failure: function(res){
-            console.log("Fetch field type info failure:", res.status)
-            handleFailure("There was an error: " + res.status, sessionId)
+            failureCallback("Fetch field type info failure:" + res.status, res.statusText, sessionId)
         },
         params: {sessionId: sessionId, trackId: trackId},
     });
