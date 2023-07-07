@@ -396,7 +396,7 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, su
             console.log("Lucene query failure:", res.status)
             console.log(res.response)
             console.log(res.statusText)
-            failureCallback("There was an error: " + res.status, res.statusText, sessionId)
+            failureCallback("There was an error: " + res.status + "\n Status Body: " + res.responseText + "\n Session ID:" + sessionId)
         },
         params: {"searchString": createEncodedFilterString(filters, true), "sessionId": sessionId, "trackId": trackGUID, "offset": offset},
     });
@@ -436,7 +436,7 @@ export async function fetchFieldTypeInfo(sessionId, trackId, successCallback, fa
             successCallback(jsonRes)
         },
         failure: function(res){
-            failureCallback("Fetch field type info failure:" + res.status, res.statusText, sessionId)
+            failureCallback("There was an error while fetching field types: " + res.status + "\n Status Body: " + res.statusText + "\n Session ID:" + sessionId)
         },
         params: {sessionId: sessionId, trackId: trackId},
     });
