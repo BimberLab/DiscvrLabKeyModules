@@ -48,6 +48,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -57,6 +58,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * User: bimber
@@ -496,9 +498,10 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             AlignmentGroup g1 = it.next();
             while (it.hasNext())
             {
+                int orig = g1.alleles.size();
                 if (compareGroupToOthers(g1))
                 {
-                    log.info("Collapsed: " + g1.lineages + ", with: " + g1.alleles.size());
+                    log.info("Collapsed: " + g1.lineages + ", from: " + orig + " to " + g1.alleles.size() + " alleles");
                     return true; // abort and restart the process with a new list iterator
                 }
 
@@ -563,14 +566,36 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                     return false;
                 }
 
-                return CollectionUtils.disjunction(this.alleles, g2.alleles).size() == 1;
+                // Allow greater level of collapse with highly ambiguous results:
+                // Require similar sizes, but disjoint allele sets (e.g., A/B/D and A/C/D, but not A/B/C and A/D/E)
+                int setDiffThreshold;
+                int sizeDiffThreshold;
+                if (this.alleles.size() >= 16)
+                {
+                    setDiffThreshold = 6;
+                    sizeDiffThreshold = 3;
+                }
+                else if (this.alleles.size() >= 8)
+                {
+                    setDiffThreshold = 4;
+                    sizeDiffThreshold = 2;
+                }
+                else
+                {
+                    setDiffThreshold = 2;
+                    sizeDiffThreshold = 1;
+                }
+
+                return Math.abs(this.alleles.size() - g2.alleles.size()) <= sizeDiffThreshold && CollectionUtils.disjunction(this.alleles, g2.alleles).size() <= setDiffThreshold;
             }
 
             public AlignmentGroup combine(AlignmentGroup g2)
             {
-                // Take the larger allele set:
+                // Take the union of the allele sets:
+                TreeSet<String> allAlleles = Stream.of(this.alleles, g2.alleles).flatMap(Collection::stream).collect(Collectors.toCollection(TreeSet::new));
                 if (g2.alleles.size() > this.alleles.size())
                 {
+                    g2.alleles = allAlleles;
                     g2.rowIdsToDelete.addAll(this.rowIds);
                     g2.rowIdsToDelete.addAll(this.rowIdsToDelete);
                     g2.totalReads = g2.totalReads + totalReads;
@@ -582,6 +607,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                 }
                 else
                 {
+                    this.alleles = allAlleles;
                     this.rowIdsToDelete.addAll(g2.rowIds);
                     this.rowIdsToDelete.addAll(g2.rowIdsToDelete);
                     this.totalReads = g2.totalReads + totalReads;
