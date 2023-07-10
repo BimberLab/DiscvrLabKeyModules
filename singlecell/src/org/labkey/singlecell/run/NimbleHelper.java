@@ -360,14 +360,13 @@ public class NimbleHelper
         alignArgs.add("--input");
         alignArgs.add("/work/" + localBam.getName());
 
-        File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "align.all");
-
         boolean dockerRan = runUsingDocker(alignArgs, output, "align.all");
         for (NimbleGenome genome : genomes)
         {
             File alignResultsTsv = new File(getPipelineCtx().getWorkingDirectory(), "alignResults." + genome.genomeId + ".txt");
             if (dockerRan && !alignResultsTsv.exists())
             {
+                File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "align.all");
                 if (doneFile.exists())
                 {
                     doneFile.delete();
@@ -539,6 +538,10 @@ public class NimbleHelper
             {
                 getPipelineCtx().getLogger().info("Nimble already completed, resuming: " + resumeString);
                 return false;
+            }
+            else
+            {
+                getPipelineCtx().getLogger().debug("done file not found: " + doneFile.getPath());
             }
         }
 
