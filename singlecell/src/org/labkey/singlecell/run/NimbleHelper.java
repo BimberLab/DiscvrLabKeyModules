@@ -422,7 +422,7 @@ public class NimbleHelper
 
             reportArgs.add("report");
             reportArgs.add("-i");
-            reportArgs.add("/work/" + alignResultsGz.getPath());
+            reportArgs.add("/work/" + alignResultsGz.getName());
 
             File reportResultsGz = new File(getPipelineCtx().getWorkingDirectory(), "reportResults." + genome.genomeId + ".txt");
             if (reportResultsGz.exists())
@@ -431,7 +431,7 @@ public class NimbleHelper
             }
 
             reportArgs.add("-o");
-            reportArgs.add("/work/" + reportResultsGz.getPath());
+            reportArgs.add("/work/" + reportResultsGz.getName());
 
             runUsingDocker(reportArgs, output, null);
 
