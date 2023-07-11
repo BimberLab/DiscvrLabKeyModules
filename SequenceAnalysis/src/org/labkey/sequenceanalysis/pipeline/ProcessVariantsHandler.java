@@ -528,7 +528,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         String cat = vcf.getName().endsWith(".gz") ? "zcat" : "cat";
         SimpleScriptWrapper wrapper = new SimpleScriptWrapper(null);
 
-        String ret = wrapper.executeWithOutput(Arrays.asList("/bin/bash", "-c", cat + " \"" + vcf.getPath() + "\" | grep -v \"#\" | " + (passOnly ? "awk ' $7 == \"PASS\" || $7 == \"\\.\" ' | " : "") + "wc -l | awk \" { print $1 } \""));
+        String ret = StringUtils.trimToNull(wrapper.executeWithOutput(Arrays.asList("/bin/bash", "-c", cat + " \"" + vcf.getPath() + "\" | grep -v \"#\" | " + (passOnly ? "awk ' $7 == \"PASS\" || $7 == \"\\.\" ' | " : "") + "wc -l | awk \" { print $1 } \"")));
 
         //NOTE: unsure how to get awk to omit this warning, so discard it:
         //the warning is: escape '\.' treated as plain '.'
