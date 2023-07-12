@@ -663,7 +663,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // alt does not equal C
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=-alt%3AC";
+        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=*%3A*%20-alt%3AC";
         beginAt(url);
         waitForText("data");
         waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
@@ -691,7 +691,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // alt does not contain AA
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=-alt%3A*AA*";
+        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=*%3A*%20-alt%3A*AA*";
         beginAt(url);
         waitForText("data");
         waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
@@ -701,7 +701,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
-            Assert.assertTrue(!jsonObject.getString("alt").contains("A"));
+            Assert.assertTrue(!jsonObject.getString("alt").contains("AA"));
         }
 
         // IMPACT starts with HI
@@ -729,7 +729,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Assert.assertEquals(5, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
-            Assert.assertEquals("TA", jsonObject.getString("contig"));
+            Assert.assertEquals("TA", jsonObject.getString("ref").substring(jsonObject.getString("ref").length() - 2));
         }
 
         // IMPACT is empty
@@ -821,7 +821,6 @@ public class JBrowseTest extends BaseWebDriverTest
             }
         }
 
-        // variable in all of m00004, m00013, m00029
         url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=";
         waitForText("data");
         waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
@@ -831,7 +830,6 @@ public class JBrowseTest extends BaseWebDriverTest
         Assert.assertEquals(100, jsonArray.length());
 
 
-        // variable in any of m00004, m00013, m00029
         url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=";
         beginAt(url);
         waitForText("data");
@@ -842,7 +840,6 @@ public class JBrowseTest extends BaseWebDriverTest
         Assert.assertEquals(100, jsonArray.length());
 
 
-        // not variable in any of m00004, m00013, m00029
         url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=";
         beginAt(url);
         waitForText("data");
@@ -856,7 +853,6 @@ public class JBrowseTest extends BaseWebDriverTest
             Assert.assertEquals(1, jsonObject.getInt("contig"));
         }
 
-        // not variable in one of
         url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=";
         beginAt(url);
         waitForText("data");
@@ -902,7 +898,7 @@ public class JBrowseTest extends BaseWebDriverTest
         // numericType:
         // contig = 1
         // this should return 100 values and each should have contig = 1
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=contig:=1";
+        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=contig%3A1";
         beginAt(url);
         waitForText("data");
         waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
@@ -929,8 +925,8 @@ public class JBrowseTest extends BaseWebDriverTest
             Assert.assertNotEquals(88, jsonObject.getInt("AC"));
         }
 
-        // CADD_PH > 7.292
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=";
+        // AF > 0.532
+        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=AF%3A%5B0.5320010000000001%20TO%20*%5D";
         beginAt(url);
         waitForText("data");
         waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
@@ -940,7 +936,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
-            Assert.assertEquals(1, jsonObject.getInt("contig"));
+            Assert.assertTrue(jsonObject.getDouble("AF") > 0.532);
         }
 
         // AF >= 0.029
@@ -954,7 +950,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
-            Assert.assertEquals(0.029, jsonObject.getDouble("AF"), 0.0001);
+            Assert.assertTrue(jsonObject.getDouble("AF") >= 0.029);
         }
 
         // start < 137
@@ -982,7 +978,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Assert.assertEquals(7, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
-            Assert.assertTrue(jsonObject.getInt("contig") <= 440);
+            Assert.assertTrue(jsonObject.getInt("end") <= 440);
         }
 
         // CADD_PH is empty
@@ -996,7 +992,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
-            Assert.assertEquals(1, jsonObject.getInt("contig"));
+            Assert.assertFalse(jsonObject.has("CADD_PH"));
         }
 
         // CADD_PH is not empty
@@ -1010,7 +1006,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
-            Assert.assertEquals(1, jsonObject.getInt("contig"));
+            Assert.assertTrue(jsonObject.has("CADD_PH"));
         }
 
 

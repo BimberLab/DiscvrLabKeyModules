@@ -239,9 +239,10 @@ public class JBrowseLuceneSearch
                 Query query = null;
 
                 // Type is defined by the first field in the lucene query
-                // "First" field is defined by getting the first consecutive string of ASCII characters terminated by a colon
+                // "First" field is defined by getting the first consecutive string of ASCII characters or underscores terminated by a colon
                 // we might just want to return the field(s) in the form instead
-                Pattern pattern = Pattern.compile("[\\p{ASCII}&&[^\\p{P}\\s:]]+:");
+                Pattern pattern = Pattern.compile("[\\p{ASCII}&&[^\\s:*-]][\\p{ASCII}&&[^:\\p{Punct}*]]*:");
+
                 Matcher matcher = pattern.matcher(queryString);
 
                 String fieldName = null;
