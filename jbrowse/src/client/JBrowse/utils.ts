@@ -214,11 +214,6 @@ export function navigateToTable(sessionId, locString, trackId, track?: any) {
     window.location.href = ActionURL.buildURL("jbrowse", "variantTable.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
 }
 
-export function navigateToFreeTextSearch(sessionId, trackGUID) {
-    // TODO: update this to use a different action. Also evaluate how to serialize filters
-    window.location.href = ActionURL.buildURL("jbrowse", "variantTable.view", null, {session: sessionId, trackId: trackGUID})
-}
-
 export function navigateToBrowser(sessionId, locString, trackGUID?: string, track?: any) {
     const sampleFilterURL = serializeSampleFilters(track)
     const infoFilterURL = serializeInfoFilters(track)

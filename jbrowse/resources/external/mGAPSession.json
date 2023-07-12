@@ -30,7 +30,7 @@
       }
     }
   },
-  "location": "1:1..30,224",
+  "location": "1:1..10,224",
   "tracks": [
     {
       "type": "ExtendedVariantTrack",
