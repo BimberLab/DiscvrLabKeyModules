@@ -383,6 +383,7 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, su
     }
 
     console.log("Attempting lucene query:")
+    console.log(createEncodedFilterString(filters, true))
 
     return Ajax.request({
         url: ActionURL.buildURL('jbrowse', 'luceneQuery.api'),
