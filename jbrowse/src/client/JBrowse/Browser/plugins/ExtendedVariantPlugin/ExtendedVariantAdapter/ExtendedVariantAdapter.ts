@@ -42,7 +42,7 @@ export default class extends VcfTabixAdapter {
                         variant: parser.parseLine(line),
                         parser,
                         id: `${this.id}-vcf-${fileOffset}`,
-                    }),
+                    })
                 )
             },
             ...opts,

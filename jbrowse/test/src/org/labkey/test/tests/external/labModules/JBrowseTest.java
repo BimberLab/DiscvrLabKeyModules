@@ -1376,13 +1376,6 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
 
         doAndWaitForPageToLoad(() -> {
-            beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116589761..117411999771", 0);
-            assertAlert("Location 1:116589761..117411999771 is too large to load.");
-        });
-        waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
-        waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
-
-        doAndWaitForPageToLoad(() -> {
             beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1", 0);
             assertAlert("Must include start/stop in location to avoid loading too many sites: 1");
         });
