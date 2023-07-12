@@ -282,22 +282,33 @@ function generateLuceneString(field, operator, value) {
   if (field === 'variableSamples' && operator == "in set") {
     return `variableSamples:~${value}~`;
   }
+  let intValue = parseInt(value);
+  let floatValue = parseFloat(value);
 
+  // Generate Lucene query string based on operator and type of value
   switch (operator) {
     case '=': // Exact match for numeric fields
-        luceneQueryString = `${field}:[${value} TO ${value}]`;
+        luceneQueryString = floatValue !== intValue 
+            ? `${field}:[${Number(value) - 0.000001} TO ${Number(value) + 0.000001}]`
+            : `${field}:[${value} TO ${value}]`;
         break;
     case '!=': // Not equal to, for numeric fields
-        luceneQueryString = `${field}:[* TO ${Number(value) - 0.000001}] OR ${field}:[${Number(value) + 0.000001} TO *]`;
+        luceneQueryString = floatValue !== intValue 
+            ? `${field}:[* TO ${Number(value) - 0.000001}] OR ${field}:[${Number(value) + 0.000001} TO *]` 
+            : `${field}:[* TO ${value}} OR ${field}:{${value} TO *]`;
         break;
     case '>': // Greater than for numeric fields
-        luceneQueryString = `${field}:[${Number(value) + 0.000001} TO *]`;
+        luceneQueryString = floatValue !== intValue 
+            ? `${field}:[${Number(value) + 0.000001} TO *]`
+            : `${field}:{${value} TO *]`;
         break;
     case '>=': // Greater than or equal to for numeric fields
         luceneQueryString = `${field}:[${value} TO *]`;
         break;
     case '<': // Less than for numeric fields
-        luceneQueryString = `${field}:[* TO ${Number(value) - 0.000001}]`;
+        luceneQueryString = floatValue !== intValue 
+            ? `${field}:[* TO ${Number(value) - 0.000001}]`
+            : `${field}:[* TO ${value}}`;
         break;
     case '<=': // Less than or equal to for numeric fields
         luceneQueryString = `${field}:[* TO ${value}]`;
