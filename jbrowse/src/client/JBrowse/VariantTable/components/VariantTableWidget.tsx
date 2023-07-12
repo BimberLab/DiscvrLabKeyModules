@@ -56,7 +56,7 @@ const VariantTableWidget = observer(props => {
     window.history.pushState(null, "", currentUrl.toString());
 
     setFilters(passedFilters);
-    fetchLuceneQuery(passedFilters, sessionId, trackGUID, currentOffset, (json)=>{console.log(json); handleSearch(json)}, (error) => {setError(error)});
+    fetchLuceneQuery(passedFilters, sessionId, trackGUID, currentOffset, (json)=>{handleSearch(json)}, (error) => {setError(error)});
   }
 
   const TableCellWithPopover = (props: { value: any }) => {
@@ -312,11 +312,7 @@ const VariantTableWidget = observer(props => {
         }
 
         const parsedLocString = parseLocString(row.contig + ":" + row.start + ".." + row.end, isValidRefNameForAssembly)
-        console.log("parsedLocString: ", parsedLocString)
-
         const refName = assembly.getCanonicalRefName(parsedLocString.refName)
-        console.log("REFNAME: ", refName)
-        console.log("Start: ", row.start, " End: ", row.end)
 
         const ret = a.getFeatures({
           refName: refName,
@@ -325,8 +321,6 @@ const VariantTableWidget = observer(props => {
         } as NoAssemblyRegion)
 
         const extendedFeatures = await ret.pipe(toArray()).toPromise()
-        console.log("RETURNED FEATURE")
-        console.log(extendedFeatures)
         const feature = extendedFeatures[0];
 
         const trackId = getConf(track, 'trackId')

@@ -288,16 +288,16 @@ function generateLuceneString(field, operator, value) {
         luceneQueryString = `${field}:[${value} TO ${value}]`;
         break;
     case '!=': // Not equal to, for numeric fields
-        luceneQueryString = `${field}:[* TO ${value - 0.000001}] OR ${field}:[${value + 0.000001} TO *]`;
+        luceneQueryString = `${field}:[* TO ${Number(value) - 0.000001}] OR ${field}:[${Number(value) + 0.000001} TO *]`;
         break;
     case '>': // Greater than for numeric fields
-        luceneQueryString = `${field}:[${value + 0.000001} TO *]`;
+        luceneQueryString = `${field}:[${Number(value) + 0.000001} TO *]`;
         break;
     case '>=': // Greater than or equal to for numeric fields
         luceneQueryString = `${field}:[${value} TO *]`;
         break;
     case '<': // Less than for numeric fields
-        luceneQueryString = `${field}:[* TO ${value - 0.000001}]`;
+        luceneQueryString = `${field}:[* TO ${Number(value) - 0.000001}]`;
         break;
     case '<=': // Less than or equal to for numeric fields
         luceneQueryString = `${field}:[* TO ${value}]`;
@@ -309,10 +309,10 @@ function generateLuceneString(field, operator, value) {
         luceneQueryString = `${field}:*${value}*`;
         break;
     case 'does not equal': // Not equal to for string fields
-        luceneQueryString = `-${field}:${value}`;
+        luceneQueryString = `*:* -${field}:${value}`;
         break;
     case 'does not contain': // Does not contain for string fields
-        luceneQueryString = `-${field}:*${value}*`;
+        luceneQueryString = `*:* -${field}:*${value}*`;
         break;
     case 'starts with': // Starts with for string fields
         luceneQueryString = `${field}:${value}*`;
@@ -358,14 +358,9 @@ function generateLuceneString(field, operator, value) {
 }
 
 export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, successCallback, failureCallback) {
-    console.log("Running fetchLuceneQuery, FILTERS")
-    console.log(filters)
-
     if (!offset) {
         offset = 0
     }
-
-    console.log("Offset: ", offset)
 
     if (!sessionId) {
         failureCallback("There was an error: " + "Lucene query: no session ID")
@@ -382,7 +377,7 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, su
         return
     }
 
-    console.log("Attempting lucene query:")
+    console.log("Attempted query: ")
     console.log(createEncodedFilterString(filters, true))
 
     return Ajax.request({
@@ -390,13 +385,9 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, su
         method: 'GET',
         success: async function(res){
             let jsonRes = JSON.parse(res.response);
-            console.log("Lucene query success:", jsonRes)
             successCallback(jsonRes)
         },
         failure: function(res) {
-            console.log("Lucene query failure:", res.status)
-            console.log(res.response)
-            console.log(res.statusText)
             failureCallback("There was an error: " + res.status + "\n Status Body: " + res.responseText + "\n Session ID:" + sessionId)
         },
         params: {"searchString": createEncodedFilterString(filters, true), "sessionId": sessionId, "trackId": trackGUID, "offset": offset},
@@ -407,8 +398,6 @@ export function createEncodedFilterString(filters: Array<{field: string; operato
     let ret: any = []
 
     if(!filters || filters.length == 0 || (filters.length == 1 && filters[0].field == "" && filters[0].operator == "" && filters[0].value == "")) {
-        console.log("EMPTY FILTERS, RETURNING ALL!")
-        console.log(filters)
         return "all"
     }
 
@@ -433,7 +422,6 @@ export async function fetchFieldTypeInfo(sessionId, trackId, successCallback, fa
         method: 'GET',
         success: async function(res){
             let jsonRes = JSON.parse(res.response);
-            console.log("Fetch field type info success:", jsonRes)
             successCallback(jsonRes)
         },
         failure: function(res){
@@ -460,7 +448,6 @@ export function searchStringToInitialFilters(operators) : any[] {
     if (searchString && searchString != "all") {
         const decodedSearchString = decodeURIComponent(searchString)
         const searchStringsArray = decodedSearchString.split("&")
-        console.log("search strings array: ", searchStringsArray)
         initialFilters = searchStringsArray
         .map((item) => {
         const [field, operator, value] = item.split(",")
