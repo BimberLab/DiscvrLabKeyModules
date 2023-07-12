@@ -11,13 +11,13 @@
       "adapter": {
         "type": "BgzipFastaAdapter",
         "fastaLocation": {
-          "uri": "https://jbrowse.org/genomes/GRCh38/fasta/hg38.prefix.fa.gz"
+          "uri": "<%=contextPath%>/jbrowse/mgap/GRCh37_small.fasta.gz"
         },
         "faiLocation": {
-          "uri": "https://jbrowse.org/genomes/GRCh38/fasta/hg38.prefix.fa.gz.fai"
+          "uri": "<%=contextPath%>/jbrowse/mgap/GRCh37_small.fasta.gz.fai"
         },
         "gziLocation": {
-          "uri": "https://jbrowse.org/genomes/GRCh38/fasta/hg38.prefix.fa.gz.gzi"
+          "uri": "<%=contextPath%>/jbrowse/mgap/GRCh37_small.fasta.gz.gzi"
         }
       }
     },
@@ -30,7 +30,7 @@
       }
     }
   },
-  "location": "1:1..30,728",
+  "location": "1:1..30,224",
   "tracks": [
     {
       "type": "ExtendedVariantTrack",

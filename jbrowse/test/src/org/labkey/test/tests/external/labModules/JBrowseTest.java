@@ -347,7 +347,7 @@ public class JBrowseTest extends BaseWebDriverTest
         WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).findFirst().get();
 
         actions.click(toClick).perform();
-        waitForElement(Locator.tagWithText("div", "1:116,982,183..116,982,183"));
+        waitForElement(Locator.tagWithText("div", "1:914..914"));
         waitForElement(Locator.tagWithText("span", "Predicted Function"));
         waitForElement(Locator.tagWithText("span", "Regulatory Data"));
         waitForElement(Locator.tagWithText("span", "Phenotypic Data"));
@@ -356,7 +356,7 @@ public class JBrowseTest extends BaseWebDriverTest
     private void testSampleFiltersFromUrl()
     {
         // Note: this can be taxing on the browser, so load a more targeted region
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&sampleFilters=mgap:m00010&location=1:116,980,271..116,983,486");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&sampleFilters=mgap:m00010&location=1:100..800");
         waitForJBrowseToLoad();
 
         // Wait for variants to load:
@@ -436,25 +436,25 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testTitleMapping()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:116981373..116981544");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:104..275");
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,981,406..116,981,406
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:137..137
         actions.click(toClick).perform();
-        waitForElement(Locator.tagWithText("div", "1:116,981,406..116,981,406"));
+        waitForElement(Locator.tagWithText("div", "1:137..137"));
         assertElementPresent(Locator.tagWithText("td", "Minor Allele Frequency"));
     }
 
     private void testPredictedFunction()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:116981373..116981544");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:104..275");
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,981,406..116,981,406
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:137..137
         actions.click(toClick).perform();
-        waitForElement(Locator.tagWithText("div", "1:116,981,406..116,981,406"));
+        waitForElement(Locator.tagWithText("div", "1:137..137"));
         assertElementPresent(Locator.tagWithText("th", "Effect"));
         assertElementPresent(Locator.tagWithText("th", "Impact"));
         assertElementPresent(Locator.tagWithText("th", "Gene Name"));
@@ -465,13 +465,13 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testAlleleFrequencies()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:116999734..116999776");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:18465..18507");
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,999,755
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:18,486
         actions.click(toClick).perform();
-        waitForElement(Locator.tagWithText("div", "1:116,999,755..116,999,755"));
+        waitForElement(Locator.tagWithText("div", "1:18,486..18,486"));
         assertElementPresent(Locator.tagWithText("th", "Sequence"));
         assertElementPresent(Locator.tagWithText("th", "Fraction"));
         assertElementPresent(Locator.tagWithText("th", "Count"));
@@ -481,13 +481,13 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testGenotypeFrequencies()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:116999734..116999776");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:18465..18507");
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:116,999,755
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:18,486
         actions.click(toClick).perform();
-        waitForElement(Locator.tagWithText("div", "1:116,999,755..116,999,755"));
+        waitForElement(Locator.tagWithText("div", "1:18,486..18,486"));
         assertElementPresent(Locator.tagWithText("td", "3041"));
         assertElementPresent(Locator.tagWithText("span", "Genotype Frequency (2329)"));
         assertElementPresent(Locator.tagWithText("a", "Click here to view sample-level genotypes"));
@@ -1359,7 +1359,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testGridFailureConditions()
     {
-        beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116999734..116999776");
+        beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:18465..18507");
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
         waitForElement(Locator.tagWithText("div", "18486"));
 
@@ -1395,7 +1395,7 @@ public class JBrowseTest extends BaseWebDriverTest
     }
 
     private void testVariantTableComparators() throws Exception {
-        beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116589678..117411688");
+        beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:1..430419");
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
         waitForElement(Locator.tagWithText("div", "1")); //proxy for grid loading
 
