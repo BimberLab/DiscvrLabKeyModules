@@ -535,6 +535,10 @@ public class JsonFile
                 put("mouseover", "jexl:'Position: ' + formatWithCommas(get(feature,'POS'))");
                 put("renderer", new JSONObject(){{
                     put("type", "ExtendedVariantRenderer");
+                    if (shouldHaveFreeTextSearch())
+                    {
+                        put("supportsLuceneIndex", true);
+                    }
                     //put("showLabels", false);
                     //put("labels", new JSONObject(){{
                     //    put("description", "jexl:get(feature,'POS')");
