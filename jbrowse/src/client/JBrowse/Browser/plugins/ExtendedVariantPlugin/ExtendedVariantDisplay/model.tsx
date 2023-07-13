@@ -203,7 +203,8 @@ export default jbrowse => {
                   },
                }]
 
-               if (self.rendererConfig?.supportsLuceneIndex) {
+               const supportsLuceneIndex = getConf(self, ['renderer', 'supportsLuceneIndex'])
+               if (supportsLuceneIndex) {
                   buttons.push({
                      label: 'View As Table',
                      onClick: () => {
