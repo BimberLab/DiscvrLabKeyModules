@@ -713,6 +713,7 @@ public class JBrowseController extends SpringActionController
                 resp = getDemoSession("external/mGAPSession.json");
                 resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("activeSamples", "m00004,m00005");
                 resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("palette", "AF");
+                resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("supportsLuceneIndex", true);
                 resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("infoFilters", new JSONArray(){{
                     put("AF:gt:0.1");
                 }});

@@ -171,54 +171,54 @@ export default jbrowse => {
             },
 
             trackMenuItems() {
-               return [
-                  filterMenu, sampleFilterMenu, colorMenu,
-                  {
-                     label: 'Show labels',
-                     icon: VisibilityIcon,
-                     type: 'checkbox',
-                     checked: self.showLabels,
+               const buttons = [filterMenu, sampleFilterMenu, colorMenu, {
+                  label: 'Show labels',
+                  icon: VisibilityIcon,
+                  type: 'checkbox',
+                  checked: self.showLabels,
+                  onClick: () => {
+                     self.toggleShowLabels()
+                  }
+               }, {
+                  label: 'Display mode',
+                  icon: VisibilityIcon,
+                  subMenu: [
+                     'compact',
+                     'reducedRepresentation',
+                     'normal',
+                     'collapse',
+                  ].map(val => ({
+                     label: val,
                      onClick: () => {
-                        self.toggleShowLabels()
-                     }
-                  },
-                  {
-                     label: 'Display mode',
-                     icon: VisibilityIcon,
-                     subMenu: [
-                        'compact',
-                        'reducedRepresentation',
-                        'normal',
-                        'collapse',
-                     ].map(val => ({
-                        label: val,
-                        onClick: () => {
-                           self.setDisplayMode(val)
-                        },
-                     })),
-                  },
-                  {
-                     label: 'Set max height',
-                     onClick: () => {
-                        getSession(self).queueDialog((doneCallback: Function) => [
-                           SetMaxHeightDlg,
-                           { model: self, handleClose: doneCallback },
-                        ])
+                        self.setDisplayMode(val)
                      },
+                  })),
+               },{
+                  label: 'Set max height',
+                  onClick: () => {
+                     getSession(self).queueDialog((doneCallback: Function) => [
+                        SetMaxHeightDlg,
+                        { model: self, handleClose: doneCallback },
+                     ])
                   },
-                  {
+               }]
+
+               if (self.rendererConfig?.supportsLuceneIndex) {
+                  buttons.push({
                      label: 'View As Table',
                      onClick: () => {
                         const track = getContainingTrackWithConfig(self)
                         const view = getContainingView(self) as LinearGenomeViewModel
-                        
+
                         const region = view.getSelectedRegions(undefined, undefined)[0]
                         const location = region.refName + ':' + region.start + '..' + region.end
                         const sessionId = view.id;
                         navigateToTable(sessionId, location, track.configuration.trackId, track)
                      },
-                  }
-              ]
+                  })
+               }
+
+               return buttons
             }
          }
       })

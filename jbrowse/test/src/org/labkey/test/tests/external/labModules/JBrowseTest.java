@@ -98,6 +98,7 @@ public class JBrowseTest extends BaseWebDriverTest
         testLoadingConfigFilters();
         testSampleFilters();
         testSampleFiltersFromUrl();
+        testViewTableButton();
 
         // TODO: restore this
         //testBrowserNavToVariantTable();
@@ -352,6 +353,22 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("span", "Predicted Function"));
         waitForElement(Locator.tagWithText("span", "Regulatory Data"));
         waitForElement(Locator.tagWithText("span", "Phenotypic Data"));
+    }
+
+    private void testViewTableButton()
+    {
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:100..1151");
+        waitForJBrowseToLoad();
+
+        waitAndClick(Locator.tagWithAttribute("button", "data-testid", "track_menu_icon"));
+        assertElementNotPresent(Locator.tagContainingText("span", "View As Table"));
+
+        // NOTE: this button wont work since it's not actually indexed, but the server's config pokes in the property to show this:
+        beginAt("/home/jbrowse-jbrowse.view?session=mgapF&location=1:100..1151");
+        waitForJBrowseToLoad();
+
+        waitAndClick(Locator.tagWithAttribute("button", "data-testid", "track_menu_icon"));
+        assertElementPresent(Locator.tagContainingText("span", "View As Table"));
     }
 
     private void testSampleFiltersFromUrl()
