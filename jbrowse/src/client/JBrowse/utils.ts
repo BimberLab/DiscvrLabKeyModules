@@ -383,9 +383,6 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, su
         return
     }
 
-    console.log("Attempted query: ")
-    console.log(createEncodedFilterString(filters, true))
-
     return Ajax.request({
         url: ActionURL.buildURL('jbrowse', 'luceneQuery.api'),
         method: 'GET',
@@ -414,7 +411,7 @@ export function createEncodedFilterString(filters: Array<{field: string; operato
     }
     const concatenatedString = ret.join('&');
 
-    return encodeURIComponent(concatenatedString);
+    return encodeURIComponent(concatenatedString.replace(/\+/g, "%2B"));
 }
 
 export async function fetchFieldTypeInfo(sessionId, trackId, successCallback, failureCallback) {

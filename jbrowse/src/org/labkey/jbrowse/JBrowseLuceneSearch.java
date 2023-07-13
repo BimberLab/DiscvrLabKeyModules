@@ -167,6 +167,13 @@ public class JBrowseLuceneSearch
 
     private String tryUrlDecode(String input) {
         try {
+            //special case for urls containing +; this isn't necessary for strings sent from the client-side, but URLs
+            //sent via unit tests autodecode, and strings containing + rather than the URL-encoded symbol are unsafe
+            //to pass through URLDecoded.decode
+            if(input.contains("+")) {
+                return input;
+            }
+
             return URLDecoder.decode(input, StandardCharsets.UTF_8.toString());
         } catch (UnsupportedEncodingException | IllegalArgumentException e) {
             return input;
@@ -241,7 +248,7 @@ public class JBrowseLuceneSearch
                 // Type is defined by the first field in the lucene query
                 // "First" field is defined by getting the first consecutive string of ASCII characters or underscores terminated by a colon
                 // we might just want to return the field(s) in the form instead
-                Pattern pattern = Pattern.compile("[\\p{ASCII}&&[^\\s:*-]][\\p{ASCII}&&[^:\\p{Punct}*]]*:");
+                Pattern pattern = Pattern.compile("[\\p{ASCII}&&[^\\s:*+-]][\\p{ASCII}&&[^:\\p{Punct}*]]*:");
 
                 Matcher matcher = pattern.matcher(queryString);
 
