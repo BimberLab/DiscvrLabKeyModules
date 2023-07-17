@@ -332,10 +332,10 @@ public class NimbleHelper
         }
 
         alignArgs.add("--log");
-        alignArgs.add("/work/" + getNimbleLogFile(getPipelineCtx().getWorkingDirectory(), null).getName());
+        alignArgs.add("/work/" + getNimbleLogFile(getPipelineCtx().getWorkingDirectory(), genomes.size() == 1 ? genomes.get(0).genomeId : null).getName());
 
         boolean alignOutput = getProvider().getParameterByName(ALIGN_OUTPUT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
-        File alignmentOutputFile = new File(getPipelineCtx().getWorkingDirectory(), "nimbleAlignment.bam");
+        File alignmentOutputFile = new File(getPipelineCtx().getWorkingDirectory(), "nimbleAlignment." + (genomes.size() == 1 ? genomes.get(0).genomeId + "." : "") + "bam");
         if (alignOutput)
         {
             alignArgs.add("--alignment_path");
@@ -349,7 +349,7 @@ public class NimbleHelper
             alignArgs.add(strandedness);
         }
 
-        File alignmentTsvBase = new File(getPipelineCtx().getWorkingDirectory(), "alignResults.txt");
+        File alignmentTsvBase = new File(getPipelineCtx().getWorkingDirectory(), "alignResults." + (genomes.size() == 1 ? genomes.get(0).genomeId + "." : "") + "txt");
 
         alignArgs.add("--reference");
         alignArgs.add(localRefJsons.stream().map(x -> "/work/" + x.getName()).collect(Collectors.joining(",")));
