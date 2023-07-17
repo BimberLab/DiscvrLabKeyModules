@@ -323,13 +323,13 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testSampleFilters()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:2000-7800");
+        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:2000-5800");
         waitForJBrowseToLoad();
 
         // Wait for variants to load:
         getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T"));
 
-        Assert.assertEquals("Incorrect number of variants", 61, getTotalVariantFeatures());
+        Assert.assertEquals("Incorrect number of variants", 48, getTotalVariantFeatures());
 
         openTrackMenuItem("Filter By Sample");
         waitForElement(Locator.tagWithText("h6", "Filter By Sample"));
