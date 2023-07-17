@@ -214,10 +214,14 @@ export function navigateToTable(sessionId, locString, trackId, track?: any) {
     window.location.href = ActionURL.buildURL("jbrowse", "variantTable.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
 }
 
-export function navigateToBrowser(sessionId, locString, trackId?: string, track?: any) {
+export function navigateToBrowser(sessionId, locString, trackGUID?: string, track?: any) {
     const sampleFilterURL = serializeSampleFilters(track)
     const infoFilterURL = serializeInfoFilters(track)
-    window.location.href = ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackId: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
+    return ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackGUID: trackGUID, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
+}
+
+export function navigateToBrowserNoFilters(sessionId, locString, trackGUID?: string, track?: any) {
+    return ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackGUID: trackGUID })
 }
 
 function serializeSampleFilters(track) {
@@ -266,3 +270,239 @@ export function getGenotypeURL(trackId, contig, start, end) {
 
     return ActionURL.buildURL("jbrowse", "genotypeTable.view", null, {trackId: trackId, chr: contig, start: start, stop: end})
 }
+
+function generateLuceneString(field, operator, value) {
+  let luceneQueryString = '';
+
+  if (field === 'variableSamples' && operator == "in set") {
+    return `variableSamples:~${value}~`;
+  }
+  let intValue = parseInt(value);
+  let floatValue = parseFloat(value);
+
+  // Generate Lucene query string based on operator and type of value
+  switch (operator) {
+    case '=': // Exact match for numeric fields
+        luceneQueryString = floatValue !== intValue 
+            ? `${field}:[${Number(value) - 0.000001} TO ${Number(value) + 0.000001}]`
+            : `${field}:[${value} TO ${value}]`;
+        break;
+    case '!=': // Not equal to, for numeric fields
+        luceneQueryString = floatValue !== intValue 
+            ? `${field}:[* TO ${Number(value) - 0.000001}] OR ${field}:[${Number(value) + 0.000001} TO *]` 
+            : `${field}:[* TO ${value}} OR ${field}:{${value} TO *]`;
+        break;
+    case '>': // Greater than for numeric fields
+        luceneQueryString = floatValue !== intValue 
+            ? `${field}:[${Number(value) + 0.000001} TO *]`
+            : `${field}:{${value} TO *]`;
+        break;
+    case '>=': // Greater than or equal to for numeric fields
+        luceneQueryString = `${field}:[${value} TO *]`;
+        break;
+    case '<': // Less than for numeric fields
+        luceneQueryString = floatValue !== intValue 
+            ? `${field}:[* TO ${Number(value) - 0.000001}]`
+            : `${field}:[* TO ${value}}`;
+        break;
+    case '<=': // Less than or equal to for numeric fields
+        luceneQueryString = `${field}:[* TO ${value}]`;
+        break;
+    case 'equals': // Exact match for string fields
+        luceneQueryString = `${field}:${value}`;
+        break;
+    case 'contains': // Substring search for string fields
+        luceneQueryString = `${field}:*${value}*`;
+        break;
+    case 'does not equal': // Not equal to for string fields
+        luceneQueryString = `*:* -${field}:${value}`;
+        break;
+    case 'does not contain': // Does not contain for string fields
+        luceneQueryString = `*:* -${field}:*${value}*`;
+        break;
+    case 'starts with': // Starts with for string fields
+        luceneQueryString = `${field}:${value}*`;
+        break;
+    case 'ends with': // Ends with for string fields
+        luceneQueryString = `${field}:*${value}`;
+        break;
+    case 'is empty': // Field is empty
+        luceneQueryString = `*:* -${field}:*`;
+        break;
+    case 'is not empty': // Field is not empty
+        luceneQueryString = `${field}:*`;
+        break;
+    case 'variable in': // Variable in for multi-valued fields
+        luceneQueryString = `${field}:${value}`;
+        break;
+    case 'not variable in': // Not variable in for multi-valued fields
+        luceneQueryString = `*:* -${field}:${value}`;
+        break;
+    default:
+        // Operators that require multiple values
+        const values = value.split(',');
+
+        switch (operator) {
+        case 'variable in all of': // Variable in all of the provided values
+            luceneQueryString = values.map(v => `+${field}:${v}`).join(' ');
+            break;
+        case 'variable in any of': // Variable in any of the provided values
+            luceneQueryString = values.map(v => `${field}:${v}`).join(' OR ');
+            break;
+        case 'not variable in any of': // Not variable in any of the provided values
+            luceneQueryString = values.map(v => `*:* -${field}:${v}`).join(' AND ');
+            break;
+        case 'not variable in one of': // Not variable in one of the provided values
+            luceneQueryString = values.map(v => `*:* -${field}:${v}`).join(' OR ');
+            break;
+        default:
+            throw new Error(`Invalid operator: ${operator}`);
+        }
+    }
+
+  return luceneQueryString;
+}
+
+export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, successCallback, failureCallback) {
+    if (!offset) {
+        offset = 0
+    }
+
+    if (!sessionId) {
+        failureCallback("There was an error: " + "Lucene query: no session ID")
+        return
+    }
+
+    if (!trackGUID) {
+        failureCallback("There was an error: " + "Lucene query: no track ID")
+        return
+    }
+
+    if (!filters) {
+        failureCallback("There was an error: " + "Lucene query: no filters")
+        return
+    }
+
+    return Ajax.request({
+        url: ActionURL.buildURL('jbrowse', 'luceneQuery.api'),
+        method: 'GET',
+        success: async function(res){
+            let jsonRes = JSON.parse(res.response);
+            successCallback(jsonRes)
+        },
+        failure: function(res) {
+            failureCallback("There was an error: " + res.status + "\n Status Body: " + res.responseText + "\n Session ID:" + sessionId)
+        },
+        params: {"searchString": createEncodedFilterString(filters, true), "sessionId": sessionId, "trackId": trackGUID, "offset": offset},
+    });
+}
+
+export function createEncodedFilterString(filters: Array<{field: string; operator: string; value: string}>, lucenify: boolean) {
+    let ret: any = []
+
+    if(!filters || filters.length == 0 || (filters.length == 1 && filters[0].field == "" && filters[0].operator == "" && filters[0].value == "")) {
+        return "all"
+    }
+
+    if(lucenify) {
+        ret = filters.map(val => generateLuceneString(val.field, val.operator, val.value));
+    } else {
+        ret = filters.map(val => val.field + "," + val.operator + "," + val.value)
+    }
+    const concatenatedString = ret.join('&');
+
+    return encodeURIComponent(concatenatedString.replace(/\+/g, "%2B"));
+}
+
+export async function fetchFieldTypeInfo(sessionId, trackId, successCallback, failureCallback) {
+    if (!sessionId || !trackId) {
+        console.error("Lucene fetch field type info: sessionId or trackId not provided")
+        return
+    }
+
+    return Ajax.request({
+        url: ActionURL.buildURL('jbrowse', 'getIndexedFields.api'),
+        method: 'GET',
+        success: async function(res){
+            let jsonRes = JSON.parse(res.response);
+            successCallback(jsonRes)
+        },
+        failure: function(res){
+            failureCallback("There was an error while fetching field types: " + res.status + "\n Status Body: " + res.statusText + "\n Session ID:" + sessionId)
+        },
+        params: {sessionId: sessionId, trackId: trackId},
+    });
+}
+
+export function truncateToValidGUID(str: string) {
+    if (str && str.length > 36) {
+        return str.substring(0, 36)
+    }
+
+    return str;
+}
+
+export function searchStringToInitialFilters(operators) : any[] {
+    const queryParam = new URLSearchParams(window.location.search)
+    const searchString = queryParam.get("searchString")
+
+    let initialFilters: any[] = [{ field: "", operator: "", value: "" }]
+
+    if (searchString && searchString != "all") {
+        const decodedSearchString = decodeURIComponent(searchString)
+        const searchStringsArray = decodedSearchString.split("&")
+        initialFilters = searchStringsArray
+        .map((item) => {
+        const [field, operator, value] = item.split(",")
+        return { field, operator, value }
+        })
+        .filter(({ field }) => operators.hasOwnProperty(field))
+    }
+
+    return initialFilters 
+}
+
+export function fieldTypeInfoToOperators(fieldTypeInfo): any {
+    const stringType = ["equals", "does not equal", "contains", "does not contain", "starts with", "ends with", "is empty", "is not empty"];
+    const variableSamplesType = ["in set", "variable in", "not variable in", "variable in all of", "variable in any of", "not variable in any of", "not variable in one of", "is empty", "is not empty"];
+    const numericType = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"];
+    const noneType = [];
+
+    const operators = Object.keys(fieldTypeInfo).reduce((acc, idx) => {
+      const fieldObj = fieldTypeInfo[idx];
+      const field = fieldObj.name;
+          const type = fieldObj.type;
+
+          let fieldType;
+
+          switch (type) {
+            case 'Flag':
+            case 'String':
+            case 'Character':
+              fieldType = stringType;
+              break;
+            case 'Float':
+            case 'Integer':
+              fieldType = numericType;
+              break;
+            case 'Impact':
+              fieldType = stringType;
+              break;
+            case 'None':
+            default:
+              fieldType = noneType;
+              break;
+          }
+
+          acc[field] = { type: fieldType };
+
+          if(field == "variableSamples") {
+            acc[field] = { type: variableSamplesType };
+          }
+
+          return acc;
+        }, {}) ?? [];
+
+    return operators
+}
+

@@ -535,6 +535,10 @@ public class JsonFile
                 put("mouseover", "jexl:'Position: ' + formatWithCommas(get(feature,'POS'))");
                 put("renderer", new JSONObject(){{
                     put("type", "ExtendedVariantRenderer");
+                    if (shouldHaveFreeTextSearch())
+                    {
+                        put("supportsLuceneIndex", true);
+                    }
                     //put("showLabels", false);
                     //put("labels", new JSONObject(){{
                     //    put("description", "jexl:get(feature,'POS')");
@@ -961,13 +965,13 @@ public class JsonFile
         return luceneDir.exists();
     }
 
-    public @NotNull List<String> getInfoFieldsToIndex(@Nullable String... defaults)
+    public @NotNull List<String> getInfoFieldsToIndex()
     {
         JSONObject config = getExtraTrackConfig();
         String rawFields = config == null ? null : StringUtils.trimToNull(config.optString("infoFieldsForFullTextSearch"));
         if (rawFields == null)
         {
-            return defaults == null ? Collections.emptyList() : Arrays.asList(defaults);
+            return Collections.emptyList();
         }
 
         return Arrays.asList(rawFields.split(","));
@@ -991,7 +995,7 @@ public class JsonFile
         args.add("-O");
         args.add(getExpectedLocationOfLuceneIndex(false).getPath());
 
-        List<String> infoFieldsForFullTextSearch = getInfoFieldsToIndex("AF");
+        List<String> infoFieldsForFullTextSearch = getInfoFieldsToIndex();
         for (String field : infoFieldsForFullTextSearch)
         {
             args.add("-IF");
@@ -1147,7 +1151,7 @@ public class JsonFile
     public boolean isVisibleByDefault()
     {
         JSONObject json = getExtraTrackConfig();
-        if (json == null || json.get("visibleByDefault") == null)
+        if (json == null || json.opt("visibleByDefault") == null)
             return false;
 
         return Boolean.parseBoolean(json.get("visibleByDefault").toString());

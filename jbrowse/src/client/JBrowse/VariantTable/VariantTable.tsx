@@ -10,15 +10,14 @@ import LogSession from '../Browser/plugins/LogSession/index';
 import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index';
 import VariantTableWidget from './components/VariantTableWidget';
 import { fetchSession } from '../utils';
-import { ErrorBoundary } from '@labkey/components';
+import { ErrorBoundary } from './components/ErrorBoundary'
 import LoadingIndicator from './components/LoadingIndicator';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
 function VariantTable() {
-      
     const queryParam = new URLSearchParams(window.location.search);
-    const sessionId = queryParam.get('session') || queryParam.get('database')
+    const sessionId = queryParam.get('session') || queryParam.get('database') || queryParam.get('sessionId')
     const locString = queryParam.get('location') || queryParam.get('loc')
     const refTheme = createTheme()
 
@@ -60,7 +59,7 @@ function VariantTable() {
                 return assemblyManager.isValidRefName(refName, assemblyNames[0])
             }
 
-            if(locString) {
+            if (locString) {
                 const parsedLocString = parseLocString(locString, isValidRefNameForAssembly)
                 setParsedLocString(parsedLocString)
             }

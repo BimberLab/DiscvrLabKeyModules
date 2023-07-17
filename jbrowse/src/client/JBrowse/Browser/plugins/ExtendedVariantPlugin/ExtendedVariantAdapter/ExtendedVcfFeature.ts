@@ -50,6 +50,11 @@ export default class ExtendedVcfFeature extends VcfFeature {
         INFO: any
         ID: string[]
     }) {
+        // Only append if not present:
+        if (variant.INFO["IMPACT"]) {
+            return(variant);
+        }
+
         if (!variant.INFO["ANN"]) {
             return(variant);
         }

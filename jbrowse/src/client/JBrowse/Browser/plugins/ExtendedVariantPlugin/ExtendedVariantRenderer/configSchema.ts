@@ -20,6 +20,10 @@ export default ConfigurationSchema(
             defaultValue: '',
             description: 'comma-delineated string of sample IDs to filter'
         },
+        supportsLuceneIndex: {
+            type: 'boolean',
+            defaultValue: false
+        }
     },
     {
         explicitlyTyped: true,

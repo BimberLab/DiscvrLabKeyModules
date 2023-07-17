@@ -33,7 +33,7 @@
     "assert": "^2.0.0",
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
-    "jquery": "^3.6.0",
+    "jquery": "^3.6.3",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.5.23",
     "node-polyfill-webpack-plugin": "1.1.4",
