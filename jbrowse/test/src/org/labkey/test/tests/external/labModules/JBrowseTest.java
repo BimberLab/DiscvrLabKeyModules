@@ -338,7 +338,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Locator.findElements(getDriver(), textArea).get(0).sendKeys("m00010");
         clickDialogButton("Apply");
 
-        Assert.assertEquals("Incorrect number of variants", 4, getTotalVariantFeatures());
+        Assert.assertEquals("Incorrect number of variants", 3, getTotalVariantFeatures());
     }
 
     private void testInferredDetails()
