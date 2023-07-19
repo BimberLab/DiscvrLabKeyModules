@@ -414,18 +414,36 @@ export function createEncodedFilterString(filters: Array<{field: string; operato
     return encodeURIComponent(concatenatedString.replace(/\+/g, "%2B"));
 }
 
-export async function fetchFieldTypeInfo(sessionId, trackId, successCallback, failureCallback) {
+export class FieldModel {
+    name: string
+    label: string
+    description: string
+    type: string
+    isInDefaultColumns: boolean
+    isIndexed: boolean
+    isMultiValued: boolean
+    isHidden: boolean
+    colWidth: number
+    formatString: string
+    orderKey: number
+    allowableValues: string[]
+    category: string
+    url: string
+}
+
+export async function fetchFieldTypeInfo(sessionId: string, trackId: string, successCallback: (res: FieldModel[]) => void, failureCallback) {
     if (!sessionId || !trackId) {
-        console.error("Lucene fetch field type info: sessionId or trackId not provided")
+        console.error("Cannot fetch field type info: sessionId or trackId not provided")
         return
     }
 
-    return Ajax.request({
+    Ajax.request({
         url: ActionURL.buildURL('jbrowse', 'getIndexedFields.api'),
         method: 'GET',
         success: async function(res){
-            let jsonRes = JSON.parse(res.response);
-            successCallback(jsonRes)
+            const fields: Array<FieldModel> = JSON.parse(res.response).fields;
+
+            successCallback(fields)
         },
         failure: function(res){
             failureCallback("There was an error while fetching field types: " + res.status + "\n Status Body: " + res.statusText + "\n Session ID:" + sessionId)
@@ -469,39 +487,39 @@ export function fieldTypeInfoToOperators(fieldTypeInfo): any {
     const noneType = [];
 
     const operators = Object.keys(fieldTypeInfo).reduce((acc, idx) => {
-      const fieldObj = fieldTypeInfo[idx];
-      const field = fieldObj.name;
-          const type = fieldObj.type;
+        const fieldObj = fieldTypeInfo[idx];
+        const field = fieldObj.name;
+        const type = fieldObj.type;
 
-          let fieldType;
+        let fieldType;
 
-          switch (type) {
+        switch (type) {
             case 'Flag':
             case 'String':
             case 'Character':
-              fieldType = stringType;
-              break;
+                fieldType = stringType;
+                break;
             case 'Float':
             case 'Integer':
-              fieldType = numericType;
-              break;
+                fieldType = numericType;
+                break;
             case 'Impact':
-              fieldType = stringType;
-              break;
+                fieldType = stringType;
+                break;
             case 'None':
             default:
-              fieldType = noneType;
-              break;
-          }
+                fieldType = noneType;
+                break;
+        }
 
-          acc[field] = { type: fieldType };
+        acc[field] = { type: fieldType };
 
-          if(field == "variableSamples") {
+        if(field == "variableSamples") {
             acc[field] = { type: variableSamplesType };
-          }
+        }
 
-          return acc;
-        }, {}) ?? [];
+        return acc;
+    }, {}) ?? [];
 
     return operators
 }

@@ -20,6 +20,7 @@ import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -847,6 +848,42 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
+    public static class ResolveVcfFieldsAction extends ReadOnlyApiAction<ResolveVcfFieldsForm>
+    {
+        @Override
+        public ApiResponse execute(ResolveVcfFieldsForm form, BindException errors)
+        {
+            try
+            {
+                JSONObject ret = new JSONObject();
+                for (String key : form.getInfoKeys())
+                {
+                    JBrowseFieldDescriptor fd = new JBrowseFieldDescriptor(key, null, true, false, VCFHeaderLineType.String, null);
+                    JBrowseServiceImpl.get().customizeField(getUser(), getContainer(), fd);
+
+                    ret.put(key, fd.toJSON());
+                }
+
+                return new ApiSimpleResponse(ret);
+            }
+            catch (IllegalArgumentException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+        }
+
+        @Override
+        public void validateForm(ResolveVcfFieldsForm form, Errors errors)
+        {
+            if (form.getInfoKeys() == null)
+            {
+                errors.reject(ERROR_MSG, "Must provide list of field keys to inspect");
+            }
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
     public static class LuceneQueryAction extends ReadOnlyApiAction<LuceneQueryForm>
     {
         @Override
@@ -950,6 +987,21 @@ public class JBrowseController extends SpringActionController
         public void setTrackId(String trackId)
         {
             _trackId = trackId;
+        }
+    }
+
+    public static class ResolveVcfFieldsForm
+    {
+        private String[] infoKeys;
+
+        public String[] getInfoKeys()
+        {
+            return infoKeys;
+        }
+
+        public void setInfoKeys(String[] infoKeys)
+        {
+            this.infoKeys = infoKeys;
         }
     }
 }

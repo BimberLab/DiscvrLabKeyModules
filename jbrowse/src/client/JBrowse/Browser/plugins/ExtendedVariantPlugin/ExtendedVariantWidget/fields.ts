@@ -210,38 +210,3 @@ export const FIELD_NAME_MAP = {
         title: 'Start (Lifted to Human)'
     }
 }
-
-interface SectionContig {
-    title: string,
-    description?: string,
-    tags?: string[]
-}
-
-export const INFO_FIELD_GROUPS: {
-    predictedFunction: SectionContig,
-    regulatory: SectionContig,
-    comparative: SectionContig,
-    phenotypicData: SectionContig
-} = {
-    predictedFunction : {
-        title: 'Predicted Function',
-        description: 'Annotations related to prediction of functional impact or coding potential.',
-        tags: ['CADD_PH', 'SD', 'SM', 'SX', 'NE', 'NF', 'NG', 'NH', 'NK', 'NL', 'NMD', 'NC', 'NJ', 'LOF', 'FC', 'FE']
-    },
-    regulatory: {
-        title: 'Regulatory Data',
-                description: 'Annotations related to overlap with known or predicted regulatory elements.',
-                tags: ['ENC', 'ENN', 'ENCDNA_SC', 'ENCTFBS_SC', 'ENCTFBS_TF', 'ENCSEG_NM', 'RDB_WS', 'RDB_MF', 'FS_EN', 'FS_WS', 'FS_NS', 'FS_SN', 'FS_TG', 'FS_US', 'FS_SC']
-    },
-    comparative: {
-        title: 'Comparative/Evolutionary Genomics',
-                description: '',
-                tags: ['PC_VB', 'PC_PL', 'PC_PR', 'PP_VB', 'PP_PL', 'PP_PR']
-    },
-    phenotypicData: {
-        title: 'Phenotypic Data',
-                tags: ['CLN_SIG', 'CLN_DN', 'CLN_DNINCL', 'CLN_ALLELE', 'CLN_ALLELEID', 'CLN_VI', 'CLN_DBVARID', 'CLN_GENEINFO', 'CLN_RS', 'OMIMN', 'OMIMT', 'OMIMD', 'OMIMS', 'OMIMM', 'OMIMC', 'OMIMMUS', 'GRASP_AN','GRASP_PH','GRASP_P','GRASP_PL','GRASP_PMID','GRASP_RS', 'CLN']
-    }
-}
-
-export const IGNORED_INFO_FIELDS = ['SF', 'NA', 'SOR', 'CADD_RS', 'ENCDNA_CT', 'ERBCTA_CT', 'ENCDNA_SC', 'ERBCTA_SC', 'NM', 'CCDS', 'OREGANNO_PMID', 'OREGANNO_TYPE', 'RSID', 'SCSNV_ADA', 'SCSNV_RS', 'SP_SC', 'ENCTFBS_CL', 'ERBSEG_CT', 'ERBSEG_NM', 'ERBSEG_SC', 'ERBSUM_NM', 'ERBSUM_SC', 'ERBTFBS_PB', 'ERBTFBS_TF', 'CLN_DISDB', 'CLN_DISDBINCL', 'CLN_HGVS', 'CLN_REVSTAT', 'CLN_SIGINCL', 'CLN_VC', 'CLN_VCSO', 'CLN_MC', 'CLN_ORIGIN', 'CLN_SSR', 'genotypes']

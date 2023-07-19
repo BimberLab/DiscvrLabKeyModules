@@ -22,6 +22,7 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.api.util.Pair;
 import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.Connection;
 import org.labkey.remoteapi.query.Filter;
@@ -66,7 +67,7 @@ import java.util.stream.Collectors;
 @Category({External.class, LabModule.class})
 public class JBrowseTest extends BaseWebDriverTest
 {
-    private static final String JB_GENOME_NAME = "JB_GRCh37";
+    public static final String JB_GENOME_NAME = "JB_GRCh37";
     private boolean _searchWebpartAdded = false;
 
     protected LabModuleHelper _helper = new LabModuleHelper(this);
@@ -560,6 +561,90 @@ public class JBrowseTest extends BaseWebDriverTest
         return List.of("jbrowse");
     }
 
+    public static Pair<String, String> prepareSearchSession(BaseWebDriverTest test, LabModuleHelper helper, String projectName, boolean searchWebpartAdded) throws Exception
+    {
+        //create session w/ some of these, verify
+        test.log("creating initial jbrowse session");
+        test.beginAt("/query/" + projectName + "/executeQuery.view?query.queryName=outputfiles&schemaName=sequenceanalysis&query.category~eq=VCF File");
+        DataRegionTable dr = DataRegionTable.DataRegion(test.getDriver()).find();
+        dr.uncheckAllOnPage();
+        dr.checkCheckbox(0);
+        dr.clickHeaderButton("Visualize/Analyze Data");
+        new Window.WindowFinder(test.getDriver()).withTitle("Visualize/Analyze Files").waitFor();
+        test.waitForElement(Locator.tagWithText("div", "View In JBrowse"));
+        test.click(Locator.tagWithText("div", "View In JBrowse"));
+        test.waitAndClick(Ext4Helper.Locators.ext4Button("Submit"));
+
+        String sessionName = "SearchSession";
+        int existingPipelineJobs = SequenceTest.getTotalPipelineJobs(test);
+        new Window.WindowFinder(test.getDriver()).withTitle("Create/Modify JBrowse Session").waitFor();
+        Ext4FieldRef.getForLabel(test, "Name").setValue(sessionName);
+        Ext4FieldRef.getForLabel(test, "Description").setValue("This is a session to test full-text search");
+        test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
+
+        Window<?> window = new Window.WindowFinder(test.getDriver()).withTitle("Create New Workbook or Add To Existing?").waitFor();
+        window.clickButton("Submit", 0);
+
+        window = new Window.WindowFinder(test.getDriver()).withTitle("Success").waitFor();
+        window.clickButton("OK");
+        test.waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Create New Session", false);
+
+        test.beginAt("/project/" + projectName + "/begin.view");
+        helper.waitForLabToolsToLoad();
+
+        // If the search panel doesnt fully load, we can get an alert on page navigation
+        if (searchWebpartAdded)
+        {
+            Locator searchLocator = Locator.tagWithClass("input", "MuiInputBase-input");
+            test.waitForElement(searchLocator);
+        }
+
+        helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
+        dr = DataRegionTable.DataRegion(test.getDriver()).find();
+        dr.clickRowDetails(0);
+
+        // Find trackId:
+        test.waitForElement(Locator.tagWithText("span", "Resources Displayed In This Session"));
+        dr = DataRegionTable.findDataRegionWithinWebpart(test, "Resources Displayed In This Session");
+        String trackId = dr.getDataAsText(0, "Resource");
+        String sessionId = test.getUrlParam("databaseId");
+
+        test.waitForElement(Locator.tagWithText("span", "Tracks Provided By This Session"));
+        dr = DataRegionTable.findDataRegionWithinWebpart(test, "Tracks Provided By This Session");
+        Assert.assertEquals("Incorrect row count", 1, dr.getDataRowCount());
+        dr.checkCheckbox(dr.getRowIndex("File Id", "TestVCF"));
+        dr.clickHeaderMenu("More Actions", false, "Modify Track Config");
+        new Window.WindowFinder(test.getDriver()).withTitle("Modify Track Config").waitFor();
+        Ext4CmpRef.waitForComponent(test, "grid");
+        Ext4GridRef grid = test._ext4Helper.queryOne("grid", Ext4GridRef.class);
+        test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Add"));
+        test.waitAndClick(Ext4Helper.Locators.menuItem("Create Full Text Index?"));
+        test.waitForElement(Locator.tagWithText("div", "createFullTextIndex"));
+        grid.completeEdit();
+
+        test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Add"));
+        test.waitAndClick(Ext4Helper.Locators.menuItem("Info Fields For Full Text Search"));
+        test.waitForElement(Locator.tagWithText("div", "infoFieldsForFullTextSearch"));
+        grid.setGridCell(2, "value", "AF,AC,CADD_PH,CLN_ALLELE,OMIMD,IMPACT");
+
+        test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
+        new Window.WindowFinder(test.getDriver()).withTitle("Success").waitFor();
+        test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
+
+        test.beginAt("/query/" + projectName + "/executeQuery.view?query.queryName=jsonfiles&schemaName=jbrowse");
+        existingPipelineJobs = SequenceTest.getTotalPipelineJobs(test);
+        dr = DataRegionTable.DataRegion(test.getDriver()).find();
+        dr.checkCheckbox(dr.getRowIndex("File Id", "TestVCF"));
+        dr.clickHeaderMenu("More Actions", false, "Re-process Selected");
+        new Window.WindowFinder(test.getDriver()).withTitle("Reprocess Resources").waitFor();
+        test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
+        new Window.WindowFinder(test.getDriver()).withTitle("Success").waitFor();
+        test.waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
+        test.waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Recreating Resources", false);
+
+        return Pair.of(sessionId, trackId);
+    }
+
     private void testFullTextSearch() throws Exception
     {
         if (!SequenceTest.isExternalPipelineEnabled(getProjectName()))
@@ -568,91 +653,15 @@ public class JBrowseTest extends BaseWebDriverTest
             return;
         }
 
-        String seq = SequenceTest.readSeqFromFile(_grch37Genome);
+        String seq = SequenceTest.readSeqFromFile(GRCH37_GENOME);
         SequenceTest.ensureRefSeqExists(this, "1", seq);
         SequenceTest.createReferenceGenome(this, 1, JB_GENOME_NAME, "1");
 
-        SequenceTest.addOutputFile(this, _mGapTestVcf, JB_GENOME_NAME, "TestVCF", "VCF File", "This is an output file to test VCF full-text search", false);
+        SequenceTest.addOutputFile(this, MGAP_TEST_VCF, JB_GENOME_NAME, "TestVCF", "VCF File", "This is an output file to test VCF full-text search", false);
 
-        //create session w/ some of these, verify
-        log("creating initial jbrowse session");
-        beginAt("/query/" + getProjectName() + "/executeQuery.view?query.queryName=outputfiles&schemaName=sequenceanalysis&query.category~eq=VCF File");
-        DataRegionTable dr = DataRegionTable.DataRegion(getDriver()).find();
-        dr.uncheckAllOnPage();
-        dr.checkCheckbox(0);
-        dr.clickHeaderButton("Visualize/Analyze Data");
-        new Window.WindowFinder(getDriver()).withTitle("Visualize/Analyze Files").waitFor();
-        waitForElement(Locator.tagWithText("div", "View In JBrowse"));
-        click(Locator.tagWithText("div", "View In JBrowse"));
-        waitAndClick(Ext4Helper.Locators.ext4Button("Submit"));
-
-        String sessionName = "SearchSession";
-        int existingPipelineJobs = SequenceTest.getTotalPipelineJobs(this);
-        new Window.WindowFinder(getDriver()).withTitle("Create/Modify JBrowse Session").waitFor();
-        Ext4FieldRef.getForLabel(this, "Name").setValue(sessionName);
-        Ext4FieldRef.getForLabel(this, "Description").setValue("This is a session to test full-text search");
-        waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
-
-        Window<?> window = new Window.WindowFinder(getDriver()).withTitle("Create New Workbook or Add To Existing?").waitFor();
-        window.clickButton("Submit", 0);
-
-        window = new Window.WindowFinder(getDriver()).withTitle("Success").waitFor();
-        window.clickButton("OK");
-        waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Create New Session", false);
-
-        beginAt("/project/" + getProjectName() + "/begin.view");
-        _helper.waitForLabToolsToLoad();
-
-        // If the search panel doesnt fully load, we can get an alert on page navigation
-        if (_searchWebpartAdded)
-        {
-            Locator searchLocator = Locator.tagWithClass("input", "MuiInputBase-input");
-            waitForElement(searchLocator);
-        }
-
-        _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
-        dr = DataRegionTable.DataRegion(getDriver()).find();
-        dr.clickRowDetails(0);
-
-        // Find trackId:
-        waitForElement(Locator.tagWithText("span", "Resources Displayed In This Session"));
-        dr = DataRegionTable.findDataRegionWithinWebpart(this, "Resources Displayed In This Session");
-        String trackId = dr.getDataAsText(0, "Resource");
-        String sessionId = getUrlParam("databaseId");
-
-        waitForElement(Locator.tagWithText("span", "Tracks Provided By This Session"));
-        dr = DataRegionTable.findDataRegionWithinWebpart(this, "Tracks Provided By This Session");
-        Assert.assertEquals("Incorrect row count", 1, dr.getDataRowCount());
-        dr.checkCheckbox(dr.getRowIndex("File Id", "TestVCF"));
-        dr.clickHeaderMenu("More Actions", false, "Modify Track Config");
-        new Window.WindowFinder(getDriver()).withTitle("Modify Track Config").waitFor();
-        Ext4CmpRef.waitForComponent(this, "grid");
-        Ext4GridRef grid = _ext4Helper.queryOne("grid", Ext4GridRef.class);
-        waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Add"));
-        waitAndClick(Ext4Helper.Locators.menuItem("Create Full Text Index?"));
-        waitForElement(Locator.tagWithText("div", "createFullTextIndex"));
-        grid.completeEdit();
-
-        waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Add"));
-        waitAndClick(Ext4Helper.Locators.menuItem("Info Fields For Full Text Search"));
-        waitForElement(Locator.tagWithText("div", "infoFieldsForFullTextSearch"));
-        grid.setGridCell(2, "value", "AF,AC,CADD_PH,CLN_ALLELE,OMIMD,IMPACT");
-
-        waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
-        new Window.WindowFinder(getDriver()).withTitle("Success").waitFor();
-        waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
-
-        beginAt("/query/" + getProjectName() + "/executeQuery.view?query.queryName=jsonfiles&schemaName=jbrowse");
-        existingPipelineJobs = SequenceTest.getTotalPipelineJobs(this);
-        dr = DataRegionTable.DataRegion(getDriver()).find();
-        dr.checkCheckbox(dr.getRowIndex("File Id", "TestVCF"));
-        dr.clickHeaderMenu("More Actions", false, "Re-process Selected");
-        new Window.WindowFinder(getDriver()).withTitle("Reprocess Resources").waitFor();
-        waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
-        new Window.WindowFinder(getDriver()).withTitle("Success").waitFor();
-        waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
-        waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Recreating Resources", false);
-
+        Pair<String, String> info = prepareSearchSession(this, _helper, getProjectName(), _searchWebpartAdded);
+        String sessionId = info.first;
+        String trackId = info.second;
 
         // all
         // this should return 143 results. We can't make any other assumptions about the content
@@ -1247,8 +1256,8 @@ public class JBrowseTest extends BaseWebDriverTest
         });
     }
 
-    public static final File _mGapTestVcf = new File(TestFileUtils.getLabKeyRoot(), "server/modules/DiscvrLabKeyModules/jbrowse/resources/web/jbrowse/mgap/mGap.v2.1.subset.vcf.gz");
-    public static final File _grch37Genome = new File(TestFileUtils.getLabKeyRoot(), "server/modules/DiscvrLabKeyModules/jbrowse/resources/web/jbrowse/mgap/GRCh37_small.fasta");
+    public static final File MGAP_TEST_VCF = new File(TestFileUtils.getLabKeyRoot(), "server/modules/DiscvrLabKeyModules/jbrowse/resources/web/jbrowse/mgap/mGap.v2.1.subset.vcf.gz");
+    public static final File GRCH37_GENOME = new File(TestFileUtils.getLabKeyRoot(), "server/modules/DiscvrLabKeyModules/jbrowse/resources/web/jbrowse/mgap/GRCh37_small.fasta");
 
     private void testOutputFileProcessing() throws Exception
     {

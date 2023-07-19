@@ -176,6 +176,8 @@ public class JBrowseFieldDescriptor {
         fieldDescriptorJSON.put("formatString", _formatString);
         fieldDescriptorJSON.put("orderKey", _orderKey);
         fieldDescriptorJSON.put("allowableValues", _allowableValues);
+        fieldDescriptorJSON.put("category", _category);
+        fieldDescriptorJSON.put("url", _url);
 
         return fieldDescriptorJSON;
     }

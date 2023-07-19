@@ -14,7 +14,7 @@ import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache';
 import { EVAdapterClass } from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter';
 import { NoAssemblyRegion } from '@jbrowse/core/util/types';
 import { toArray } from 'rxjs/operators';
-import { fieldTypeInfoToOperators, searchStringToInitialFilters,  } from "../../utils";
+import { FieldModel, fieldTypeInfoToOperators, searchStringToInitialFilters, } from '../../utils';
 import { parseLocString } from '@jbrowse/core/util';
 
 
@@ -219,10 +219,10 @@ const VariantTableWidget = observer(props => {
       const queryParam = new URLSearchParams(window.location.search)
 
       await fetchFieldTypeInfo(sessionId, trackGUID,
-        (res) => {
+        (res: FieldModel[]) => {
           let columns: any = [];
 
-          for(const fieldObj of res.fields) {
+          for (const fieldObj of res) {
             const field = fieldObj.name;
             const type = fieldObj.type;
             let muiFieldType;
@@ -256,9 +256,9 @@ const VariantTableWidget = observer(props => {
           const columnsWithoutOrderKey = columns.map(({ orderKey, ...rest }) => rest);
 
           setColumns(columnsWithoutOrderKey);
-          const operators = fieldTypeInfoToOperators(res.fields)
+          const operators = fieldTypeInfoToOperators(res)
           setAvailableOperators(operators)
-          setFieldTypeInfo(res.fields)
+          setFieldTypeInfo(res)
           handleQuery(searchStringToInitialFilters(operators))
         },
         (error) => {
