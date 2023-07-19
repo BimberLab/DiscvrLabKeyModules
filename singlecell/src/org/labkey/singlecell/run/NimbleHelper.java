@@ -331,9 +331,6 @@ public class NimbleHelper
             alignArgs.add(String.valueOf(maxThreads));
         }
 
-        alignArgs.add("--log");
-        alignArgs.add("/work/" + getNimbleLogFile(getPipelineCtx().getWorkingDirectory(), genomes.size() == 1 ? genomes.get(0).genomeId : null).getName());
-
         boolean alignOutput = getProvider().getParameterByName(ALIGN_OUTPUT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
         File alignmentOutputFile = new File(getPipelineCtx().getWorkingDirectory(), "nimbleAlignment." + (genomes.size() == 1 ? genomes.get(0).genomeId + "." : "") + "bam");
         if (alignOutput)
@@ -394,26 +391,6 @@ public class NimbleHelper
                 throw new PipelineJobException("Expected to find gz file: " + alignResultsGz.getPath());
             }
 
-            File log = getNimbleLogFile(alignResultsGz.getParentFile(), genome.genomeId);
-            if (!log.exists())
-            {
-                throw new PipelineJobException("Expected to find file: " + log.getPath());
-            }
-
-            getPipelineCtx().getLogger().info("Nimble alignment stats for genome :" + genome.getGenomeId());
-            try (BufferedReader reader = Readers.getReader(log))
-            {
-                String line;
-                while ((line = reader.readLine()) != null)
-                {
-                    getPipelineCtx().getLogger().info(line);
-                }
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-
             // Now run nimble report. Always re-run since this is fast:
             List<String> reportArgs = new ArrayList<>();
             reportArgs.add("python3");
@@ -444,11 +421,6 @@ public class NimbleHelper
         }
 
         return resultMap;
-    }
-
-    public static File getNimbleLogFile(File baseDir, @Nullable Integer genomeId)
-    {
-        return new File(baseDir, "nimbleStats." + (genomeId == null ? "" : genomeId + ".") + "txt");
     }
 
     private File getNimbleDoneFile(File parentDir, String resumeString)
@@ -634,76 +606,6 @@ public class NimbleHelper
         public double getScorePercent()
         {
             return scorePercent;
-        }
-    }
-
-    public static void importQualityMetrics(SequenceOutputFile so, PipelineJob job) throws PipelineJobException
-    {
-        try
-        {
-            if (so.getDataId() == null)
-            {
-                throw new PipelineJobException("DataId is null for SequenceOutputFile");
-            }
-
-            ExpData d = ExperimentService.get().getExpData(so.getDataId());
-            File cachedMetrics = getNimbleLogFile(so.getFile().getParentFile(), so.getLibrary_id());
-
-            Map<String, Object> metricsMap;
-            if (cachedMetrics.exists())
-            {
-                job.getLogger().debug("reading previously calculated metrics from file: " + cachedMetrics.getPath());
-                metricsMap = new HashMap<>();
-                try (CSVReader reader = new CSVReader(Readers.getReader(cachedMetrics), ':'))
-                {
-                    String[] line;
-                    while ((line = reader.readNext()) != null)
-                    {
-                        if (metricsMap.containsKey(StringUtils.trim(line[0])))
-                        {
-                            throw new PipelineJobException("Unexpected duplicate metric names: " + StringUtils.trim(line[0]));
-                        }
-
-                        String value = StringUtils.trim(line[1]);
-                        if (value == null)
-                        {
-                            continue;
-                        }
-
-                        metricsMap.put(StringUtils.trim(line[0]), value.split(" ")[0]);
-                    }
-                }
-
-                job.getLogger().debug("Total metrics: " + metricsMap.size());
-            }
-            else
-            {
-                throw new PipelineJobException("Unable to find metrics file: " + cachedMetrics.getPath());
-            }
-
-            TableInfo metricsTable = DbSchema.get(SingleCellSchema.SEQUENCE_SCHEMA_NAME, DbSchemaType.Module).getTable(SingleCellSchema.TABLE_QUALITY_METRICS);
-            for (String metricName : metricsMap.keySet())
-            {
-                Map<String, Object> r = new HashMap<>();
-                r.put("category", "Nimble");
-                r.put("metricname", metricName);
-                r.put("metricvalue", metricsMap.get(metricName));
-                r.put("dataid", d.getRowId());
-                r.put("readset", so.getReadset());
-                r.put("container", so.getContainer());
-                r.put("createdby", job.getUser().getUserId());
-
-                Table.insert(job.getUser(), metricsTable, r);
-            }
-
-            if (cachedMetrics.exists())
-            {
-                cachedMetrics.delete();
-            }
-        }
-        catch (Exception e)
-        {
-            throw new PipelineJobException(e);
         }
     }
 }
