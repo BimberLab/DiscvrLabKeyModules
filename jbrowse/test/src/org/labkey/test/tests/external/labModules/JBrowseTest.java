@@ -398,24 +398,34 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("p", "Error - no session provided."));
     }
 
-    private Locator.XPathLocator getTrackLocator(String trackId, boolean waitFor)
+    public Locator.XPathLocator getTrackLocator(String trackId, boolean waitFor)
+    {
+        return getTrackLocator(this, trackId, waitFor);
+    }
+
+    public static Locator.XPathLocator getTrackLocator(BaseWebDriverTest test, String trackId, boolean waitFor)
     {
         trackId = "trackRenderingContainer-mgap-" + trackId;
         Locator.XPathLocator l = Locator.tagWithAttributeContaining("div", "data-testid", trackId);
         if (waitFor)
         {
-            waitForElement(l);
+            test.waitForElement(l);
         }
 
         return l;
     }
 
-    private By getVariantWithinTrack(String trackId, String variantText)
+    public By getVariantWithinTrack(String trackId, String variantText)
     {
-        Locator.XPathLocator l = getTrackLocator(trackId, true);
-        waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
+        return getVariantWithinTrack(this, trackId, variantText);
+    }
+
+    public static By getVariantWithinTrack(BaseWebDriverTest test, String trackId, String variantText)
+    {
+        Locator.XPathLocator l = getTrackLocator(test, trackId, true);
+        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
         l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]")).notHidden().append("/..");
-        waitForElement(l);
+        test.waitForElement(l);
 
         return By.xpath(l.toXpath());
     }
@@ -431,15 +441,20 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagContainingText("div", "Aut molestiae temporibus nesciunt."));
     }
 
-    private void waitForJBrowseToLoad()
+    public void waitForJBrowseToLoad()
     {
-        waitForElementToDisappear(Locator.tagWithText("p", "Loading...")); //the initial message before getSession
-        waitForElement(Locator.tagWithClass("span", "MuiIconButton-label").notHidden()); //this is the top-left icon
-        waitForElement(Locator.tagWithAttribute("button", "title", "close this track").notHidden());
-        waitForElement(Locator.tagWithClassContaining("span", "MuiTypography-root").notHidden(), WAIT_FOR_PAGE); //this is the icon from the track label
+        waitForJBrowseToLoad(this);
+    }
 
-        waitForElementToDisappear(Locator.tagWithText("div", "Loading...")); //track data
-        waitForElementToDisappear(Locator.tagWithText("p", "Loading..."));
+    public static void waitForJBrowseToLoad(BaseWebDriverTest test)
+    {
+        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading...")); //the initial message before getSession
+        test.waitForElement(Locator.tagWithClass("span", "MuiIconButton-label").notHidden()); //this is the top-left icon
+        test.waitForElement(Locator.tagWithAttribute("button", "title", "close this track").notHidden());
+        test.waitForElement(Locator.tagWithClassContaining("span", "MuiTypography-root").notHidden(), WAIT_FOR_PAGE); //this is the icon from the track label
+
+        test.waitForElementToDisappear(Locator.tagWithText("div", "Loading...")); //track data
+        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading..."));
     }
 
     private void testSessionCardDisplay()
