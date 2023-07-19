@@ -41,6 +41,7 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
 import org.labkey.api.jbrowse.JBrowseService;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleHtmlView;
@@ -801,25 +802,34 @@ public class JBrowseController extends SpringActionController
         }
     }
 
-    @RequiresPermission(AdminPermission.class)
-    public class GetIndexedFieldsAction extends ReadOnlyApiAction<LuceneQueryForm>
+    @RequiresPermission(ReadPermission.class)
+    public static class GetIndexedFieldsAction extends ReadOnlyApiAction<LuceneQueryForm>
     {
         @Override
         public ApiResponse execute(LuceneQueryForm form, BindException errors)
         {
-            JBrowseLuceneSearch searcher;
             try
             {
-                searcher = JBrowseLuceneSearch.create(form.getSessionId(), form.getTrackId(), getUser());
+                JBrowseSession session = JBrowseFieldUtils.getSession(form.getSessionId());
+                JsonFile jsonFile = JBrowseFieldUtils.getTrack(session, form.getTrackId(), getUser());
+
+                Map<String, JBrowseFieldDescriptor> fields = JBrowseFieldUtils.getIndexedFields(jsonFile, getUser(), getContainer());
+                JSONObject results = new JSONObject();
+                JSONArray data = new JSONArray();
+
+                for (Map.Entry<String, JBrowseFieldDescriptor> entry : fields.entrySet()) {
+                    data.put(entry.getValue().toJSON());
+                }
+
+                results.put("fields", data);
+
+                return new ApiSimpleResponse(results);
             }
             catch (IllegalArgumentException e)
             {
                 errors.reject(ERROR_MSG, e.getMessage());
                 return null;
             }
-
-            JSONObject indexedFieldsJson = searcher.returnIndexedFields();
-            return new ApiSimpleResponse(indexedFieldsJson);
         }
 
         @Override
@@ -836,7 +846,7 @@ public class JBrowseController extends SpringActionController
         }
     }
 
-    @RequiresPermission(AdminPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public static class LuceneQueryAction extends ReadOnlyApiAction<LuceneQueryForm>
     {
         @Override
@@ -855,7 +865,7 @@ public class JBrowseController extends SpringActionController
 
             try
             {
-                return new ApiSimpleResponse(searcher.doSearch(PageFlowUtil.decode(form.getSearchString()), form.getPageSize(), form.getOffset()));
+                return new ApiSimpleResponse(searcher.doSearch(getUser(), PageFlowUtil.decode(form.getSearchString()), form.getPageSize(), form.getOffset()));
             }
             catch (Exception e)
             {

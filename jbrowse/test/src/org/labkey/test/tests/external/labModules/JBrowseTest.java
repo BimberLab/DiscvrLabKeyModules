@@ -779,9 +779,8 @@ public class JBrowseTest extends BaseWebDriverTest
             Assert.assertTrue(jsonObject.has("IMPACT"));
         }
 
-        // variableSamplesType:
-        // in set ONPRC
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=variableSamples%3A~ONPRC~";
+        // variableSamplesType in set TestGroup
+        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=variableSamples%3A~!TestGroup!~";
         beginAt(url);
         waitForText("data");
         waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
