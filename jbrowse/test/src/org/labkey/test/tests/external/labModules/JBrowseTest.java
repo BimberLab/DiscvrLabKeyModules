@@ -102,10 +102,9 @@ public class JBrowseTest extends BaseWebDriverTest
         testSampleFiltersFromUrl();
         testViewTableButton();
 
-        // TODO: restore this
-        //testBrowserNavToVariantTable();
-        //testGridFailureConditions();
-        //testVariantTableComparators();
+        testBrowserNavToVariantTable();
+        testGridFailureConditions();
+        testVariantTableComparators();
 
         testOutputFileProcessing();
 
@@ -363,7 +362,8 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         waitAndClick(Locator.tagWithAttribute("button", "data-testid", "track_menu_icon"));
-        assertElementNotPresent(Locator.tagContainingText("span", "View As Table"));
+        assertElementPresent(Locator.tagContainingText("span", "View As Table"));
+        assertElementNotPresent(Locator.tagContainingText("span", "Variant Search"));
 
         // NOTE: this button wont work since it's not actually indexed, but the server's config pokes in the property to show this:
         beginAt("/home/jbrowse-jbrowse.view?session=mgapF&location=1:100..1151");
@@ -371,6 +371,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         waitAndClick(Locator.tagWithAttribute("button", "data-testid", "track_menu_icon"));
         assertElementPresent(Locator.tagContainingText("span", "View As Table"));
+        assertElementPresent(Locator.tagContainingText("span", "Variant Search"));
     }
 
     private void testSampleFiltersFromUrl()
@@ -1590,7 +1591,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         doAndWaitForPageToLoad(() -> {
             beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1", 0);
-            assertAlert("Must include start/stop in location to avoid loading too many sites: 1");
+            assertAlert("Must include start/stop in location: 1");
         });
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
         waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
@@ -1601,7 +1602,7 @@ public class JBrowseTest extends BaseWebDriverTest
     }
 
     private void testVariantTableComparators() throws Exception {
-        beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:1..430419");
+        beginAt("/home/jbrowse-variantSearch.view?session=mgap&trackId=mgap_hg38&location=1:1..430419");
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
         waitForElement(Locator.tagWithText("div", "1")); //proxy for grid loading
 

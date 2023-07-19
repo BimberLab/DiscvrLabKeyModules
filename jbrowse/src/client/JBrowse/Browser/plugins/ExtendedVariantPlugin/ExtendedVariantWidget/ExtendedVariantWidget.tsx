@@ -305,19 +305,26 @@ export default jbrowse => {
         }
 
         const infoKeys = Object.keys(feat.INFO)
+        let isApiSubscribed = true
         useEffect(() => {
             Ajax.request({
                 url: ActionURL.buildURL('jbrowse', 'resolveVcfFields.api'),
                 method: 'POST',
                 success: async function(res){
-                    const fields: Map<string, FieldModel> = JSON.parse(res.response);
-                    setInfoFields(fields)
+                    if (isApiSubscribed) {
+                        const fields: Map<string, FieldModel> = JSON.parse(res.response);
+                        setInfoFields(fields)
+                    }
                 },
                 failure: function(res){
                     console.error("There was an error while fetching field types: " + res.status + "\n Status Body: " + res.statusText)
                 },
                 params: {infoKeys: infoKeys},
             });
+
+            return () => {
+                isApiSubscribed = false;
+            };
         }, [infoKeys])
 
         let annTable;

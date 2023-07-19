@@ -214,13 +214,19 @@ export function navigateToTable(sessionId, locString, trackId, track?: any) {
     window.location.href = ActionURL.buildURL("jbrowse", "variantTable.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
 }
 
+export function navigateToSearch(sessionId, locString, trackId, track?: any) {
+    const sampleFilterURL = serializeSampleFilters(track)
+    const infoFilterURL = serializeInfoFilters(track)
+    window.location.href = ActionURL.buildURL("jbrowse", "variantSearch.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
+}
+
 export function navigateToBrowser(sessionId, locString, trackGUID?: string, track?: any) {
     const sampleFilterURL = serializeSampleFilters(track)
     const infoFilterURL = serializeInfoFilters(track)
-    return ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackGUID: trackGUID, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
+    window.location.href = ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackGUID: trackGUID, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
 }
 
-export function navigateToBrowserNoFilters(sessionId, locString, trackGUID?: string, track?: any) {
+export function getBrowserUrlNoFilters(sessionId, locString, trackGUID?: string, track?: any) {
     return ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackGUID: trackGUID })
 }
 
