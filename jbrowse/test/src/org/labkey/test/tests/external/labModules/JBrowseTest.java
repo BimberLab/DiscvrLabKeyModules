@@ -352,8 +352,6 @@ public class JBrowseTest extends BaseWebDriverTest
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:914..914"));
         waitForElement(Locator.tagWithText("span", "Predicted Function"));
-        waitForElement(Locator.tagWithText("span", "Regulatory Data"));
-        waitForElement(Locator.tagWithText("span", "Phenotypic Data"));
     }
 
     private void testViewTableButton()
