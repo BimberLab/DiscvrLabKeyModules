@@ -119,7 +119,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testColorWidget()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgap");
         waitForJBrowseToLoad();
 
         openTrackMenuItem("Color Selection");
@@ -175,7 +175,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testBrowserNavToVariantTable() throws Exception
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgap");
         waitForJBrowseToLoad();
 
         waitAndClick(Locator.tagWithAttribute("button", "data-testid", "track_menu_icon"));
@@ -186,7 +186,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testDefaultColorApplied()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgapF");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgapF");
         waitForJBrowseToLoad();
 
         // Indicates AF scheme applied:
@@ -213,7 +213,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testAFColor()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgap");
         waitForJBrowseToLoad();
 
         openTrackMenuItem("Color Selection");
@@ -235,7 +235,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testFilterWidget()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgap");
         waitForJBrowseToLoad();
 
         //TODO: ensure test filter panel UI throughout this
@@ -307,7 +307,7 @@ public class JBrowseTest extends BaseWebDriverTest
     }
 
     private void testLoadingConfigFilters(){
-        beginAt("/home/jbrowse-jbrowse.view?session=mgapF&location=1:1..10224");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgapF&location=1:1..10224");
         waitForJBrowseToLoad();
 
         // Wait for variants to load:
@@ -331,7 +331,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testSampleFilters()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:2000-5800");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgap&location=1:2000-5800");
         waitForJBrowseToLoad();
 
         // Wait for variants to load:
@@ -351,7 +351,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testInferredDetails()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgapF");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgapF");
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
@@ -364,7 +364,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testViewTableButton()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:100..1151");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgap&location=1:100..1151");
         waitForJBrowseToLoad();
 
         waitAndClick(Locator.tagWithAttribute("button", "data-testid", "track_menu_icon"));
@@ -372,7 +372,7 @@ public class JBrowseTest extends BaseWebDriverTest
         assertElementNotPresent(Locator.tagContainingText("span", "Variant Search"));
 
         // NOTE: this button wont work since it's not actually indexed, but the server's config pokes in the property to show this:
-        beginAt("/home/jbrowse-jbrowse.view?session=mgapF&location=1:100..1151");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgapF&location=1:100..1151");
         waitForJBrowseToLoad();
 
         waitAndClick(Locator.tagWithAttribute("button", "data-testid", "track_menu_icon"));
@@ -383,7 +383,7 @@ public class JBrowseTest extends BaseWebDriverTest
     private void testSampleFiltersFromUrl()
     {
         // Note: this can be taxing on the browser, so load a more targeted region
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&sampleFilters=mgap:m00010&location=1:100..1151");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgap&sampleFilters=mgap:m00010&location=1:100..1151");
         waitForJBrowseToLoad();
 
         // Wait for variants to load:
@@ -400,7 +400,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testNoSession()
     {
-        beginAt("/home/jbrowse-jbrowse.view?");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?");
         waitForElement(Locator.tagWithText("p", "Error - no session provided."));
     }
 
@@ -438,7 +438,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testMessageDisplay()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgap");
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
@@ -465,7 +465,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testSessionCardDisplay()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:8328..8842");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgap&location=1:8328..8842");
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
@@ -478,7 +478,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testTitleMapping()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:104..275");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgap&location=1:104..275");
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
@@ -490,7 +490,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testPredictedFunction()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:104..275");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgap&location=1:104..275");
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
@@ -507,7 +507,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testAlleleFrequencies()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:18465..18507");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgap&location=1:18465..18507");
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
@@ -523,7 +523,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testGenotypeFrequencies()
     {
-        beginAt("/home/jbrowse-jbrowse.view?session=mgap&location=1:18465..18507");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgap&location=1:18465..18507");
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
@@ -1596,36 +1596,36 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testGridFailureConditions()
     {
-        beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:18465..18507");
+        beginAt("/" + getProjectName() + "/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:18465..18507");
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
         waitForElement(Locator.tagWithText("div", "18486"));
 
-        beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=");
+        beginAt("/" + getProjectName() + "/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=");
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
         waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
 
         // will fail to parse, and then reload without features:
         doAndWaitForPageToLoad(() -> {
-            beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116999.1", 0);
+            beginAt("/" + getProjectName() + "/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:116999.1", 0);
             assertAlert("Error: could not parse range \"116999.1\" on location \"1:116999.1\"");
         });
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
         waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
 
         doAndWaitForPageToLoad(() -> {
-            beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1", 0);
+            beginAt("/" + getProjectName() + "/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1", 0);
             assertAlert("Must include start/stop in location: 1");
         });
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
         waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
 
-        beginAt("/home/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:100-200");
+        beginAt("/" + getProjectName() + "/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:100-200");
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
         waitForElement(Locator.tagWithText("div", "No rows").withClass("MuiDataGrid-overlay"));
     }
 
     private void testVariantTableComparators() throws Exception {
-        beginAt("/home/jbrowse-variantSearch.view?session=mgap&trackId=mgap_hg38&location=1:1..430419");
+        beginAt("/" + getProjectName() + "/jbrowse-variantSearch.view?session=mgap&trackId=mgap_hg38&location=1:1..430419");
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
         waitForElement(Locator.tagWithText("div", "1")); //proxy for grid loading
 
