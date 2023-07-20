@@ -1349,12 +1349,12 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("div", "3813"));
         elem.click();
         waitForElementToDisappear(Locator.tagWithText("div", "3813"));
-        waitForElement(Locator.tagWithText("div", "19276"));
+        waitForElement(Locator.tagWithText("div", "6082"));
 
         Locator sortedTopRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
         waitForElement(sortedTopRow);
-        testColumns("1", "117000545", "TTGCTCGTTTTATTGG", "T",
-                "0.0009927", "intron_variant", "", "NTNG1", "");
+        testColumns("1", "6082", "TC", "T",
+                "0.001313", "intron_variant", "", "NTNG1", "");
 
         // Test filtering
         waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
@@ -1368,7 +1368,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(valueSelector);
         WebElement valueSelectorElem = valueSelector.findElement(getDriver());
         valueSelectorElem.sendKeys("GGC");
-        waitForElementToDisappear(Locator.tagWithText("div", "TTGCTCGTTTTATTGG"));
+        waitForElementToDisappear(Locator.tagWithText("div", "6082"));
 
         Locator filteredTopRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
         waitForElement(filteredTopRow);
@@ -1497,7 +1497,7 @@ public class JBrowseTest extends BaseWebDriverTest
     }
 
     private void testVariantTableComparators() throws Exception {
-        beginAt("/" + getProjectName() + "/jbrowse-variantSearch.view?session=mgap&trackId=mgap_hg38&location=1:1..430419");
+        beginAt("/" + getProjectName() + "/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:1..430419");
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
         waitForElement(Locator.tagWithText("div", "1")); //proxy for grid loading
 
