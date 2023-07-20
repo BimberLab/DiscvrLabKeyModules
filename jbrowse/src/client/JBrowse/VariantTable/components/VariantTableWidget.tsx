@@ -1,37 +1,28 @@
 import { observer } from 'mobx-react';
-import { GridColumns, getGridNumericColumnOperators, GridToolbarDensitySelector, GridToolbarColumnsButton, DataGrid, GridColDef, GridRenderCellParams, GridToolbarContainer, GridToolbarExport } from '@mui/x-data-grid';
-import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline'
-import FilterListIcon from '@material-ui/icons/FilterList';
 import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
-import { Tooltip, Popover } from '@material-ui/core';
-import { Box, Button, Typography, AppBar, Dialog, Toolbar, Paper } from '@material-ui/core';
-import { APIDataToRows } from '../dataUtils';
-import ArrowPagination from './ArrowPagination';
-import { multiValueComparator, multiModalOperator } from '../constants';
-import { FilterFormModal } from "./FilterFormModal"
-import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache';
-import { EVAdapterClass } from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter';
-import { NoAssemblyRegion } from '@jbrowse/core/util/types';
+import { Widget } from '@jbrowse/core/util';
 import { toArray } from 'rxjs/operators';
-import { fieldTypeInfoToOperators, searchStringToInitialFilters,  } from "../../utils";
-import { parseLocString } from '@jbrowse/core/util';
-
+import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache';
+import { AppBar, Box, Button, Dialog, Grid, MenuItem, Paper, Toolbar, Typography } from '@material-ui/core';
+import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline';
+import { DataGrid, GridColDef, GridRenderCellParams, GridToolbar } from '@mui/x-data-grid';
+import { columns } from '../constants';
+import { filterFeatures, rawFeatureToRow } from '../dataUtils';
+import MenuButton from './MenuButton';
 
 import '../VariantTable.css';
 import '../../jbrowse.css';
-import { getGenotypeURL, createEncodedFilterString, navigateToBrowserNoFilters, fetchLuceneQuery, fetchFieldTypeInfo, truncateToValidGUID} from '../../utils';
+import { getGenotypeURL, navigateToBrowser, navigateToSearch } from '../../utils';
 import LoadingIndicator from './LoadingIndicator';
+import ExtendedVcfFeature from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter/ExtendedVcfFeature';
+import { NoAssemblyRegion } from '@jbrowse/core/util/types';
+import StandaloneSearchComponent from '../../Search/components/StandaloneSearchComponent';
+import { EVAdapterClass } from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter';
 
 const VariantTableWidget = observer(props => {
   const { assembly, assemblyName, trackId, locString, parsedLocString, sessionId, session, pluginManager } = props
-  const { assemblyNames, assemblyManager } = session
   const { view } = session
-
-  const currentOffset = parseInt(new URLSearchParams(window.location.search).get('offset') || '0');
-
-  // The code expects a proper GUID, yet the trackId is a string containing the GUID + filename
-  const trackGUID = truncateToValidGUID(props.trackId)
 
   const track = view.tracks.find(
       t => t.configuration.trackId === trackId,
@@ -41,171 +32,56 @@ const VariantTableWidget = observer(props => {
     return (<p>Unknown track: {trackId}</p>)
   }
 
-  function handleSearch(data) {
-    setFeatures(APIDataToRows(data.data, trackId))
+  function handleMenu(item) {
+    switch(item) {
+      case "filterSample":
+        session.showWidget(sampleFilterWidget)
+        addActiveWidgetId(sampleFilterWidget.id)
+        break;
+      case "filterInfo":
+        session.showWidget(infoFilterWidget)
+        addActiveWidgetId(infoFilterWidget.id)
+        break;
+      case "browserRedirect":
+        navigateToBrowser(sessionId, locString, trackId, track)
+        break;
+      case "luceneRedirect":
+        navigateToSearch(sessionId, locString, trackId, track)
+        break;
+    }
   }
-
-  function handleModalClose(widget) {
-    session.hideWidget(widget)
-  } 
-
-  function handleQuery(passedFilters) {
-    const encodedSearchString = createEncodedFilterString(passedFilters, false);
-    const currentUrl = new URL(window.location.href);
-    currentUrl.searchParams.set("searchString", encodedSearchString);
-    window.history.pushState(null, "", currentUrl.toString());
-
-    setFilters(passedFilters);
-    fetchLuceneQuery(passedFilters, sessionId, trackGUID, currentOffset, (json)=>{handleSearch(json)}, (error) => {setError(error)});
-  }
-
-  const TableCellWithPopover = (props: { value: any }) => {
-    const { value } = props;
-    const fullDisplayValue = value ? (Array.isArray(value) ? value.join(', ') : value) : ''
-    const [displayValue, setDisplayValue] = useState(fullDisplayValue)
-
-    const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null)
-    const open = Boolean(anchorEl);
-
-    const [hoverTimeout, setHoverTimeout] = React.useState<NodeJS.Timeout | null>(null);
-
-    const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>) => {
-      clearHoverTimeout()
-      const currentTarget = event.currentTarget;
-      const timeoutId = setTimeout(() => {
-        setAnchorEl(currentTarget);
-      }, 1000)
-      setHoverTimeout(timeoutId);
-    };
-
-    const handlePopoverClose = () => {
-      setAnchorEl(null);
-    };
-
-    const clearHoverTimeout = () => {
-      if (hoverTimeout) {
-        clearTimeout(hoverTimeout);
-        setHoverTimeout(null);
-      }
-    };
-
-    const renderPopover = displayValue && Array.isArray(value)
-
-    // Get screen width and set the maximum number of characters for displayValue
-    useEffect(() => {
-      const truncateDisplayValue = () => {
-        const screenWidth = window.innerWidth;
-        const maxCharacters = Math.floor(screenWidth / 12 / 10);
-
-        setDisplayValue(
-          fullDisplayValue && fullDisplayValue.length > maxCharacters
-            ? `${fullDisplayValue.substring(0, maxCharacters - 3)}...`
-            : fullDisplayValue
-        );
-      };
-
-      window.addEventListener('resize', truncateDisplayValue)
-      truncateDisplayValue()
-
-      return () => {
-        window.removeEventListener('resize', truncateDisplayValue)
-      };
-    }, [fullDisplayValue]);
-
-    return (
-      <div>
-        <Typography
-          aria-owns={open ? 'mouse-over-popover' : undefined}
-          aria-haspopup="true"
-          onMouseEnter={handlePopoverOpen}
-          onMouseLeave={clearHoverTimeout}
-        >
-          <span className='table-cell-truncate'>{displayValue}</span>
-        </Typography>
-        {renderPopover && 
-          <Popover
-            id="mouse-over-popover"
-            open={open}
-            anchorEl={anchorEl}
-            onClose={handlePopoverClose}
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'left',
-            }}
-            transformOrigin={{
-              vertical: 'top',
-              horizontal: 'left',
-            }}
-            PaperProps={{
-              style: { maxWidth: '80%', wordWrap: 'break-word' },
-            }}
-            onMouseEnter={clearHoverTimeout}
-            onMouseLeave={handlePopoverClose}
-          >
-            <Typography style={{ padding: '16px', marginTop: '16px', marginBottom: '16px', marginLeft: '16px' }}>
-              {fullDisplayValue}
-            </Typography>
-          </Popover>
-        }
-      </div>
-    );
-  }
-
-  function CustomToolbar({ setFilterModalOpen }) {
-    return (
-      <GridToolbarContainer>
-        <GridToolbarColumnsButton />
-        <Button
-          startIcon={<FilterListIcon />}
-          size="small"
-          color="primary"
-          onClick={() => setFilterModalOpen(true)}
-        >
-          Filter
-        </Button>
-        <GridToolbarDensitySelector />
-        <GridToolbarExport />
-      </GridToolbarContainer>
-    );
-  }
-
-  const ToolbarWithProps = () => (
-    <CustomToolbar setFilterModalOpen={setFilterModalOpen} />
-  );
-
-  const handleOffsetChange = (newOffset: number) => {
-    const url = new URL(window.location.href);
-    const urlSearchParams = url.searchParams;
-
-    urlSearchParams.set('offset', newOffset.toString());
-    url.search = urlSearchParams.toString();
-
-    window.location.href = url.toString();
-  };
 
   // Manager for the activeWidgetList
   function addActiveWidgetId(id: string) {
     setActiveWidgetList([id, ...activeWidgetList])
   }
 
+  // MaterialUI modal handlers
+  function handleModalClose(widget) {
+    session.hideWidget(widget)
+  }
+  
+  // Menu handlers
+  function handleMenuClick(e, set) {
+    set(e.currentTarget)
+  }
+
+  function handleMenuClose(set) {
+    set(null)
+  }
+
   // Contains all features from the API call once the useEffect finished
-  //const [features, setFeatures] = useState<ExtendedVcfFeature[]>([])
-  const [features, setFeatures] = useState<any[]>([])
-  const [columns, setColumns] = useState<GridColumns>([])
-
-  const [error, setError] = useState<any>(undefined)
-
-  const [filterModalOpen, setFilterModalOpen] = useState(false);
-  const [filters, setFilters] = useState([]);
-  const [fieldTypeInfo, setFieldTypeInfo] = useState([]);
-
-  const [adapter, setAdapter] = useState<EVAdapterClass | undefined>(undefined)
-
-  const [availableOperators, setAvailableOperators] = useState([]);
+  const [features, setFeatures] = useState<ExtendedVcfFeature[]>([])
 
   // Active widget ID list to force rerender when a JBrowseUIButton is clicked
   const [activeWidgetList, setActiveWidgetList] = useState<string[]>([])
 
+  // Widget states
+  const [sampleFilterWidget, setSampleFilterWidget] = useState<Widget | undefined>()
+  const [infoFilterWidget, setInfoFilterWidget] = useState<Widget | undefined>()
+
+  // Menu management
+  const [anchorFilterMenu, setAnchorFilterMenu] = useState(null)
   const [isValidLocString, setIsValidLocString] = useState(true)
 
   // False until initial data load or an error:
@@ -216,58 +92,61 @@ const VariantTableWidget = observer(props => {
   // API call to retrieve the requested features.
   useEffect(() => {
     async function fetch() {
-      const queryParam = new URLSearchParams(window.location.search)
+      let adapterConfig = getConf(track, ['adapter'])
 
-      await fetchFieldTypeInfo(sessionId, trackGUID,
-        (res) => {
-          let columns: any = [];
+      let adapter = (await getAdapter(
+          pluginManager,
+          sessionId,
+          adapterConfig,
+      )).dataAdapter as EVAdapterClass
 
-          for(const fieldObj of res.fields) {
-            const field = fieldObj.name;
-            const type = fieldObj.type;
-            let muiFieldType;
+      const ret = adapter.getFeatures({
+        refName: assembly.getCanonicalRefName(parsedLocString.refName),
+        start: parsedLocString.start,
+        end: parsedLocString.end
+      } as NoAssemblyRegion)
 
-            switch (type) {
-              case 'Flag':
-              case 'String':
-              case 'Character':
-              case 'Impact':
-                muiFieldType = "string";
-                break;
-              case 'Float':
-              case 'Integer':
-                muiFieldType = "number";
-                break;
-            }
+      // TODO: do we actually want to cache the in-memory filtered features, or should we
+      // cache the full set and react to changes in track.configuration and filter on-demand?
+      // I suspect the fact this is responsive to session.visibleWidget is accidentally getting the reload correct, since that forces
+      // this to be re-called when the filter widget is removed.
+      const rawFeatures = await ret.pipe(toArray()).toPromise()
+      const filteredFeatures = filterFeatures(rawFeatures,
+        track.configuration.displays[0].renderer.activeSamples.value, 
+        track.configuration.displays[0].renderer.infoFilters.valueJSON)
 
-            let column: any = { field: field, renderCell: (params: any) =>  { return <TableCellWithPopover value={params.value} /> }, description: fieldObj.description , headerName: fieldObj.label ?? field, minWidth: 25, width: fieldObj.colWidth ?? 50, maxWidth: 100, type: muiFieldType, flex: 1, headerAlign: 'left', align: "left", hide: fieldObj.isHidden }
-
-            if (field == "af") {
-              column.sortComparator = multiValueComparator
-              column.filterOperators = getGridNumericColumnOperators().map(op => multiModalOperator(op))
-            }
-
-            column.orderKey = fieldObj.orderKey;
-
-            columns.push(column)
-          }
-
-          columns.sort((a, b) => a.orderKey - b.orderKey);
-          const columnsWithoutOrderKey = columns.map(({ orderKey, ...rest }) => rest);
-
-          setColumns(columnsWithoutOrderKey);
-          const operators = fieldTypeInfoToOperators(res.fields)
-          setAvailableOperators(operators)
-          setFieldTypeInfo(res.fields)
-          handleQuery(searchStringToInitialFilters(operators))
-        },
-        (error) => {
-          setError(error)
-        })
+      setFeatures(filteredFeatures)
+      setDataLoaded(true)
     }
 
-    fetch()
+    if (pluginManager && parsedLocString && isValidLocString) {
+      setSampleFilterWidget(session.addWidget(
+        'SampleFilterWidget',
+        'Sample-Variant-' + getConf(track, ['trackId']),
+        { track: track.configuration }
+      ))
 
+      setInfoFilterWidget(session.addWidget(
+        'InfoFilterWidget',
+        'Info-Variant-' + getConf(track, ['trackId']),
+        { track: track.configuration }
+      ))
+
+      const regionLength = parsedLocString.end - parsedLocString.start
+      const maxRegionSize = 900000
+      if (isNaN(regionLength)) {
+        alert("Must include start/stop in location: " + locString)
+        setDataLoaded(true)
+        setIsValidLocString(false)
+      }
+      else if (regionLength > maxRegionSize) {
+        alert("Location " + locString + " is too large to load.")
+        setDataLoaded(true)
+        setIsValidLocString(false)
+      } else {
+        fetch()
+      }
+    }
   }, [pluginManager, parsedLocString, session.visibleWidget])
 
   if (!view) {
@@ -278,68 +157,24 @@ const VariantTableWidget = observer(props => {
       return(<p>Unable to find track: {trackId}</p>)
   }
 
-  if (error) {
-    throw new Error(error)
-  }
-
-  const getAdapterInstance = async () => {
-    let adapterConfig = getConf(track, 'adapter')
-    
-    let a = (await getAdapter(
-        pluginManager,
-        sessionId,
-        adapterConfig,
-    )).dataAdapter as EVAdapterClass
-
-    setAdapter(a)
-
-    return a;
-  }
-
-  const showDetailsWidget = (rowIdx: number, params: any) => {
-    (async () => {
-        /*let a = adapter;
-
-        if (!a) {
-            a = await getAdapterInstance();
-        }*/
-        let a = await getAdapterInstance();
-
-        const row = features[rowIdx] as any
-
-        const isValidRefNameForAssembly = function(refName: string, assemblyName?: string) {
-            return assemblyManager.isValidRefName(refName, assemblyNames[0])
+  const supportsLuceneIndex = getConf(track, ['displays', '0', 'renderer', 'supportsLuceneIndex'])
+  const showDetailsWidget = (rowIdx: number) => {
+    const feature = features[rowIdx]
+    const trackId = getConf(track, ['trackId'])
+    const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])
+    const widgetId = 'Variant-' + trackId;
+    const featureWidget = session.addWidget(
+        'ExtendedVariantWidget',
+        widgetId,
+        {
+          featureData: feature,
+          trackId: trackId,
+          message: '',
+          detailsConfig: detailsConfig
         }
+    )
 
-        const parsedLocString = parseLocString(row.contig + ":" + row.start + ".." + row.end, isValidRefNameForAssembly)
-        const refName = assembly.getCanonicalRefName(parsedLocString.refName)
-
-        const ret = a.getFeatures({
-          refName: refName,
-          start: row.start - 1,
-          end: row.end
-        } as NoAssemblyRegion)
-
-        const extendedFeatures = await ret.pipe(toArray()).toPromise()
-        const feature = extendedFeatures[0];
-
-        const trackId = getConf(track, 'trackId')
-        const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])
-        const widgetId = 'Variant-' + trackId;
-
-        const featureWidget = session.addWidget(
-            'ExtendedVariantWidget',
-            widgetId,
-            {
-              featureData: feature,
-              trackId: trackId,
-              message: '',
-              detailsConfig: detailsConfig
-            }
-        )
-
-        session.showWidget(featureWidget)
-    })();
+    session.showWidget(featureWidget)
   }
 
   const actionsCol: GridColDef = {
@@ -358,9 +193,8 @@ const VariantTableWidget = observer(props => {
                 flexDirection: 'column'
               }}
             >
-              <Box sx={{lineHeight: '20px'}}><a className={"labkey-text-link"} onClick={() => { showDetailsWidget(params.row.id, params) }}>Variant Details</a></Box>
-              <Box sx={{lineHeight: '20px'}}><a className={"labkey-text-link"} target="_blank" href={getGenotypeURL(params.row.trackId, params.row.contig, params.row.start, params.row.end)}>View Genotypes</a></Box>
-              <Box sx={{lineHeight: '20px'}}><a className={"labkey-text-link"} target="_blank" href={navigateToBrowserNoFilters(sessionId, params.row.contig + ":" + params.row.start + ".." + params.row.end, trackId, track)}>View in Genome Browser</a></Box>
+              <Box sx={{lineHeight: '20px'}}><a className={"labkey-text-link"} onClick={() => { showDetailsWidget(params.row.id) }}>Variant Details</a></Box>
+              <Box sx={{lineHeight: '20px'}}><a className={"labkey-text-link"} target="_blank" href={getGenotypeURL(params.row.trackId, params.row.chrom, params.row.start, params.row.end)}>View Genotypes</a></Box>
             </Box>
           </>
       )
@@ -370,43 +204,17 @@ const VariantTableWidget = observer(props => {
   const gridElement = (
     <DataGrid
         columns={[...columns, actionsCol]}
-        rows={features}
-        components={{ Toolbar: ToolbarWithProps }}
+        rows={features.map((rawFeature, id) => rawFeatureToRow(rawFeature, id, trackId))}
+        components={{ Toolbar: GridToolbar }}
         rowsPerPageOptions={[10,25,50,100]}
         pageSize={pageSize}
-        density="comfortable"
         onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
       />
   )
 
-  const renderHeaderCell = (params) => {
-    return (
-      <Tooltip title={params.colDef.description}>
-        <div>{params.colDef.headerName}</div>
-      </Tooltip>
-    );
-  };
-
-  const filterModal = (
-    <FilterFormModal open={filterModalOpen} handleClose={() => setFilterModalOpen(false)} 
-                   sessionId={sessionId}
-                   trackGUID={trackGUID}
-                   handleQuery={(filters) => handleQuery(filters)}
-                   setFilters={setFilters}
-                   handleFailureCallback={() => {}}
-                   availableOperators={availableOperators}
-                   fieldTypeInfo={fieldTypeInfo}
-                   components={{
-                     headerCell: renderHeaderCell,
-                    }}
-  />
-  );
-
-
   return (
     <>
       <LoadingIndicator isOpen={!dataLoaded}/>
-
       {
         [...session.activeWidgets].map((elem) => {
           const widget = elem[1]
@@ -432,35 +240,31 @@ const VariantTableWidget = observer(props => {
         })
       }
 
+      <div style={{marginBottom: "10px"}}>
+        <Grid container spacing={1} justifyContent="flex-start" alignItems="center">
+          <Grid key='search' item xs="auto">
+            <StandaloneSearchComponent session={session} tableUrl={true} assemblyName={assemblyName} trackId={trackId} selectedRegion={isValidLocString ? locString : ""}/>
+          </Grid>
 
-      <div style={{ marginBottom: "10px", display: "flex", alignItems: "center" }}>
+          <Grid key='filterMenu' item xs="auto">
+            <MenuButton disabled={!isValidLocString} id={'filterMenu'} color="primary" variant="contained" text="Filter" anchor={anchorFilterMenu}
+              handleClick={(e) => handleMenuClick(e, setAnchorFilterMenu)}
+              handleClose={(e) => handleMenuClose(setAnchorFilterMenu)}>
+              <MenuItem className="menuItem" onClick={() => { handleMenu("filterSample"); handleMenuClose(setAnchorFilterMenu) }}>Filter By Sample</MenuItem>
+              <MenuItem className="menuItem" onClick={() => { handleMenu("filterInfo"); handleMenuClose(setAnchorFilterMenu) }}>Filter By Attributes</MenuItem>
+            </MenuButton>
+          </Grid>
 
-      <div style={{ flex: 1 }}>
-        {filters.map((filter, index) => {
-          if ((filter as any).field == "" || (filter as any).operator == "" || (filter as any).value == "" ) {
-            return null;
-          }
-          return (
-            <Button
-              key={index}
-              onClick={() => setFilterModalOpen(true)}
-              style={{ border: "1px solid gray", margin: "5px" }}
-            >
-              {`${(filter as any).field} ${(filter as any).operator} ${(filter as any).value}`}
-            </Button>
-          );
-        })}
+          <Grid key='genomeViewButton' item xs="auto">
+            <Button disabled={!isValidLocString} style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("browserRedirect")}>View in Genome Browser</Button>
+          </Grid>
+
+          {supportsLuceneIndex ? <Grid key='luceneViewButton' item xs="auto">
+            <Button hidden={!supportsLuceneIndex} style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("luceneRedirect")}>Switch to Free-text Search</Button>
+          </Grid> : null}
+        </Grid>
       </div>
 
-        <div style={{ marginLeft: "auto" }}>
-          <ArrowPagination
-            offset={currentOffset}
-            onOffsetChange={handleOffsetChange}
-          />
-        </div>
-      </div>
-
-      {filterModal}
       {gridElement}
     </>
   )

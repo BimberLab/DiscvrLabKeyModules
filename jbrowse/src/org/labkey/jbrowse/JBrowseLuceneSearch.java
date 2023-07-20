@@ -1,21 +1,14 @@
 package org.labkey.jbrowse;
 
-import htsjdk.variant.vcf.VCFFileReader;
-import htsjdk.variant.vcf.VCFHeader;
-import htsjdk.variant.vcf.VCFHeaderLineType;
-import htsjdk.variant.vcf.VCFInfoHeaderLine;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
-import org.apache.lucene.document.FloatPoint;
-import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexableField;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.queryparser.flexible.standard.config.PointsConfig;
@@ -26,23 +19,23 @@ import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.json.JSONArray;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
-import org.labkey.api.security.User;
-import org.labkey.jbrowse.model.JBrowseSession;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.jbrowse.AbstractJBrowseFieldCustomizer;
-import org.labkey.api.jbrowse.JBrowseFieldCustomizer;
+import org.labkey.api.jbrowse.GroupsProvider;
 import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
 import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.security.User;
+import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
+
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
@@ -55,110 +48,49 @@ import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.labkey.jbrowse.JBrowseFieldUtils.VARIABLE_SAMPLES;
+import static org.labkey.jbrowse.JBrowseFieldUtils.getSession;
+import static org.labkey.jbrowse.JBrowseFieldUtils.getTrack;
+
 public class JBrowseLuceneSearch
 {
     private final JBrowseSession _session;
     private final JsonFile _jsonFile;
+    private final User _user;
 
-    private JBrowseLuceneSearch(final JBrowseSession session, final JsonFile jsonFile)
+    private JBrowseLuceneSearch(final JBrowseSession session, final JsonFile jsonFile, User u)
     {
         _session = session;
         _jsonFile = jsonFile;
+        _user = u;
+    }
+
+    private Container getContainer()
+    {
+        return ContainerManager.getForId(_session.getContainer());
     }
 
     public static JBrowseLuceneSearch create(String sessionId, String trackId, User u)
     {
-        JBrowseSession session = JBrowseSession.getForId(sessionId);
-        if (session == null)
-        {
-            throw new IllegalArgumentException("Unable to find JBrowse session: " + sessionId);
-        }
+        JBrowseSession session = getSession(sessionId);
 
-        JsonFile track = session.getTrack(u, trackId);
-        if (track == null)
-        {
-            throw new IllegalArgumentException("Unable to find track with ID: " + trackId);
-        }
-
-        if (!track.shouldHaveFreeTextSearch())
-        {
-            throw new IllegalArgumentException("This track does not support free text search: " + trackId);
-        }
-
-        if (!track.doExpectedSearchIndexesExist())
-        {
-            throw new IllegalArgumentException("The lucene index has not been created for this track: " + trackId);
-        }
-
-        return new JBrowseLuceneSearch(session, track);
+        return new JBrowseLuceneSearch(session, getTrack(session, trackId, u), u);
     }
 
-    private static final String VARIABLE_SAMPLES = "variableSamples";
-
-    private Map<String, JBrowseFieldDescriptor> getIndexedFields()
-    {
-        Map<String, JBrowseFieldDescriptor> ret = new HashMap<>() {{
-            put("contig", new JBrowseFieldDescriptor("contig", "This is the chromosome/contig", true, true, VCFHeaderLineType.String, 1).label("Chromosome"));
-            put("ref", new JBrowseFieldDescriptor("ref", "The reference allele", true, true, VCFHeaderLineType.String, 3).label("Ref Allele"));
-            put("alt", new JBrowseFieldDescriptor("alt", "The alternate allele", true, true, VCFHeaderLineType.String, 5).label("Alt Allele"));
-            put("start", new JBrowseFieldDescriptor("start", "The start position of this variant", true, true, VCFHeaderLineType.Integer, 2).label("Start"));
-            put("end", new JBrowseFieldDescriptor("end", "The end position of this variant", true, true, VCFHeaderLineType.Integer, 4).label("End"));
-            put("genomicPosition", new JBrowseFieldDescriptor("genomicPosition", "", false, true, VCFHeaderLineType.Integer, 6).hidden(true).label("Genomic Position"));
-            put("variableSamples", new JBrowseFieldDescriptor(VARIABLE_SAMPLES, "All samples with this variant", true, true, VCFHeaderLineType.Character, 7).multiValued(true).label("Samples With Variant"));
-        }};
-
-        File vcf = _jsonFile.getTrackFile();
-        if (!vcf.exists()){
-            throw new IllegalArgumentException("Unable to find file: " + vcf.getPath());
-        }
-
-        try (VCFFileReader reader = new VCFFileReader(vcf))
-        {
-            VCFHeader header = reader.getFileHeader();
-            for (String fn : _jsonFile.getInfoFieldsToIndex())
-            {
-                if (!header.hasInfoLine(fn))
-                {
-                    throw new IllegalArgumentException("Field not present: " + fn);
-                }
-
-                VCFInfoHeaderLine info = header.getInfoHeaderLine(fn);
-                ret.put(fn, new JBrowseFieldDescriptor(fn, info.getDescription(), false, true, info.getType(), 8));
-            }
-        }
-
-        return ret;
-    }
-
-    public JSONObject returnIndexedFields() {
-        Map<String, JBrowseFieldDescriptor> fields = getIndexedFields();
-        JSONObject results = new JSONObject();
-        JSONArray data = new JSONArray();
-
-        for (Map.Entry<String, JBrowseFieldDescriptor> entry : fields.entrySet()) {
-            data.put(entry.getValue().toJSON());
-        }
-
-        results.put("fields", data);
-        return results;
-    }
-
-    private static String templateReplace(final String searchString) {
-        Map<String, String> variableMap = new HashMap<>();
-
-        // TODO define and fetch this map
-        variableMap.put("ONPRC", "(m07952 OR m07528 OR m07431)");
-
+    private String templateReplace(final String searchString) {
         String result = searchString;
         Pattern pattern = Pattern.compile("~(.*?)~");
         Matcher matcher = pattern.matcher(searchString);
 
-        while (matcher.find()) {
-            String variableName = matcher.group(1);
-            String replacement = variableMap.get(variableName);
+        while (matcher.find())
+        {
+            String groupName = matcher.group(1);
+            List<String> resolvedGroup = JBrowseServiceImpl.get().resolveGroups(_jsonFile.getJsonTrackId(), groupName, _user, getContainer());
+            if (resolvedGroup != null)
+            {
+                String replacement = "(" + StringUtils.join(resolvedGroup,  " OR ") +")";
 
-            if (replacement != null) {
-                result = result.replace("~" + variableName + "~", replacement);
+                result = result.replace("~" + groupName + "~", replacement);
             }
         }
 
@@ -174,18 +106,18 @@ public class JBrowseLuceneSearch
                 return input;
             }
 
-            return URLDecoder.decode(input, StandardCharsets.UTF_8.toString());
-        } catch (UnsupportedEncodingException | IllegalArgumentException e) {
+            return URLDecoder.decode(input, StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException e) {
             return input;
         }
     }
 
 
-    public JSONObject doSearch(String searchString, final int pageSize, final int offset) throws IOException, ParseException
+    public JSONObject doSearch(User u, String searchString, final int pageSize, final int offset) throws IOException, ParseException
     {
         searchString = tryUrlDecode(searchString);
         File indexPath = _jsonFile.getExpectedLocationOfLuceneIndex(true);
-        Map<String, JBrowseFieldDescriptor> fields = getIndexedFields();
+        Map<String, JBrowseFieldDescriptor> fields = JBrowseFieldUtils.getIndexedFields(_jsonFile, u, getContainer());
 
         // Open directory of lucene path, get a directory reader, and create the index search manager
         try (
@@ -224,7 +156,7 @@ public class JBrowseLuceneSearch
 
             // The numericQueryParser can perform range queries, but numeric fields they can't be indexed alongside
             // lexicographic  fields, so they get split into a separate parser
-            MultiFieldQueryParser queryParser = new MultiFieldQueryParser(stringQueryParserFields.toArray(new String[stringQueryParserFields.size()]), new StandardAnalyzer());
+            MultiFieldQueryParser queryParser = new MultiFieldQueryParser(stringQueryParserFields.toArray(new String[0]), new StandardAnalyzer());
             queryParser.setAllowLeadingWildcard(true);
 
             StandardQueryParser numericQueryParser = new StandardQueryParser();
@@ -253,11 +185,13 @@ public class JBrowseLuceneSearch
                 Matcher matcher = pattern.matcher(queryString);
 
                 String fieldName = null;
-                if (matcher.find()) {
+                if (matcher.find())
+                {
                     fieldName = matcher.group().substring(0, matcher.group().length() - 1);
                 }
 
-                if ("variableSamples".equals(fieldName)) {
+                if (VARIABLE_SAMPLES.equals(fieldName))
+                {
                     queryString = templateReplace(queryString);
                 }
 
@@ -267,14 +201,16 @@ public class JBrowseLuceneSearch
                 }
                 else if(numericQueryParserFields.contains(fieldName))
                 {
-                    try {
+                    try
+                    {
                         query = numericQueryParser.parse(queryString, "");
                     }
                     catch (QueryNodeException e)
                     {
                         e.printStackTrace();
                     }
-                } else {
+                } else
+                {
                     throw new IllegalArgumentException("No such field(s), or malformed query.");
                 }
 
@@ -336,17 +272,38 @@ public class JBrowseLuceneSearch
         }
 
         @Override
-        public void customizeField(JBrowseFieldDescriptor field)
+        public void customizeField(JBrowseFieldDescriptor field, Container c, User u)
         {
             switch (field.getFieldName())
             {
-                case "AF":
-                    field.label("Allele Frequency");
-                    break;
-                case "IMPACT":
-                    field.label("Impact on Protein Coding").allowableValues(Arrays.asList("HIGH", "LOW", "MODERATE", "MODIFIER"));
-                    break;
+                case "AF" -> field.label("Allele Frequency");
+                case "AC" -> field.label("Allele Count");
+                case "MAF" -> field.label("Minor Allele Frequency");
+                case "IMPACT" ->
+                        field.label("Impact on Protein Coding").allowableValues(Arrays.asList("HIGH", "LOW", "MODERATE", "MODIFIER"));
             }
+        }
+    }
+
+    public static class TestJBrowseGroupProvider implements GroupsProvider
+    {
+        public static final String GROUP_NAME = "!TestGroup!";
+
+        @Override
+        public @Nullable List<String> getGroupMembers(String trackId, String groupName, Container c, User u)
+        {
+            if (GROUP_NAME.equals(groupName))
+            {
+                return Arrays.asList("m07952", "m07528", "m07431");
+            }
+
+            return null;
+        }
+
+        @Override
+        public boolean isAvailable(Container c, User u)
+        {
+            return true;
         }
     }
 }

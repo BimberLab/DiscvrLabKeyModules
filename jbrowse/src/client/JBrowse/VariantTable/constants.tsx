@@ -19,11 +19,11 @@ const parseCellValue = (cellValue) => (cellValue.valueOf() as string).split(",")
   return Number(str);
 })
 
-export const multiValueComparator: GridComparatorFn = (v1, v2) => {
+const multiValueComparator: GridComparatorFn = (v1, v2) => {
   return arrayMax(parseCellValue(v1)) - arrayMax(parseCellValue(v2))
 }
 
-export const multiModalOperator = (operator: GridFilterOperator) => {
+const multiModalOperator = (operator: GridFilterOperator) => {
   const getApplyFilterFn = (
     filterItem: GridFilterItem,
     column: GridStateColDef,
@@ -67,11 +67,10 @@ export const multiModalOperator = (operator: GridFilterOperator) => {
 
 // Columns to be shown, minus the ID column.
 export const columns: GridColumns = [
-  { field: 'chrom', headerName: 'Chromosome', width: 150, type: "string", flex: 1, headerAlign: 'left', hide: true },
+  { field: 'chrom', headerName: 'Chromosome', width: 150, type: "string", flex: 1, headerAlign: 'left' },
   { field: 'pos', headerName: 'Position', width: 150, type: "number", flex: 1, headerAlign: 'left' },
-  { field: 'samples', headerName: 'Samples', width: 150, type: "string", flex: 1, headerAlign: 'left' },
-  { field: 'ref', headerName: 'Reference', width: 150, type: "string", flex: 1, headerAlign: 'left', hide: true },
-  { field: 'alt', headerName: 'Alternative Allele', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true },
+  { field: 'ref', headerName: 'Reference', width: 150, type: "string", flex: 1, headerAlign: 'left' },
+  { field: 'alt', headerName: 'Alternate Allele', width: 50, type: "string", flex: 1, headerAlign: 'left' },
   { 
     field: 'af', 
     headerName: 'Allele Frequency',
@@ -82,11 +81,11 @@ export const columns: GridColumns = [
     sortComparator: multiValueComparator,
     filterOperators: getGridNumericColumnOperators().map(op => multiModalOperator(op))
   },
-  { field: 'variant_type', headerName: 'Type', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true },
-  { field: 'impact', headerName: 'Impact', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true },
-  { field: 'overlapping_genes', headerName: 'Overlapping Genes', type: "string", flex: 1, headerAlign: 'left', hide: true },
+  { field: 'variant_type', headerName: 'Type', width: 50, type: "string", flex: 1, headerAlign: 'left' },
+  { field: 'impact', headerName: 'Impact', width: 50, type: "string", flex: 1, headerAlign: 'left' },
+  { field: 'overlapping_genes', headerName: 'Overlapping Genes', type: "string", flex: 1, headerAlign: 'left' },
   { field: 'cadd_ph', headerName: 'CADD Score', width: 50, type: "number", flex: 1, headerAlign: 'left' },
-  { field: 'track_id', headerName: 'Track ID', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true }, //hide everything below this
-  { field: 'start', headerName: 'Start Location', width: 50, type: "string", flex: 1, headerAlign: 'left' },
-  { field: 'end', headerName: 'End Location', width: 50, type: "string", flex: 1, headerAlign: 'left' }
+  { field: 'track_id', headerName: 'Track ID', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true },
+  { field: 'start', headerName: 'Start Location', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true },
+  { field: 'end', headerName: 'End Location', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true }
 ]

@@ -1,6 +1,5 @@
 package org.labkey.jbrowse;
 
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
@@ -144,7 +143,7 @@ public class JBrowseServiceImpl extends JBrowseService
         Collections.reverse(customizers);
         for (JBrowseFieldCustomizer fc : customizers) {
             if (fc.isAvailable(c, u)) {
-                fc.customizeField(field);
+                fc.customizeField(field, c, u);
             }
         }
     }
@@ -155,10 +154,10 @@ public class JBrowseServiceImpl extends JBrowseService
      * @param c
      * @return
      */
-    public Set<String> resolveGroups(String groupName, User u, Container c)
+    public List<String> resolveGroups(String trackId, String groupName, User u, Container c)
     {
         // NOTE: providers will be registered on module startup, which will be in dependency order.
-        // Process them here in reverse dependency order so we prioritize end modules
+        // Process them here in reverse dependency order to prioritize end modules
         List<GroupsProvider> providers = new ArrayList<>(_providers);
         Collections.reverse(providers);
         for (GroupsProvider gp : providers)
@@ -167,7 +166,7 @@ public class JBrowseServiceImpl extends JBrowseService
             {
                 try
                 {
-                    Set<String> members = gp.getGroupMembers(groupName, c, u);
+                    List<String> members = gp.getGroupMembers(trackId, groupName, c, u);
                     if (members != null)
                     {
                         return members;

@@ -1,23 +1,14 @@
-import {FIELD_NAME_MAP, IGNORED_INFO_FIELDS, INFO_FIELD_GROUPS} from "./fields";
-import {Chart} from "react-google-charts";
-import {style as styles} from "./style";
-import {getGenotypeURL} from "../../../../utils";
+import { FIELD_NAME_MAP } from './fields';
+import { Chart } from 'react-google-charts';
+import { style as styles } from './style';
+import { FieldModel, getGenotypeURL } from '../../../../utils';
+import { ActionURL, Ajax } from '@labkey/api';
+import React, { useEffect, useState } from 'react';
+import { BaseCard, FeatureDetails } from '@jbrowse/core/BaseFeatureWidget/BaseFeatureDetail';
+import { Paper, Table, TableBody, TableCell, TableHead, TableRow, Tooltip } from '@material-ui/core';
+import { observer, PropTypes as MobxPropTypes } from 'mobx-react';
 
 export default jbrowse => {
-    const {
-        Paper,
-        Table,
-        TableBody,
-        TableCell,
-        TableHead,
-        TableRow,
-        Tooltip
-    } = jbrowse.jbrequire('@material-ui/core')
-    const { observer, PropTypes: MobxPropTypes } = jbrowse.jbrequire('mobx-react')
-    const React = jbrowse.jbrequire('react')
-    const { useState, useEffect } = React
-    const { FeatureDetails, BaseCard } = jbrowse.jbrequire('@jbrowse/core/BaseFeatureWidget/BaseFeatureDetail')
-
     function round(value, decimals) {
         return Number(Math.round(Number(value+'e'+decimals)) + 'e-'+decimals);
     }
@@ -64,19 +55,23 @@ export default jbrowse => {
         )
     }
 
-    function makeDisplays(feat, displays, classes, infoMap){
+    function makeDisplays(feat, displays, classes, featureInfoFields, infoFields){
+        if (!infoFields) {
+            return null
+        }
+
         const propertyJSX = []
         for (let display of displays){
             const tempProp = []
             for (let propertyName of display.properties){
                 // This value is not in the header, and is probably injected programmatically, so skip:
-                if (!infoMap[propertyName]) {
+                if (!featureInfoFields[propertyName]) {
                     continue
                 }
 
                 const value = feat["INFO"][propertyName]
-                const fieldTitle = FIELD_NAME_MAP[propertyName]?.title || propertyName
-                const tooltip = infoMap[propertyName] ? infoMap[propertyName].Description : null
+                const fieldTitle = infoFields[propertyName]?.label || FIELD_NAME_MAP[propertyName]?.title || propertyName
+                const tooltip = infoFields[propertyName]?.description || featureInfoFields[propertyName]?.Description
                 if (value){
                     tempProp.push(
                             <TableRow key={propertyName + "-field"} className={classes.fieldRow}>
@@ -86,6 +81,7 @@ export default jbrowse => {
                                     </TableCell>
                                 </Tooltip>
                                 <TableCell key={propertyName + "-val"} className={classes.fieldValue}>
+                                    {/* TODO: use JEXL and formatString */}
                                     {Array.isArray(value) ? value.join(', ') :  value}
                                 </TableCell>
                             </TableRow>
@@ -112,28 +108,29 @@ export default jbrowse => {
         return displayJSX
     }
 
-    function inferSections(feat) {
-        const sections = []
+    function inferSections(feat, infoFields: Map<string, FieldModel>) {
+        if (!infoFields) {
+            return []
+        }
 
-        for (const [key, sectionConfig] of Object.entries(INFO_FIELD_GROUPS)) {
-            const section = {
-                title: sectionConfig.title,
-                description: sectionConfig.description,
-                properties: []
+        const sectionMap = {}
+        for (const [key, fieldDescriptor] of Object.entries(infoFields)) {
+            if (!fieldDescriptor.category) {
+                continue
             }
 
-            for (const fieldName of sectionConfig.tags) {
-                if (feat["INFO"][fieldName]) {
-                    section.properties.push(fieldName)
+            if (!sectionMap[fieldDescriptor.category]) {
+                sectionMap[fieldDescriptor.category] = {
+                    title: fieldDescriptor.category,
+                    properties: []
                 }
             }
 
-            if (section.properties.length) {
-                sections.push(section)
-            }
+            sectionMap[fieldDescriptor.category].properties.push(fieldDescriptor.name)
         }
 
-        return sections
+        const keys = Object.keys(sectionMap).sort()
+        return keys.map((x) => sectionMap[x])
     }
 
     function makeChart(samples, feat, classes, trackId){
@@ -295,7 +292,8 @@ export default jbrowse => {
         const { model } = props
         const detailsConfig = JSON.parse(JSON.stringify(model.detailsConfig || {}))
         const feature = model.featureData
-        const infoMap = feature.parser.metadata.INFO
+        const featureInfoFields = feature.parser.metadata.INFO
+        const [infoFields, setInfoFields] = useState<Map<string, FieldModel>>(null)
 
         const feat = JSON.parse(JSON.stringify(feature))
         const { samples } = feat
@@ -306,14 +304,37 @@ export default jbrowse => {
             console.error('Error! No trackId')
         }
 
+        const infoKeys = Object.keys(feat.INFO)
+        let isApiSubscribed = true
+        useEffect(() => {
+            Ajax.request({
+                url: ActionURL.buildURL('jbrowse', 'resolveVcfFields.api'),
+                method: 'POST',
+                success: async function(res){
+                    if (isApiSubscribed) {
+                        const fields: Map<string, FieldModel> = JSON.parse(res.response);
+                        setInfoFields(fields)
+                    }
+                },
+                failure: function(res){
+                    console.error("There was an error while fetching field types: " + res.status + "\n Status Body: " + res.statusText)
+                },
+                params: {infoKeys: infoKeys},
+            });
+
+            return () => {
+                isApiSubscribed = false;
+            };
+        }, [infoKeys])
+
         let annTable;
         if (feat["INFO"]["ANN"]){
             annTable = makeAnnTable(feat["INFO"]["ANN"], classes)
             delete feat["INFO"]["ANN"]
         }
 
-        const sections = detailsConfig.sections || inferSections(feat)
-        const displays = makeDisplays(feat, sections, classes, infoMap)
+        const sections = detailsConfig.sections || inferSections(feat, infoFields)
+        const displays = makeDisplays(feat, sections, classes, featureInfoFields, infoFields)
 
         // If a given INFO field is used in a specific section, dont include in the catch-all INFO section:
         for (let i in sections){
@@ -322,15 +343,18 @@ export default jbrowse => {
             }
         }
 
-        for (const fieldName of IGNORED_INFO_FIELDS) {
-            if (feat["INFO"][fieldName]) {
-                delete feat["INFO"][fieldName]
+        if (infoFields) {
+            const ignoredFields = Object.values(infoFields).filter((x: FieldModel) => !!x.isHidden).map((x: FieldModel) => x.name)
+            for (const fieldName of ignoredFields) {
+                if (feat["INFO"][fieldName]) {
+                    delete feat["INFO"][fieldName]
+                }
             }
         }
 
         const message = detailsConfig.message ? <div className={classes.message} >{detailsConfig.message}</div> : null
         const infoConfig = [{
-            title: "Info",
+            title: "Other Fields",
             properties: []
         }]
 
@@ -338,7 +362,7 @@ export default jbrowse => {
             infoConfig[0].properties.push(infoEntry)
         }
 
-        const infoDisplays = makeDisplays(feat, infoConfig, classes, infoMap)
+        const infoDisplays = makeDisplays(feat, infoConfig, classes, featureInfoFields, infoFields)
         feat["INFO"] = null
 
         return (

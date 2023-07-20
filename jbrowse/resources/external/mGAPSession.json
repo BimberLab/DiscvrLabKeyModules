@@ -35,7 +35,7 @@
     {
       "type": "ExtendedVariantTrack",
       "trackId": "mgap_hg38",
-      "name": "mgap",
+      "name": "mGAP",
       "assemblyNames": [
         "hg38"
       ],

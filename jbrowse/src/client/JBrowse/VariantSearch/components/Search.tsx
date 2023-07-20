@@ -1,6 +1,5 @@
-import React, { useState } from "react";
-import Button from "@material-ui/core/Button";
-import FilterForm from "./FilterForm";
+import React, { useState } from 'react';
+import Button from '@material-ui/core/Button';
 import { truncateToValidGUID } from '../../utils';
 
 

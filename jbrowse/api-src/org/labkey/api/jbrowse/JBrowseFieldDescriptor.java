@@ -11,17 +11,19 @@ public class JBrowseFieldDescriptor {
     private final String _fieldName;
     private final VCFHeaderLineType _type;
     private String _label;
-    private final String _description;
-    private final boolean _isInDefaultColumns;
-    private final boolean _isIndexed;
+    private String _description;
+    private boolean _isInDefaultColumns;
+    private boolean _isIndexed;
     private boolean _isMultiValued = false;
     private List<String> _allowableValues = null;
     private boolean _isHidden = false;
     private String _colWidth = null;
-    private Integer _orderKey = null;
+    private Integer _orderKey = 8;
 
     // NOTE: this should support "jexl:xxxxxx" syntax, like other JBrowse formatting
     private String _formatString = null;
+    private String _category = null;
+    private String _url = null;
 
     public JBrowseFieldDescriptor(String luceneFieldName, @Nullable String description, boolean isInDefaultColumns, boolean isIndexed, VCFHeaderLineType type, Integer orderKey) {
         _fieldName = luceneFieldName;
@@ -49,7 +51,14 @@ public class JBrowseFieldDescriptor {
     }
 
     public JBrowseFieldDescriptor allowableValues(List<String> allowableValues) {
-        _allowableValues = Collections.unmodifiableList(allowableValues);
+        _allowableValues = allowableValues == null ? null : Collections.unmodifiableList(allowableValues);
+
+        // Only change the value if we are certain there are multiple values:
+        if (_allowableValues != null && !_allowableValues.isEmpty())
+        {
+            _isMultiValued = true;
+        }
+
         return this;
     }
 
@@ -103,6 +112,21 @@ public class JBrowseFieldDescriptor {
         _label = label;
     }
 
+    public void setInDefaultColumns(boolean inDefaultColumns)
+    {
+        _isInDefaultColumns = inDefaultColumns;
+    }
+
+    public void setCategory(String category)
+    {
+        _category = category;
+    }
+
+    public void setUrl(String url)
+    {
+        _url = url;
+    }
+
     public void setMultiValued(boolean multiValued) {
         _isMultiValued = multiValued;
     }
@@ -111,12 +135,31 @@ public class JBrowseFieldDescriptor {
         _isHidden = hidden;
     }
 
+    public void setIndexed(boolean indexed) {
+        _isIndexed = indexed;
+    }
+
     public void setColWidth(String colWidth) {
         _colWidth = colWidth;
     }
 
     public void setOrderKey(Integer orderKey) {
         _orderKey = orderKey;
+    }
+
+    public void setAllowableValues(List<String> allowableValues)
+    {
+        _allowableValues = allowableValues;
+    }
+
+    public void setFormatString(String formatString)
+    {
+        _formatString = formatString;
+    }
+
+    public void setDescription(String description)
+    {
+        _description = description;
     }
 
     public JSONObject toJSON() {
@@ -133,6 +176,8 @@ public class JBrowseFieldDescriptor {
         fieldDescriptorJSON.put("formatString", _formatString);
         fieldDescriptorJSON.put("orderKey", _orderKey);
         fieldDescriptorJSON.put("allowableValues", _allowableValues);
+        fieldDescriptorJSON.put("category", _category);
+        fieldDescriptorJSON.put("url", _url);
 
         return fieldDescriptorJSON;
     }
