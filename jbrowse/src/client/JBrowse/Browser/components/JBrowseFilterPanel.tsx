@@ -52,7 +52,7 @@ const JBrowseFilterPanel = observer(props => {
             const sampleText = activeSamples.split(',').length > 5 ? '<too many to show>' : activeSamples
             const label = getConf(track, ['name']) || trackId
 
-            filterDisplayItems.push(<Button color="primary" key={"sampleFilterButton"} style={{marginRight: 10}} variant={'contained'} onClick={() => handleButtonClick('SampleFilterWidget', track, label)}>{label + ': ' + 'Showing sites with a variant in any of:'}<br />{sampleText}</Button>)
+            filterDisplayItems.push(<Button color="primary" key={"sampleFilterButton"} style={{marginRight: 10, textTransform: 'initial'}} variant={'contained'} onClick={() => handleButtonClick('SampleFilterWidget', track, label)}>{label + ': ' + 'Showing sites with a variant in any of:'}<br />{sampleText}</Button>)
         }
 
         const infoFilters = getConf(track, ['displays', '0', 'renderer', 'infoFilters'])
@@ -60,7 +60,7 @@ const JBrowseFilterPanel = observer(props => {
             const filterText = infoFilters.map(filter => generateUserFriendlyLabel(filter)).join(', ')
             const label = getConf(track, ['name']) || getConf(track, ['trackId'])
 
-            filterDisplayItems.push(<Button color="primary" key={"infoFilterButton"} style={{marginRight: 10}} variant={'contained'} onClick={() => handleButtonClick('InfoFilterWidget', track, label)}>{label + ': ' + 'Showing sites where:'}<br />{filterText}</Button>)
+            filterDisplayItems.push(<Button color="primary" key={"infoFilterButton"} style={{marginRight: 10, textTransform: 'initial'}} variant={'contained'} onClick={() => handleButtonClick('InfoFilterWidget', track, label)}>{label + ': ' + 'Showing sites where:'}<br />{filterText}</Button>)
         }
     }
 

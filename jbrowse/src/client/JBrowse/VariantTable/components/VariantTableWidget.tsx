@@ -13,7 +13,7 @@ import MenuButton from './MenuButton';
 
 import '../VariantTable.css';
 import '../../jbrowse.css';
-import { getGenotypeURL, navigateToBrowser } from '../../utils';
+import { getGenotypeURL, navigateToBrowser, navigateToSearch } from '../../utils';
 import LoadingIndicator from './LoadingIndicator';
 import ExtendedVcfFeature from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter/ExtendedVcfFeature';
 import { NoAssemblyRegion } from '@jbrowse/core/util/types';
@@ -44,6 +44,9 @@ const VariantTableWidget = observer(props => {
         break;
       case "browserRedirect":
         navigateToBrowser(sessionId, locString, trackId, track)
+        break;
+      case "luceneRedirect":
+        navigateToSearch(sessionId, locString, trackId, track)
         break;
     }
   }
@@ -131,7 +134,6 @@ const VariantTableWidget = observer(props => {
 
       const regionLength = parsedLocString.end - parsedLocString.start
       const maxRegionSize = 900000
-      console.log(parsedLocString)
       if (isNaN(regionLength)) {
         alert("Must include start/stop in location: " + locString)
         setDataLoaded(true)
@@ -155,6 +157,7 @@ const VariantTableWidget = observer(props => {
       return(<p>Unable to find track: {trackId}</p>)
   }
 
+  const supportsLuceneIndex = getConf(track, ['displays', '0', 'renderer', 'supportsLuceneIndex'])
   const showDetailsWidget = (rowIdx: number) => {
     const feature = features[rowIdx]
     const trackId = getConf(track, ['trackId'])
@@ -255,6 +258,10 @@ const VariantTableWidget = observer(props => {
           <Grid key='genomeViewButton' item xs="auto">
             <Button disabled={!isValidLocString} style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("browserRedirect")}>View in Genome Browser</Button>
           </Grid>
+
+          {supportsLuceneIndex ? <Grid key='luceneViewButton' item xs="auto">
+            <Button hidden={!supportsLuceneIndex} style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("luceneRedirect")}>Switch to Free-text Search</Button>
+          </Grid> : null}
         </Grid>
       </div>
 

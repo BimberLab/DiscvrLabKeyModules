@@ -70,7 +70,7 @@ export const columns: GridColumns = [
   { field: 'chrom', headerName: 'Chromosome', width: 150, type: "string", flex: 1, headerAlign: 'left' },
   { field: 'pos', headerName: 'Position', width: 150, type: "number", flex: 1, headerAlign: 'left' },
   { field: 'ref', headerName: 'Reference', width: 150, type: "string", flex: 1, headerAlign: 'left' },
-  { field: 'alt', headerName: 'Alternative Allele', width: 50, type: "string", flex: 1, headerAlign: 'left' },
+  { field: 'alt', headerName: 'Alternate Allele', width: 50, type: "string", flex: 1, headerAlign: 'left' },
   { 
     field: 'af', 
     headerName: 'Allele Frequency',
