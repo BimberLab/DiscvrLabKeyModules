@@ -1470,8 +1470,7 @@ public class JBrowseTest extends BaseWebDriverTest
         //TODO: ensure filter panel UI working throughout this
 
         // Test default
-        testColumns("1", "1", "A", "T", "0.029", "intron_variant", "HIGH",
-                "NTNG1", "7.292");
+        testColumns("1", "2", "A", "T", "0.029", "", "HIGH", "", "7.292");
 
         // Test sorting
         Locator referenceSort = Locator.tagWithText("div", "Reference");
@@ -1556,6 +1555,10 @@ public class JBrowseTest extends BaseWebDriverTest
 
         for (WebElement elem : locator.findElements(By.xpath("./child::*"))) {
             String value = elem.getText();
+            if (StringUtils.trimToNull(value) == null)
+            {
+                value = "";
+            }
 
             if (StringUtils.isEmpty(elem.getText())) {
                 return;

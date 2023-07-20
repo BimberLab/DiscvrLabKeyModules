@@ -12,6 +12,7 @@ import VariantTableWidget from './components/VariantTableWidget';
 import { fetchSession } from '../utils';
 import { ErrorBoundary } from '@labkey/components';
 import LoadingIndicator from './components/LoadingIndicator';
+import JBrowseFilterPanel from '../Browser/components/JBrowseFilterPanel';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
@@ -88,6 +89,7 @@ function VariantTable() {
         <ThemeProvider theme={theme}>
         <div style={{height: "80vh", display:"block"}}>
             <ErrorBoundary>
+                <JBrowseFilterPanel session={state.session}/>
                 <VariantTableWidget assemblyName={assemblyNames[0]} assembly={assembly} trackId={trackId} locString={locString}
                                     parsedLocString={parsedLocString} sessionId={sessionId} session={session} pluginManager={pluginManager}/>
             </ErrorBoundary>
