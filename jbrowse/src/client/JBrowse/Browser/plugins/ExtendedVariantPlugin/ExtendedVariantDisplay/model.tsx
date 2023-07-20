@@ -82,7 +82,7 @@ export default jbrowse => {
             onClick: () => {
                const session = getSession(self)
                const track = getContainingTrackWithConfig(self)
-               const widgetId = 'Variant-' + getConf(track, 'trackId');
+               const widgetId = 'InfoFilterWidget-' + getConf(track, 'trackId');
                const filterWidget = session.addWidget(
                   'InfoFilterWidget',
                   widgetId,
@@ -97,7 +97,7 @@ export default jbrowse => {
             onClick: () => {
                const session = getSession(self)
                const track = getContainingTrackWithConfig(self)
-               const widgetId = 'Variant-' + getConf(track, 'trackId');
+               const widgetId = 'ColorWidget-' + getConf(track, 'trackId');
                const colorWidget = session.addWidget(
                   'ColorWidget',
                   widgetId,
@@ -113,7 +113,7 @@ export default jbrowse => {
             onClick: () => {
                const session = getSession(self)
                const track = getContainingTrackWithConfig(self)
-               const widgetId = 'Variant-' + getConf(track, 'trackId');
+               const widgetId = 'SampleFilterWidget-' + getConf(track, 'trackId');
                const sampleFilterWidget = session.addWidget(
                   'SampleFilterWidget',
                   widgetId,
