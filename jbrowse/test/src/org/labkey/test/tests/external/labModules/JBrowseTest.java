@@ -16,13 +16,13 @@
 package org.labkey.test.tests.external.labModules;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.api.util.Pair;
 import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.Connection;
 import org.labkey.remoteapi.query.Filter;
@@ -406,34 +406,12 @@ public class JBrowseTest extends BaseWebDriverTest
 
     public Locator.XPathLocator getTrackLocator(String trackId, boolean waitFor)
     {
-        return getTrackLocator(this, trackId, waitFor);
-    }
-
-    public static Locator.XPathLocator getTrackLocator(BaseWebDriverTest test, String trackId, boolean waitFor)
-    {
-        trackId = "trackRenderingContainer-mgap-" + trackId;
-        Locator.XPathLocator l = Locator.tagWithAttributeContaining("div", "data-testid", trackId);
-        if (waitFor)
-        {
-            test.waitForElement(l);
-        }
-
-        return l;
+        return JBrowseTestHelper.getTrackLocator(this, trackId, waitFor);
     }
 
     public By getVariantWithinTrack(String trackId, String variantText)
     {
-        return getVariantWithinTrack(this, trackId, variantText);
-    }
-
-    public static By getVariantWithinTrack(BaseWebDriverTest test, String trackId, String variantText)
-    {
-        Locator.XPathLocator l = getTrackLocator(test, trackId, true);
-        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
-        l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]")).notHidden().append("/..");
-        test.waitForElement(l);
-
-        return By.xpath(l.toXpath());
+        return JBrowseTestHelper.getVariantWithinTrack(this, trackId, variantText);
     }
 
     private void testMessageDisplay()
@@ -449,18 +427,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     public void waitForJBrowseToLoad()
     {
-        waitForJBrowseToLoad(this);
-    }
-
-    public static void waitForJBrowseToLoad(BaseWebDriverTest test)
-    {
-        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading...")); //the initial message before getSession
-        test.waitForElement(Locator.tagWithClass("span", "MuiIconButton-label").notHidden()); //this is the top-left icon
-        test.waitForElement(Locator.tagWithAttribute("button", "title", "close this track").notHidden());
-        test.waitForElement(Locator.tagWithClassContaining("span", "MuiTypography-root").notHidden(), WAIT_FOR_PAGE); //this is the icon from the track label
-
-        test.waitForElementToDisappear(Locator.tagWithText("div", "Loading...")); //track data
-        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading..."));
+        JBrowseTestHelper.waitForJBrowseToLoad(this);
     }
 
     private void testSessionCardDisplay()
@@ -469,7 +436,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> G")).stream().filter(WebElement::isDisplayed).collect(toSingleton());
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> G")).stream().filter(WebElement::isDisplayed).collect(JBrowseTestHelper.toSingleton());
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("span", "Section 1"));
 
@@ -482,7 +449,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:137..137
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).collect(JBrowseTestHelper.toSingleton()); // 1:137..137
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:137..137"));
         assertElementPresent(Locator.tagWithText("td", "Minor Allele Frequency"));
@@ -494,7 +461,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:137..137
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).collect(JBrowseTestHelper.toSingleton()); // 1:137..137
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:137..137"));
         assertElementPresent(Locator.tagWithText("th", "Effect"));
@@ -511,7 +478,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:18,486
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A")).stream().filter(WebElement::isDisplayed).collect(JBrowseTestHelper.toSingleton()); // 1:18,486
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:18,486..18,486"));
         assertElementPresent(Locator.tagWithText("th", "Sequence"));
@@ -527,7 +494,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A")).stream().filter(WebElement::isDisplayed).collect(toSingleton()); // 1:18,486
+        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A")).stream().filter(WebElement::isDisplayed).collect(JBrowseTestHelper.toSingleton()); // 1:18,486
         actions.click(toClick).perform();
         waitForElement(Locator.tagWithText("div", "1:18,486..18,486"));
         assertElementPresent(Locator.tagWithText("td", "3041"));
@@ -583,90 +550,6 @@ public class JBrowseTest extends BaseWebDriverTest
         return List.of("jbrowse");
     }
 
-    public static Pair<String, String> prepareSearchSession(BaseWebDriverTest test, LabModuleHelper helper, String projectName, boolean searchWebpartAdded) throws Exception
-    {
-        //create session w/ some of these, verify
-        test.log("creating initial jbrowse session");
-        test.beginAt("/query/" + projectName + "/executeQuery.view?query.queryName=outputfiles&schemaName=sequenceanalysis&query.category~eq=VCF File");
-        DataRegionTable dr = DataRegionTable.DataRegion(test.getDriver()).find();
-        dr.uncheckAllOnPage();
-        dr.checkCheckbox(0);
-        dr.clickHeaderButton("Visualize/Analyze Data");
-        new Window.WindowFinder(test.getDriver()).withTitle("Visualize/Analyze Files").waitFor();
-        test.waitForElement(Locator.tagWithText("div", "View In JBrowse"));
-        test.click(Locator.tagWithText("div", "View In JBrowse"));
-        test.waitAndClick(Ext4Helper.Locators.ext4Button("Submit"));
-
-        String sessionName = "SearchSession";
-        int existingPipelineJobs = SequenceTest.getTotalPipelineJobs(test);
-        new Window.WindowFinder(test.getDriver()).withTitle("Create/Modify JBrowse Session").waitFor();
-        Ext4FieldRef.getForLabel(test, "Name").setValue(sessionName);
-        Ext4FieldRef.getForLabel(test, "Description").setValue("This is a session to test full-text search");
-        test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
-
-        Window<?> window = new Window.WindowFinder(test.getDriver()).withTitle("Create New Workbook or Add To Existing?").waitFor();
-        window.clickButton("Submit", 0);
-
-        window = new Window.WindowFinder(test.getDriver()).withTitle("Success").waitFor();
-        window.clickButton("OK");
-        test.waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Create New Session", false);
-
-        test.beginAt("/project/" + projectName + "/begin.view");
-        helper.waitForLabToolsToLoad();
-
-        // If the search panel doesnt fully load, we can get an alert on page navigation
-        if (searchWebpartAdded)
-        {
-            Locator searchLocator = Locator.tagWithClass("input", "MuiInputBase-input");
-            test.waitForElement(searchLocator);
-        }
-
-        helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
-        dr = DataRegionTable.DataRegion(test.getDriver()).find();
-        dr.clickRowDetails(0);
-
-        // Find trackId:
-        test.waitForElement(Locator.tagWithText("span", "Resources Displayed In This Session"));
-        dr = DataRegionTable.findDataRegionWithinWebpart(test, "Resources Displayed In This Session");
-        String trackId = dr.getDataAsText(0, "Resource");
-        String sessionId = test.getUrlParam("databaseId");
-
-        test.waitForElement(Locator.tagWithText("span", "Tracks Provided By This Session"));
-        dr = DataRegionTable.findDataRegionWithinWebpart(test, "Tracks Provided By This Session");
-        Assert.assertEquals("Incorrect row count", 1, dr.getDataRowCount());
-        dr.checkCheckbox(dr.getRowIndex("File Id", "TestVCF"));
-        dr.clickHeaderMenu("More Actions", false, "Modify Track Config");
-        new Window.WindowFinder(test.getDriver()).withTitle("Modify Track Config").waitFor();
-        Ext4CmpRef.waitForComponent(test, "grid");
-        Ext4GridRef grid = test._ext4Helper.queryOne("grid", Ext4GridRef.class);
-        test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Add"));
-        test.waitAndClick(Ext4Helper.Locators.menuItem("Create Full Text Index?"));
-        test.waitForElement(Locator.tagWithText("div", "createFullTextIndex"));
-        grid.completeEdit();
-
-        test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Add"));
-        test.waitAndClick(Ext4Helper.Locators.menuItem("Info Fields For Full Text Search"));
-        test.waitForElement(Locator.tagWithText("div", "infoFieldsForFullTextSearch"));
-        grid.setGridCell(2, "value", "AF,AC,CADD_PH,CLN_ALLELE,OMIMD,IMPACT");
-
-        test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
-        new Window.WindowFinder(test.getDriver()).withTitle("Success").waitFor();
-        test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
-
-        test.beginAt("/query/" + projectName + "/executeQuery.view?query.queryName=jsonfiles&schemaName=jbrowse");
-        existingPipelineJobs = SequenceTest.getTotalPipelineJobs(test);
-        dr = DataRegionTable.DataRegion(test.getDriver()).find();
-        dr.checkCheckbox(dr.getRowIndex("File Id", "TestVCF"));
-        dr.clickHeaderMenu("More Actions", false, "Re-process Selected");
-        new Window.WindowFinder(test.getDriver()).withTitle("Reprocess Resources").waitFor();
-        test.waitAndClick(Ext4Helper.Locators.ext4ButtonEnabled("Submit"));
-        new Window.WindowFinder(test.getDriver()).withTitle("Success").waitFor();
-        test.waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
-        test.waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Recreating Resources", false);
-
-        return Pair.of(sessionId, trackId);
-    }
-
     private void testFullTextSearch() throws Exception
     {
         if (!SequenceTest.isExternalPipelineEnabled(getProjectName()))
@@ -675,15 +558,16 @@ public class JBrowseTest extends BaseWebDriverTest
             return;
         }
 
-        String seq = SequenceTest.readSeqFromFile(GRCH37_GENOME);
+        String seq = SequenceTest.readSeqFromFile(JBrowseTestHelper.GRCH37_GENOME);
         SequenceTest.ensureRefSeqExists(this, "1", seq);
         SequenceTest.createReferenceGenome(this, 1, JB_GENOME_NAME, "1");
 
-        SequenceTest.addOutputFile(this, MGAP_TEST_VCF, JB_GENOME_NAME, "TestVCF", "VCF File", "This is an output file to test VCF full-text search", false);
+        SequenceTest.addOutputFile(this, JBrowseTestHelper.MGAP_TEST_VCF, JB_GENOME_NAME, "TestVCF", "VCF File", "This is an output file to test VCF full-text search", false);
 
-        Pair<String, String> info = prepareSearchSession(this, _helper, getProjectName(), _searchWebpartAdded);
-        String sessionId = info.first;
-        String trackId = info.second;
+        JBrowseTestHelper.prepareSearchSession(this, getProjectName());
+        Pair<String, String> info = JBrowseTestHelper.configureSearchSession(this, getProjectName());
+        String sessionId = info.getKey();
+        String trackId = info.getValue();
 
         // all
         // this should return 143 results. We can't make any other assumptions about the content
@@ -1278,9 +1162,6 @@ public class JBrowseTest extends BaseWebDriverTest
         });
     }
 
-    public static final File MGAP_TEST_VCF = new File(TestFileUtils.getLabKeyRoot(), "server/modules/DiscvrLabKeyModules/jbrowse/resources/web/jbrowse/mgap/mGap.v2.1.subset.vcf.gz");
-    public static final File GRCH37_GENOME = new File(TestFileUtils.getLabKeyRoot(), "server/modules/DiscvrLabKeyModules/jbrowse/resources/web/jbrowse/mgap/GRCh37_small.fasta");
-
     private void testOutputFileProcessing() throws Exception
     {
         goToProjectHome();
@@ -1447,18 +1328,6 @@ public class JBrowseTest extends BaseWebDriverTest
 
         waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
-    }
-
-    public static <T> Collector<T, ?, T> toSingleton() {
-        return Collectors.collectingAndThen(
-                Collectors.toList(),
-                list -> {
-                    if (list.size() != 1) {
-                        throw new IllegalStateException("Expected single element, found: " + list.size());
-                    }
-                    return list.get(0);
-                }
-        );
     }
 
     private static final Locator TOP_ROW = Locator.tagWithAttribute("div", "aria-rowindex", "2");
