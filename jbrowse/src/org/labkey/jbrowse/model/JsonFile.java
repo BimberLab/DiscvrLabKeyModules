@@ -1002,6 +1002,8 @@ public class JsonFile
             args.add(field);
         }
 
+        args.add("--allow-missing-fields");
+
         runner.execute(args);
     }
 
