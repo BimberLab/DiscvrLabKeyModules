@@ -984,7 +984,7 @@ public class JsonFile
         DISCVRSeqRunner runner = new DISCVRSeqRunner(log);
         if (!runner.jarExists())
         {
-            log.error("Unable to find DISCVRSeq.jar, skiping lucene index creation");
+            log.error("Unable to find DISCVRSeq.jar, skipping lucene index creation");
             return;
         }
 
