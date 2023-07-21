@@ -1004,6 +1004,13 @@ public class JsonFile
 
         args.add("--allow-missing-fields");
 
+        JSONObject config = getExtraTrackConfig();
+        if (config != null && !config.isNull("lenientLuceneProcessing") && config.getBoolean("lenientLuceneProcessing"))
+        {
+            args.add("--validation-stringency");
+            args.add("LENIENT");
+        }
+
         runner.execute(args);
     }
 
