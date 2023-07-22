@@ -217,7 +217,7 @@ const VariantTableWidget = observer(props => {
 
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [filters, setFilters] = useState([]);
-  const [fieldTypeInfo, setFieldTypeInfo] = useState([]);
+  const [fieldTypeInfo, setFieldTypeInfo] = useState<FieldModel[]>([]);
 
   const [adapter, setAdapter] = useState<EVAdapterClass | undefined>(undefined)
 
@@ -240,7 +240,9 @@ const VariantTableWidget = observer(props => {
 
       await fetchFieldTypeInfo(sessionId, trackGUID,
         (res: FieldModel[]) => {
-          let columns: any = [];
+          res.sort((a, b) => a.orderKey - b.orderKey);
+
+          let columns: GridColDef[] = [];
 
           for (const fieldObj of res) {
             const field = fieldObj.name;
@@ -260,22 +262,32 @@ const VariantTableWidget = observer(props => {
                 break;
             }
 
-            let column: any = { field: field, renderCell: (params: any) =>  { return <TableCellWithPopover value={params.value} /> }, description: fieldObj.description , headerName: fieldObj.label ?? field, minWidth: 25, width: fieldObj.colWidth ?? 50, maxWidth: 100, type: muiFieldType, flex: 1, headerAlign: 'left', align: "left", hide: fieldObj.isHidden }
+            let column: GridColDef = {
+                field: field,
+                // TODO: can we pass the JEXL format string here? Maybe make a renderer function?
+                renderCell: (params: any) =>  { return <TableCellWithPopover value={params.value} /> },
+                description: fieldObj.description,
+                headerName: fieldObj.label ?? field,
+                minWidth: 25,
+                width: fieldObj.colWidth ?? 50,
+                type: muiFieldType,
+                flex: fieldObj.flex || 1,
+                headerAlign: 'left',
+                align: "left",
+                //TODO: consider best behavior here
+                hide: fieldObj.isHidden || fieldObj.isInDefaultColumns === false
+            }
 
-            if (fieldObj.isMultiValued || field == "af") {
+            // TODO: does this really apply here? Can we drop it?
+            if (fieldObj.isMultiValued) {
               column.sortComparator = multiValueComparator
               column.filterOperators = getGridNumericColumnOperators().map(op => multiModalOperator(op))
             }
 
-            column.orderKey = fieldObj.orderKey;
-
             columns.push(column)
           }
 
-          columns.sort((a, b) => a.orderKey - b.orderKey);
-          const columnsWithoutOrderKey = columns.map(({ orderKey, ...rest }) => rest);
-
-          setColumns(columnsWithoutOrderKey);
+          setColumns(columns);
           const operators = fieldTypeInfoToOperators(res)
           setAvailableOperators(operators)
           setFieldTypeInfo(res)

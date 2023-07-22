@@ -1522,4 +1522,9 @@ public class JBrowseTest extends BaseWebDriverTest
                 "0.008258, 0.44, 0.17, 0.036, 0.005367, 0.019, 0", "intron_variant", "", "NTNG1", "");
         waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
     }
+
+    private void testLuceneSearchUI()
+    {
+        //TODO: actually test the grid UI
+    }
 }

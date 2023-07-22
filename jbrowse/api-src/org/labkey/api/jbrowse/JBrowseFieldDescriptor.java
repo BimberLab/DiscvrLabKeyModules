@@ -169,6 +169,12 @@ public class JBrowseFieldDescriptor {
         _flex = flex;
     }
 
+    public JBrowseFieldDescriptor inDefaultColumns(boolean isInDefaultColumns)
+    {
+        _isInDefaultColumns = isInDefaultColumns;
+        return this;
+    }
+
     public JSONObject toJSON() {
         JSONObject fieldDescriptorJSON = new JSONObject();
         fieldDescriptorJSON.put("name", _fieldName);

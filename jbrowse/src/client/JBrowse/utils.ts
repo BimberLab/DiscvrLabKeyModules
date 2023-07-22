@@ -426,7 +426,6 @@ export class FieldModel {
     description: string
     type: string
     isInDefaultColumns: boolean
-    isIndexed: boolean
     isMultiValued: boolean
     isHidden: boolean
     colWidth: number
@@ -435,6 +434,8 @@ export class FieldModel {
     allowableValues: string[]
     category: string
     url: string
+    flex: number
+    supportsFilter: boolean = true
 }
 
 export async function fetchFieldTypeInfo(sessionId: string, trackId: string, successCallback: (res: FieldModel[]) => void, failureCallback) {
@@ -486,7 +487,7 @@ export function searchStringToInitialFilters(operators) : any[] {
     return initialFilters 
 }
 
-export function fieldTypeInfoToOperators(fieldTypeInfo): any {
+export function fieldTypeInfoToOperators(fieldTypeInfo: FieldModel[]): any {
     const stringType = ["equals", "does not equal", "contains", "does not contain", "starts with", "ends with", "is empty", "is not empty"];
     const variableSamplesType = ["in set", "variable in", "not variable in", "variable in all of", "variable in any of", "not variable in any of", "not variable in one of", "is empty", "is not empty"];
     const numericType = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"];
