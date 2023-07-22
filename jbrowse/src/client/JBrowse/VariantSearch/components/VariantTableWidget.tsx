@@ -42,7 +42,7 @@ import '../../jbrowse.css';
 import LoadingIndicator from './LoadingIndicator';
 
 const VariantTableWidget = observer(props => {
-  const { assembly, assemblyName, trackId, locString, parsedLocString, sessionId, session, pluginManager } = props
+  const { assembly, trackId, parsedLocString, sessionId, session, pluginManager } = props
   const { assemblyNames, assemblyManager } = session
   const { view } = session
 
@@ -61,6 +61,7 @@ const VariantTableWidget = observer(props => {
 
   function handleSearch(data) {
     setFeatures(APIDataToRows(data.data, trackId))
+    setDataLoaded(true)
   }
 
   function handleModalClose(widget) {
@@ -74,7 +75,8 @@ const VariantTableWidget = observer(props => {
     window.history.pushState(null, "", currentUrl.toString());
 
     setFilters(passedFilters);
-    fetchLuceneQuery(passedFilters, sessionId, trackGUID, currentOffset, (json)=>{handleSearch(json)}, (error) => {setError(error)});
+    setDataLoaded(false)
+    fetchLuceneQuery(passedFilters, sessionId, trackGUID, currentOffset, (json)=>{handleSearch(json)}, (error) => {setDataLoaded(true);setError(error)});
   }
 
   const TableCellWithPopover = (props: { value: any }) => {

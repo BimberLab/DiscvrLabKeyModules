@@ -25,6 +25,8 @@ public class JBrowseFieldDescriptor {
     private String _category = null;
     private String _url = null;
 
+    private Integer _flex = null;
+
     public JBrowseFieldDescriptor(String luceneFieldName, @Nullable String description, boolean isInDefaultColumns, boolean isIndexed, VCFHeaderLineType type, Integer orderKey) {
         _fieldName = luceneFieldName;
         _label = luceneFieldName;
@@ -162,6 +164,11 @@ public class JBrowseFieldDescriptor {
         _description = description;
     }
 
+    public void setFlex(Integer flex)
+    {
+        _flex = flex;
+    }
+
     public JSONObject toJSON() {
         JSONObject fieldDescriptorJSON = new JSONObject();
         fieldDescriptorJSON.put("name", _fieldName);
@@ -178,6 +185,7 @@ public class JBrowseFieldDescriptor {
         fieldDescriptorJSON.put("allowableValues", _allowableValues);
         fieldDescriptorJSON.put("category", _category);
         fieldDescriptorJSON.put("url", _url);
+        fieldDescriptorJSON.put("flex", _flex);
 
         return fieldDescriptorJSON;
     }
