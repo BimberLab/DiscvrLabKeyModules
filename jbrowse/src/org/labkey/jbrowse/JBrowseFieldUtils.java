@@ -4,9 +4,12 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
 import org.labkey.api.security.User;
+import org.labkey.api.util.logging.LogHelper;
 import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 
@@ -16,6 +19,8 @@ import java.util.Map;
 
 public class JBrowseFieldUtils
 {
+    private static final Logger _log = LogHelper.getLogger(JBrowseFieldUtils.class, "Logger for JBrowseFieldUtils");
+
     public static final String VARIABLE_SAMPLES = "variableSamples";
 
     // These fields are always indexed in DISCVRSeq, and present in all VCFs (or created client-side in ExtendedVariantAdapter
@@ -46,7 +51,8 @@ public class JBrowseFieldUtils
             {
                 if (!header.hasInfoLine(fn))
                 {
-                    throw new IllegalArgumentException("Field not present: " + fn);
+                    _log.error("Field requested for JBrowse indexing, but was not present: " + fn + ", for JsonFile: " + jsonFile.getObjectId());
+                    continue;
                 }
 
                 VCFInfoHeaderLine info = header.getInfoHeaderLine(fn);
