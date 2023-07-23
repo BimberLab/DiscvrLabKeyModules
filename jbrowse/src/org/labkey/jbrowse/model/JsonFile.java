@@ -774,6 +774,11 @@ public class JsonFile
         return (needsGzip() && !isGzipped()) || doIndex() || shouldHaveFreeTextSearch();
     }
 
+    public boolean shouldBeCopiedToProcessDir()
+    {
+        return (needsGzip() && !isGzipped());
+    }
+
     public boolean isGzipped()
     {
         String fn = getSourceFileName();
