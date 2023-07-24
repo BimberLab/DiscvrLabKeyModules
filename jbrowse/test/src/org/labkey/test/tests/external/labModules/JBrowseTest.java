@@ -1150,16 +1150,7 @@ public class JBrowseTest extends BaseWebDriverTest
             Assert.assertEquals("A", jsonObject.getString("ref"));
         }
 
-        getArtifactCollector().dumpPageSnapshot("JBrowseLuceneIndexPage");
-
-        beginAt("/query/" + getProjectName() + "/executeQuery.view?query.queryName=jsonfiles&schemaName=jbrowse");
-        final DataRegionTable drt = DataRegionTable.DataRegion(getDriver()).find();
-        drt.checkAllOnPage();
-        doAndWaitForPageToLoad(() ->
-        {
-            drt.clickHeaderButton("Delete");
-            assertAlert("Are you sure you want to delete the selected rows?");
-        });
+        testLuceneSearchUI(sessionId, trackId);
     }
 
     private void testOutputFileProcessing() throws Exception
@@ -1282,9 +1273,8 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
 
-        // TODO restore this
         //Now test search
-        //testSearch(sessionId);
+        testSearch(sessionId);
     }
 
     private void testSearch(String sessionId) throws Exception
@@ -1523,8 +1513,10 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
     }
 
-    private void testLuceneSearchUI()
+    private void testLuceneSearchUI(String sessionId, String trackId)
     {
-        //TODO: actually test the grid UI
+        beginAt("/" + getProjectName() + "/jbrowse-variantSearch.view?session=" + sessionId + "&trackId=" + trackId);
+
+        waitForElement(Locator.tagWithText("span", "0.029"));
     }
 }
