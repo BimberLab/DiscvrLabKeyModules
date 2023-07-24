@@ -10,7 +10,7 @@ import {
     GridToolbarExport
 } from '@mui/x-data-grid';
 import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline';
-import FilterListIcon from '@material-ui/icons/FilterList';
+import SearchIcon from '@material-ui/icons/Search';
 import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { AppBar, Box, Button, Dialog, Paper, Popover, Toolbar, Tooltip, Typography } from '@material-ui/core';
@@ -174,12 +174,12 @@ const VariantTableWidget = observer(props => {
       <GridToolbarContainer>
         <GridToolbarColumnsButton />
         <Button
-          startIcon={<FilterListIcon />}
+          startIcon={<SearchIcon />}
           size="small"
           color="primary"
           onClick={() => setFilterModalOpen(true)}
         >
-          Filter
+          Search
         </Button>
         <GridToolbarDensitySelector />
         <GridToolbarExport />
@@ -216,6 +216,7 @@ const VariantTableWidget = observer(props => {
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [filters, setFilters] = useState([]);
   const [fieldTypeInfo, setFieldTypeInfo] = useState<FieldModel[]>([]);
+  const [hiddenColumns, setHiddenColumns] = useState([]);
 
   const [adapter, setAdapter] = useState<EVAdapterClass | undefined>(undefined)
 
@@ -358,15 +359,27 @@ const VariantTableWidget = observer(props => {
     }
   }
 
+  const columnsWithLocalHideState = columns.map(col => ({
+    ...col,
+    hide: hiddenColumns.includes(col.field),
+  }));
+
   const gridElement = (
     <DataGrid
-        columns={[...columns, actionsCol]}
+        columns={[...columnsWithLocalHideState, actionsCol]}
         rows={features}
         components={{ Toolbar: ToolbarWithProps }}
         rowsPerPageOptions={[10,25,50,100]}
         pageSize={pageSize}
         density="comfortable"
         onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
+        onColumnVisibilityChange={(params) => {
+          if (params.isVisible) {
+            setHiddenColumns(prev => prev.filter(field => field !== params.field));
+          } else {
+            setHiddenColumns(prev => [...prev, params.field]);
+          }
+        }}
       />
   )
 
