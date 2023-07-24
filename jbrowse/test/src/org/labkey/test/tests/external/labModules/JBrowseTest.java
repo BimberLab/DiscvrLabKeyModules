@@ -1515,8 +1515,20 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testLuceneSearchUI(String sessionId, String trackId)
     {
-        beginAt("/" + getProjectName() + "/jbrowse-variantSearch.view?session=" + sessionId + "&trackId=" + trackId);
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=" + sessionId);
+        waitForJBrowseToLoad();
+        waitForElement(Locator.tagWithText("span", "Show all regions in assembly"));
+        waitAndClick(Locator.tagWithText("span", "Open"));
+        waitAndClick(Locator.tagWithText("p", "No tracks active."));
+        waitAndClick(Locator.tagWithText("span", "Open Track Selector"));
 
+        Locator l = Locator.tag("input").withAttributeContaining("data-testid", trackId);
+        waitAndClick(l);
+        getDriver().findElement(l).sendKeys(Keys.ESCAPE); //close modal
+        waitAndClick(Locator.tagWithAttribute("button", "data-testid", "track_menu_icon"));
+        waitAndClickAndWait(Locator.tagContainingText("span", "Variant Search"));
+
+        // Now test UI:
         waitForElement(Locator.tagWithText("span", "0.029"));
     }
 }
