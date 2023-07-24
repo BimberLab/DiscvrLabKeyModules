@@ -106,12 +106,17 @@ const FilterForm = (props: FilterFormProps ) => {
   };
 
   const handleRemoveFilter = (index) => {
+  // If it's the last filter, just reset its values to default empty values
+  if (filters.length === 1) {
+    localSetFilters([{ field: "", operator: "", value: "" }]);
+  } else {
+    // Otherwise, remove the filter normally
     localSetFilters(
       filters.filter((filter, i) => {
         return i !== index;
       })
     );
-  };
+  }};
 
   const handleFilterChange = (index, key, value) => {
   const newFilters = filters.map((filter, i) => {
@@ -129,29 +134,30 @@ const handleSubmit = (event) => {
   const highlightedInputs = {};
 
   filters.forEach((filter, index) => {
-    highlightedInputs[index] = { field: false, operator: false, value: false };
+      highlightedInputs[index] = { field: false, operator: false, value: false };
 
-    if (filter.field === '') {
-      highlightedInputs[index].field = true;
+      if (filter.field === '') {
+          highlightedInputs[index].field = true;
+      }
+
+      if (filter.operator === '') {
+          highlightedInputs[index].operator = true;
+      }
+
+      if (filter.value === '') {
+          highlightedInputs[index].value = true;
+      }
+    });
+
+    const isSingleEmptyFilter = filters.length === 1 && !filters[0].field && !filters[0].operator && !filters[0].value;
+
+    setHighlightedInputs(highlightedInputs);
+    if (isSingleEmptyFilter || !Object.values(highlightedInputs).some(v => (v as any).field || (v as any).operator || (v as any).value)) {
+        handleQuery(filters);
+        setFilters(filters);
+        handleClose();
     }
-
-    if (filter.operator === '') {
-      highlightedInputs[index].operator = true;
-    }
-
-    if (filter.value === '') {
-      highlightedInputs[index].value = true;
-    }
-  });
-
-  setHighlightedInputs(highlightedInputs);
-
-  if (!Object.values(highlightedInputs).some(v => (v as any).field || (v as any).operator || (v as any).value)) {
-    handleQuery(filters);
-    setFilters(filters);
-    handleClose();
-  }
-};
+  };
 
   return (
    <Card className={classes.card} elevation={0}>
@@ -260,7 +266,6 @@ const handleSubmit = (event) => {
                 />
               )}
 
-              {filters.length > 1 && (
               <Button
                 variant="contained"
                 color="primary"
@@ -268,7 +273,6 @@ const handleSubmit = (event) => {
               >
                 Remove Filter
               </Button>
-              )}
             </div>
           ))}
         </div>
