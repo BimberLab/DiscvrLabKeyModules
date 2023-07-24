@@ -276,11 +276,10 @@ public class JBrowseLuceneSearch
         {
             switch (field.getFieldName())
             {
-                case "AF" -> field.label("Allele Frequency");
+                case "AF" -> field.label("Allele Frequency").inDefaultColumns(true);
                 case "AC" -> field.label("Allele Count");
                 case "MAF" -> field.label("Minor Allele Frequency");
-                case "IMPACT" ->
-                        field.label("Impact on Protein Coding").allowableValues(Arrays.asList("HIGH", "LOW", "MODERATE", "MODIFIER"));
+                case "IMPACT" -> field.label("Impact on Protein Coding").allowableValues(Arrays.asList("HIGH", "LOW", "MODERATE", "MODIFIER")).inDefaultColumns(true);
             }
         }
     }

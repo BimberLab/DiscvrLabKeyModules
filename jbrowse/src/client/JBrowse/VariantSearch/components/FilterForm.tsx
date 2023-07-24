@@ -1,15 +1,15 @@
-import React, { useState } from "react";
-import { makeStyles } from "@material-ui/core/styles";
-import TextField from "@material-ui/core/TextField";
-import Button from "@material-ui/core/Button";
-import Select from "@material-ui/core/Select";
-import MenuItem from "@material-ui/core/MenuItem";
-import FormControl from "@material-ui/core/FormControl";
-import InputLabel from "@material-ui/core/InputLabel";
-import CardActions from "@material-ui/core/CardActions";
-import Card from "@material-ui/core/Card";
-import CardContent from "@material-ui/core/CardContent";
-import { searchStringToInitialFilters } from "../../utils";
+import React, { useState } from 'react';
+import { makeStyles } from '@material-ui/core/styles';
+import TextField from '@material-ui/core/TextField';
+import Button from '@material-ui/core/Button';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
+import FormControl from '@material-ui/core/FormControl';
+import InputLabel from '@material-ui/core/InputLabel';
+import CardActions from '@material-ui/core/CardActions';
+import Card from '@material-ui/core/Card';
+import CardContent from '@material-ui/core/CardContent';
+import { FieldModel, searchStringToInitialFilters } from '../../utils';
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -85,9 +85,17 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const FilterForm = (props) => {
-  const { availableOperators, handleQuery, setFilters, handleClose, fieldTypeInfo } = props
+export declare type FilterFormProps = {
+  availableOperators: any,
+  handleQuery: (filters: string[]) => void,
+  setFilters: (filters: string[]) => void,
+  handleClose?: any,
+  fieldTypeInfo: FieldModel[]
+}
 
+const FilterForm = (props: FilterFormProps ) => {
+  const { availableOperators, handleQuery, setFilters, handleClose, fieldTypeInfo } = props
+  // TODO: this should use a typed class for Filter. see utils.ts
   const [filters, localSetFilters] = useState(searchStringToInitialFilters(availableOperators));
   const [highlightedInputs, setHighlightedInputs] = useState<{ [index: number]: { field: boolean, operator: boolean, value: boolean } }>({});
 
@@ -159,6 +167,8 @@ const handleSubmit = (event) => {
           </Button>
         </div>
 
+        {/* TODO: this should read the FieldModel and interpret allowableValues, perhaps isMultiValued, etc. */}
+        {/* TODO: consider also using something like FieldModel.supportsFilter */}
         <div className={classes.formScroll}>
           {filters.map((filter, index) => (
             <div key={index} className={`${classes.filterRow}`}>
@@ -218,6 +228,7 @@ const handleSubmit = (event) => {
                       handleFilterChange(index, "value", event.target.value)
                     }
                   >
+                    {/* TODO: remove this. Maybe make a free-text field?*/}
                     <MenuItem value="ONPRC">ONPRC</MenuItem>
                   </Select>
                 </FormControl>

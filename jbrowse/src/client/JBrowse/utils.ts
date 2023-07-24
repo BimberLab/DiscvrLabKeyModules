@@ -2,6 +2,8 @@ import { isEmptyObject } from 'jquery';
 import jexl from 'jexl';
 import { createViewState, loadPlugins } from '@jbrowse/react-linear-genome-view';
 import { ActionURL, Ajax } from '@labkey/api';
+import { getGridNumericColumnOperators, GridColDef } from '@mui/x-data-grid';
+import { multiModalOperator, multiValueComparator } from './VariantSearch/constants';
 
 export function arrayMax(array) {
     return Array.isArray(array) ? Math.max(...array) : array
@@ -426,7 +428,6 @@ export class FieldModel {
     description: string
     type: string
     isInDefaultColumns: boolean
-    isIndexed: boolean
     isMultiValued: boolean
     isHidden: boolean
     colWidth: number
@@ -435,6 +436,60 @@ export class FieldModel {
     allowableValues: string[]
     category: string
     url: string
+    flex: number
+    supportsFilter: boolean = true
+
+    getMuiType(): string {
+        let muiFieldType;
+
+        switch (this.type) {
+            case 'Flag':
+            case 'String':
+            case 'Character':
+            case 'Impact':
+                muiFieldType = "string";
+                break;
+            case 'Float':
+            case 'Integer':
+                muiFieldType = "number";
+            break;
+        }
+
+        return muiFieldType
+    }
+
+    toGridColDef(): GridColDef {
+        let gridCol: GridColDef = {
+            field: this.name,
+            description: this.description,
+            headerName: this.label ?? this.name,
+            minWidth: 25,
+            width: this.colWidth ?? 50,
+            type: this.getMuiType(),
+            flex: this.flex || 1,
+            headerAlign: 'left',
+            align: "left",
+            //TODO: consider whether we really need a separate isHidden
+            hide: this.isHidden || this.isInDefaultColumns === false
+        }
+
+        // TODO: can we pass the JEXL format string here? How does this impact filter/sorting?
+        // if (this.formatString) {
+        //     gridCol.type = "string"
+        //     gridCol.valueFormatter = (params: GridValueFormatterParams) => {
+        //         const context = {...params.row}
+        //         return jexl.evalSync(this.formatString, context)
+        //     }
+        // }
+
+        // TODO: does this really apply here? Can we drop it?
+        if (this.isMultiValued) {
+            gridCol.sortComparator = multiValueComparator
+            gridCol.filterOperators = getGridNumericColumnOperators().map(op => multiModalOperator(op))
+        }
+
+        return gridCol
+    }
 }
 
 export async function fetchFieldTypeInfo(sessionId: string, trackId: string, successCallback: (res: FieldModel[]) => void, failureCallback) {
@@ -466,6 +521,13 @@ export function truncateToValidGUID(str: string) {
     return str;
 }
 
+// TODO: we should have a class for this
+export declare type Filter = {
+    field: string,
+    value: any,
+    operator: string
+}
+
 export function searchStringToInitialFilters(operators) : any[] {
     const queryParam = new URLSearchParams(window.location.search)
     const searchString = queryParam.get("searchString")
@@ -486,7 +548,7 @@ export function searchStringToInitialFilters(operators) : any[] {
     return initialFilters 
 }
 
-export function fieldTypeInfoToOperators(fieldTypeInfo): any {
+export function fieldTypeInfoToOperators(fieldTypeInfo: FieldModel[]): any {
     const stringType = ["equals", "does not equal", "contains", "does not contain", "starts with", "ends with", "is empty", "is not empty"];
     const variableSamplesType = ["in set", "variable in", "not variable in", "variable in all of", "variable in any of", "not variable in any of", "not variable in one of", "is empty", "is not empty"];
     const numericType = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"];

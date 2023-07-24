@@ -1,7 +1,6 @@
 import { observer } from 'mobx-react';
 import {
     DataGrid,
-    getGridNumericColumnOperators,
     GridColDef,
     GridColumns,
     GridRenderCellParams,
@@ -17,7 +16,6 @@ import { getConf } from '@jbrowse/core/configuration';
 import { AppBar, Box, Button, Dialog, Paper, Popover, Toolbar, Tooltip, Typography } from '@material-ui/core';
 import { APIDataToRows } from '../dataUtils';
 import ArrowPagination from './ArrowPagination';
-import { multiModalOperator, multiValueComparator } from '../constants';
 import { FilterFormModal } from './FilterFormModal';
 import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache';
 import { EVAdapterClass } from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter';
@@ -217,7 +215,7 @@ const VariantTableWidget = observer(props => {
 
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [filters, setFilters] = useState([]);
-  const [fieldTypeInfo, setFieldTypeInfo] = useState([]);
+  const [fieldTypeInfo, setFieldTypeInfo] = useState<FieldModel[]>([]);
 
   const [adapter, setAdapter] = useState<EVAdapterClass | undefined>(undefined)
 
@@ -240,42 +238,15 @@ const VariantTableWidget = observer(props => {
 
       await fetchFieldTypeInfo(sessionId, trackGUID,
         (res: FieldModel[]) => {
-          let columns: any = [];
+          res.sort((a, b) => a.orderKey - b.orderKey);
 
-          for (const fieldObj of res) {
-            const field = fieldObj.name;
-            const type = fieldObj.type;
-            let muiFieldType;
+          let columns: GridColDef[] = res.map((x) => {
+              return {...x.toGridColDef(),
+                renderCell: (params: any) =>  { return <TableCellWithPopover value={params.value} /> }
+              }
+          })
 
-            switch (type) {
-              case 'Flag':
-              case 'String':
-              case 'Character':
-              case 'Impact':
-                muiFieldType = "string";
-                break;
-              case 'Float':
-              case 'Integer':
-                muiFieldType = "number";
-                break;
-            }
-
-            let column: any = { field: field, renderCell: (params: any) =>  { return <TableCellWithPopover value={params.value} /> }, description: fieldObj.description , headerName: fieldObj.label ?? field, minWidth: 25, width: fieldObj.colWidth ?? 50, maxWidth: 100, type: muiFieldType, flex: 1, headerAlign: 'left', align: "left", hide: fieldObj.isHidden }
-
-            if (fieldObj.isMultiValued || field == "af") {
-              column.sortComparator = multiValueComparator
-              column.filterOperators = getGridNumericColumnOperators().map(op => multiModalOperator(op))
-            }
-
-            column.orderKey = fieldObj.orderKey;
-
-            columns.push(column)
-          }
-
-          columns.sort((a, b) => a.orderKey - b.orderKey);
-          const columnsWithoutOrderKey = columns.map(({ orderKey, ...rest }) => rest);
-
-          setColumns(columnsWithoutOrderKey);
+          setColumns(columns);
           const operators = fieldTypeInfoToOperators(res)
           setAvailableOperators(operators)
           setFieldTypeInfo(res)
@@ -408,17 +379,15 @@ const VariantTableWidget = observer(props => {
   };
 
   const filterModal = (
-    <FilterFormModal open={filterModalOpen} handleClose={() => setFilterModalOpen(false)} 
-                   sessionId={sessionId}
-                   trackGUID={trackGUID}
-                   handleQuery={(filters) => handleQuery(filters)}
-                   setFilters={setFilters}
-                   handleFailureCallback={() => {}}
-                   availableOperators={availableOperators}
-                   fieldTypeInfo={fieldTypeInfo}
-                   components={{
-                     headerCell: renderHeaderCell,
-                    }}
+    <FilterFormModal
+        open={filterModalOpen}
+        handleClose={() => setFilterModalOpen(false)}
+        filterProps={{
+            setFilters: setFilters,
+            availableOperators: availableOperators,
+            fieldTypeInfo: fieldTypeInfo,
+            handleQuery: (filters) => handleQuery(filters)
+        }}
   />
   );
 
