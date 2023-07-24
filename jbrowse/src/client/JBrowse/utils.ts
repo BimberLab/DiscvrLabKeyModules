@@ -502,7 +502,7 @@ export async function fetchFieldTypeInfo(sessionId: string, trackId: string, suc
         url: ActionURL.buildURL('jbrowse', 'getIndexedFields.api'),
         method: 'GET',
         success: async function(res){
-            const fields: Array<FieldModel> = JSON.parse(res.response).fields;
+            const fields: Array<FieldModel> = JSON.parse(res.response).fields.map((f) => Object.assign(new FieldModel(), f ))
 
             successCallback(fields)
         },
