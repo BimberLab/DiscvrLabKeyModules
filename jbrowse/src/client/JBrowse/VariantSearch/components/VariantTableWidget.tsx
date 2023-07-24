@@ -1,7 +1,6 @@
 import { observer } from 'mobx-react';
 import {
     DataGrid,
-    getGridNumericColumnOperators,
     GridColDef,
     GridColumns,
     GridRenderCellParams,
@@ -17,7 +16,6 @@ import { getConf } from '@jbrowse/core/configuration';
 import { AppBar, Box, Button, Dialog, Paper, Popover, Toolbar, Tooltip, Typography } from '@material-ui/core';
 import { APIDataToRows } from '../dataUtils';
 import ArrowPagination from './ArrowPagination';
-import { multiModalOperator, multiValueComparator } from '../constants';
 import { FilterFormModal } from './FilterFormModal';
 import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache';
 import { EVAdapterClass } from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter';
@@ -242,50 +240,11 @@ const VariantTableWidget = observer(props => {
         (res: FieldModel[]) => {
           res.sort((a, b) => a.orderKey - b.orderKey);
 
-          let columns: GridColDef[] = [];
-
-          for (const fieldObj of res) {
-            const field = fieldObj.name;
-            const type = fieldObj.type;
-            let muiFieldType;
-
-            switch (type) {
-              case 'Flag':
-              case 'String':
-              case 'Character':
-              case 'Impact':
-                muiFieldType = "string";
-                break;
-              case 'Float':
-              case 'Integer':
-                muiFieldType = "number";
-                break;
-            }
-
-            let column: GridColDef = {
-                field: field,
-                // TODO: can we pass the JEXL format string here? Maybe make a renderer function?
-                renderCell: (params: any) =>  { return <TableCellWithPopover value={params.value} /> },
-                description: fieldObj.description,
-                headerName: fieldObj.label ?? field,
-                minWidth: 25,
-                width: fieldObj.colWidth ?? 50,
-                type: muiFieldType,
-                flex: fieldObj.flex || 1,
-                headerAlign: 'left',
-                align: "left",
-                //TODO: consider best behavior here
-                hide: fieldObj.isHidden || fieldObj.isInDefaultColumns === false
-            }
-
-            // TODO: does this really apply here? Can we drop it?
-            if (fieldObj.isMultiValued) {
-              column.sortComparator = multiValueComparator
-              column.filterOperators = getGridNumericColumnOperators().map(op => multiModalOperator(op))
-            }
-
-            columns.push(column)
-          }
+          let columns: GridColDef[] = res.map((x) => {
+              return {...x.toGridColDef(),
+                renderCell: (params: any) =>  { return <TableCellWithPopover value={params.value} /> }
+              }
+          })
 
           setColumns(columns);
           const operators = fieldTypeInfoToOperators(res)
@@ -420,17 +379,15 @@ const VariantTableWidget = observer(props => {
   };
 
   const filterModal = (
-    <FilterFormModal open={filterModalOpen} handleClose={() => setFilterModalOpen(false)} 
-                   sessionId={sessionId}
-                   trackGUID={trackGUID}
-                   handleQuery={(filters) => handleQuery(filters)}
-                   setFilters={setFilters}
-                   handleFailureCallback={() => {}}
-                   availableOperators={availableOperators}
-                   fieldTypeInfo={fieldTypeInfo}
-                   components={{
-                     headerCell: renderHeaderCell,
-                    }}
+    <FilterFormModal
+        open={filterModalOpen}
+        handleClose={() => setFilterModalOpen(false)}
+        filterProps={{
+            setFilters: setFilters,
+            availableOperators: availableOperators,
+            fieldTypeInfo: fieldTypeInfo,
+            handleQuery: (filters) => handleQuery(filters)
+        }}
   />
   );
 

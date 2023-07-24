@@ -9,7 +9,7 @@ import InputLabel from '@material-ui/core/InputLabel';
 import CardActions from '@material-ui/core/CardActions';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
-import { searchStringToInitialFilters } from '../../utils';
+import { FieldModel, searchStringToInitialFilters } from '../../utils';
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -85,10 +85,17 @@ const useStyles = makeStyles((theme) => ({
   }
 }));
 
-const FilterForm = (props) => {
-  // TODO: how to type this as fieldTypeInfo: FieldModel[]?
-  const { availableOperators, handleQuery, setFilters, handleClose, fieldTypeInfo } = props
+export declare type FilterFormProps = {
+  availableOperators: any,
+  handleQuery: (filters: string[]) => void,
+  setFilters: (filters: string[]) => void,
+  handleClose?: any,
+  fieldTypeInfo: FieldModel[]
+}
 
+const FilterForm = (props: FilterFormProps ) => {
+  const { availableOperators, handleQuery, setFilters, handleClose, fieldTypeInfo } = props
+  // TODO: this should use a typed class for Filter. see utils.ts
   const [filters, localSetFilters] = useState(searchStringToInitialFilters(availableOperators));
   const [highlightedInputs, setHighlightedInputs] = useState<{ [index: number]: { field: boolean, operator: boolean, value: boolean } }>({});
 
@@ -221,6 +228,7 @@ const handleSubmit = (event) => {
                       handleFilterChange(index, "value", event.target.value)
                     }
                   >
+                    {/* TODO: remove this. Maybe make a free-text field?*/}
                     <MenuItem value="ONPRC">ONPRC</MenuItem>
                   </Select>
                 </FormControl>

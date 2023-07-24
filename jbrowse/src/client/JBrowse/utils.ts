@@ -2,6 +2,8 @@ import { isEmptyObject } from 'jquery';
 import jexl from 'jexl';
 import { createViewState, loadPlugins } from '@jbrowse/react-linear-genome-view';
 import { ActionURL, Ajax } from '@labkey/api';
+import { getGridNumericColumnOperators, GridColDef } from '@mui/x-data-grid';
+import { multiModalOperator, multiValueComparator } from './VariantSearch/constants';
 
 export function arrayMax(array) {
     return Array.isArray(array) ? Math.max(...array) : array
@@ -436,6 +438,58 @@ export class FieldModel {
     url: string
     flex: number
     supportsFilter: boolean = true
+
+    getMuiType(): string {
+        let muiFieldType;
+
+        switch (this.type) {
+            case 'Flag':
+            case 'String':
+            case 'Character':
+            case 'Impact':
+                muiFieldType = "string";
+                break;
+            case 'Float':
+            case 'Integer':
+                muiFieldType = "number";
+            break;
+        }
+
+        return muiFieldType
+    }
+
+    toGridColDef(): GridColDef {
+        let gridCol: GridColDef = {
+            field: this.name,
+            description: this.description,
+            headerName: this.label ?? this.name,
+            minWidth: 25,
+            width: this.colWidth ?? 50,
+            type: this.getMuiType(),
+            flex: this.flex || 1,
+            headerAlign: 'left',
+            align: "left",
+            //TODO: consider whether we really need a separate isHidden
+            hide: this.isHidden || this.isInDefaultColumns === false
+        }
+
+        // TODO: can we pass the JEXL format string here? How does this impact filter/sorting?
+        // if (this.formatString) {
+        //     gridCol.type = "string"
+        //     gridCol.valueFormatter = (params: GridValueFormatterParams) => {
+        //         const context = {...params.row}
+        //         return jexl.evalSync(this.formatString, context)
+        //     }
+        // }
+
+        // TODO: does this really apply here? Can we drop it?
+        if (this.isMultiValued) {
+            gridCol.sortComparator = multiValueComparator
+            gridCol.filterOperators = getGridNumericColumnOperators().map(op => multiModalOperator(op))
+        }
+
+        return gridCol
+    }
 }
 
 export async function fetchFieldTypeInfo(sessionId: string, trackId: string, successCallback: (res: FieldModel[]) => void, failureCallback) {
@@ -465,6 +519,13 @@ export function truncateToValidGUID(str: string) {
     }
 
     return str;
+}
+
+// TODO: we should have a class for this
+export declare type Filter = {
+    field: string,
+    value: any,
+    operator: string
 }
 
 export function searchStringToInitialFilters(operators) : any[] {
