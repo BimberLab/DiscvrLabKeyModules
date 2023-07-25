@@ -507,8 +507,8 @@ export async function fetchFieldTypeInfo(sessionId: string, trackId: string, suc
             const groups: string[] = json.groups
             const promotedFilters: Map<string, Filter[]> = json.promotedFilters.reduce((map, obj) => {
                 const [label, filterStr] = obj.split('|')
-                const filter = Filter.fromString(filterStr)
-                map.set(label, filter)
+                const filters = Filter.fromString(filterStr)
+                map.set(label, filters)
 
                 return map
             }, new Map<string, Filter[]>())
@@ -537,9 +537,17 @@ export declare type FilterType = {
 }
 
 export class Filter implements FilterType {
-    field: string
-    value: any
-    operator: string
+    field: string = ""
+    value: any = ""
+    operator: string = ""
+
+    encode(): string {
+        return [this.field, this.operator, this.value].join(',')
+    }
+
+    isEmpty(): boolean {
+        return !!this.field
+    }
 
     static fromString(str: string): Filter[] {
         const decodedSearchString = decodeURIComponent(str)
@@ -549,6 +557,15 @@ export class Filter implements FilterType {
             const [field, operator, value] = item.split(",")
             return Object.assign(new Filter(), { field: field, operator: operator, value: value })
         })
+    }
+
+    static deduplicate(filters: Filter[]): Filter[] {
+        const filterMap = {}
+        filters.forEach((f) => {
+            filterMap[f.encode()] = f
+        })
+
+        return Object.keys(filterMap).map((key) => filterMap[key])
     }
 }
 
@@ -560,7 +577,7 @@ export function searchStringToInitialFilters(knownFieldNames: string[]) : Filter
         return Filter.fromString(searchString).filter(({ field }) => knownFieldNames.includes(field))
     }
 
-    return [{ field: "", operator: "", value: "" }]
+    return [new Filter()]
 }
 
 export function getOperatorsForField(fieldObj: FieldModel): string[] {
@@ -569,8 +586,8 @@ export function getOperatorsForField(fieldObj: FieldModel): string[] {
     const numericOperators = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"];
     const noneOperators = [];
 
+    // This can occur for the blank placeholder field:
     if (!fieldObj) {
-        console.error('Null fieldObj was passed to getOperatorsForField')
         return[]
     }
 

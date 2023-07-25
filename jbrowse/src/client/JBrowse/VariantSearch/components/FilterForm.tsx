@@ -106,13 +106,13 @@ const FilterForm = (props: FilterFormProps ) => {
   const classes = useStyles();
 
   const handleAddFilter = () => {
-    localSetFilters([...filters, { field: "", operator: "", value: "" }]);
+    localSetFilters([...filters, new Filter()]);
   };
 
   const handleRemoveFilter = (index) => {
   // If it's the last filter, just reset its values to default empty values
   if (filters.length === 1) {
-    localSetFilters([{ field: "", operator: "", value: "" }]);
+    localSetFilters([new Filter()]);
   } else {
     // Otherwise, remove the filter normally
     localSetFilters(
@@ -123,9 +123,9 @@ const FilterForm = (props: FilterFormProps ) => {
   }};
 
   const handleFilterChange = (index, key, value) => {
-  const newFilters = filters.map((filter, i) => {
+    const newFilters = filters.map((filter, i) => {
     if (i === index) {
-      return { ...filter, [key]: value };
+      return Object.assign(new Filter(), { ...filter, [key]: value });
     }
     return filter;
   });
@@ -169,8 +169,11 @@ const handleSubmit = (event) => {
 
   const handleMenuClick = (filterLabel: string) => {
     handleMenuClose()
-    const f = promotedFilters[filterLabel]
-    console.log(f)
+    const f = promotedFilters.get(filterLabel)
+    let toAdd = [...filters].filter((f) => f.isEmpty())
+    toAdd = Filter.deduplicate(toAdd.concat(f))
+
+    localSetFilters(toAdd)
   }
 
   return (
@@ -178,7 +181,7 @@ const handleSubmit = (event) => {
      <form>
       <CardContent className={classes.centeredContent}>
         <div className={classes.addFilterExternalWrapper}>
-          <Box>
+          <Box padding={'5px'}>
           <Button
             variant="contained"
             color="primary"
@@ -188,6 +191,7 @@ const handleSubmit = (event) => {
           </Button>
           <Button
               ref={buttonRef}
+              style={{marginLeft: '5px'}}
               variant="contained"
               color="primary"
               hidden={!!promotedFilters}
@@ -204,8 +208,6 @@ const handleSubmit = (event) => {
           </Box>
         </div>
 
-        {/* TODO: this should read the FieldModel and interpret allowableValues, perhaps isMultiValued, etc. */}
-        {/* TODO: consider also using something like FieldModel.supportsFilter */}
         <div className={classes.formScroll}>
           {filters.map((filter, index) => (
             <div key={index} className={`${classes.filterRow}`}>
