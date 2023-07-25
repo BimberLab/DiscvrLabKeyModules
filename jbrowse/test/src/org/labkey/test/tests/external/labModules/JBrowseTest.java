@@ -1516,7 +1516,6 @@ public class JBrowseTest extends BaseWebDriverTest
     private void testLuceneSearchUI(String sessionId, String trackId)
     {
         beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=" + sessionId);
-        waitForJBrowseToLoad();
         waitForElement(Locator.tagWithText("span", "Show all regions in assembly"));
         waitAndClick(Locator.tagWithText("span", "Open"));
         waitAndClick(Locator.tagWithText("p", "No tracks active."));
