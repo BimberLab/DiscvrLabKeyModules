@@ -492,7 +492,7 @@ export class FieldModel {
     }
 }
 
-export async function fetchFieldTypeInfo(sessionId: string, trackId: string, successCallback: (res: FieldModel[]) => void, failureCallback) {
+export async function fetchFieldTypeInfo(sessionId: string, trackId: string, successCallback: (fields: FieldModel[], groups: string[], promotedFilters: Map<string, Filter[]>) => void, failureCallback) {
     if (!sessionId || !trackId) {
         console.error("Cannot fetch field type info: sessionId or trackId not provided")
         return
@@ -502,9 +502,18 @@ export async function fetchFieldTypeInfo(sessionId: string, trackId: string, suc
         url: ActionURL.buildURL('jbrowse', 'getIndexedFields.api'),
         method: 'GET',
         success: async function(res){
-            const fields: Array<FieldModel> = JSON.parse(res.response).fields.map((f) => Object.assign(new FieldModel(), f ))
+            const json = JSON.parse(res.response)
+            const fields: Array<FieldModel> = json.fields.map((f) => Object.assign(new FieldModel(), f ))
+            const groups: string[] = json.groups
+            const promotedFilters: Map<string, Filter[]> = json.promotedFilters.reduce((map, obj) => {
+                const [label, filterStr] = obj.split('|')
+                const filters = Filter.fromString(filterStr)
+                map.set(label, filters)
 
-            successCallback(fields)
+                return map
+            }, new Map<string, Filter[]>())
+
+            successCallback(fields, groups, promotedFilters)
         },
         failure: function(res){
             failureCallback("There was an error while fetching field types: " + res.status + "\n Status Body: " + res.statusText + "\n Session ID:" + sessionId)
@@ -521,74 +530,94 @@ export function truncateToValidGUID(str: string) {
     return str;
 }
 
-// TODO: we should have a class for this
-export declare type Filter = {
+export declare type FilterType = {
     field: string,
     value: any,
     operator: string
 }
 
-export function searchStringToInitialFilters(operators) : any[] {
+export class Filter implements FilterType {
+    field: string = ""
+    value: any = ""
+    operator: string = ""
+
+    encode(): string {
+        return [this.field, this.operator, this.value].join(',')
+    }
+
+    isEmpty(): boolean {
+        return !!this.field
+    }
+
+    static fromString(str: string): Filter[] {
+        const decodedSearchString = decodeURIComponent(str)
+        const searchStringsArray = decodedSearchString.split("&").filter((x) => x !== "all")
+
+        return searchStringsArray.map((item) => {
+            const [field, operator, value] = item.split(",")
+            return Object.assign(new Filter(), { field: field, operator: operator, value: value })
+        })
+    }
+
+    static deduplicate(filters: Filter[]): Filter[] {
+        const filterMap = {}
+        filters.forEach((f) => {
+            filterMap[f.encode()] = f
+        })
+
+        return Object.keys(filterMap).map((key) => filterMap[key])
+    }
+}
+
+export function searchStringToInitialFilters(knownFieldNames: string[]) : Filter[] {
     const queryParam = new URLSearchParams(window.location.search)
     const searchString = queryParam.get("searchString")
 
-    let initialFilters: any[] = [{ field: "", operator: "", value: "" }]
-
     if (searchString && searchString != "all") {
-        const decodedSearchString = decodeURIComponent(searchString)
-        const searchStringsArray = decodedSearchString.split("&")
-        initialFilters = searchStringsArray
-        .map((item) => {
-        const [field, operator, value] = item.split(",")
-        return { field, operator, value }
-        })
-        .filter(({ field }) => operators.hasOwnProperty(field))
+        return Filter.fromString(searchString).filter(({ field }) => knownFieldNames.includes(field))
     }
 
-    return initialFilters 
+    return [new Filter()]
 }
 
-export function fieldTypeInfoToOperators(fieldTypeInfo: FieldModel[]): any {
-    const stringType = ["equals", "does not equal", "contains", "does not contain", "starts with", "ends with", "is empty", "is not empty"];
+export function getOperatorsForField(fieldObj: FieldModel): string[] {
+    const stringOperators = ["equals", "does not equal", "contains", "does not contain", "starts with", "ends with", "is empty", "is not empty"];
     const variableSamplesType = ["in set", "variable in", "not variable in", "variable in all of", "variable in any of", "not variable in any of", "not variable in one of", "is empty", "is not empty"];
-    const numericType = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"];
-    const noneType = [];
+    const numericOperators = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"];
+    const noneOperators = [];
 
-    const operators = Object.keys(fieldTypeInfo).reduce((acc, idx) => {
-        const fieldObj = fieldTypeInfo[idx];
-        const field = fieldObj.name;
-        const type = fieldObj.type;
+    // This can occur for the blank placeholder field:
+    if (!fieldObj) {
+        return[]
+    }
 
-        let fieldType;
+    const field = fieldObj.name;
+    const type = fieldObj.type;
 
-        switch (type) {
-            case 'Flag':
-            case 'String':
-            case 'Character':
-                fieldType = stringType;
-                break;
-            case 'Float':
-            case 'Integer':
-                fieldType = numericType;
-                break;
-            case 'Impact':
-                fieldType = stringType;
-                break;
-            case 'None':
-            default:
-                fieldType = noneType;
-                break;
-        }
+    let allowedOperators;
+    switch (type) {
+        case 'Flag':
+        case 'String':
+        case 'Character':
+            allowedOperators = stringOperators;
+            break;
+        case 'Float':
+        case 'Integer':
+            allowedOperators = numericOperators;
+            break;
+        case 'Impact':
+            allowedOperators = stringOperators;
+            break;
+        case 'None':
+        default:
+            allowedOperators = noneOperators;
+            break;
+    }
 
-        acc[field] = { type: fieldType };
+    if (field === "variableSamples") {
+        return variableSamplesType
+    }
 
-        if(field == "variableSamples") {
-            acc[field] = { type: variableSamplesType };
-        }
-
-        return acc;
-    }, {}) ?? [];
-
-    return operators
+    return allowedOperators
 }
 

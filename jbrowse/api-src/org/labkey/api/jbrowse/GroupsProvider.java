@@ -9,5 +9,8 @@ import java.util.List;
 public interface GroupsProvider
 {
         @Nullable List<String> getGroupMembers(String trackId, String groupName, Container c, User u);
+
+        @Nullable List<String> getGroupNames(Container c, User u);
+
         boolean isAvailable(Container c, User u);
 }
