@@ -216,7 +216,7 @@ const VariantTableWidget = observer(props => {
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [filters, setFilters] = useState([]);
   const [fieldTypeInfo, setFieldTypeInfo] = useState<FieldModel[]>([]);
-  const [hiddenColumns, setHiddenColumns] = useState([]);
+  const [hiddenColumns, setHiddenColumns] = useState<String[]>([]);
 
   const [adapter, setAdapter] = useState<EVAdapterClass | undefined>(undefined)
 
@@ -247,7 +247,8 @@ const VariantTableWidget = observer(props => {
               }
           })
 
-          setColumns(columns);
+          setColumns(columns)
+          setHiddenColumns(columns.filter((x) => !x.hide).map((x) => x.field))
           const operators = fieldTypeInfoToOperators(res)
           setAvailableOperators(operators)
           setFieldTypeInfo(res)

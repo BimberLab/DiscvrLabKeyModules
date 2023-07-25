@@ -1,7 +1,13 @@
-import { GridColumns, GridComparatorFn, getGridNumericColumnOperators, GridFilterOperator, GridFilterItem, GridStateColDef, GridCellParams } from '@mui/x-data-grid';
-import { arrayMax } from '../utils'
+import {
+  GridCellParams,
+  GridComparatorFn,
+  GridFilterItem,
+  GridFilterOperator,
+  GridStateColDef
+} from '@mui/x-data-grid';
+import { arrayMax } from '../utils';
 
-const parseCellValue = (cellValue) => (cellValue.valueOf() as string).split(",").map(str => {
+export const parseCellValue = (cellValue) => JSON.stringify(cellValue ?? "").split(",").map(str => {
   return Number(str);
 })
 

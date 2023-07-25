@@ -1,5 +1,14 @@
-import { GridColumns, GridComparatorFn, getGridNumericColumnOperators, GridFilterOperator, GridFilterItem, GridStateColDef, GridCellParams } from '@mui/x-data-grid';
-import { arrayMax } from '../utils'
+import {
+  getGridNumericColumnOperators,
+  GridCellParams,
+  GridColumns,
+  GridComparatorFn,
+  GridFilterItem,
+  GridFilterOperator,
+  GridStateColDef
+} from '@mui/x-data-grid';
+import { arrayMax } from '../utils';
+import { parseCellValue } from '../VariantSearch/constants';
 
 // TODO: we need to look into this for all numeric fields. Because some attributes are per-allele,
 // The value of these attributes is a CSV string. See comments in dataUtils/rawFeatureToRow()
@@ -15,9 +24,6 @@ import { arrayMax } from '../utils'
 //     val ? Number(val).toLocaleString(navigator.language, {maximumFractionDigits: 6}) : val
 //   }).join(', ')
 // }
-const parseCellValue = (cellValue) => (cellValue.valueOf() as string).split(",").map(str => {
-  return Number(str);
-})
 
 const multiValueComparator: GridComparatorFn = (v1, v2) => {
   return arrayMax(parseCellValue(v1)) - arrayMax(parseCellValue(v2))
