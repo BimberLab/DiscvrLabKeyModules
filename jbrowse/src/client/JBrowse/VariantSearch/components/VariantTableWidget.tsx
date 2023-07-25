@@ -248,7 +248,7 @@ const VariantTableWidget = observer(props => {
           })
 
           setColumns(columns)
-          setHiddenColumns(columns.filter((x) => !x.hide).map((x) => x.field))
+          setHiddenColumns(columns.filter((x) => x.hide).map((x) => x.field))
           const operators = fieldTypeInfoToOperators(res)
           setAvailableOperators(operators)
           setFieldTypeInfo(res)
