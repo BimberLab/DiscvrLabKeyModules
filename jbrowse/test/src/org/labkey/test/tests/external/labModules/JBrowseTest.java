@@ -1521,9 +1521,9 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.tagWithText("p", "No tracks active."));
         waitAndClick(Locator.tagWithText("span", "Open Track Selector"));
 
-        Locator l = Locator.tag("input").withAttributeContaining("data-testid", trackId);
+        Locator l = Locator.tagWithText("span", "TestVCF").withClass("MuiFormControlLabel-label");
         waitAndClick(l);
-        getDriver().findElement(l).sendKeys(Keys.ESCAPE); //close modal
+        getDriver().findElement(Locator.tag("body")).sendKeys(Keys.ESCAPE); //close modal
         waitAndClick(Locator.tagWithAttribute("button", "data-testid", "track_menu_icon"));
         waitAndClickAndWait(Locator.tagContainingText("span", "Variant Search"));
 
