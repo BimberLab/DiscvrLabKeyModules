@@ -7,7 +7,7 @@ import {
 } from '@mui/x-data-grid';
 import { arrayMax } from '../utils';
 
-export const parseCellValue = (cellValue) => JSON.stringify(cellValue ?? "").split(",").map(str => {
+export const parseCellValue = (cellValue) => String(cellValue ?? "").split(",").map(str => {
   return Number(str);
 })
 
