@@ -268,7 +268,7 @@ const handleSubmit = (event) => {
                     }
                   >
                     {allowedGroupNames?.map((gn) => (
-                      <MenuItem value="{gn}">{gn}</MenuItem>
+                      <MenuItem value={gn} key={gn}>{gn}</MenuItem>
                     ))}
 
                   </Select>
