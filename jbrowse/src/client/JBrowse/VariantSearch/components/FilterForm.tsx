@@ -9,7 +9,9 @@ import InputLabel from '@material-ui/core/InputLabel';
 import CardActions from '@material-ui/core/CardActions';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
-import { FieldModel, searchStringToInitialFilters } from '../../utils';
+import { FieldModel, Filter, getOperatorsForField, searchStringToInitialFilters } from '../../utils';
+import KeyboardArrowDownIcon from '@material-ui/icons/KeyboardArrowDown';
+import { Box, Menu } from '@material-ui/core';
 
 const useStyles = makeStyles((theme) => ({
   formControl: {
@@ -86,18 +88,20 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export declare type FilterFormProps = {
-  availableOperators: any,
-  handleQuery: (filters: string[]) => void,
-  setFilters: (filters: string[]) => void,
+  handleQuery: (filters: Filter[]) => void,
+  setFilters: (filters: Filter[]) => void,
   handleClose?: any,
-  fieldTypeInfo: FieldModel[]
+  fieldTypeInfo: FieldModel[],
+  allowedGroupNames?: string[],
+  promotedFilters?: Map<string, Filter[]>
 }
 
 const FilterForm = (props: FilterFormProps ) => {
-  const { availableOperators, handleQuery, setFilters, handleClose, fieldTypeInfo } = props
-  // TODO: this should use a typed class for Filter. see utils.ts
-  const [filters, localSetFilters] = useState(searchStringToInitialFilters(availableOperators));
+  const { handleQuery, setFilters, handleClose, fieldTypeInfo, allowedGroupNames, promotedFilters } = props
+  const [filters, localSetFilters] = useState<Filter[]>(searchStringToInitialFilters(fieldTypeInfo.map((x) => x.name)));
   const [highlightedInputs, setHighlightedInputs] = useState<{ [index: number]: { field: boolean, operator: boolean, value: boolean } }>({});
+  const [commonFilterMenuOpen, setCommonFilterMenuOpen] = useState<boolean>(false)
+  const buttonRef = React.useRef(null);
 
   const classes = useStyles();
 
@@ -159,11 +163,22 @@ const handleSubmit = (event) => {
     }
   };
 
+  const handleMenuClose = () => {
+    setCommonFilterMenuOpen(false)
+  }
+
+  const handleMenuClick = (filterLabel: string) => {
+    handleMenuClose()
+    const f = promotedFilters[filterLabel]
+    console.log(f)
+  }
+
   return (
    <Card className={classes.card} elevation={0}>
      <form>
       <CardContent className={classes.centeredContent}>
         <div className={classes.addFilterExternalWrapper}>
+          <Box>
           <Button
             variant="contained"
             color="primary"
@@ -171,6 +186,22 @@ const handleSubmit = (event) => {
           >
             Add Search Filter
           </Button>
+          <Button
+              ref={buttonRef}
+              variant="contained"
+              color="primary"
+              hidden={!!promotedFilters}
+              onClick={() => setCommonFilterMenuOpen(!commonFilterMenuOpen)}
+              endIcon={<KeyboardArrowDownIcon />}
+          >
+            Common Filters
+          </Button>
+          <Menu open={commonFilterMenuOpen} onClose={handleMenuClose} anchorEl={buttonRef.current}>
+            {Array.from(promotedFilters?.keys()).map((label) => (
+                <MenuItem key={label} onClick={(e) => handleMenuClick(label)}>{label}</MenuItem>
+            ))}
+          </Menu>
+          </Box>
         </div>
 
         {/* TODO: this should read the FieldModel and interpret allowableValues, perhaps isMultiValued, etc. */}
@@ -190,9 +221,9 @@ const handleSubmit = (event) => {
                   <MenuItem value="">
                     <em>None</em>
                   </MenuItem>
-                  {Object.keys(availableOperators).map((field) => (
-                    <MenuItem key={field} value={field}>
-                      {fieldTypeInfo.find(obj => obj.name === field).label ?? field}
+                  {fieldTypeInfo.map((field) => (
+                    <MenuItem key={field.name} value={field.name}>
+                      {field.label ?? field.name}
                     </MenuItem>
                   ))}
                 </Select>
@@ -211,8 +242,8 @@ const handleSubmit = (event) => {
                     <em>None</em>
                   </MenuItem>
 
-                  {availableOperators[filter.field] && availableOperators[filter.field].type ? (
-                    availableOperators[filter.field].type.map((operator) => (
+                  {getOperatorsForField(fieldTypeInfo.find(obj => obj.name === filter.field)) ? (
+                      getOperatorsForField(fieldTypeInfo.find(obj => obj.name === filter.field)).map((operator) => (
                       <MenuItem key={operator} value={operator}>
                         {operator}
                       </MenuItem>
@@ -234,8 +265,10 @@ const handleSubmit = (event) => {
                       handleFilterChange(index, "value", event.target.value)
                     }
                   >
-                    {/* TODO: remove this. Maybe make a free-text field?*/}
-                    <MenuItem value="ONPRC">ONPRC</MenuItem>
+                    {allowedGroupNames?.map((gn) => (
+                      <MenuItem value="{gn}">{gn}</MenuItem>
+                    ))}
+
                   </Select>
                 </FormControl>
               ) : fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length > 0 ? (

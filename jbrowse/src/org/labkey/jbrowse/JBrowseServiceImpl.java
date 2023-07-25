@@ -20,6 +20,7 @@ import org.labkey.jbrowse.model.JsonFile;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,6 +28,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Created by bimber on 11/3/2016.
@@ -180,6 +182,66 @@ public class JBrowseServiceImpl extends JBrowseService
         }
 
         return null;
+    }
+
+    public List<String> getGroupNames(User u, Container c)
+    {
+        Set<String> groups = new TreeSet<>();
+
+        // NOTE: providers will be registered on module startup, which will be in dependency order.
+        // Process them here in reverse dependency order to prioritize end modules
+        List<GroupsProvider> providers = new ArrayList<>(_providers);
+        Collections.reverse(providers);
+        for (GroupsProvider gp : providers)
+        {
+            if (gp.isAvailable(c, u))
+            {
+                try
+                {
+                    List<String> gn = gp.getGroupNames(c, u);
+                    if (gn != null)
+                    {
+                        groups.addAll(gn);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _log.error(e.getMessage(), e);
+                }
+            }
+        }
+
+        return new ArrayList<>(groups);
+    }
+
+    public List<String> getPromotedFilters(Collection<String> indexedFields, User u, Container c)
+    {
+        Set<String> filters = new TreeSet<>();
+
+        // NOTE: providers will be registered on module startup, which will be in dependency order.
+        // Process them here in reverse dependency order to prioritize end modules
+        List<JBrowseFieldCustomizer> customizers = new ArrayList<>(_customizers);
+        Collections.reverse(customizers);
+        for (JBrowseFieldCustomizer customizer : customizers)
+        {
+            if (customizer.isAvailable(c, u))
+            {
+                try
+                {
+                    List<String> gn = customizer.getPromotedFilters(indexedFields, c, u);
+                    if (gn != null)
+                    {
+                        filters.addAll(gn);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _log.error(e.getMessage(), e);
+                }
+            }
+        }
+
+        return new ArrayList<>(filters);
     }
 
     public Map<String, String> getDemographicsFields(User u, Container c)

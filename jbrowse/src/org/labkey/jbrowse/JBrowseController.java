@@ -817,12 +817,15 @@ public class JBrowseController extends SpringActionController
                 Map<String, JBrowseFieldDescriptor> fields = JBrowseFieldUtils.getIndexedFields(jsonFile, getUser(), getContainer());
                 JSONObject results = new JSONObject();
                 JSONArray data = new JSONArray();
-
+                Set<String> indexedFields = new HashSet<>();
                 for (Map.Entry<String, JBrowseFieldDescriptor> entry : fields.entrySet()) {
                     data.put(entry.getValue().toJSON());
+                    indexedFields.add(entry.getValue().getFieldName());
                 }
 
                 results.put("fields", data);
+                results.put("groups", JBrowseServiceImpl.get().getGroupNames(getUser(), getContainer()));
+                results.put("promotedFilters", JBrowseServiceImpl.get().getPromotedFilters(indexedFields, getUser(), getContainer()));
 
                 return new ApiSimpleResponse(results);
             }

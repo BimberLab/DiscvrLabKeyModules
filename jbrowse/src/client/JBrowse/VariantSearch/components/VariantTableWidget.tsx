@@ -25,8 +25,7 @@ import {
     createEncodedFilterString,
     fetchFieldTypeInfo,
     fetchLuceneQuery,
-    FieldModel,
-    fieldTypeInfoToOperators,
+    FieldModel, Filter,
     getBrowserUrlNoFilters,
     getGenotypeURL,
     searchStringToInitialFilters,
@@ -216,16 +215,14 @@ const VariantTableWidget = observer(props => {
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [filters, setFilters] = useState([]);
   const [fieldTypeInfo, setFieldTypeInfo] = useState<FieldModel[]>([]);
-  const [hiddenColumns, setHiddenColumns] = useState<String[]>([]);
+  const [allowedGroupNames, setAllowedGroupNames] = useState<string[]>([]);
+  const [promotedFilters, setPromotedFilters] = useState<Map<string, Filter[]>>(null);
+  const [hiddenColumns, setHiddenColumns] = useState<string[]>([]);
 
   const [adapter, setAdapter] = useState<EVAdapterClass | undefined>(undefined)
 
-  const [availableOperators, setAvailableOperators] = useState([]);
-
   // Active widget ID list to force rerender when a JBrowseUIButton is clicked
   const [activeWidgetList, setActiveWidgetList] = useState<string[]>([])
-
-  const [isValidLocString, setIsValidLocString] = useState(true)
 
   // False until initial data load or an error:
   const [dataLoaded, setDataLoaded] = useState(!parsedLocString)
@@ -235,13 +232,11 @@ const VariantTableWidget = observer(props => {
   // API call to retrieve the requested features.
   useEffect(() => {
     async function fetch() {
-      const queryParam = new URLSearchParams(window.location.search)
-
       await fetchFieldTypeInfo(sessionId, trackGUID,
-        (res: FieldModel[]) => {
-          res.sort((a, b) => a.orderKey - b.orderKey);
+        (fields: FieldModel[], groups: string[], promotedFilters: Map<string, Filter[]>) => {
+            fields.sort((a, b) => a.orderKey - b.orderKey);
 
-          let columns: GridColDef[] = res.map((x) => {
+          let columns: GridColDef[] = fields.filter((x) => !x.isHidden).map((x) => {
               return {...x.toGridColDef(),
                 renderCell: (params: any) =>  { return <TableCellWithPopover value={params.value} /> }
               }
@@ -249,10 +244,11 @@ const VariantTableWidget = observer(props => {
 
           setColumns(columns)
           setHiddenColumns(columns.filter((x) => x.hide).map((x) => x.field))
-          const operators = fieldTypeInfoToOperators(res)
-          setAvailableOperators(operators)
-          setFieldTypeInfo(res)
-          handleQuery(searchStringToInitialFilters(operators))
+          setFieldTypeInfo(fields)
+          setAllowedGroupNames(groups)
+          setPromotedFilters(promotedFilters)
+
+          handleQuery(searchStringToInitialFilters(fields.map((x) => x.name)))
         },
         (error) => {
           setError(error)
@@ -398,8 +394,9 @@ const VariantTableWidget = observer(props => {
         handleClose={() => setFilterModalOpen(false)}
         filterProps={{
             setFilters: setFilters,
-            availableOperators: availableOperators,
             fieldTypeInfo: fieldTypeInfo,
+            allowedGroupNames: allowedGroupNames,
+            promotedFilters: promotedFilters,
             handleQuery: (filters) => handleQuery(filters)
         }}
   />

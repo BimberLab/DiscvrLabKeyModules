@@ -31,6 +31,7 @@ import org.labkey.api.jbrowse.GroupsProvider;
 import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.security.User;
+import org.labkey.api.settings.AppProps;
 import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 
@@ -41,6 +42,8 @@ import java.nio.charset.StandardCharsets;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -282,11 +285,29 @@ public class JBrowseLuceneSearch
                 case "IMPACT" -> field.label("Impact on Protein Coding").allowableValues(Arrays.asList("HIGH", "LOW", "MODERATE", "MODIFIER")).inDefaultColumns(true);
             }
         }
+
+        @Override
+        public List<String> getPromotedFilters(Collection<String> indexedFields, Container c, User u)
+        {
+            List<String> ret = new ArrayList<>();
+            if (indexedFields.contains("AF"))
+            {
+                ret.add("Rare Variants;AF,>,0.05");
+            }
+
+            return ret;
+        }
     }
 
     public static class TestJBrowseGroupProvider implements GroupsProvider
     {
         public static final String GROUP_NAME = "!TestGroup!";
+
+        @Override
+        public @Nullable List<String> getGroupNames(Container c, User u)
+        {
+            return AppProps.getInstance().isDevMode() ? Collections.singletonList(GROUP_NAME) : null;
+        }
 
         @Override
         public @Nullable List<String> getGroupMembers(String trackId, String groupName, Container c, User u)
