@@ -245,9 +245,10 @@ const VariantTableWidget = observer(props => {
 
                     setColumns(columns)
 
-                    // TODO
-                    //columnVisibilityModel = new GridColumnVisibilityModel
-                    //setHiddenColumns(columns.filter((x) => x.hideable).map((x) => x.field))
+                    const columnVisibilityModel = {}
+                    fields.filter((x) => !x.isHidden).forEach((x) => columnVisibilityModel[x.name] = !!x.isInDefaultColumns)
+                    setColumnVisibilityModel(columnVisibilityModel)
+
                     setFieldTypeInfo(fields)
                     setAllowedGroupNames(groups)
                     setPromotedFilters(promotedFilters)
@@ -366,7 +367,9 @@ const VariantTableWidget = observer(props => {
             columns={[...columns, actionsCol]}
             rows={features}
             density="comfortable"
-            components={{ Toolbar: ToolbarWithProps }}
+            slots={{
+                toolbar: ToolbarWithProps
+            }}
             columnVisibilityModel={columnVisibilityModel}
             pageSizeOptions={[10,25,50,100]}
             paginationModel={ pageSizeModel }

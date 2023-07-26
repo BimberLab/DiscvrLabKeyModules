@@ -206,7 +206,7 @@ const VariantTableWidget = observer(props => {
     <DataGrid
         columns={[...columns, actionsCol]}
         rows={features.map((rawFeature, id) => rawFeatureToRow(rawFeature, id, trackId))}
-        components={{ Toolbar: GridToolbar }}
+        slots={{ toolbar: GridToolbar }}
         pageSizeOptions={[10,25,50,100]}
         paginationModel={ pageSizeModel }
         onPaginationModelChange= {(newModel) => setPageSizeModel(newModel)}
