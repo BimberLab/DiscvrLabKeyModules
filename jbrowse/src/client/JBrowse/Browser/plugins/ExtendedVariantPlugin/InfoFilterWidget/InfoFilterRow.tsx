@@ -1,10 +1,10 @@
 import {observer} from "mobx-react";
-import {style as styles} from "./style";
+import { classes, Root as RootStyle } from "./style";
 
 import React, {useState} from "react";
-import {FormControl, IconButton, MenuItem, Select, TableCell, TableRow, TextField, Tooltip} from "@material-ui/core";
+import {FormControl, IconButton, MenuItem, Select, TableCell, TableRow, TextField, Tooltip} from "@mui/material";
 import {filterMap} from "./filters";
-import ClearIcon from "@material-ui/icons/Clear";
+import ClearIcon from "@mui/icons-material/Clear";
 
 export const OPERATOR_TO_DISPLAY = {
     lt: "<",
@@ -35,7 +35,6 @@ function convertFilterObjToString(filter) {
 }
 
 const InfoFilterRow = observer(props => {
-    const classes = styles()
     const { rowIdx, filterStr, filterChangeHandler, deleteHandler, hasSubmitted } = props
     const filterObj = convertFilterStringToObj(filterStr)
 
@@ -57,48 +56,49 @@ const InfoFilterRow = observer(props => {
         const fieldDef = filterMap[filterObj.field]
         if (fieldDef.dataType === 'number') {
             return (
-                    <FormControl className={classes.numValueControl}>
-                        <TextField
-                                id="standard-number"
-                                type="number"
-                                inputProps={{
-                                    inputMode: "numeric",
-                                    min: fieldDef.minValue ? Number(fieldDef.minValue) : undefined,
-                                    max: fieldDef.maxValue ? Number(fieldDef.maxValue) : undefined
-                                }}
-                                value={filterObj.value}
-                                required={true}
-                                error={hasSubmitted && !filterObj.value}
-                                onChange={handleValueChange}
-                        />
-                    </FormControl>
+                <FormControl className={classes.numValueControl}>
+                    <TextField
+                        id="standard-number"
+                        type="number"
+                        inputProps={{
+                            inputMode: "numeric",
+                            min: fieldDef.minValue ? Number(fieldDef.minValue) : undefined,
+                            max: fieldDef.maxValue ? Number(fieldDef.maxValue) : undefined
+                        }}
+                        value={filterObj.value}
+                        required={true}
+                        error={hasSubmitted && !filterObj.value}
+                        onChange={handleValueChange}
+                    />
+                </FormControl>
             )
         } else if (filterObj) {
             return (
-                    <FormControl className={classes.formControl}>
-                        <div>
-                            <Select
-                                    labelId="category-select-label"
-                                    id="category-select"
-                                    value={filterObj.value}
-                                    required={true}
-                                    error={hasSubmitted && !filterObj.value}
-                                    onChange={handleValueChange}
-                            >
-                                {filterMap[filterObj["field"]].options.map((option) => (
-                                        <MenuItem key={option} value={option}>
-                                            {option}
-                                        </MenuItem>
-                                ))}
-                            </Select>
-                        </div>
-                    </FormControl>
+                <FormControl className={classes.formControl}>
+                    <div>
+                        <Select
+                            labelId="category-select-label"
+                            id="category-select"
+                            value={filterObj.value}
+                            required={true}
+                            error={hasSubmitted && !filterObj.value}
+                            onChange={handleValueChange}
+                        >
+                            {filterMap[filterObj["field"]].options.map((option) => (
+                                <MenuItem key={option} value={option}>
+                                    {option}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </div>
+                </FormControl>
             )
         }
     })
 
     return (
-            <>
+        <>
+            <RootStyle className={classes.root}>
                 <TableRow>
                     <TableCell className={classes.tableCell}>
                         {filterMap[filterObj["field"]].title || filterObj["field"]}
@@ -106,22 +106,22 @@ const InfoFilterRow = observer(props => {
                     <TableCell className={classes.tableCell}>
                         <FormControl className={classes.formControl}>
                             <Select
-                                    labelId="category-select-label"
-                                    id="category-select"
-                                    value={filterObj.operator || ''}
-                                    error={hasSubmitted && !filterObj.operator}
-                                    onChange={handleOperatorChange}
-                                    required={true}
-                                    displayEmpty
+                                labelId="category-select-label"
+                                id="category-select"
+                                value={filterObj.operator || ''}
+                                error={hasSubmitted && !filterObj.operator}
+                                onChange={handleOperatorChange}
+                                required={true}
+                                displayEmpty
                             >
                                 <MenuItem disabled value="">
                                     <em>Operator</em>
                                 </MenuItem>
                                 {filterMap[filterObj["field"]].operators.map(operatorStr => {
                                     return (
-                                            <MenuItem value={operatorStr} key={operatorStr}>
-                                                {OPERATOR_TO_DISPLAY[operatorStr]}
-                                            </MenuItem>
+                                        <MenuItem value={operatorStr} key={operatorStr}>
+                                            {OPERATOR_TO_DISPLAY[operatorStr]}
+                                        </MenuItem>
                                     )
                                 })}
                             </Select>
@@ -138,7 +138,8 @@ const InfoFilterRow = observer(props => {
                         </Tooltip>
                     </TableCell>
                 </TableRow>
-            </>
+            </RootStyle>
+        </>
     )
 })
 

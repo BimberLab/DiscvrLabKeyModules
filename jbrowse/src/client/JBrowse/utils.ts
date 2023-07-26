@@ -2,7 +2,7 @@ import { isEmptyObject } from 'jquery';
 import jexl from 'jexl';
 import { createViewState, loadPlugins } from '@jbrowse/react-linear-genome-view';
 import { ActionURL, Ajax } from '@labkey/api';
-import { getGridNumericColumnOperators, GridColDef } from '@mui/x-data-grid';
+import { getGridNumericOperators, GridColDef } from '@mui/x-data-grid';
 import { multiModalOperator, multiValueComparator } from './VariantSearch/constants';
 
 export function arrayMax(array) {
@@ -118,8 +118,8 @@ export async function fetchSession(queryParam, sessionId, nativePlugins, refThem
                     "palette": {
                         primary: {main: themeSecondaryColor},
                         secondary: {main: themePrimaryColor},
-                        tertiary: refTheme.palette.augmentColor({main: grey}),
-                        quaternary: refTheme.palette.augmentColor({main: mandarin}),
+                        tertiary: refTheme.palette.augmentColor({color: {main: grey}}),
+                        quaternary: refTheme.palette.augmentColor({color: {main: mandarin}}),
                     }
                 }
             }
@@ -469,9 +469,12 @@ export class FieldModel {
             flex: this.flex || 1,
             headerAlign: 'left',
             align: "left",
-            //TODO: consider whether we really need a separate isHidden
-            hide: this.isHidden || this.isInDefaultColumns === false
+            hideable: true
         }
+
+        //TODO: consider whether we really need a separate isHidden
+        //hide: this.isHidden || this.isInDefaultColumns === false
+
 
         // TODO: can we pass the JEXL format string here? How does this impact filter/sorting?
         // if (this.formatString) {
@@ -485,7 +488,7 @@ export class FieldModel {
         // TODO: does this really apply here? Can we drop it?
         if (this.isMultiValued) {
             gridCol.sortComparator = multiValueComparator
-            gridCol.filterOperators = getGridNumericColumnOperators().map(op => multiModalOperator(op))
+            gridCol.filterOperators = getGridNumericOperators().map(op => multiModalOperator(op))
         }
 
         return gridCol

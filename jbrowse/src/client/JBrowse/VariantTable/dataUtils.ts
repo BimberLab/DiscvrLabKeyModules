@@ -1,9 +1,9 @@
 import type { Row } from './types';
 import { passesInfoFilters, passesSampleFilters } from '../utils';
 import { deserializeFilters } from '../Browser/plugins/ExtendedVariantPlugin/InfoFilterWidget/filterUtil';
-import ExtendedVcfFeature from '../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter/ExtendedVcfFeature';
+import { VcfFeature } from '@jbrowse/plugin-variants';
 
-const prepareInfoField = (rawFeature: ExtendedVcfFeature, propKey: string) => {
+const prepareInfoField = (rawFeature: VcfFeature, propKey: string) => {
     //const info = rawFeature.getInfoFieldMeta(propKey)
     const rawVal = rawFeature.get("INFO")[propKey]
     if (Array.isArray(rawVal)) {
@@ -15,7 +15,7 @@ const prepareInfoField = (rawFeature: ExtendedVcfFeature, propKey: string) => {
 }
 
 // Takes a feature JSON from the API and converts it into a JS object in the schema we want.
-export function rawFeatureToRow(rawFeature: ExtendedVcfFeature, id: number, trackId: string): Row {
+export function rawFeatureToRow(rawFeature: VcfFeature, id: number, trackId: string): Row {
   return {
       id: id,
       chrom: (rawFeature.get("CHROM") ?? "-1").toString(),

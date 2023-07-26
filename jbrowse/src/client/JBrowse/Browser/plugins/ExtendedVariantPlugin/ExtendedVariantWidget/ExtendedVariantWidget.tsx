@@ -1,11 +1,11 @@
 import { FIELD_NAME_MAP } from './fields';
 import { Chart } from 'react-google-charts';
-import { style as styles } from './style';
+import { classes, Root as StyleRoot } from './style';
 import { FieldModel, getGenotypeURL } from '../../../../utils';
 import { ActionURL, Ajax } from '@labkey/api';
 import React, { useEffect, useState } from 'react';
 import { BaseCard, FeatureDetails } from '@jbrowse/core/BaseFeatureWidget/BaseFeatureDetail';
-import { Paper, Table, TableBody, TableCell, TableHead, TableRow, Tooltip } from '@material-ui/core';
+import { Paper, Table, TableBody, TableCell, TableHead, TableRow, Tooltip } from '@mui/material';
 import { observer, PropTypes as MobxPropTypes } from 'mobx-react';
 
 export default jbrowse => {
@@ -37,6 +37,7 @@ export default jbrowse => {
         }
 
         return(
+            <StyleRoot className={classes.root}>
                 <BaseCard title="Predicted Function">
                     <Table className={classes.table}>
                         <TableHead>
@@ -52,6 +53,7 @@ export default jbrowse => {
                         </TableBody>
                     </Table>
                 </BaseCard>
+            </StyleRoot>
         )
     }
 
@@ -288,7 +290,6 @@ export default jbrowse => {
         return state
     }
     function CreatePanel(props) {
-        const classes = styles()
         const { model } = props
         const detailsConfig = JSON.parse(JSON.stringify(model.detailsConfig || {}))
         const feature = model.featureData

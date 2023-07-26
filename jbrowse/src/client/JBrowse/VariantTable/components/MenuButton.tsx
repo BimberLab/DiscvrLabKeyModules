@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Menu, Button } from "@material-ui/core"
+import { Menu, Button } from "@mui/material"
 
 export default function MenuButton(props) {
   return (

@@ -1,24 +1,17 @@
 import React, { useEffect, useState } from 'react';
 
 import { JBrowseLinearGenomeView, ViewModel } from '@jbrowse/react-linear-genome-view';
-import { createTheme, makeStyles } from '@material-ui/core/styles';
+import { createTheme } from '@mui/material/styles';
 import LogSession from './plugins/LogSession/index';
 import ExtendedVariantPlugin from './plugins/ExtendedVariantPlugin/index';
 import '../jbrowse.css';
 import JBrowseFooter from './components/JBrowseFooter';
-import { ErrorBoundary } from '@labkey/components';
 import { fetchSession } from '../utils';
 import JBrowseFilterPanel from './components/JBrowseFilterPanel';
+import { ErrorBoundary } from '../VariantSearch/components/ErrorBoundary';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 const refTheme = createTheme()
-
-const useStyles = makeStyles({
-    labkeyOverrides: {
-        borderStyle: "none; !important",
-        fontSize: "14px"
-    }
-})
 
 function View(){
     const queryParam = new URLSearchParams(window.location.search);
@@ -37,7 +30,7 @@ function View(){
         }
 
         fetchSession(queryParam, session, nativePlugins, refTheme, setState, false, activeTracks, setBgColor)
-    }, []);
+    }, [])
 
     if (session === null){
         return (<p>Error - no session provided.</p>)

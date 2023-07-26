@@ -514,7 +514,7 @@ public class JsonFile
         }
 
         ret.put("adapter", new JSONObject(){{
-            put("type", "ExtendedVariantAdapter");
+            put("type", "VcfTabixAdapter");
             put("vcfGzLocation", new JSONObject(){{
                 put("uri", url);
             }});

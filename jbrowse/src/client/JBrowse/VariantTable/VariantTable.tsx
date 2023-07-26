@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { observer } from 'mobx-react';
 import { getEnv } from 'mobx-state-tree';
-import { createTheme } from '@material-ui/core/styles';
+import { createTheme } from '@mui/material/styles';
 import { parseLocString } from '@jbrowse/core/util';
 import { readConfObject } from '@jbrowse/core/configuration';
 import { createJBrowseTheme } from '@jbrowse/core/ui';
-import { ThemeProvider } from '@material-ui/core';
+import { ThemeProvider } from '@mui/material';
 import LogSession from '../Browser/plugins/LogSession/index';
 import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index';
 import VariantTableWidget from './components/VariantTableWidget';
 import { fetchSession } from '../utils';
-import { ErrorBoundary } from '@labkey/components';
 import LoadingIndicator from './components/LoadingIndicator';
 import JBrowseFilterPanel from '../Browser/components/JBrowseFilterPanel';
+import { ErrorBoundary } from '../VariantSearch/components/ErrorBoundary';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
@@ -66,6 +66,7 @@ function VariantTable() {
             }
 
             setState(state)
+            // @ts-ignore
             setTheme(createJBrowseTheme(readConfObject(state.config.configuration, 'theme')))
         }
 

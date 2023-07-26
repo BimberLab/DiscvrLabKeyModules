@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react';
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@material-ui/core';
+import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import React, { useState } from 'react';
 import { getServerContext } from '@labkey/api';
 

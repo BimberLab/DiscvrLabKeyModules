@@ -12,35 +12,14 @@ const NodePolyfillPlugin = require("node-polyfill-webpack-plugin")
 
 const clientConfig = devConfig
 
+// See: https://stackoverflow.com/questions/68707553/uncaught-referenceerror-buffer-is-not-defined
 clientConfig.resolve.fallback =
 {
-    "buffer": require.resolve("buffer"),
-    "path": require.resolve("path-browserify"),
-    "stream": require.resolve("stream-browserify"),
-    "zlib": require.resolve("browserify-zlib"),
-    "vm": require.resolve("vm-browserify"),
-    "fs": false
+    "buffer": require.resolve("buffer")
 }
-
-clientConfig.resolve.alias["react/jsx-dev-runtime"] = "react/jsx-dev-runtime.js"
-clientConfig.resolve.alias["react/jsx-runtime"] = "react/jsx-runtime.js"
-clientConfig.resolve.alias["process/browser"] = "process/browser.js"
 
 clientConfig.plugins = [new NodePolyfillPlugin()].concat(constants.processPlugins(entryPoints))
 
-clientConfig.module.rules = clientConfig.module.rules.concat(
-{
-    test: /\.m?js$/,
-    exclude: /node_modules/,
-    use: {
-        loader: 'babel-loader',
-        options: {
-            presets: [
-                ['@babel/preset-env', { targets: "defaults" }],
-                ['@babel/preset-react']
-            ]
-        }
-    }
-})
+clientConfig.output.publicPath = 'auto'
 
 module.exports = [clientConfig]

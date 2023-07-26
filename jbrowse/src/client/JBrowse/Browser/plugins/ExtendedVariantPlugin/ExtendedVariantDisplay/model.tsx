@@ -1,11 +1,11 @@
 import { ConfigurationReference, getConf } from '@jbrowse/core/configuration';
 import { AnyConfigurationModel, } from '@jbrowse/core/configuration/configurationSchema';
 import { getContainingTrack, getContainingView, getSession } from '@jbrowse/core/util';
-import FilterListIcon from '@material-ui/icons/FilterList';
-import VisibilityIcon from '@material-ui/icons/Visibility';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import configSchemaF from './configSchema';
 import { getEnv, IAnyStateTreeNode, types } from 'mobx-state-tree';
-import PaletteIcon from '@material-ui/icons/Palette';
+import PaletteIcon from '@mui/icons-material/Palette';
 import { LinearGenomeViewModel } from '@jbrowse/plugin-linear-genome-view';
 import { navigateToSearch, navigateToTable } from '../../../../utils';
 

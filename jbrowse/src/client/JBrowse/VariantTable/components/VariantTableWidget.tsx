@@ -4,9 +4,9 @@ import { getConf } from '@jbrowse/core/configuration';
 import { Widget } from '@jbrowse/core/util';
 import { toArray } from 'rxjs/operators';
 import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache';
-import { AppBar, Box, Button, Dialog, Grid, MenuItem, Paper, Toolbar, Typography } from '@material-ui/core';
-import ScopedCssBaseline from '@material-ui/core/ScopedCssBaseline';
-import { DataGrid, GridColDef, GridRenderCellParams, GridToolbar } from '@mui/x-data-grid';
+import { AppBar, Box, Button, Dialog, Grid, MenuItem, Paper, Toolbar, Typography } from '@mui/material';
+import ScopedCssBaseline from '@mui/material/ScopedCssBaseline';
+import { DataGrid, GridColDef, GridPaginationModel, GridRenderCellParams, GridToolbar } from '@mui/x-data-grid';
 import { columns } from '../constants';
 import { filterFeatures, rawFeatureToRow } from '../dataUtils';
 import MenuButton from './MenuButton';
@@ -15,10 +15,10 @@ import '../VariantTable.css';
 import '../../jbrowse.css';
 import { getGenotypeURL, navigateToBrowser, navigateToSearch } from '../../utils';
 import LoadingIndicator from './LoadingIndicator';
-import ExtendedVcfFeature from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter/ExtendedVcfFeature';
 import { NoAssemblyRegion } from '@jbrowse/core/util/types';
 import StandaloneSearchComponent from '../../Search/components/StandaloneSearchComponent';
-import { EVAdapterClass } from '../../Browser/plugins/ExtendedVariantPlugin/ExtendedVariantAdapter';
+import { VcfFeature } from '@jbrowse/plugin-variants';
+import { BaseFeatureDataAdapter } from '@jbrowse/core/data_adapters/BaseAdapter';
 
 const VariantTableWidget = observer(props => {
   const { assembly, assemblyName, trackId, locString, parsedLocString, sessionId, session, pluginManager } = props
@@ -71,7 +71,7 @@ const VariantTableWidget = observer(props => {
   }
 
   // Contains all features from the API call once the useEffect finished
-  const [features, setFeatures] = useState<ExtendedVcfFeature[]>([])
+  const [features, setFeatures] = useState<VcfFeature[]>([])
 
   // Active widget ID list to force rerender when a JBrowseUIButton is clicked
   const [activeWidgetList, setActiveWidgetList] = useState<string[]>([])
@@ -87,7 +87,7 @@ const VariantTableWidget = observer(props => {
   // False until initial data load or an error:
   const [dataLoaded, setDataLoaded] = useState(!parsedLocString)
 
-  const [pageSize, setPageSize] = React.useState<number>(25);
+  const [pageSizeModel, setPageSizeModel] = React.useState<GridPaginationModel>({ page: 1, pageSize: 25 });
 
   // API call to retrieve the requested features.
   useEffect(() => {
@@ -98,7 +98,7 @@ const VariantTableWidget = observer(props => {
           pluginManager,
           sessionId,
           adapterConfig,
-      )).dataAdapter as EVAdapterClass
+      )).dataAdapter as BaseFeatureDataAdapter
 
       const ret = adapter.getFeatures({
         refName: assembly.getCanonicalRefName(parsedLocString.refName),
@@ -157,6 +157,7 @@ const VariantTableWidget = observer(props => {
       return(<p>Unable to find track: {trackId}</p>)
   }
 
+  // @ts-ignore
   const supportsLuceneIndex = getConf(track, ['displays', '0', 'renderer', 'supportsLuceneIndex'])
   const showDetailsWidget = (rowIdx: number) => {
     const feature = features[rowIdx]
@@ -206,9 +207,9 @@ const VariantTableWidget = observer(props => {
         columns={[...columns, actionsCol]}
         rows={features.map((rawFeature, id) => rawFeatureToRow(rawFeature, id, trackId))}
         components={{ Toolbar: GridToolbar }}
-        rowsPerPageOptions={[10,25,50,100]}
-        pageSize={pageSize}
-        onPageSizeChange={(newPageSize) => setPageSize(newPageSize)}
+        pageSizeOptions={[10,25,50,100]}
+        paginationModel={ pageSizeModel }
+        onPaginationModelChange= {(newModel) => setPageSizeModel(newModel)}
       />
   )
 

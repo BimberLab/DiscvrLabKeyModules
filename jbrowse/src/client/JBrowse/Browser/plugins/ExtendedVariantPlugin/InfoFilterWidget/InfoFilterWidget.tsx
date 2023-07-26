@@ -1,4 +1,4 @@
-import { style as styles } from './style';
+import { classes, Root as RootStyle } from "./style";
 import { filterMap } from './filters';
 import { readConfObject } from '@jbrowse/core/configuration';
 import { getSession } from '@jbrowse/core/util';
@@ -20,7 +20,7 @@ import {
     Popper,
     Table,
     TableBody
-} from '@material-ui/core';
+} from '@mui/material';
 
 import InfoFilterRow from './InfoFilterRow';
 import { SessionWithWidgets } from '@jbrowse/core/util/types';
@@ -29,10 +29,10 @@ import { observer } from 'mobx-react';
 export default jbrowse => {
 
     function FilterForm(props){
-        const classes = styles()
         const { model } = props
         let track = model.track
 
+        // @ts-ignore
         const displays = readConfObject(track, 'displays')
         const initialFilters = displays[0].renderer.infoFilters || []
 
@@ -49,6 +49,7 @@ export default jbrowse => {
                 return false
             }
 
+            // TODO: data-driven
             for (const filter of filters){
                 const tokens = filter.split(':')
                 if (tokens.length !== 3) {
@@ -129,80 +130,81 @@ export default jbrowse => {
         }, [open])
 
         return(
-                <>
+            <>
+                <RootStyle className={classes.root}>
                     <div style={{padding: '5px' }}>
-                    Only show variants where:
-                    <Table className={classes.table}>
-                        <TableBody>
-                            {infoFilters.map((filterStr, key) =>
+                        Only show variants where:
+                        <Table className={classes.table}>
+                            <TableBody>
+                                {infoFilters.map((filterStr, key) =>
                                     <InfoFilterRow key={key} filterStr={filterStr} filterChangeHandler={filterChangeHandler} deleteHandler={onRowDelete} rowIdx={Number(key)} hasSubmitted={hasSubmitted}/>
-                            )}
-                        </TableBody>
-                    </Table>
-                    <FormControl className={classes.addNewControl} >
-                        <Box padding={'5px'} mr="5px">
-                        <Button
-                                className={classes.button}
-                                ref={anchorRef}
-                                id="composition-button"
-                                aria-controls={open ? 'composition-menu' : undefined}
-                                aria-expanded={open ? 'true' : undefined}
-                                aria-haspopup="true"
-                                onClick={handleToggle}
-                                variant="contained"
-                                color="primary">
-                            Add Filter
-                        </Button>
-                        <Popper
-                                open={open}
-                                anchorEl={anchorRef.current}
-                                role={undefined}
-                                placement="bottom-start"
-                                transition
-                                disablePortal
-                        >
-                            {({ TransitionProps, placement }) => (
-                                    <Grow
+                                )}
+                            </TableBody>
+                        </Table>
+                        <FormControl className={classes.addNewControl} >
+                            <Box padding={'5px'} mr="5px">
+                                <Button
+                                    className={classes.button}
+                                    ref={anchorRef}
+                                    id="composition-button"
+                                    aria-controls={open ? 'composition-menu' : undefined}
+                                    aria-expanded={open ? 'true' : undefined}
+                                    aria-haspopup="true"
+                                    onClick={handleToggle}
+                                    variant="contained"
+                                    color="primary">
+                                    Add Filter
+                                </Button>
+                                <Popper
+                                    open={open}
+                                    anchorEl={anchorRef.current}
+                                    role={undefined}
+                                    placement="bottom-start"
+                                    transition
+                                    disablePortal
+                                >
+                                    {({ TransitionProps, placement }) => (
+                                        <Grow
                                             {...TransitionProps}
                                             style={{
                                                 transformOrigin:
-                                                        placement === 'bottom-start' ? 'left top' : 'left bottom',
+                                                    placement === 'bottom-start' ? 'left top' : 'left bottom',
                                             }}
-                                    >
-                                        <Paper>
-                                            <ClickAwayListener onClickAway={handleClose}>
-                                                <MenuList
+                                        >
+                                            <Paper>
+                                                <ClickAwayListener onClickAway={handleClose}>
+                                                    <MenuList
                                                         autoFocusItem={open}
                                                         id="composition-menu"
                                                         aria-labelledby="composition-button"
-                                                >
+                                                    >
                                                         {
                                                             Object.entries(filterMap).map(([key, val]) =>
-                                                                    <MenuItem value={key} key={key} onClick={handleMenuChange} data-field-name={key}>
-                                                                        {val.title || key}
-                                                                    </MenuItem>
+                                                                <MenuItem value={key} key={key} onClick={handleMenuChange} data-field-name={key}>
+                                                                    {val.title || key}
+                                                                </MenuItem>
                                                             )
                                                         }
-                                                </MenuList>
-                                            </ClickAwayListener>
-                                        </Paper>
-                                    </Grow>
-                            )}
-                        </Popper>
-                        <Button className={classes.button} onClick={handleFilterSubmit} variant="contained" color="primary">
-                            Apply
-                        </Button>
-                        <Button className={classes.button} onClick={clearFilters} variant="contained" color="primary">
-                            Clear Filters
-                        </Button>
-                        </Box>
-                    </FormControl>
+                                                    </MenuList>
+                                                </ClickAwayListener>
+                                            </Paper>
+                                        </Grow>
+                                    )}
+                                </Popper>
+                                <Button className={classes.button} onClick={handleFilterSubmit} variant="contained" color="primary">
+                                    Apply
+                                </Button>
+                                <Button className={classes.button} onClick={clearFilters} variant="contained" color="primary">
+                                    Clear Filters
+                                </Button>
+                            </Box>
+                        </FormControl>
                     </div>
                     <Dialog
-                            open={alertOpen}
-                            onClose={handleAlertClose}
-                            aria-labelledby="alert-dialog-title"
-                            aria-describedby="alert-dialog-description"
+                        open={alertOpen}
+                        onClose={handleAlertClose}
+                        aria-labelledby="alert-dialog-title"
+                        aria-describedby="alert-dialog-description"
                     >
                         <DialogTitle id="alert-dialog-title">Invalid Filters</DialogTitle>
                         <DialogContent>
@@ -214,7 +216,8 @@ export default jbrowse => {
                             <Button onClick={handleAlertClose}>OK</Button>
                         </DialogActions>
                     </Dialog>
-                </>
+                </RootStyle>
+            </>
         )
     }
 

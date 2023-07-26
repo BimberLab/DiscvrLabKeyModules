@@ -1,11 +1,10 @@
 import {
-  getGridNumericColumnOperators,
+  getGridNumericOperators,
   GridCellParams,
-  GridColumns,
+  GridColDef,
   GridComparatorFn,
   GridFilterItem,
-  GridFilterOperator,
-  GridStateColDef
+  GridFilterOperator
 } from '@mui/x-data-grid';
 import { arrayMax } from '../utils';
 import { parseCellValue } from '../VariantSearch/constants';
@@ -32,7 +31,7 @@ const multiValueComparator: GridComparatorFn = (v1, v2) => {
 const multiModalOperator = (operator: GridFilterOperator) => {
   const getApplyFilterFn = (
     filterItem: GridFilterItem,
-    column: GridStateColDef,
+    column: GridColDef,
   ) => {
     const innerFilterFn = operator.getApplyFilterFn(filterItem, column);
     if (!innerFilterFn) {
@@ -42,7 +41,7 @@ const multiModalOperator = (operator: GridFilterOperator) => {
     return (params: GridCellParams) => {
       let cellValue = parseCellValue(params.value)
 
-      switch(filterItem.operatorValue) {
+      switch(filterItem.operator) {
         case "!=":
           return cellValue.map(val => val == Number(filterItem.value)).every((val) => val == false)
         case "=":
@@ -72,7 +71,7 @@ const multiModalOperator = (operator: GridFilterOperator) => {
 }
 
 // Columns to be shown, minus the ID column.
-export const columns: GridColumns = [
+export const columns: GridColDef[] = [
   { field: 'chrom', headerName: 'Chromosome', width: 150, type: "string", flex: 1, headerAlign: 'left' },
   { field: 'pos', headerName: 'Position', width: 150, type: "number", flex: 1, headerAlign: 'left' },
   { field: 'ref', headerName: 'Reference', width: 150, type: "string", flex: 1, headerAlign: 'left' },
@@ -85,13 +84,14 @@ export const columns: GridColumns = [
     flex: 1,
     headerAlign: 'left',
     sortComparator: multiValueComparator,
-    filterOperators: getGridNumericColumnOperators().map(op => multiModalOperator(op))
+    filterOperators: getGridNumericOperators().map(op => multiModalOperator(op))
   },
   { field: 'variant_type', headerName: 'Type', width: 50, type: "string", flex: 1, headerAlign: 'left' },
   { field: 'impact', headerName: 'Impact', width: 50, type: "string", flex: 1, headerAlign: 'left' },
   { field: 'overlapping_genes', headerName: 'Overlapping Genes', type: "string", flex: 1, headerAlign: 'left' },
   { field: 'cadd_ph', headerName: 'CADD Score', width: 50, type: "number", flex: 1, headerAlign: 'left' },
-  { field: 'track_id', headerName: 'Track ID', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true },
-  { field: 'start', headerName: 'Start Location', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true },
-  { field: 'end', headerName: 'End Location', width: 50, type: "string", flex: 1, headerAlign: 'left', hide: true }
+    //TODO: hide??
+  { field: 'track_id', headerName: 'Track ID', width: 50, type: "string", flex: 1, headerAlign: 'left' },
+  { field: 'start', headerName: 'Start Location', width: 50, type: "string", flex: 1, headerAlign: 'left' },
+  { field: 'end', headerName: 'End Location', width: 50, type: "string", flex: 1, headerAlign: 'left' }
 ]

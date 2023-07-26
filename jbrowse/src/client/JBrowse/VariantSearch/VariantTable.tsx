@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { observer } from 'mobx-react';
 import { getEnv } from 'mobx-state-tree';
-import { createTheme } from '@material-ui/core/styles';
+import { createTheme } from '@mui/material/styles';
 import { parseLocString } from '@jbrowse/core/util';
 import { readConfObject } from '@jbrowse/core/configuration';
 import { createJBrowseTheme } from '@jbrowse/core/ui';
-import { ThemeProvider } from '@material-ui/core';
+import { ThemeProvider } from '@mui/material';
 import LogSession from '../Browser/plugins/LogSession/index';
 import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index';
 import VariantTableWidget from './components/VariantTableWidget';
@@ -65,6 +65,7 @@ function VariantTable() {
             }
 
             setState(state)
+            // @ts-ignore
             setTheme(createJBrowseTheme(readConfObject(state.config.configuration, 'theme')))
         }
 

@@ -1,10 +1,4 @@
-import {
-  GridCellParams,
-  GridComparatorFn,
-  GridFilterItem,
-  GridFilterOperator,
-  GridStateColDef
-} from '@mui/x-data-grid';
+import { GridCellParams, GridColDef, GridComparatorFn, GridFilterItem, GridFilterOperator } from '@mui/x-data-grid';
 import { arrayMax } from '../utils';
 
 export const parseCellValue = (cellValue) => String(cellValue ?? "").split(",").map(str => {
@@ -18,7 +12,7 @@ export const multiValueComparator: GridComparatorFn = (v1, v2) => {
 export const multiModalOperator = (operator: GridFilterOperator) => {
   const getApplyFilterFn = (
     filterItem: GridFilterItem,
-    column: GridStateColDef,
+    column: GridColDef,
   ) => {
     const innerFilterFn = operator.getApplyFilterFn(filterItem, column);
     if (!innerFilterFn) {
@@ -28,7 +22,7 @@ export const multiModalOperator = (operator: GridFilterOperator) => {
     return (params: GridCellParams) => {
       let cellValue = parseCellValue(params.value)
 
-      switch(filterItem.operatorValue) {
+      switch(filterItem.operator) {
         case "!=":
           return cellValue.map(val => val == Number(filterItem.value)).every((val) => val == false)
         case "=":
