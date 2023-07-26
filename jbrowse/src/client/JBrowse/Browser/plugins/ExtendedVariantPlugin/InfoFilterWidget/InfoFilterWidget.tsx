@@ -5,18 +5,14 @@ import React from 'react';
 import {
     Box,
     Button,
-    ClickAwayListener,
     Dialog,
     DialogActions,
     DialogContent,
     DialogContentText,
     DialogTitle,
     FormControl,
-    Grow,
+    Menu,
     MenuItem,
-    MenuList,
-    Paper,
-    Popper,
     Table,
     TableBody
 } from '@mui/material';
@@ -25,6 +21,7 @@ import InfoFilterRow from './InfoFilterRow';
 import { SessionWithWidgets } from '@jbrowse/core/util/types';
 import { observer } from 'mobx-react';
 import { styled } from '@mui/material/styles';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 export default jbrowse => {
     function FilterForm(props){
@@ -91,7 +88,7 @@ export default jbrowse => {
 
         // Based on: https://mui.com/components/menus/#menulist-composition
         const [open, setOpen] = React.useState(false);
-        const anchorRef = React.useRef(null);
+        const buttonRef = React.useRef(null);
 
         const handleToggle = () => {
             setOpen((prevOpen) => !prevOpen);
@@ -110,24 +107,6 @@ export default jbrowse => {
             setInfoFilters([...infoFilters])
         }
 
-        const handleClose = (event) => {
-            if (anchorRef.current && anchorRef.current.contains(event.target)) {
-                return;
-            }
-
-            setOpen(false)
-        };
-
-        // return focus to the button when we transitioned from !open -> open
-        const prevOpen = React.useRef(open);
-        React.useEffect(() => {
-            if (prevOpen.current === true && open === false) {
-                anchorRef.current.focus();
-            }
-
-            prevOpen.current = open;
-        }, [open])
-
         const FormControlS = styled(FormControl)(({ theme }) => ({
             margin: theme.spacing(1),
             padding: theme.spacing(2),
@@ -145,6 +124,10 @@ export default jbrowse => {
             display: 'block'
         }))
 
+        const handleMenuClose = () => {
+            setOpen(false)
+        }
+
         return(
             <>
                 <div style={{padding: '5px' }}>
@@ -159,52 +142,20 @@ export default jbrowse => {
                     <FormControlS>
                         <Box padding={'5px'} mr="5px">
                             <ButtonS
-                                ref={anchorRef}
-                                id="composition-button"
-                                aria-controls={open ? 'composition-menu' : undefined}
-                                aria-expanded={open ? 'true' : undefined}
-                                aria-haspopup="true"
-                                onClick={handleToggle}
+                                ref={buttonRef}
+                                onClick={() => setOpen(!open)}
                                 variant="contained"
+                                endIcon={<KeyboardArrowDownIcon />}
                                 color="primary">
                                 Add Filter
                             </ButtonS>
-                            <Popper
-                                open={open}
-                                anchorEl={anchorRef.current}
-                                role={undefined}
-                                placement="bottom-start"
-                                transition
-                                disablePortal
-                            >
-                                {({ TransitionProps, placement }) => (
-                                    <Grow
-                                        {...TransitionProps}
-                                        style={{
-                                            transformOrigin:
-                                                placement === 'bottom-start' ? 'left top' : 'left bottom',
-                                        }}
-                                    >
-                                        <Paper>
-                                            <ClickAwayListener onClickAway={handleClose}>
-                                                <MenuList
-                                                    autoFocusItem={open}
-                                                    id="composition-menu"
-                                                    aria-labelledby="composition-button"
-                                                >
-                                                    {
-                                                        Object.entries(filterMap).map(([key, val]) =>
-                                                            <MenuItem value={key} key={key} onClick={handleMenuChange} data-field-name={key}>
-                                                                {val.title || key}
-                                                            </MenuItem>
-                                                        )
-                                                    }
-                                                </MenuList>
-                                            </ClickAwayListener>
-                                        </Paper>
-                                    </Grow>
+                            <Menu open={open} onClose={handleMenuClose} anchorEl={buttonRef.current}>
+                                {Object.entries(filterMap).map(([key, val]) =>
+                                    <MenuItem value={key} key={key} onClick={handleMenuChange} data-field-name={key}>
+                                        {val.title || key}
+                                    </MenuItem>
                                 )}
-                            </Popper>
+                            </Menu>
                             <ButtonS onClick={handleFilterSubmit} variant="contained" color="primary">
                                 Apply
                             </ButtonS>

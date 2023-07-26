@@ -218,7 +218,7 @@ const VariantTableWidget = observer(props => {
     const [fieldTypeInfo, setFieldTypeInfo] = useState<FieldModel[]>([]);
     const [allowedGroupNames, setAllowedGroupNames] = useState<string[]>([]);
     const [promotedFilters, setPromotedFilters] = useState<Map<string, Filter[]>>(null);
-    const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>(null);
+    const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({});
 
     const [adapter, setAdapter] = useState<BaseFeatureDataAdapter>(null)
 
