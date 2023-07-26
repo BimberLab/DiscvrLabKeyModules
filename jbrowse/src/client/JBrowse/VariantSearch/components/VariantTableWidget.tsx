@@ -402,7 +402,6 @@ const VariantTableWidget = observer(props => {
   />
   );
 
-
   return (
     <>
       <LoadingIndicator isOpen={!dataLoaded}/>
@@ -432,13 +431,18 @@ const VariantTableWidget = observer(props => {
         })
       }
 
-
       <div style={{ marginBottom: "10px", display: "flex", alignItems: "center" }}>
 
       <div style={{ flex: 1 }}>
         {filters.map((filter, index) => {
           if ((filter as any).field == "" || (filter as any).operator == "" || (filter as any).value == "" ) {
-            return null;
+            return (<Button
+              key={index}
+              onClick={() => setFilterModalOpen(true)}
+              style={{ border: "1px solid gray", margin: "5px" }}
+            >
+              No filters
+            </Button>)
           }
           return (
             <Button
