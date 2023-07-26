@@ -422,7 +422,7 @@ const VariantTableWidget = observer(props => {
                     <Typography variant="h6">{widgetType.heading}</Typography>
                 </Toolbar>
               </AppBar>
-              <ScopedCssBaseline>
+              <ScopedCssBaseline style={{ margin: "12px" }}>
                 <ReactComponent model={visibleWidget}/>
               </ScopedCssBaseline>
             </Paper>
