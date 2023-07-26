@@ -1,5 +1,4 @@
 import { colorSchemes } from './colorSchemes';
-import { classes, Root as RootStyle } from './style';
 import { getSession } from '@jbrowse/core/util';
 import { readConfObject } from '@jbrowse/core/configuration';
 import { generateSchemeJexl } from './colorUtil';
@@ -9,6 +8,7 @@ import React, { useState } from 'react';
 import SchemeTable from './SchemeComponent';
 import { SessionWithWidgets } from '@jbrowse/core/util/types';
 import { observer } from 'mobx-react';
+import { styled } from '@mui/material/styles';
 
 export default jbrowse => {
     function ColorSchemePicker(props){
@@ -42,28 +42,32 @@ export default jbrowse => {
                         </MenuItem>
                 ))
 
+        const FormControlS = styled(FormControl)(({ theme }) => ({
+            margin: theme.spacing(2),
+            padding: theme.spacing(1, 3, 1, 1),
+            minWidth: 100,
+        }))
+
         return(
                 <>
-                    <RootStyle className={classes.root}>
-                        <div style={{padding: '5px' }}>
-                        <FormControl className={classes.schemeControl}>
-                            <InputLabel id="category-select-label">Color Using</InputLabel>
-                            <Select
-                                    labelId="category-select-label"
-                                    id="category-select"
-                                    value={palette}
-                                    onChange={handleSchemeChange}
-                            >
-                                {menuItems}
-                            </Select>
-                        </FormControl>
-                        <SchemeTable colorScheme={colorSchemes[palette]}/>
-                        <p/>
-                        <Button onClick={onApply} variant="contained" color="primary">
-                            Apply
-                        </Button>
-                        </div>
-                    </RootStyle>
+                    <div style={{padding: '5px' }}>
+                    <FormControlS>
+                        <InputLabel id="category-select-label">Color Using</InputLabel>
+                        <Select
+                                labelId="category-select-label"
+                                id="category-select"
+                                value={palette}
+                                onChange={handleSchemeChange}
+                        >
+                            {menuItems}
+                        </Select>
+                    </FormControlS>
+                    <SchemeTable colorScheme={colorSchemes[palette]}/>
+                    <p/>
+                    <Button onClick={onApply} variant="contained" color="primary">
+                        Apply
+                    </Button>
+                    </div>
                 </>
         )
     }

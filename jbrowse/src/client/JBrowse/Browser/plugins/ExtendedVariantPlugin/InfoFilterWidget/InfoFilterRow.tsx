@@ -1,10 +1,10 @@
-import {observer} from "mobx-react";
-import { classes, Root as RootStyle } from "./style";
+import { observer } from 'mobx-react';
 
-import React, {useState} from "react";
-import {FormControl, IconButton, MenuItem, Select, TableCell, TableRow, TextField, Tooltip} from "@mui/material";
-import {filterMap} from "./filters";
-import ClearIcon from "@mui/icons-material/Clear";
+import React from 'react';
+import { FormControl, IconButton, MenuItem, Select, TableCell, TableRow, TextField, Tooltip } from '@mui/material';
+import { filterMap } from './filters';
+import ClearIcon from '@mui/icons-material/Clear';
+import { styled } from '@mui/material/styles';
 
 export const OPERATOR_TO_DISPLAY = {
     lt: "<",
@@ -52,11 +52,28 @@ const InfoFilterRow = observer(props => {
         deleteHandler(rowIdx)
     }
 
+    const FormControlNumValue = styled(FormControl)(({ theme }) => ({
+        margin: theme.spacing(1),
+        minWidth: 100
+    }))
+
+    const FormControlS = styled(FormControl)(({ theme }) => ({
+        margin: theme.spacing(1),
+        padding: theme.spacing(2),
+        minWidth: 400,
+        display: 'flex'
+    }))
+
+    const TableCellS = styled(TableCell)(({ theme }) => ({
+        textAlign: 'center',
+        padding: theme.spacing(0.75, 0, 0.75, 1),
+    }))
+
     const getValueComponent = ((filterObj) => {
         const fieldDef = filterMap[filterObj.field]
         if (fieldDef.dataType === 'number') {
             return (
-                <FormControl className={classes.numValueControl}>
+                <FormControlNumValue>
                     <TextField
                         id="standard-number"
                         type="number"
@@ -70,11 +87,11 @@ const InfoFilterRow = observer(props => {
                         error={hasSubmitted && !filterObj.value}
                         onChange={handleValueChange}
                     />
-                </FormControl>
+                </FormControlNumValue>
             )
         } else if (filterObj) {
             return (
-                <FormControl className={classes.formControl}>
+                <FormControlS>
                     <div>
                         <Select
                             labelId="category-select-label"
@@ -91,54 +108,52 @@ const InfoFilterRow = observer(props => {
                             ))}
                         </Select>
                     </div>
-                </FormControl>
+                </FormControlS>
             )
         }
     })
 
     return (
         <>
-            <RootStyle className={classes.root}>
-                <TableRow>
-                    <TableCell className={classes.tableCell}>
-                        {filterMap[filterObj["field"]].title || filterObj["field"]}
-                    </TableCell>
-                    <TableCell className={classes.tableCell}>
-                        <FormControl className={classes.formControl}>
-                            <Select
-                                labelId="category-select-label"
-                                id="category-select"
-                                value={filterObj.operator || ''}
-                                error={hasSubmitted && !filterObj.operator}
-                                onChange={handleOperatorChange}
-                                required={true}
-                                displayEmpty
-                            >
-                                <MenuItem disabled value="">
-                                    <em>Operator</em>
-                                </MenuItem>
-                                {filterMap[filterObj["field"]].operators.map(operatorStr => {
-                                    return (
-                                        <MenuItem value={operatorStr} key={operatorStr}>
-                                            {OPERATOR_TO_DISPLAY[operatorStr]}
-                                        </MenuItem>
-                                    )
-                                })}
-                            </Select>
-                        </FormControl>
-                    </TableCell>
-                    <TableCell className={classes.tableCell}>
-                        {getValueComponent(filterObj)}
-                    </TableCell>
-                    <TableCell className={classes.tableCell}>
-                        <Tooltip title="Remove filter" aria-label="remove" placement="bottom">
-                            <IconButton aria-label="remove filter" onClick={handleFilterDelete}>
-                                <ClearIcon />
-                            </IconButton>
-                        </Tooltip>
-                    </TableCell>
-                </TableRow>
-            </RootStyle>
+            <TableRow>
+                <TableCellS>
+                    {filterMap[filterObj["field"]].title || filterObj["field"]}
+                </TableCellS>
+                <TableCellS>
+                    <FormControlS>
+                        <Select
+                            labelId="category-select-label"
+                            id="category-select"
+                            value={filterObj.operator || ''}
+                            error={hasSubmitted && !filterObj.operator}
+                            onChange={handleOperatorChange}
+                            required={true}
+                            displayEmpty
+                        >
+                            <MenuItem disabled value="">
+                                <em>Operator</em>
+                            </MenuItem>
+                            {filterMap[filterObj["field"]].operators.map(operatorStr => {
+                                return (
+                                    <MenuItem value={operatorStr} key={operatorStr}>
+                                        {OPERATOR_TO_DISPLAY[operatorStr]}
+                                    </MenuItem>
+                                )
+                            })}
+                        </Select>
+                    </FormControlS>
+                </TableCellS>
+                <TableCellS>
+                    {getValueComponent(filterObj)}
+                </TableCellS>
+                <TableCellS>
+                    <Tooltip title="Remove filter" aria-label="remove" placement="bottom">
+                        <IconButton aria-label="remove filter" onClick={handleFilterDelete}>
+                            <ClearIcon />
+                        </IconButton>
+                    </Tooltip>
+                </TableCellS>
+            </TableRow>
         </>
     )
 })

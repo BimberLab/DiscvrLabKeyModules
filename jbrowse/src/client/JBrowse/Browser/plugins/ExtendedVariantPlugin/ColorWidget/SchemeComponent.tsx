@@ -1,9 +1,9 @@
-import {observer} from 'mobx-react'
-import React from 'react'
-import {classes, Root as RootStyle} from "./style";
-import {generateGradient} from "./colorUtil"
+import { observer } from 'mobx-react';
+import React from 'react';
+import { generateGradient } from './colorUtil';
 
-import {Box, Table, TableBody, TableCell, TableHead, TableRow} from '@mui/material'
+import { Box, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
+import { styled } from '@mui/material/styles';
 
 function makeTitle(key){
     if (key === "minVal"){
@@ -19,12 +19,23 @@ const SchemeComponent = observer(props => {
     let scheme = props.scheme as any
     let tableHeader = <></>
     let table = <></>
+
+    const TableS = styled(Table)(({ theme }) => ({
+        padding: 0,
+        display: 'block'
+    }))
+
+    const TableCellS = styled(TableCell)(({ theme }) => ({
+        textAlign: 'center',
+        padding: theme.spacing(0.75, 0, 0.75, 1)
+    }))
+    
     const lastRow =
         <TableRow>
-            <TableCell className={classes.tableCell}>
+            <TableCellS>
                 Other
-            </TableCell>
-            <TableCell className={classes.tableCell}>
+            </TableCellS>
+            <TableCellS>
                 <Box
                     sx={{
                         width: 10,
@@ -35,28 +46,28 @@ const SchemeComponent = observer(props => {
                     }}
                     bgcolor='gray'
                 />
-            </TableCell>
+            </TableCellS>
         </TableRow>
 
     if (scheme.dataType === "number"){
         let gradient = generateGradient(scheme.options.minVal, scheme.options.maxVal, scheme.gradientSteps, scheme.maxVal)
         tableHeader =
             <TableRow>
-                <TableCell className={classes.tableCell}>
+                <TableCellS>
                     Value
-                </TableCell>
-                <TableCell className={classes.tableCell}>
+                </TableCellS>
+                <TableCellS>
                     Color
-                </TableCell>
+                </TableCellS>
             </TableRow>
         let tableRows = []
         for (let i = 0; i < gradient.length - 1; i++){
             tableRows.push(
                 <TableRow key={'gradient-' + i}>
-                    <TableCell className={classes.tableCell}>
+                    <TableCellS>
                         {gradient[i].ub.toFixed(scheme.displaySigFigs) + ' to ' + gradient[i + 1].ub.toFixed(scheme.displaySigFigs) }
-                    </TableCell>
-                    <TableCell className={classes.tableCell}>
+                    </TableCellS>
+                    <TableCellS>
                         <Box
                             sx={{
                                 width: 10,
@@ -67,7 +78,7 @@ const SchemeComponent = observer(props => {
                             }}
                             bgcolor={'#'+gradient[i].hex}
                         />
-                    </TableCell>
+                    </TableCellS>
                 </TableRow>)
         }
 
@@ -75,20 +86,20 @@ const SchemeComponent = observer(props => {
     } else if (scheme.dataType === "option"){
         tableHeader =
             <TableRow>
-                <TableCell className={classes.tableCell}>
+                <TableCellS>
                     Value
-                </TableCell>
-                <TableCell className={classes.tableCell}>
+                </TableCellS>
+                <TableCellS>
                     Color
-                </TableCell>
+                </TableCellS>
             </TableRow>
 
         let tableRows = Object.entries(scheme.options).map(([key, val]) =>
             <TableRow key={key}>
-                <TableCell className={classes.tableCell}>
+                <TableCellS>
                     {makeTitle(key)}
-                </TableCell>
-                <TableCell className={classes.tableCell}>
+                </TableCellS>
+                <TableCellS>
                     <Box
                         sx={{
                             width: 10,
@@ -99,7 +110,7 @@ const SchemeComponent = observer(props => {
                         }}
                         bgcolor={val as string}
                     />
-                </TableCell>
+                </TableCellS>
             </TableRow>
         )
 
@@ -107,16 +118,14 @@ const SchemeComponent = observer(props => {
     }
     return (
         <>
-            <RootStyle className={classes.root}>
-                <Table className={classes.table}>
-                    <TableHead>
-                        {tableHeader}
-                    </TableHead>
-                    <TableBody>
-                        {table}
-                    </TableBody>
-                </Table>
-            </RootStyle>
+            <TableS>
+                <TableHead>
+                    {tableHeader}
+                </TableHead>
+                <TableBody>
+                    {table}
+                </TableBody>
+            </TableS>
         </>
     )
 })
