@@ -11,6 +11,12 @@ import { observer } from 'mobx-react';
 import { styled } from '@mui/material/styles';
 
 export default jbrowse => {
+    const FormControlS = styled(FormControl)(({ theme }) => ({
+        margin: theme.spacing(2),
+        padding: theme.spacing(1, 3, 1, 1),
+        minWidth: 100,
+    }))
+
     function ColorSchemePicker(props){
         const { model } = props
         const { track } = model
@@ -41,12 +47,6 @@ export default jbrowse => {
                             {val.title || key}
                         </MenuItem>
                 ))
-
-        const FormControlS = styled(FormControl)(({ theme }) => ({
-            margin: theme.spacing(2),
-            padding: theme.spacing(1, 3, 1, 1),
-            minWidth: 100,
-        }))
 
         return(
                 <>

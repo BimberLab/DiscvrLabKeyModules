@@ -24,6 +24,23 @@ import { styled } from '@mui/material/styles';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 export default jbrowse => {
+    const FormControlS = styled(FormControl)(({ theme }) => ({
+        margin: theme.spacing(1),
+        padding: theme.spacing(2),
+        minWidth: 400,
+        display: 'flex'
+    }))
+
+    const ButtonS = styled(Button)(({ theme }) => ({
+        maxWidth: 150,
+        marginRight: theme.spacing(2)
+    }))
+
+    const TableS = styled(Table)(({ theme }) => ({
+        padding: 0,
+        display: 'block'
+    }))
+
     function FilterForm(props){
         const { model } = props
         let track = model.track
@@ -90,10 +107,6 @@ export default jbrowse => {
         const [open, setOpen] = React.useState(false);
         const buttonRef = React.useRef(null);
 
-        const handleToggle = () => {
-            setOpen((prevOpen) => !prevOpen);
-        };
-
         const handleAlertClose = () => {
             setAlertOpen(false);
         };
@@ -106,23 +119,6 @@ export default jbrowse => {
             infoFilters.push(fieldName + ":" + op + ":")
             setInfoFilters([...infoFilters])
         }
-
-        const FormControlS = styled(FormControl)(({ theme }) => ({
-            margin: theme.spacing(1),
-            padding: theme.spacing(2),
-            minWidth: 400,
-            display: 'flex'
-        }))
-
-        const ButtonS = styled(Button)(({ theme }) => ({
-            maxWidth: 150,
-            marginRight: theme.spacing(2)
-        }))
-
-        const TableS = styled(Table)(({ theme }) => ({
-            padding: 0,
-            display: 'block'
-        }))
 
         const handleMenuClose = () => {
             setOpen(false)

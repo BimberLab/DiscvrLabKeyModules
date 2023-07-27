@@ -34,6 +34,23 @@ function convertFilterObjToString(filter) {
     return [filter.field, filter.operator || '', filter.value || ''].join(':')
 }
 
+const FormControlNumValue = styled(FormControl)(({ theme }) => ({
+    margin: theme.spacing(1),
+    minWidth: 100
+}))
+
+const FormControlS = styled(FormControl)(({ theme }) => ({
+    margin: theme.spacing(1),
+    padding: theme.spacing(2),
+    minWidth: 400,
+    display: 'flex'
+}))
+
+const TableCellS = styled(TableCell)(({ theme }) => ({
+    textAlign: 'center',
+    padding: theme.spacing(0.75, 0, 0.75, 1),
+}))
+
 const InfoFilterRow = observer(props => {
     const { rowIdx, filterStr, filterChangeHandler, deleteHandler, hasSubmitted } = props
     const filterObj = convertFilterStringToObj(filterStr)
@@ -51,23 +68,6 @@ const InfoFilterRow = observer(props => {
     const handleFilterDelete = () => {
         deleteHandler(rowIdx)
     }
-
-    const FormControlNumValue = styled(FormControl)(({ theme }) => ({
-        margin: theme.spacing(1),
-        minWidth: 100
-    }))
-
-    const FormControlS = styled(FormControl)(({ theme }) => ({
-        margin: theme.spacing(1),
-        padding: theme.spacing(2),
-        minWidth: 400,
-        display: 'flex'
-    }))
-
-    const TableCellS = styled(TableCell)(({ theme }) => ({
-        textAlign: 'center',
-        padding: theme.spacing(0.75, 0, 0.75, 1),
-    }))
 
     const getValueComponent = ((filterObj) => {
         const fieldDef = filterMap[filterObj.field]
