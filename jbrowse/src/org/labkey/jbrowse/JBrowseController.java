@@ -859,9 +859,15 @@ public class JBrowseController extends SpringActionController
             try
             {
                 JSONObject ret = new JSONObject();
+                if (form.isIncludeDefaultFields())
+                {
+                    JBrowseFieldUtils.DEFAULT_FIELDS.forEach((key, val) -> ret.put(key, val.toJSON()));
+                }
+
                 for (String key : form.getInfoKeys())
                 {
-                    JBrowseFieldDescriptor fd = new JBrowseFieldDescriptor(key, null, true, false, VCFHeaderLineType.String, null);
+                    // NOTE: leave type null and let the client figure it out using the VCF header. In most cases this wont matter for presentation
+                    JBrowseFieldDescriptor fd = new JBrowseFieldDescriptor(key, null, false, false, null, null);
                     JBrowseServiceImpl.get().customizeField(getUser(), getContainer(), fd);
 
                     ret.put(key, fd.toJSON());
@@ -996,6 +1002,7 @@ public class JBrowseController extends SpringActionController
     public static class ResolveVcfFieldsForm
     {
         private String[] infoKeys;
+        private boolean includeDefaultFields = false;
 
         public String[] getInfoKeys()
         {
@@ -1005,6 +1012,16 @@ public class JBrowseController extends SpringActionController
         public void setInfoKeys(String[] infoKeys)
         {
             this.infoKeys = infoKeys;
+        }
+
+        public boolean isIncludeDefaultFields()
+        {
+            return includeDefaultFields;
+        }
+
+        public void setIncludeDefaultFields(boolean includeDefaultFields)
+        {
+            this.includeDefaultFields = includeDefaultFields;
         }
     }
 }

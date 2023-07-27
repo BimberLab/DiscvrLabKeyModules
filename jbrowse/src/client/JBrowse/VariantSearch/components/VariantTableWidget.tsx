@@ -235,7 +235,7 @@ const VariantTableWidget = observer(props => {
         async function fetch() {
             await fetchFieldTypeInfo(sessionId, trackGUID,
                 (fields: FieldModel[], groups: string[], promotedFilters: Map<string, Filter[]>) => {
-                    fields.sort((a, b) => a.orderKey - b.orderKey);
+                    fields.sort((a, b) => a.orderKey - b.orderKey || a.getLabel().toLowerCase().localeCompare(b.getLabel().toLowerCase()))
 
                     let columns: GridColDef[] = fields.filter((x) => !x.isHidden).map((x) => {
                         return {...x.toGridColDef(),

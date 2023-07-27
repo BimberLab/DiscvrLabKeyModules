@@ -432,12 +432,16 @@ export class FieldModel {
     isHidden: boolean
     colWidth: number
     formatString: string
-    orderKey: number
+    orderKey: number = 999
     allowableValues: string[]
     category: string
     url: string
     flex: number
     supportsFilter: boolean = true
+
+    getLabel(): string {
+        return this.label ?? this.name
+    }
 
     getMuiType(): string {
         let muiFieldType;

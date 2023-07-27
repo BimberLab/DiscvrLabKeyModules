@@ -2,23 +2,31 @@ import { observer } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { Widget } from '@jbrowse/core/util';
-import { toArray } from 'rxjs/operators';
 import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache';
 import { AppBar, Box, Button, Dialog, Grid, MenuItem, Paper, Toolbar, Typography } from '@mui/material';
 import ScopedCssBaseline from '@mui/material/ScopedCssBaseline';
-import { DataGrid, GridColDef, GridPaginationModel, GridRenderCellParams, GridToolbar } from '@mui/x-data-grid';
-import { columns } from '../constants';
+import {
+  DataGrid,
+  GridColDef,
+  GridColumnVisibilityModel,
+  GridPaginationModel,
+  GridRenderCellParams,
+  GridToolbar
+} from '@mui/x-data-grid';
 import { filterFeatures, rawFeatureToRow } from '../dataUtils';
 import MenuButton from './MenuButton';
 
 import '../VariantTable.css';
 import '../../jbrowse.css';
-import { getGenotypeURL, navigateToBrowser, navigateToSearch } from '../../utils';
+import { FieldModel, getGenotypeURL, navigateToBrowser, navigateToSearch } from '../../utils';
 import LoadingIndicator from './LoadingIndicator';
 import { NoAssemblyRegion } from '@jbrowse/core/util/types';
 import StandaloneSearchComponent from '../../Search/components/StandaloneSearchComponent';
 import { VcfFeature } from '@jbrowse/plugin-variants';
 import { BaseFeatureDataAdapter } from '@jbrowse/core/data_adapters/BaseAdapter';
+import { lastValueFrom } from 'rxjs';
+import { toArray } from 'rxjs/operators';
+import { ActionURL, Ajax } from '@labkey/api';
 
 const VariantTableWidget = observer(props => {
   const { assembly, assemblyName, trackId, locString, parsedLocString, sessionId, session, pluginManager } = props
@@ -70,6 +78,8 @@ const VariantTableWidget = observer(props => {
     set(null)
   }
 
+  const [ metadata, setMetadata ] = useState(null)
+
   // Contains all features from the API call once the useEffect finished
   const [features, setFeatures] = useState<VcfFeature[]>([])
 
@@ -87,7 +97,10 @@ const VariantTableWidget = observer(props => {
   // False until initial data load or an error:
   const [dataLoaded, setDataLoaded] = useState(!parsedLocString)
 
-  const [pageSizeModel, setPageSizeModel] = React.useState<GridPaginationModel>({ page: 1, pageSize: 25 });
+  const [pageSizeModel, setPageSizeModel] = React.useState<GridPaginationModel>({ page: 0, pageSize: 25 });
+  const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({});
+  const [infoFields, setInfoFields] = useState<Map<string, FieldModel>>(null)
+  const [gridColumns, setGridColumns] = useState<GridColDef[]>([])
 
   // API call to retrieve the requested features.
   useEffect(() => {
@@ -100,22 +113,81 @@ const VariantTableWidget = observer(props => {
           adapterConfig,
       )).dataAdapter as BaseFeatureDataAdapter
 
-      const ret = adapter.getFeatures({
+      const featObservable = adapter.getFeatures({
         refName: assembly.getCanonicalRefName(parsedLocString.refName),
         start: parsedLocString.start,
         end: parsedLocString.end
-      } as NoAssemblyRegion)
+      } as NoAssemblyRegion).pipe(toArray())
+
+      const metadataPromise = adapter.getMetadata()
 
       // TODO: do we actually want to cache the in-memory filtered features, or should we
       // cache the full set and react to changes in track.configuration and filter on-demand?
       // I suspect the fact this is responsive to session.visibleWidget is accidentally getting the reload correct, since that forces
       // this to be re-called when the filter widget is removed.
-      const rawFeatures = await ret.pipe(toArray()).toPromise()
+      const rawFeatures = await lastValueFrom(featObservable)
+      const metadata: any = await metadataPromise
+
       const filteredFeatures = filterFeatures(rawFeatures,
         track.configuration.displays[0].renderer.activeSamples.value, 
-        track.configuration.displays[0].renderer.infoFilters.valueJSON)
+        track.configuration.displays[0].renderer.infoFilters.valueJSON
+      )
 
+      setMetadata(metadata)
       setFeatures(filteredFeatures)
+
+      if (metadata?.INFO) {
+        await Ajax.request({
+          url: ActionURL.buildURL('jbrowse', 'resolveVcfFields.api'),
+          method: 'POST',
+          success: async function (res) {
+            const fields: Map<string, FieldModel> = JSON.parse(res.response);
+
+            Object.keys(fields).forEach((key) => {
+              const f = fields[key];
+
+              // This is a bit of a hack. The lucene search indexes chrom/contig as contig, but the JB feature uses chrom
+              if (fields[key].name === 'contig') {
+                fields[key].name = 'chrom';
+              }
+
+              if (metadata.INFO[f.name]) {
+
+                if (!f.type) {
+                  fields[key].type = metadata.INFO[f.name].Type;
+                }
+
+                if (!f.description) {
+                  fields[key].type = metadata.INFO[f.name].Description;
+                }
+
+                if (metadata.INFO[f.name].Number == 'R' || metadata.INFO[f.name].Number == 'A' || metadata.INFO[f.name].Number == '.') {
+                  fields[key].isMultiValued = true;
+                } else if (!isNaN(metadata.INFO[f.name].Number) && parseInt(metadata.INFO[f.name].Number) > 1) {
+                  fields[key].isMultiValued = true;
+                }
+              }
+            });
+
+            setInfoFields(fields);
+
+            const columns = [];
+            const fieldToShow: FieldModel[] = Object.values(fields).map((x) => Object.assign(new FieldModel(), x)).sort((a, b) => a.orderKey - b.orderKey || a.getLabel().toLowerCase().localeCompare(b.getLabel().toLowerCase()));
+            fieldToShow.filter((x) => !x.isHidden).map((x) => x.toGridColDef()).forEach((x) => columns.push(x));
+
+            const columnVisibilityModel = {actions: true};
+            fieldToShow.filter((x) => !x.isHidden).forEach((x) => columnVisibilityModel[x.name] = !!x.isInDefaultColumns);
+
+            setColumnVisibilityModel(columnVisibilityModel);
+            setGridColumns(columns);
+          },
+          failure: function (res) {
+            console.error('There was an error while fetching field types: ' + res.status + '\n Status Body: ' + res.statusText);
+          },
+          params: {infoKeys: Object.keys(metadata.INFO), includeDefaultFields: true},
+        });
+      }
+
       setDataLoaded(true)
     }
 
@@ -184,6 +256,7 @@ const VariantTableWidget = observer(props => {
     width: 50,
     flex: 1,
     headerAlign: 'left',
+    hideable: false,
     renderCell: (params: GridRenderCellParams) => {
       return (
           <>
@@ -204,12 +277,16 @@ const VariantTableWidget = observer(props => {
 
   const gridElement = (
     <DataGrid
-        columns={[...columns, actionsCol]}
+        columns={[...gridColumns, actionsCol]}
         rows={features.map((rawFeature, id) => rawFeatureToRow(rawFeature, id, trackId))}
         slots={{ toolbar: GridToolbar }}
         pageSizeOptions={[10,25,50,100]}
         paginationModel={ pageSizeModel }
         onPaginationModelChange= {(newModel) => setPageSizeModel(newModel)}
+        columnVisibilityModel={columnVisibilityModel}
+        onColumnVisibilityModelChange={(model) => {
+          setColumnVisibilityModel(model)
+        }}
       />
   )
 
