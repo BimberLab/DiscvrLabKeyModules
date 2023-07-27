@@ -33,6 +33,8 @@
     "jspdf-autotable": "^3.5.31",
     "@mui/x-data-grid": "^6.0.1",
     "node-polyfill-webpack-plugin": "2.0.1",
+    "@labkey/components": "^2.355.0",
+    "uuid": "^9.0.0",
     "path-browserify": "^1.0.1",
     "pkg": "^5.8.1",
     "react-data-grid": "7.0.0-beta.10",

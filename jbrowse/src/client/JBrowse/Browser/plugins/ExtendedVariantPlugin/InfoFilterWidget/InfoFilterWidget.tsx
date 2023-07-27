@@ -140,15 +140,16 @@ export default jbrowse => {
                         </TableBody>
                     </TableS>
                     <FormControlS>
-                        <Box padding={'5px'} mr="5px">
-                            <ButtonS
+                        <Box padding={'5px'}>
+                            <Button
                                 ref={buttonRef}
-                                onClick={() => setOpen(!open)}
+                                sx={{maxWidth: 150, marginRight: 5}}
                                 variant="contained"
+                                onClick={() => setOpen(!open)}
                                 endIcon={<KeyboardArrowDownIcon />}
                                 color="primary">
                                 Add Filter
-                            </ButtonS>
+                            </Button>
                             <Menu open={open} onClose={handleMenuClose} anchorEl={buttonRef.current}>
                                 {Object.entries(filterMap).map(([key, val]) =>
                                     <MenuItem value={key} key={key} onClick={handleMenuChange} data-field-name={key}>
