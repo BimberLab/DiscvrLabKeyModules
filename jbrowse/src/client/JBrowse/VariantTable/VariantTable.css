@@ -19,3 +19,8 @@
 .menuItem {
     height: 100%;
 }
+
+/* This was added to fix an issue in the VariantTable grid's built-in filtering, where the value input was lower than the others*/
+div.MuiFormControl-marginDense {
+    margin-top: unset;
+}

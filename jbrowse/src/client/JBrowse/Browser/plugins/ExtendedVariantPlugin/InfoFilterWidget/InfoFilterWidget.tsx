@@ -24,7 +24,7 @@ import { styled } from '@mui/material/styles';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 export default jbrowse => {
-    const FormControlS = styled(FormControl)(({ theme }) => ({
+    const FormControlButtonBar = styled(FormControl)(({ theme }) => ({
         margin: theme.spacing(1),
         padding: theme.spacing(2),
         minWidth: 400,
@@ -36,7 +36,7 @@ export default jbrowse => {
         marginRight: theme.spacing(2)
     }))
 
-    const TableS = styled(Table)(({ theme }) => ({
+    const TableNoPaddingBlock = styled(Table)(({ theme }) => ({
         padding: 0,
         display: 'block'
     }))
@@ -128,18 +128,18 @@ export default jbrowse => {
             <>
                 <div style={{padding: '5px' }}>
                     Only show variants where:
-                    <TableS>
+                    <TableNoPaddingBlock>
                         <TableBody>
                             {infoFilters.map((filterStr, key) =>
                                 <InfoFilterRow key={key} filterStr={filterStr} filterChangeHandler={filterChangeHandler} deleteHandler={onRowDelete} rowIdx={Number(key)} hasSubmitted={hasSubmitted}/>
                             )}
                         </TableBody>
-                    </TableS>
-                    <FormControlS>
+                    </TableNoPaddingBlock>
+                    <FormControlButtonBar>
                         <Box padding={'5px'}>
                             <Button
                                 ref={buttonRef}
-                                sx={{maxWidth: 150, marginRight: 5}}
+                                sx={{maxWidth: 150, marginRight: 2}}
                                 variant="contained"
                                 onClick={() => setOpen(!open)}
                                 endIcon={<KeyboardArrowDownIcon />}
@@ -160,7 +160,7 @@ export default jbrowse => {
                                 Clear Filters
                             </ButtonS>
                         </Box>
-                    </FormControlS>
+                    </FormControlButtonBar>
                 </div>
                 <Dialog
                     open={alertOpen}

@@ -249,7 +249,7 @@ function serializeInfoFilters(track) {
         return undefined
     }
 
-    if (!track.configuration.displays[0].renderer.infoFilters.valueJSON || isEmptyObject(track.configuration.displays[0].renderer.infoFilters.valueJSON)) {
+    if (!track.configuration.displays[0].renderer.infoFilters.valueJSON || isEmptyObject(track.configuration.displays[0].renderer.infoFilters.valueJSON)  || !track.configuration.displays[0].renderer.infoFilters.valueJSON.length) {
         return undefined
     }
 

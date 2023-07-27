@@ -152,8 +152,6 @@ public class JBrowseTest extends BaseWebDriverTest
         clickDialogButton("Apply");
 
         waitForElement(Locator.tagWithAttribute("polygon", "fill", "#2425E0"));
-
-        //TODO: ensure test filter panel reflects this
     }
 
     private void assertBoxWithColorPresent(final String expectedColor)
@@ -170,7 +168,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void clickDialogButton(String text)
     {
-        waitAndClick(Locator.XPathLocator.tagWithClass("button", "MuiButtonBase-root").withChild(Locator.tagWithText("span", text)));
+        waitAndClick(Locator.XPathLocator.tagWithClass("button", "MuiButtonBase-root").withText(text));
     }
 
     private void testBrowserNavToVariantTable() throws Exception
@@ -195,7 +193,7 @@ public class JBrowseTest extends BaseWebDriverTest
         openTrackMenuItem("Color Selection");
         waitForElement(Locator.tagWithText("h6", "Color Schemes"));
 
-        waitForElement(Locator.tagWithText("div", "Allele Frequency").withClass("MuiSelect-selectMenu"));
+        waitForElement(Locator.tagWithText("div", "Allele Frequency").withClass("MuiSelect-select"));
 
         // Now toggle to IMPACT:
         waitAndClick(Locator.tagWithText("div", "Allele Frequency"));
@@ -207,8 +205,6 @@ public class JBrowseTest extends BaseWebDriverTest
 
         // Indicates the IMPACT scheme applies:
         waitForElement(Locator.tagWithAttribute("polygon", "fill", "gray"));
-
-        //TODO: ensure test filter panel reflects this
     }
 
     private void testAFColor()
@@ -229,8 +225,6 @@ public class JBrowseTest extends BaseWebDriverTest
 
         clickDialogButton("Apply");
         waitForElement(Locator.tagWithAttribute("polygon", "fill", "#9A1764"));
-
-        //TODO: ensure test filter panel reflects this
     }
 
     private void testFilterWidget()
@@ -238,27 +232,25 @@ public class JBrowseTest extends BaseWebDriverTest
         beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgap");
         waitForJBrowseToLoad();
 
-        //TODO: ensure test filter panel UI throughout this
-
         openTrackMenuItem("Filter By Attributes");
         waitForElement(Locator.tagWithText("h6", "Filter Variants"));
         clickDialogButton("Add Filter");
         waitAndClick(Locator.tagWithText("li", "Predicted Impact"));
 
         // text filters should have only one option for operator:
-        waitForElement(Locator.tagWithText("div", "=").withClass("MuiSelect-selectMenu"));
+        waitForElement(Locator.tagWithText("div", "=").withClass("MuiSelect-select"));
 
-        waitAndClick(Locator.tagWithClass("div", "MuiSelect-selectMenu").index(1));
+        waitAndClick(Locator.tagWithClass("div", "MuiSelect-select").index(1));
         waitAndClick(Locator.tagWithText("li", "HIGH"));
 
         clickDialogButton("Add Filter");
         waitAndClick(Locator.tagWithText("li", "Allele Frequency"));
-        waitForElement(Locator.tagWithClass("div", "MuiInput-underline").index(3));
+        waitForElement(Locator.tagWithText("td", "Allele Frequency"));
         clickDialogButton("Apply");
 
         //Wait for dialog
         waitForElement(Locator.tagWithText("h2", "Invalid Filters"));
-        waitAndClick(Locator.tagWithText("span", "OK").withClass("MuiButton-label"));
+        waitAndClick(Locator.tagWithText("button", "OK").withClass("MuiButtonBase-root"));
 
         // Remove row
         waitAndClick(Locator.tagWithClass("button", "MuiIconButton-sizeSmall").withAttribute("aria-label", "remove filter").index(1));
@@ -270,16 +262,15 @@ public class JBrowseTest extends BaseWebDriverTest
         openTrackMenuItem("Filter By Attributes");
         waitForElement(Locator.tagWithText("h6", "Filter Variants"));
 
-        waitAndClick(Locator.tagWithClass("button", "MuiIconButton-sizeSmall").withAttribute("aria-label", "remove filter"));
+        waitAndClick(Locator.tagWithClass("button", "MuiIconButton-sizeSmall").withAttribute("aria-label", "remove filter").index(0));
         clickDialogButton("Add Filter");
         waitAndClick(Locator.tagWithText("li", "Allele Frequency"));
 
-        Locator.XPathLocator valueField = Locator.tagWithClass("div", "MuiInput-underline").index(1);
+        Locator.XPathLocator valueField = Locator.tagWithClass("div", "MuiInput-underline").index(0);
         waitForElement(valueField);
         WebElement input = getDriver().findElement(valueField.child(Locator.tag("input")));
 
-        // NOTE: this is deliberate, so we ensure ".2" => 0.2
-        input.sendKeys(".02");
+        input.sendKeys("0.02");
 
         waitAndClick(Locator.tagWithText("em", "Operator"));
         waitAndClick(Locator.tagContainingText("li", "<"));
@@ -287,7 +278,10 @@ public class JBrowseTest extends BaseWebDriverTest
         clickDialogButton("Apply");
         sleep(1000);
 
-        Assert.assertEquals("Incorrect number of variants", 85, getTotalVariantFeatures());
+        Assert.assertEquals("Incorrect number of variants", 87, getTotalVariantFeatures());
+
+        // bottom filter UI
+        waitForElement(Locator.tagContainingText("button", "mGAP: Showing sites where").containing("AF < 0.02"));
     }
 
     private long getTotalVariantFeatures()
@@ -315,6 +309,9 @@ public class JBrowseTest extends BaseWebDriverTest
 
         Assert.assertEquals("Incorrect number of variants", 7, getTotalVariantFeatures());
 
+        // bottom filter UI
+        waitForElement(Locator.tagContainingText("button", "mGAP: Showing sites with a variant in any of:").containing("m00004,m00005"));
+
         openTrackMenuItem("Filter By Attributes");
         waitForElement(Locator.tagWithText("h6", "Filter Variants"));
         waitForElement(Locator.tagWithText("td", "Allele Frequency").withClass("MuiTableCell-sizeSmall"));
@@ -324,7 +321,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         openTrackMenuItem("Filter By Sample");
         waitForElement(Locator.tagWithText("h6", "Filter By Sample"));
-        Locator textArea = Locator.tagWithClass("textarea", "MuiOutlinedInput-inputMultiline");
+        Locator textArea = Locator.tagWithClass("textarea", "MuiInputBase-inputMultiline");
         waitForElement(textArea);
         Assert.assertEquals("Incorrect samples", "m00004\nm00005", Locator.findElements(getDriver(), textArea).get(0).getText());
     }
@@ -337,11 +334,11 @@ public class JBrowseTest extends BaseWebDriverTest
         // Wait for variants to load:
         getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T"));
 
-        Assert.assertEquals("Incorrect number of variants", 36, getTotalVariantFeatures());
+        Assert.assertEquals("Incorrect number of variants", 37, getTotalVariantFeatures());
 
         openTrackMenuItem("Filter By Sample");
         waitForElement(Locator.tagWithText("h6", "Filter By Sample"));
-        Locator textArea = Locator.tagWithClass("textarea", "MuiOutlinedInput-inputMultiline");
+        Locator textArea = Locator.tagWithClass("textarea", "MuiInputBase-inputMultiline");
         waitForElement(textArea);
         Locator.findElements(getDriver(), textArea).get(0).sendKeys("m00010");
         clickDialogButton("Apply");
@@ -358,7 +355,7 @@ public class JBrowseTest extends BaseWebDriverTest
         WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).findFirst().get();
 
         actions.click(toClick).perform();
-        waitForElement(Locator.tagWithText("div", "1:914..914"));
+        waitForElement(Locator.tagWithText("div", "1:914"));
         waitForElement(Locator.tagWithText("span", "Predicted Function"));
     }
 
@@ -393,7 +390,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         openTrackMenuItem("Filter By Sample");
         waitForElement(Locator.tagWithText("h6", "Filter By Sample"));
-        Locator textArea = Locator.tagWithClass("textarea", "MuiOutlinedInput-inputMultiline");
+        Locator textArea = Locator.tagWithClass("textarea", "MuiInputBase-inputMultiline");
         waitForElement(textArea);
         Assert.assertEquals("Incorrect samples", "m00010", Locator.findElements(getDriver(), textArea).get(0).getText());
     }
@@ -451,7 +448,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Actions actions = new Actions(getDriver());
         WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).collect(JBrowseTestHelper.toSingleton()); // 1:137..137
         actions.click(toClick).perform();
-        waitForElement(Locator.tagWithText("div", "1:137..137"));
+        waitForElement(Locator.tagWithText("div", "1:137"));
         assertElementPresent(Locator.tagWithText("td", "Minor Allele Frequency"));
     }
 
@@ -463,7 +460,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Actions actions = new Actions(getDriver());
         WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).collect(JBrowseTestHelper.toSingleton()); // 1:137..137
         actions.click(toClick).perform();
-        waitForElement(Locator.tagWithText("div", "1:137..137"));
+        waitForElement(Locator.tagWithText("div", "1:137"));
         assertElementPresent(Locator.tagWithText("th", "Effect"));
         assertElementPresent(Locator.tagWithText("th", "Impact"));
         assertElementPresent(Locator.tagWithText("th", "Gene Name"));
@@ -480,7 +477,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Actions actions = new Actions(getDriver());
         WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A")).stream().filter(WebElement::isDisplayed).collect(JBrowseTestHelper.toSingleton()); // 1:18,486
         actions.click(toClick).perform();
-        waitForElement(Locator.tagWithText("div", "1:18,486..18,486"));
+        waitForElement(Locator.tagWithText("div", "1:18,486"));
         assertElementPresent(Locator.tagWithText("th", "Sequence"));
         assertElementPresent(Locator.tagWithText("th", "Fraction"));
         assertElementPresent(Locator.tagWithText("th", "Count"));
@@ -496,7 +493,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Actions actions = new Actions(getDriver());
         WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV C -> A")).stream().filter(WebElement::isDisplayed).collect(JBrowseTestHelper.toSingleton()); // 1:18,486
         actions.click(toClick).perform();
-        waitForElement(Locator.tagWithText("div", "1:18,486..18,486"));
+        waitForElement(Locator.tagWithText("div", "1:18,486"));
         assertElementPresent(Locator.tagWithText("td", "3041"));
         assertElementPresent(Locator.tagWithText("span", "Genotype Frequency (2329)"));
         assertElementPresent(Locator.tagWithText("a", "Click here to view sample-level genotypes"));
@@ -1269,15 +1266,15 @@ public class JBrowseTest extends BaseWebDriverTest
         _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
         waitAndClickAndWait(Locator.tagWithText("a", "View In JBrowse"));
         waitForElement(Locator.tagWithText("div", "TestGenome1"));
-        waitAndClick(Locator.tagContainingText("span", "Show all regions in assembly").withClass("MuiButton-label"));
+        waitAndClick(Locator.tagContainingText("button", "Show all regions in assembly").withClass("MuiButtonBase-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
 
         //Now test search
-        testSearch(sessionId);
+        testTrixSearch(sessionId);
     }
 
-    private void testSearch(String sessionId) throws Exception
+    private void testTrixSearch(String sessionId) throws Exception
     {
         goToProjectHome();
 
@@ -1326,8 +1323,6 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         waitForTableLoadingToDisappear();
 
-        //TODO: ensure filter panel UI working throughout this
-
         // Test default
         testColumns("1", "2", "A", "T", "0.029", "", "HIGH", "", "7.292");
 
@@ -1349,10 +1344,8 @@ public class JBrowseTest extends BaseWebDriverTest
         // Test filtering
         waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
 
-        Locator columnSelector = Locator.tagWithClass("div", "MuiGridFilterForm-columnSelect");
-        waitAndClick(columnSelector);
-        Locator refOption = Locator.tagWithAttributeContaining("option", "value", "ref");
-        waitAndClick(refOption);
+        waitAndClick(Locator.tagWithClass("select", "MuiNativeSelect-select").notHidden().withChild(Locator.tagWithText("option", "Chromosome")));
+        waitAndClick(Locator.tagWithAttributeContaining("option", "value", "ref"));
 
         Locator valueSelector = Locator.tagWithAttributeContaining("input", "placeholder", "Filter value");
         waitAndClick(valueSelector);
@@ -1380,6 +1373,8 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElementToDisappear(Locator.tagWithText("div", "GGCAT"));
         testColumns("1", "8401", "ATGGCTCCTG", "A",
                 "0.0009728", "intron_variant", "", "NTNG1", "3.911");
+
+        waitForElement(Locator.tagContainingText("button", "mGAP: Showing sites where:").containing("AF == 0.0009728"));
 
         // Test navigating back to table with InfoFilters intact
         waitAndClickAndWait(Locator.tagWithText("button", "View in Genome Browser"));
@@ -1494,11 +1489,8 @@ public class JBrowseTest extends BaseWebDriverTest
         // Test filtering AF with wrapped comparators
         waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
 
-        Locator columnSelector = Locator.tagWithClass("div", "MuiGridFilterForm-columnSelect");
-        waitAndClick(columnSelector);
-        Locator afOption = Locator.tagWithAttributeContaining("option", "value", "af");
-        waitAndClick(afOption);
-        waitForElementToDisappear(Locator.tagWithText("div", "1"));
+        waitAndClick(Locator.tagWithClass("select", "MuiNativeSelect-select").notHidden().withChild(Locator.tagWithText("option", "Chromosome")));
+        waitAndClick(Locator.tagWithAttributeContaining("option", "value", "af"));
 
         Locator valueSelector = Locator.tagWithAttributeContaining("input", "placeholder", "Filter value");
         waitAndClick(valueSelector);

@@ -9,6 +9,47 @@ import { observer, PropTypes as MobxPropTypes } from 'mobx-react';
 import { styled } from '@mui/material/styles';
 
 export default jbrowse => {
+    const TableNoPaddingBlock = styled(Table)(({ theme }) => ({
+        padding: 0,
+        display: 'block'
+    }))
+
+    const TableRowBgGrey = styled(TableRow)(({ theme }) => ({
+        background: theme.palette.grey[100]
+    }))
+
+    const Link = styled('div')(({ theme }) => ({
+        padding: theme.spacing(5)
+    }))
+
+    const TableRowFlexWrap = styled(TableRow)(({ theme }) => ({
+        display: 'flex',
+        flexWrap: 'wrap'
+    }))
+
+    const TableCellFieldName = styled(TableCell)(({ theme }) => ({
+        wordBreak: 'break-all',
+        minWidth: 120,
+        borderBottom: '1px solid #0003',
+        background: theme.palette.grey[200],
+        marginRight: theme.spacing(1),
+        padding: theme.spacing(0.5)
+    }))
+
+    const TableCellFieldValue = styled(TableCell)(({ theme }) => ({
+        wordBreak: 'break-word',
+        maxWidth: 500,
+        padding: theme.spacing(0.5),
+        overflow: 'auto'
+    }))
+
+    const Message = styled('div')(({ theme }) => ({
+        paddingTop: theme.spacing(5),
+        paddingLeft: theme.spacing(5),
+        paddingRight: theme.spacing(5),
+        maxWidth: 500
+    }))
+
     function round(value, decimals) {
         return Number(Math.round(Number(value+'e'+decimals)) + 'e-'+decimals);
     }
@@ -36,30 +77,21 @@ export default jbrowse => {
             }
         }
 
-        const TableS = styled(Table)(({ theme }) => ({
-            padding: 0,
-            display: 'block'
-        }))
-
-        const TableRowS = styled(TableRow)(({ theme }) => ({
-            background: theme.palette.grey[100]
-        }))
-
         return(
             <BaseCard title="Predicted Function">
-                <TableS>
+                <TableNoPaddingBlock>
                     <TableHead>
-                        <TableRowS>
+                        <TableRowBgGrey>
                             <TableCell>Effect</TableCell>
                             <TableCell>Impact</TableCell>
                             <TableCell>Gene Name</TableCell>
                             <TableCell>Position/Consequence</TableCell>
-                        </TableRowS>
+                        </TableRowBgGrey>
                     </TableHead>
                     <TableBody>
                         {tableBodyRows}
                     </TableBody>
-                </TableS>
+                </TableNoPaddingBlock>
             </BaseCard>
         )
     }
@@ -68,27 +100,6 @@ export default jbrowse => {
         if (!infoFields) {
             return null
         }
-
-        const TableRowS = styled(TableRow)(({ theme }) => ({
-            display: 'flex',
-            flexWrap: 'wrap'
-        }))
-
-        const TableCellFN = styled(TableCell)(({ theme }) => ({
-            wordBreak: 'break-all',
-            minWidth: 120,
-            borderBottom: '1px solid #0003',
-            background: theme.palette.grey[200],
-            marginRight: theme.spacing(1),
-            padding: theme.spacing(0.5)
-        }))
-
-        const TableCellFV = styled(TableCell)(({ theme }) => ({
-            wordBreak: 'break-word',
-            maxWidth: 500,
-            padding: theme.spacing(0.5),
-            overflow: 'auto'
-        }))
 
         const propertyJSX = []
         for (let display of displays){
@@ -104,17 +115,17 @@ export default jbrowse => {
                 const tooltip = infoFields[propertyName]?.description || featureInfoFields[propertyName]?.Description
                 if (value){
                     tempProp.push(
-                            <TableRowS key={propertyName + "-field"}>
+                            <TableRowFlexWrap key={propertyName + "-field"}>
                                 <Tooltip title={tooltip}>
-                                    <TableCellFN>
+                                    <TableCellFieldName>
                                         {fieldTitle}
-                                    </TableCellFN>
+                                    </TableCellFieldName>
                                 </Tooltip>
-                                <TableCellFV key={propertyName + "-val"}>
+                                <TableCellFieldValue key={propertyName + "-val"}>
                                     {/* TODO: use JEXL and formatString */}
                                     {Array.isArray(value) ? value.join(', ') :  value}
-                                </TableCellFV>
-                            </TableRowS>
+                                </TableCellFieldValue>
+                            </TableRowFlexWrap>
                     )
                 }
             }
@@ -124,20 +135,15 @@ export default jbrowse => {
             }
         }
 
-        const TableS = styled(Table)(({ theme }) => ({
-            padding: 0,
-            display: 'block'
-        }))
-
         const displayJSX = []
         for (let i = 0; i < propertyJSX.length; i++){
             displayJSX.push(
                     <BaseCard key={displays[i].title} title={displays[i].title}>
-                        <TableS>
+                        <TableNoPaddingBlock>
                             <TableBody>
                                 {propertyJSX[i]}
                             </TableBody>
-                        </TableS>
+                        </TableNoPaddingBlock>
                     </BaseCard>
             )
         }
@@ -281,34 +287,21 @@ export default jbrowse => {
 
             const href = <a href={getGenotypeURL(trackId, contig, start, end)} target="_blank">Click here to view sample-level genotypes</a>
 
-            const TableRowS = styled(TableRow)(({ theme }) => ({
-                background: theme.palette.grey[100]
-            }))
-
-            const TableS = styled(Table)(({ theme }) => ({
-                padding: 0,
-                display: 'block'
-            }))
-
-            const Link = styled('div')(({ theme }) => ({
-                padding: theme.spacing(5)
-            }))
-
             setState(
                     <div>
                         <BaseCard title="Allele Frequencies">
-                            <TableS>
+                            <TableNoPaddingBlock>
                                 <TableHead>
-                                    <TableRowS>
+                                    <TableRowBgGrey>
                                         <TableCell>Sequence</TableCell>
                                         <TableCell>Fraction</TableCell>
                                         <TableCell>Count</TableCell>
-                                    </TableRowS>
+                                    </TableRowBgGrey>
                                 </TableHead>
                                 <TableBody>
                                     {alleleTableRows}
                                 </TableBody>
-                            </TableS>
+                            </TableNoPaddingBlock>
                         </BaseCard>
                         <BaseCard title={gtTitle}>
                             <Chart
@@ -399,13 +392,6 @@ export default jbrowse => {
                 }
             }
         }
-
-        const Message = styled('div')(({ theme }) => ({
-            paddingTop: theme.spacing(5),
-            paddingLeft: theme.spacing(5),
-            paddingRight: theme.spacing(5),
-            maxWidth: 500
-        }))
 
         const message = detailsConfig.message ? <Message >{detailsConfig.message}</Message> : null
         const infoConfig = [{

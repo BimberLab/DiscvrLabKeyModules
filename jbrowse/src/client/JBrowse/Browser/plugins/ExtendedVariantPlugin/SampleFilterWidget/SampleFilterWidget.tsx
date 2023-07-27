@@ -8,6 +8,15 @@ import { observer } from 'mobx-react';
 import { styled } from '@mui/material/styles';
 
 export default jbrowse => {
+    const FormControlS = styled(FormControl)(({ theme }) => ({
+        margin: theme.spacing(2),
+        minWidth: 100,
+    }))
+
+    const ButtonS = styled(Button)(({ theme }) => ({
+        maxWidth: 125,
+        marginLeft: theme.spacing(2)
+    }))
 
     function parseSampleCSV(val) {
         if (!val) {
@@ -53,16 +62,6 @@ export default jbrowse => {
             const m = getSession(model) as SessionWithWidgets
             m.hideWidget(model)
         }
-
-        const FormControlS = styled(FormControl)(({ theme }) => ({
-            margin: theme.spacing(1),
-            minWidth: 100,
-        }))
-
-        const ButtonS = styled(Button)(({ theme }) => ({
-            maxWidth: 125,
-            marginLeft: theme.spacing(2)
-        }))
 
         return(
             <>

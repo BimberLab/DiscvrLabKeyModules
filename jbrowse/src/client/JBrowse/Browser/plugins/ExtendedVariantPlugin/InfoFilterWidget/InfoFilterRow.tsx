@@ -39,14 +39,14 @@ const FormControlNumValue = styled(FormControl)(({ theme }) => ({
     minWidth: 100
 }))
 
-const FormControlS = styled(FormControl)(({ theme }) => ({
+const FormControlCategorical = styled(FormControl)(({ theme }) => ({
     margin: theme.spacing(1),
     padding: theme.spacing(2),
-    minWidth: 400,
+    minWidth: 100,
     display: 'flex'
 }))
 
-const TableCellS = styled(TableCell)(({ theme }) => ({
+const TableCellCenteredPadded = styled(TableCell)(({ theme }) => ({
     textAlign: 'center',
     padding: theme.spacing(0.75, 0, 0.75, 1),
 }))
@@ -91,7 +91,7 @@ const InfoFilterRow = observer(props => {
             )
         } else if (filterObj) {
             return (
-                <FormControlS>
+                <FormControlCategorical>
                     <div>
                         <Select
                             labelId="category-select-label"
@@ -108,7 +108,7 @@ const InfoFilterRow = observer(props => {
                             ))}
                         </Select>
                     </div>
-                </FormControlS>
+                </FormControlCategorical>
             )
         }
     })
@@ -116,11 +116,11 @@ const InfoFilterRow = observer(props => {
     return (
         <>
             <TableRow>
-                <TableCellS>
+                <TableCellCenteredPadded>
                     {filterMap[filterObj["field"]].title || filterObj["field"]}
-                </TableCellS>
-                <TableCellS>
-                    <FormControlS>
+                </TableCellCenteredPadded>
+                <TableCellCenteredPadded>
+                    <FormControlCategorical>
                         <Select
                             labelId="category-select-label"
                             id="category-select"
@@ -141,18 +141,18 @@ const InfoFilterRow = observer(props => {
                                 )
                             })}
                         </Select>
-                    </FormControlS>
-                </TableCellS>
-                <TableCellS>
+                    </FormControlCategorical>
+                </TableCellCenteredPadded>
+                <TableCellCenteredPadded>
                     {getValueComponent(filterObj)}
-                </TableCellS>
-                <TableCellS>
+                </TableCellCenteredPadded>
+                <TableCellCenteredPadded>
                     <Tooltip title="Remove filter" aria-label="remove" placement="bottom">
                         <IconButton aria-label="remove filter" onClick={handleFilterDelete}>
                             <ClearIcon />
                         </IconButton>
                     </Tooltip>
-                </TableCellS>
+                </TableCellCenteredPadded>
             </TableRow>
         </>
     )
