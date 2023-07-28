@@ -335,7 +335,8 @@ public class JBrowseTest extends BaseWebDriverTest
         // Wait for variants to load:
         getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T"));
 
-        Assert.assertEquals("Incorrect number of variants", 37, getTotalVariantFeatures());
+        // NOTE: depending on the size of the view area, this can vary. This is more a factor of the environment that actual behavior
+        Assert.assertEquals("Incorrect number of variants", 37.0, getTotalVariantFeatures(), 1);
 
         openTrackMenuItem("Filter By Sample");
         waitForElement(Locator.tagWithText("h6", "Filter By Sample"));
