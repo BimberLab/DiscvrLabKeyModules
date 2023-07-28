@@ -266,12 +266,15 @@ const VariantTableWidget = observer(props => {
   useEffect(() => {
     let parsedLocString = null
 
-    try {
-      parsedLocString = locString ? parseLocString(locString, isValidRefNameForAssembly) : null
-    }
-    catch (e) {
-      alert('Error: ' + e.message)
-      setIsValidLocString(false)
+    // Ensure we only hit this once:
+    if (isValidLocString !== false) {
+      try {
+        parsedLocString = locString ? parseLocString(locString, isValidRefNameForAssembly) : null
+      }
+      catch (e) {
+        alert('Error: ' + e.message)
+        setIsValidLocString(false)
+      }
     }
 
     if (parsedLocString && isValidLocString) {
