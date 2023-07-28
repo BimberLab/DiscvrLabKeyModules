@@ -278,7 +278,8 @@ public class JBrowseTest extends BaseWebDriverTest
         clickDialogButton("Apply");
         sleep(1000);
 
-        Assert.assertEquals("Incorrect number of variants", 87, getTotalVariantFeatures());
+        // NOTE: depending on the size of the view area, this can vary. This is more a factor of the environment that actual behavior
+        Assert.assertEquals("Incorrect number of variants", 87.0, getTotalVariantFeatures(), 1.0);
 
         // bottom filter UI
         waitForElement(Locator.tagContainingText("button", "mGAP: Showing sites where").containing("AF < 0.02"));

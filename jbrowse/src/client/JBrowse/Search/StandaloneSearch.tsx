@@ -5,12 +5,12 @@ import './search.css';
 
 import LogSession from '../Browser/plugins/LogSession/index';
 import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index';
-import { fetchSession } from '../utils';
+import { fetchSession, navigateToBrowser } from '../utils';
 import StandaloneSearchComponent from './components/StandaloneSearchComponent';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
-const StandaloneSearch = observer(({ sessionId, tableUrl, trackId, selectedRegion }: { sessionId: any, tableUrl: boolean, trackId?: string, selectedRegion?: string}) => {
+const StandaloneSearch = observer(({ sessionId, selectedRegion }: { sessionId: any, selectedRegion?: string}) => {
     if (!sessionId){
         return(<p>No session Id provided. Please have your site admin use the customize icon to set the session ID for this webpart.</p>)
     }
@@ -35,8 +35,14 @@ const StandaloneSearch = observer(({ sessionId, tableUrl, trackId, selectedRegio
     const { session } = state
     const assemblyName = state.config.assembly.name
 
+    const handleSearch = (locString) => {
+        if (locString) {
+            navigateToBrowser(sessionId, locString)
+        }
+    }
+
     return (
-        <StandaloneSearchComponent session={session} tableUrl={tableUrl} trackId={trackId} assemblyName={assemblyName} selectedRegion={selectedRegion}/>
+        <StandaloneSearchComponent session={session} onSelect={handleSearch} assemblyName={assemblyName} selectedRegion={selectedRegion}/>
     )
 })
 

@@ -18,7 +18,7 @@ import MenuButton from './MenuButton';
 
 import '../VariantTable.css';
 import '../../jbrowse.css';
-import { FieldModel, getGenotypeURL, navigateToBrowser, navigateToSearch } from '../../utils';
+import { FieldModel, getGenotypeURL, navigateToBrowser, navigateToSearch, navigateToTable } from '../../utils';
 import LoadingIndicator from './LoadingIndicator';
 import { NoAssemblyRegion } from '@jbrowse/core/util/types';
 import StandaloneSearchComponent from '../../Search/components/StandaloneSearchComponent';
@@ -78,8 +78,6 @@ const VariantTableWidget = observer(props => {
     set(null)
   }
 
-  const [ metadata, setMetadata ] = useState(null)
-
   // Contains all features from the API call once the useEffect finished
   const [features, setFeatures] = useState<VcfFeature[]>([])
 
@@ -133,7 +131,6 @@ const VariantTableWidget = observer(props => {
         track.configuration.displays[0].renderer.infoFilters.valueJSON
       )
 
-      setMetadata(metadata)
       setFeatures(filteredFeatures)
 
       if (metadata?.INFO) {
@@ -290,6 +287,12 @@ const VariantTableWidget = observer(props => {
       />
   )
 
+  const handleSearch = (locString) => {
+    if (locString) {
+      navigateToTable(sessionId, locString, trackId)
+    }
+  }
+
   return (
     <>
       <LoadingIndicator isOpen={!dataLoaded}/>
@@ -321,7 +324,7 @@ const VariantTableWidget = observer(props => {
       <div style={{marginBottom: "10px"}}>
         <Grid container spacing={1} justifyContent="flex-start" alignItems="center">
           <Grid key='search' item xs="auto">
-            <StandaloneSearchComponent session={session} tableUrl={true} assemblyName={assemblyName} trackId={trackId} selectedRegion={isValidLocString ? locString : ""}/>
+            <StandaloneSearchComponent session={session} onSelect={handleSearch} forVariantTable={true} assemblyName={assemblyName} selectedRegion={isValidLocString ? locString : ""}/>
           </Grid>
 
           <Grid key='filterMenu' item xs="auto">
