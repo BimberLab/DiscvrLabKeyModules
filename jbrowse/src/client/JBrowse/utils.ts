@@ -4,6 +4,7 @@ import { createViewState, loadPlugins } from '@jbrowse/react-linear-genome-view'
 import { ActionURL, Ajax } from '@labkey/api';
 import { getGridNumericOperators, GridColDef } from '@mui/x-data-grid';
 import { multiModalOperator, multiValueComparator } from './VariantSearch/constants';
+import { VcfFeature } from '@jbrowse/plugin-variants';
 
 export function arrayMax(array) {
     return Array.isArray(array) ? Math.max(...array) : array

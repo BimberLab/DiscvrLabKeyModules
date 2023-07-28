@@ -1,7 +1,8 @@
 import { observer } from 'mobx-react';
 import {
     DataGrid,
-    GridColDef, GridColumnVisibilityModel,
+    GridColDef,
+    GridColumnVisibilityModel,
     GridPaginationModel,
     GridRenderCellParams,
     GridToolbarColumnsButton,
@@ -14,7 +15,6 @@ import SearchIcon from '@mui/icons-material/Search';
 import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { AppBar, Box, Button, Dialog, Paper, Popover, Toolbar, Tooltip, Typography } from '@mui/material';
-import { APIDataToRows } from '../dataUtils';
 import ArrowPagination from './ArrowPagination';
 import { FilterFormModal } from './FilterFormModal';
 import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache';
@@ -58,7 +58,12 @@ const VariantTableWidget = observer(props => {
     }
 
     function handleSearch(data) {
-        setFeatures(APIDataToRows(data.data, trackId))
+        setFeatures(data.data.map((obj, idx) => {
+            obj["id"] = idx
+            obj["trackId"] = trackId
+
+            return obj
+        }))
         setDataLoaded(true)
     }
 

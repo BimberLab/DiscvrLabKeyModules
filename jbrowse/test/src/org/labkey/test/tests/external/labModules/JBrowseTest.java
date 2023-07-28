@@ -1328,7 +1328,7 @@ public class JBrowseTest extends BaseWebDriverTest
         testColumns("1", "2", "A", "T", "0.029", "", "HIGH", "", "7.292");
 
         // Test sorting
-        Locator referenceSort = Locator.tagWithText("div", "Reference");
+        Locator referenceSort = Locator.tagWithText("div", "Ref Allele");
         waitForElement(referenceSort);
         WebElement elem = referenceSort.findElement(getDriver());
         elem.click();

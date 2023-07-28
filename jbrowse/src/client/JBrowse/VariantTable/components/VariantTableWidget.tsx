@@ -13,12 +13,19 @@ import {
   GridRenderCellParams,
   GridToolbar
 } from '@mui/x-data-grid';
-import { filterFeatures, rawFeatureToRow } from '../dataUtils';
 import MenuButton from './MenuButton';
 
 import '../VariantTable.css';
 import '../../jbrowse.css';
-import { FieldModel, getGenotypeURL, navigateToBrowser, navigateToSearch, navigateToTable } from '../../utils';
+import {
+  FieldModel,
+  getGenotypeURL,
+  navigateToBrowser,
+  navigateToSearch,
+  navigateToTable,
+  passesInfoFilters,
+  passesSampleFilters
+} from '../../utils';
 import LoadingIndicator from './LoadingIndicator';
 import { NoAssemblyRegion } from '@jbrowse/core/util/types';
 import StandaloneSearchComponent from '../../Search/components/StandaloneSearchComponent';
@@ -27,6 +34,7 @@ import { BaseFeatureDataAdapter } from '@jbrowse/core/data_adapters/BaseAdapter'
 import { lastValueFrom } from 'rxjs';
 import { toArray } from 'rxjs/operators';
 import { ActionURL, Ajax } from '@labkey/api';
+import { deserializeFilters } from '../../Browser/plugins/ExtendedVariantPlugin/InfoFilterWidget/filterUtil';
 
 const VariantTableWidget = observer(props => {
   const { assembly, assemblyName, trackId, locString, parsedLocString, sessionId, session, pluginManager } = props
@@ -76,6 +84,44 @@ const VariantTableWidget = observer(props => {
 
   function handleMenuClose(set) {
     set(null)
+  }
+
+  function resolveValue(key: string, feature: VcfFeature) {
+    let val = feature.get(key) ?? feature.get("INFO")[key] ?? null
+    if (Array.isArray(val)) {
+      val = val.filter(x => x !== null && x !== '').join(", ") ?? ""
+    }
+
+    return val
+  }
+
+  function rawFeatureToRow(feature: VcfFeature, id: number, columns: GridColDef[], trackId: string) {
+    const ret = {
+      id: id,
+      trackId: trackId
+    }
+
+    columns.forEach(col => {
+      // NOTE: upperCase() might be needed for CHROM, START, etc.
+      ret[col.field] = resolveValue(col.field, feature) ?? resolveValue(col.field.toUpperCase(), feature)
+    })
+
+    return(ret)
+  }
+
+  function filterFeatures(features, activeSamples, filters) {
+    let ret = []
+
+    let processedActiveSamples = activeSamples === "" ? [] : activeSamples.split(",")
+    let processedFilters = deserializeFilters(JSON.parse(filters))
+
+    features.forEach((feature) => {
+      if (passesSampleFilters(feature, processedActiveSamples) && passesInfoFilters(feature, processedFilters)) {
+        ret.push(feature)
+      }
+    })
+
+    return ret
   }
 
   // Contains all features from the API call once the useEffect finished
@@ -165,6 +211,10 @@ const VariantTableWidget = observer(props => {
                 }
               }
             });
+
+            // NOTE: for now these are only available in free-text search
+            delete fields['genomicPosition']
+            delete fields['variableSamples']
 
             setInfoFields(fields);
 
@@ -275,7 +325,7 @@ const VariantTableWidget = observer(props => {
   const gridElement = (
     <DataGrid
         columns={[...gridColumns, actionsCol]}
-        rows={features.map((rawFeature, id) => rawFeatureToRow(rawFeature, id, trackId))}
+        rows={features.map((rawFeature, id) => rawFeatureToRow(rawFeature, id, gridColumns, trackId))}
         slots={{ toolbar: GridToolbar }}
         pageSizeOptions={[10,25,50,100]}
         paginationModel={ pageSizeModel }
