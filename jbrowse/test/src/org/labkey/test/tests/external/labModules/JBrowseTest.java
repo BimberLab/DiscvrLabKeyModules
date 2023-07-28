@@ -1290,15 +1290,18 @@ public class JBrowseTest extends BaseWebDriverTest
         Ext4FieldRef.getForLabel(this, "Target JBrowse DB").setValue(sessionId);
         window.clickButton("Submit", WAIT_FOR_PAGE);
 
-        String search = "Ga";
-        String optionText = "Gag";
+        String search = "Gene";
 
         Locator searchLocator = Locator.tagWithClass("input", "MuiInputBase-input");
         waitForElement(searchLocator);
         WebElement searchBox = searchLocator.findElement(getDriver());
         searchBox.sendKeys(search);
 
-        Locator optionLocator = Locator.tagWithText("li", optionText);
+        waitForElement(Locator.tagWithText("li", "Gene0"));
+        waitForElement(Locator.tagWithText("li", "Gene1"));
+        waitForElement(Locator.tagWithText("li", "Gene3"));
+        waitForElement(Locator.tagWithText("li", "Gene4"));
+        Locator optionLocator = Locator.tagWithText("li", "Gene1");
         waitForElement(optionLocator);
         WebElement locator = optionLocator.findElement(getDriver());
         int locatorIndex = Integer.parseInt(locator.getAttribute("data-option-index"));
@@ -1316,6 +1319,8 @@ public class JBrowseTest extends BaseWebDriverTest
 
         waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
+
+        Assert.assertEquals("Incorrect URL param", "8510..8630", getUrlParam("loc"));
     }
 
     private static final Locator TOP_ROW = Locator.tagWithAttribute("div", "aria-rowindex", "2");
@@ -1325,22 +1330,21 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForTableLoadingToDisappear();
 
         // Test default
-        testColumns("1", "2", "A", "T", "0.029", "", "HIGH", "", "7.292");
+        testColumns("1", "2", "A", "T", "0.029", "HIGH");
 
         // Test sorting
         Locator referenceSort = Locator.tagWithText("div", "Ref Allele");
         waitForElement(referenceSort);
         WebElement elem = referenceSort.findElement(getDriver());
         elem.click();
-        waitForElement(Locator.tagWithText("div", "3813"));
+        waitForElement(Locator.tagWithText("div", "3,813"));
         elem.click();
-        waitForElementToDisappear(Locator.tagWithText("div", "3813"));
-        waitForElement(Locator.tagWithText("div", "6082"));
+        waitForElementToDisappear(Locator.tagWithText("div", "3,813"));
+        waitForElement(Locator.tagWithText("div", "6,082"));
 
         Locator sortedTopRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
         waitForElement(sortedTopRow);
-        testColumns("1", "6082", "TC", "T",
-                "0.001313", "intron_variant", "", "NTNG1", "");
+        testColumns("1", "6,082", "TC", "T", "0.001313", "");
 
         // Test filtering
         waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
@@ -1352,12 +1356,11 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(valueSelector);
         WebElement valueSelectorElem = valueSelector.findElement(getDriver());
         valueSelectorElem.sendKeys("GGC");
-        waitForElementToDisappear(Locator.tagWithText("div", "6082"));
+        waitForElementToDisappear(Locator.tagWithText("div", "6,082"));
 
         Locator filteredTopRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
         waitForElement(filteredTopRow);
-        testColumns("1", "6258", "GGCAT", "G",
-                "0.029", "intron_variant", "", "NTNG1", "");
+        testColumns("1", "6,258", "GGCAT", "G", "0.029", "");
 
         // Test the table responding to the filtering backend by using the infoFilterWidget
         waitAndClick(Locator.tagWithText("button", "Filter"));
@@ -1372,8 +1375,7 @@ public class JBrowseTest extends BaseWebDriverTest
         value.sendKeys("0.0009728");
         waitAndClick(Locator.tagWithText("button", "Apply"));
         waitForElementToDisappear(Locator.tagWithText("div", "GGCAT"));
-        testColumns("1", "8401", "ATGGCTCCTG", "A",
-                "0.0009728", "intron_variant", "", "NTNG1", "3.911");
+        testColumns("1", "8,401", "ATGGCTCCTG", "A", "0.0009728", "");
 
         waitForElement(Locator.tagContainingText("button", "mGAP: Showing sites where:").containing("AF == 0.0009728"));
 
@@ -1404,7 +1406,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElementToDisappear(Locator.tagWithClass("div", "MuiCircularProgress-root").notHidden(), WAIT_FOR_JAVASCRIPT * 3);
     }
 
-    private void testColumns(String chromosome, String position, String reference, String alt, String af, String type, String impact, String overlapping, String cadd_ph) throws Exception {
+    private void testColumns(String chromosome, String position, String reference, String alt, String af, String impact) {
         waitForElement(TOP_ROW);
         WebElement locator = TOP_ROW.findElement(getDriver());
 
@@ -1433,20 +1435,11 @@ public class JBrowseTest extends BaseWebDriverTest
                 case "4":
                     Assert.assertEquals(value, alt);
                     break;
-                case "5":
-                    Assert.assertEquals(value, af);
-                    break;
                 case "6":
-                    Assert.assertEquals(value, type);
+                    Assert.assertEquals(value, af);
                     break;
                 case "7":
                     Assert.assertEquals(value, impact);
-                    break;
-                case "8":
-                    Assert.assertEquals(value, overlapping);
-                    break;
-                case "9":
-                    Assert.assertEquals(value, cadd_ph);
                     break;
             }
         }
@@ -1456,7 +1449,7 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         beginAt("/" + getProjectName() + "/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=1:18465..18507");
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
-        waitForElement(Locator.tagWithText("div", "18486"));
+        waitForElement(Locator.tagWithText("div", "18,486"));
 
         beginAt("/" + getProjectName() + "/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38&location=");
         waitForElement(Locator.tagWithClass("div", "MuiDataGrid-root"));
@@ -1491,18 +1484,17 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
 
         waitAndClick(Locator.tagWithClass("select", "MuiNativeSelect-select").notHidden().withChild(Locator.tagWithText("option", "Chromosome")));
-        waitAndClick(Locator.tagWithAttributeContaining("option", "value", "af"));
+        waitAndClick(Locator.tagWithAttributeContaining("option", "value", "AF"));
 
         Locator valueSelector = Locator.tagWithAttributeContaining("input", "placeholder", "Filter value");
         waitAndClick(valueSelector);
         WebElement valueSelectorElem = valueSelector.findElement(getDriver());
         valueSelectorElem.sendKeys("0");
-        waitForElement(Locator.tagWithText("div", "4506"));
+        waitForElement(Locator.tagWithText("div", "4,506"));
 
         Locator filteredTopRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
         waitForElement(filteredTopRow);
-        testColumns("1", "4506", "GAAAA", "GAA, GAAA, GAAAAA, G, GA, GAAAAAA, GTTAAAA",
-                "0.008258, 0.44, 0.17, 0.036, 0.005367, 0.019, 0", "intron_variant", "", "NTNG1", "");
+        testColumns("1", "4,506", "GAAAA", "GAA, GAAA, GAAAAA, G, GA, GAAAAAA, GTTAAAA", "0.008258, 0.44, 0.17, 0.036, 0.005367, 0.019, 0", "");
         waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
     }
 

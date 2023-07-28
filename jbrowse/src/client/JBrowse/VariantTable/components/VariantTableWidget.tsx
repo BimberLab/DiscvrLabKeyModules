@@ -20,6 +20,7 @@ import '../../jbrowse.css';
 import {
   FieldModel,
   getGenotypeURL,
+  isVariant,
   navigateToBrowser,
   navigateToSearch,
   navigateToTable,
@@ -182,6 +183,19 @@ const VariantTableWidget = observer(props => {
         track.configuration.displays[0].renderer.activeSamples.value, 
         track.configuration.displays[0].renderer.infoFilters.valueJSON
       )
+
+      // Maintain a cached list of all non-WT samples at this position:
+      filteredFeatures.forEach(variant => {
+        if (!variant.get('INFO')['variableSamples'] && variant.get('SAMPLES')) {
+          variant.get('INFO')['variableSamples'] = []
+          Object.keys(variant.get('SAMPLES')).forEach(function(sampleId) {
+            const gt = variant.get('SAMPLES')[sampleId]["GT"][0]
+            if (isVariant(gt)) {
+              variant.get('INFO')['variableSamples'].push(sampleId)
+            }
+          })
+        }
+      })
 
       setFeatures(filteredFeatures)
 
