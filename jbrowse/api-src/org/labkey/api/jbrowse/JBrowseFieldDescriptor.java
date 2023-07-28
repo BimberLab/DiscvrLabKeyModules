@@ -180,7 +180,7 @@ public class JBrowseFieldDescriptor {
         fieldDescriptorJSON.put("name", _fieldName);
         fieldDescriptorJSON.put("label", _label == null ? _fieldName : _label);
         fieldDescriptorJSON.put("description", _description);
-        fieldDescriptorJSON.put("type", _type.toString());
+        fieldDescriptorJSON.put("type", _type == null ? null : _type.toString());
         fieldDescriptorJSON.put("isInDefaultColumns", _isInDefaultColumns);
         fieldDescriptorJSON.put("isIndexed", _isIndexed);
         fieldDescriptorJSON.put("isMultiValued", _isMultiValued);

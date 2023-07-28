@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Menu } from '@material-ui/core';
+import { Button, Menu } from '@mui/material';
 
 export default function MenuButton(props) {
   return (

@@ -139,9 +139,9 @@ public class JBrowseTestHelper
     public static void waitForJBrowseToLoad(BaseWebDriverTest test)
     {
         test.waitForElementToDisappear(Locator.tagWithText("p", "Loading...")); //the initial message before getSession
-        test.waitForElement(Locator.tagWithClass("span", "MuiIconButton-label").notHidden()); //this is the top-left icon
+        test.waitForElement(Locator.tagWithClass("span", "MuiTouchRipple-root").notHidden()); //this is the top-left icon
         test.waitForElement(Locator.tagWithAttribute("button", "title", "close this track").notHidden());
-        test.waitForElement(Locator.tagWithClassContaining("span", "MuiTypography-root").notHidden(), WebDriverWrapper.WAIT_FOR_PAGE); //this is the icon from the track label
+        test.waitForElement(Locator.tagWithClassContaining("button", "MuiButtonBase-root").notHidden(), WebDriverWrapper.WAIT_FOR_PAGE); //this is the icon from the track label
 
         test.waitForElementToDisappear(Locator.tagWithText("div", "Loading...")); //track data
         test.waitForElementToDisappear(Locator.tagWithText("p", "Loading..."));

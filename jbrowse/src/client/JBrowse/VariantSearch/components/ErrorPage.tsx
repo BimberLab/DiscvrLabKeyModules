@@ -1,6 +1,6 @@
 import React from 'react';
 import { ErrorInfo } from 'react';
-import { Box, Typography, Paper } from '@material-ui/core';
+import { Box, Typography, Paper } from '@mui/material';
 
 interface ErrorPageProps {
     error: Error | undefined;

@@ -1,14 +1,11 @@
 import { ConfigurationReference, getConf } from '@jbrowse/core/configuration';
 import { AnyConfigurationModel, } from '@jbrowse/core/configuration/configurationSchema';
 import { getContainingTrack, getContainingView, getSession } from '@jbrowse/core/util';
-import FilterListIcon from '@material-ui/icons/FilterList';
-import VisibilityIcon from '@material-ui/icons/Visibility';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import configSchemaF from './configSchema';
 import { getEnv, IAnyStateTreeNode, types } from 'mobx-state-tree';
-import PaletteIcon from '@material-ui/icons/Palette';
-import {
-   default as SetMaxHeightDlg
-} from '@jbrowse/plugin-linear-genome-view/src/LinearBasicDisplay/components/SetMaxHeight';
+import PaletteIcon from '@mui/icons-material/Palette';
 import { LinearGenomeViewModel } from '@jbrowse/plugin-linear-genome-view';
 import { navigateToSearch, navigateToTable } from '../../../../utils';
 
@@ -54,7 +51,8 @@ export default jbrowse => {
             const session = getSession(self)
             const track = getContainingTrackWithConfig(self)
 
-            const trackId = getConf(track, 'trackId')
+            // @ts-ignore
+            const trackId = getConf(track, ['trackId'])
             const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])
 
             const widgetId = 'Variant-' + trackId;
@@ -195,14 +193,6 @@ export default jbrowse => {
                         self.setDisplayMode(val)
                      },
                   })),
-               }, {
-                  label: 'Set max height',
-                  onClick: () => {
-                     getSession(self).queueDialog((doneCallback: Function) => [
-                        SetMaxHeightDlg,
-                        {model: self, handleClose: doneCallback},
-                     ])
-                  }
                }, {
                   label: 'View As Table',
                   onClick: () => {
