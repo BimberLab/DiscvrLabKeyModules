@@ -106,6 +106,12 @@ const VariantTableWidget = observer(props => {
       ret[col.field] = resolveValue(col.field, feature) ?? resolveValue(col.field.toUpperCase(), feature)
     })
 
+    // The VcfFeature uses 0-based coordinates
+    if (ret['start']) {
+      ret['start0'] = ret['start']
+      ret['start'] = ret['start'] + 1
+    }
+
     return(ret)
   }
 
@@ -214,7 +220,6 @@ const VariantTableWidget = observer(props => {
 
             // NOTE: for now these are only available in free-text search
             delete fields['genomicPosition']
-            delete fields['variableSamples']
 
             setInfoFields(fields);
 
