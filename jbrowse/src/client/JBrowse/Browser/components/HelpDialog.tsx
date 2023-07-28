@@ -8,6 +8,7 @@ const HelpDialog = observer(props => {
     const { isOpen, bgColor }  = props
 
     const handleClose = () => {
+        setActiveImage(0)
         setDialogOpen(false)
     }
 
