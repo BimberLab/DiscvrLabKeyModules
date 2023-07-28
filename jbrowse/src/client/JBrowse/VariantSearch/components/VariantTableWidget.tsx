@@ -65,11 +65,14 @@ const VariantTableWidget = observer(props => {
     session.hideWidget(widget)
   } 
 
-  function handleQuery(passedFilters) {
+  function handleQuery(passedFilters, pushToHistory) {
     const encodedSearchString = createEncodedFilterString(passedFilters, false);
     const currentUrl = new URL(window.location.href);
     currentUrl.searchParams.set("searchString", encodedSearchString);
-    window.history.pushState(null, "", currentUrl.toString());
+
+    if (pushToHistory) {
+      window.history.pushState(null, "", currentUrl.toString());
+    }
 
     setFilters(passedFilters);
     setDataLoaded(false)
@@ -120,6 +123,7 @@ const VariantTableWidget = observer(props => {
             : fullDisplayValue
         );
       };
+
 
       window.addEventListener('resize', truncateDisplayValue)
       truncateDisplayValue()
@@ -231,6 +235,11 @@ const VariantTableWidget = observer(props => {
 
   // API call to retrieve the requested features.
   useEffect(() => {
+    const handlePopState = () => {
+      window.location.reload();
+    };
+    window.addEventListener('popstate', handlePopState);
+
     async function fetch() {
       await fetchFieldTypeInfo(sessionId, trackGUID,
         (fields: FieldModel[], groups: string[], promotedFilters: Map<string, Filter[]>) => {
@@ -248,7 +257,7 @@ const VariantTableWidget = observer(props => {
           setAllowedGroupNames(groups)
           setPromotedFilters(promotedFilters)
 
-          handleQuery(searchStringToInitialFilters(fields.map((x) => x.name)))
+          handleQuery(searchStringToInitialFilters(fields.map((x) => x.name)), false)
         },
         (error) => {
           setError(error)
@@ -257,6 +266,9 @@ const VariantTableWidget = observer(props => {
 
     fetch()
 
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
   }, [pluginManager, parsedLocString, session.visibleWidget])
 
   if (!view) {
@@ -397,7 +409,7 @@ const VariantTableWidget = observer(props => {
             fieldTypeInfo: fieldTypeInfo,
             allowedGroupNames: allowedGroupNames,
             promotedFilters: promotedFilters,
-            handleQuery: (filters) => handleQuery(filters)
+            handleQuery: (filters) => handleQuery(filters, true)
         }}
   />
   );
