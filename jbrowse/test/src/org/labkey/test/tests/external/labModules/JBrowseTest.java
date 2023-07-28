@@ -113,8 +113,20 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void openTrackMenuItem(String name)
     {
+        openTrackMenuItem(name, false);
+    }
+
+    private void openTrackMenuItem(String name, boolean waitForPage)
+    {
         waitAndClick(Locator.tagWithAttribute("button", "data-testid", "track_menu_icon"));
-        waitAndClick(Locator.tagContainingText("span", name));
+        if (waitForPage)
+        {
+            waitAndClickAndWait(Locator.tagContainingText("span", name));
+        }
+        else
+        {
+            waitAndClick(Locator.tagContainingText("span", name));
+        }
     }
 
     private void testColorWidget()
@@ -1149,7 +1161,7 @@ public class JBrowseTest extends BaseWebDriverTest
             Assert.assertEquals("A", jsonObject.getString("ref"));
         }
 
-        testLuceneSearchUI(sessionId, trackId);
+        testLuceneSearchUI(sessionId);
     }
 
     private void testOutputFileProcessing() throws Exception
@@ -1321,7 +1333,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
 
-        Assert.assertEquals("Incorrect URL param", "SIVmac239_Test:4,165..5,370", getUrlParam("location", true));
+        Assert.assertEquals("Incorrect URL param", "SIVmac239_Test:4165..5370", getUrlParam("location", true));
     }
 
     private static final Locator TOP_ROW = Locator.tagWithAttribute("div", "aria-rowindex", "2");
@@ -1504,21 +1516,41 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
     }
 
-    private void testLuceneSearchUI(String sessionId, String trackId)
+    private void testLuceneSearchUI(String sessionId)
     {
         beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=" + sessionId);
-        waitForElement(Locator.tagWithText("span", "Show all regions in assembly"));
-        waitAndClick(Locator.tagWithText("span", "Open"));
+        waitAndClick(Locator.tagContainingText("button", "Show all regions in assembly").withClass("MuiButtonBase-root"));
         waitAndClick(Locator.tagWithText("p", "No tracks active."));
-        waitAndClick(Locator.tagWithText("span", "Open Track Selector"));
+        waitAndClick(Locator.tagWithText("button", "Open track selector"));
 
         Locator l = Locator.tagWithText("span", "TestVCF").withClass("MuiFormControlLabel-label");
         waitAndClick(l);
         getDriver().findElement(Locator.tag("body")).sendKeys(Keys.ESCAPE); //close modal
-        waitAndClick(Locator.tagWithAttribute("button", "data-testid", "track_menu_icon"));
-        waitAndClickAndWait(Locator.tagContainingText("span", "Variant Search"));
+
+        openTrackMenuItem("Variant Search", true);
 
         // Now test UI:
         waitForElement(Locator.tagWithText("span", "0.029"));
+
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Ref Allele")).click();
+
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "equals")).click();
+
+        waitForElement(Locator.tagWithClass("input", "MuiInputBase-inputSizeSmall")).sendKeys("C");
+
+        // TODO: index isnt very stable. we need to differentiate the modal button from the grid button bar:
+        waitAndClick(Locator.tagWithText("button", "Search").index(1));
+
+        // indicates row is filtered:
+        waitForElementToDisappear(Locator.tagWithText("span", "2"));
+
+        // should re-open the dialog
+        waitForElement(Locator.tagWithText("button", "ref equals C")).click();
+        waitForElement(Locator.tagWithText("button", "Remove Filter")).click();
+        waitAndClick(Locator.tagWithText("button", "Search").index(1));
+        waitForElement(Locator.tagWithText("span", "2"));
     }
 }

@@ -14,8 +14,6 @@ import {
   GridToolbar
 } from '@mui/x-data-grid';
 import MenuButton from './MenuButton';
-
-import '../VariantTable.css';
 import '../../jbrowse.css';
 import {
   FieldModel,

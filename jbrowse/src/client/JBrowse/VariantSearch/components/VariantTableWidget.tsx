@@ -32,9 +32,6 @@ import {
     truncateToValidGUID,
 } from '../../utils';
 import { parseLocString } from '@jbrowse/core/util';
-
-
-import '../VariantTable.css';
 import '../../jbrowse.css';
 import LoadingIndicator from './LoadingIndicator';
 import { BaseFeatureDataAdapter } from '@jbrowse/core/data_adapters/BaseAdapter';
