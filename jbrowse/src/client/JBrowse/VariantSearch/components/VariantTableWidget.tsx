@@ -146,6 +146,7 @@ const VariantTableWidget = observer(props => {
                     <span className='table-cell-truncate'>{displayValue}</span>
                 </Typography>
                 {renderPopover &&
+                        // TODO
                         <Popover
                                 id="mouse-over-popover"
                                 open={open}
@@ -233,7 +234,7 @@ const VariantTableWidget = observer(props => {
     // False until initial data load or an error:
     const [dataLoaded, setDataLoaded] = useState(!parsedLocString)
 
-    const [pageSizeModel, setPageSizeModel] = React.useState<GridPaginationModel>({ page: 1, pageSize: 25 });
+    const [pageSizeModel, setPageSizeModel] = React.useState<GridPaginationModel>({ page: 0, pageSize: 50 });
 
     // API call to retrieve the requested features.
     useEffect(() => {
@@ -321,6 +322,12 @@ const VariantTableWidget = observer(props => {
             } as NoAssemblyRegion)
 
             const extendedFeatures = await ret.pipe(toArray()).toPromise()
+
+            // TODO: sanity check this to ensure we have the right feature, especially if there are different alleles
+            if (extendedFeatures.length > 1) {
+
+            }
+
             const feature = extendedFeatures[0];
 
             const trackId = getConf(track, 'trackId')

@@ -7,11 +7,10 @@ import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import CardActions from '@mui/material/CardActions';
 import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
 import { FieldModel, Filter, getOperatorsForField, searchStringToInitialFilters } from '../../utils';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { Box, Menu } from '@mui/material';
-import { classes, Root as StyleRoot } from './style';
+import { styled } from '@mui/material/styles';
 
 export declare type FilterFormProps = {
     handleQuery: (filters: Filter[]) => void,
@@ -21,6 +20,61 @@ export declare type FilterFormProps = {
     allowedGroupNames?: string[],
     promotedFilters?: Map<string, Filter[]>
 }
+
+const FormControlMinWidth = styled(FormControl)(({ theme }) => ({
+        minWidth: 200,
+        marginRight: theme.spacing(2)
+}))
+
+const TextFieldMinWidth = styled(TextField)(({ theme }) => ({
+    minWidth: 200,
+    marginRight: theme.spacing(2)
+}))
+
+const CardTransparent = styled(Card)(({ theme }) => ({
+    backgroundColor: 'transparent',
+    border: '1px solid rgba(0, 0, 0, 0.12)'
+}))
+
+const CardActionsJustify = styled(CardActions)(({ theme }) => ({
+    display: 'flex',
+    justifyContent: 'flex-end',
+}))
+
+const AddFilterExternalWrapper = styled('div')(({ theme }) => ({
+    display: 'flex',
+    justifyContent: 'space-between',
+    width: '100%'
+}))
+
+const FilterRow = styled('div')(({ theme }) => ({
+    display: "flex",
+    alignItems: "center",
+    marginTop: theme.spacing(2),
+    justifyContent: "center", // Add this line to center the contents of the filter map call
+}))
+
+const CardActionsCenteredContent = styled(CardActions)(({ theme }) => ({
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    "& > :not(:first-child)": {
+        textAlign: "center",
+    }
+}))
+
+const FormScroll = styled('div')(({ theme }) => ({
+    width: '100%',
+    margin: '0 auto',
+    maxHeight: 'calc(100vh - 200px)',
+    overflowY: 'auto'
+}))
+
+const SubmitAndExternal = styled('div')(({ theme }) => ({
+    display: "flex",
+    gap: theme.spacing(2)
+}))
 
 const FilterForm = (props: FilterFormProps ) => {
     const { handleQuery, setFilters, handleClose, fieldTypeInfo, allowedGroupNames, promotedFilters } = props
@@ -100,159 +154,162 @@ const FilterForm = (props: FilterFormProps ) => {
         localSetFilters(toAdd)
     }
 
-    return (
-        <StyleRoot className={classes.root}>
-            <Card className={classes.card} elevation={0}>
-                <form>
-                    <CardContent className={classes.centeredContent}>
-                        <div className={classes.addFilterExternalWrapper}>
-                            <Box padding={'5px'}>
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    onClick={handleAddFilter}
-                                >
-                                    Add Search Filter
-                                </Button>
-                                <Button
-                                    ref={buttonRef}
-                                    style={{marginLeft: '5px'}}
-                                    variant="contained"
-                                    color="primary"
-                                    hidden={!!promotedFilters}
-                                    onClick={() => setCommonFilterMenuOpen(!commonFilterMenuOpen)}
-                                    endIcon={<KeyboardArrowDownIcon />}
-                                >
-                                    Common Filters
-                                </Button>
-                                <Menu open={commonFilterMenuOpen} onClose={handleMenuClose} anchorEl={buttonRef.current}>
-                                    {Array.from(promotedFilters?.keys()).map((label) => (
-                                        <MenuItem key={label} onClick={(e) => handleMenuClick(label)}>{label}</MenuItem>
-                                    ))}
-                                </Menu>
-                            </Box>
-                        </div>
+    const highlightedSx = {
+        border: '2px solid red',
+        borderRadius: '4px'
+    }
 
-                        <div className={classes.formScroll}>
-                            {filters.map((filter, index) => (
-                                <div key={index} className={`${classes.filterRow}`}>
-                                    <FormControl className={`${classes.formControl} ${highlightedInputs[index]?.field ? classes.highlighted : ''}`}>
-                                        <InputLabel id="field-label">Field</InputLabel>
+    return (
+        <CardTransparent elevation={0}>
+            <form>
+                <CardActionsCenteredContent>
+                    <AddFilterExternalWrapper>
+                        <Box padding={'5px'}>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={handleAddFilter}
+                            >
+                                Add Search Filter
+                            </Button>
+                            <Button
+                                ref={buttonRef}
+                                style={{marginLeft: '5px'}}
+                                variant="contained"
+                                color="primary"
+                                hidden={!!promotedFilters}
+                                onClick={() => setCommonFilterMenuOpen(!commonFilterMenuOpen)}
+                                endIcon={<KeyboardArrowDownIcon />}
+                            >
+                                Common Filters
+                            </Button>
+                            <Menu open={commonFilterMenuOpen} onClose={handleMenuClose} anchorEl={buttonRef.current}>
+                                {Array.from(promotedFilters?.keys()).map((label) => (
+                                    <MenuItem key={label} onClick={(e) => handleMenuClick(label)}>{label}</MenuItem>
+                                ))}
+                            </Menu>
+                        </Box>
+                    </AddFilterExternalWrapper>
+
+                    <FormScroll>
+                        {filters.map((filter, index) => (
+                            <FilterRow key={index} >
+                                <FormControlMinWidth sx={ highlightedInputs[index]?.field ? highlightedSx : null }>
+                                    <InputLabel id="field-label">Field</InputLabel>
+                                    <Select
+                                        labelId="field-label"
+                                        value={filter.field}
+                                        onChange={(event) =>
+                                            handleFilterChange(index, "field", event.target.value)
+                                        }
+                                    >
+                                        <MenuItem value="">
+                                            <em>None</em>
+                                        </MenuItem>
+                                        {fieldTypeInfo.map((field) => (
+                                            <MenuItem key={field.name} value={field.name}>
+                                                {field.label ?? field.name}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControlMinWidth>
+
+                                <FormControlMinWidth sx={ highlightedInputs[index]?.operator ? highlightedSx : null } >
+                                    <InputLabel id="operator-label">Operator</InputLabel>
+                                    <Select
+                                        labelId="operator-label"
+                                        value={filter.operator}
+                                        onChange={(event) =>
+                                            handleFilterChange(index, "operator", event.target.value)
+                                        }
+                                    >
+                                        <MenuItem value="None">
+                                            <em>None</em>
+                                        </MenuItem>
+
+                                        {getOperatorsForField(fieldTypeInfo.find(obj => obj.name === filter.field)) ? (
+                                            getOperatorsForField(fieldTypeInfo.find(obj => obj.name === filter.field)).map((operator) => (
+                                                <MenuItem key={operator} value={operator}>
+                                                    {operator}
+                                                </MenuItem>
+                                            ))
+                                        ) : (
+                                            <MenuItem></MenuItem>
+                                        )}
+
+                                    </Select>
+                                </FormControlMinWidth>
+
+                                {filter.operator === "in set" ? (
+                                    <FormControlMinWidth sx={ highlightedInputs[index]?.value ? highlightedSx : null } >
+                                        <InputLabel id="value-select-label">Value</InputLabel>
                                         <Select
-                                            labelId="field-label"
-                                            value={filter.field}
+                                            labelId="value-select-label"
+                                            value={filter.value}
                                             onChange={(event) =>
-                                                handleFilterChange(index, "field", event.target.value)
+                                                handleFilterChange(index, "value", event.target.value)
                                             }
                                         >
-                                            <MenuItem value="">
-                                                <em>None</em>
-                                            </MenuItem>
-                                            {fieldTypeInfo.map((field) => (
-                                                <MenuItem key={field.name} value={field.name}>
-                                                    {field.label ?? field.name}
+                                            {allowedGroupNames?.map((gn) => (
+                                                <MenuItem value={gn} key={gn}>{gn}</MenuItem>
+                                            ))}
+
+                                        </Select>
+                                    </FormControlMinWidth>
+                                ) : fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length > 0 ? (
+                                    <FormControlMinWidth sx={ highlightedInputs[index]?.value ? highlightedSx : null } >
+                                        <InputLabel id="value-select-label">Value</InputLabel>
+                                        <Select
+                                            labelId="value-select-label"
+                                            value={filter.value}
+                                            onChange={(event) =>
+                                                handleFilterChange(index, "value", event.target.value)
+                                            }
+                                        >
+                                            {fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.map(allowableValue => (
+                                                <MenuItem key={allowableValue} value={allowableValue}>
+                                                    {allowableValue}
                                                 </MenuItem>
                                             ))}
                                         </Select>
-                                    </FormControl>
+                                    </FormControlMinWidth>
+                                ) : (
+                                    <TextFieldMinWidth
+                                        label="Value"
+                                        sx={ highlightedInputs[index]?.value ? highlightedSx : null }
+                                        value={filter.value}
+                                        onChange={(event) =>
+                                            handleFilterChange(index, 'value', event.target.value)
+                                        }
+                                    />
+                                )}
 
-                                    <FormControl className={`${classes.formControl} ${highlightedInputs[index]?.operator? classes.highlighted : ''}`}>
-                                        <InputLabel id="operator-label">Operator</InputLabel>
-                                        <Select
-                                            labelId="operator-label"
-                                            value={filter.operator}
-                                            onChange={(event) =>
-                                                handleFilterChange(index, "operator", event.target.value)
-                                            }
-                                        >
-                                            <MenuItem value="None">
-                                                <em>None</em>
-                                            </MenuItem>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={() => handleRemoveFilter(index)}
+                                >
+                                    Remove Filter
+                                </Button>
+                            </FilterRow>
+                        ))}
+                    </FormScroll>
+                </CardActionsCenteredContent>
 
-                                            {getOperatorsForField(fieldTypeInfo.find(obj => obj.name === filter.field)) ? (
-                                                getOperatorsForField(fieldTypeInfo.find(obj => obj.name === filter.field)).map((operator) => (
-                                                    <MenuItem key={operator} value={operator}>
-                                                        {operator}
-                                                    </MenuItem>
-                                                ))
-                                            ) : (
-                                                <MenuItem></MenuItem>
-                                            )}
-
-                                        </Select>
-                                    </FormControl>
-
-                                    {filter.operator === "in set" ? (
-                                        <FormControl className={`${classes.formControl} ${highlightedInputs[index]?.value? classes.highlighted : ''}`}>
-                                            <InputLabel id="value-select-label">Value</InputLabel>
-                                            <Select
-                                                labelId="value-select-label"
-                                                value={filter.value}
-                                                onChange={(event) =>
-                                                    handleFilterChange(index, "value", event.target.value)
-                                                }
-                                            >
-                                                {allowedGroupNames?.map((gn) => (
-                                                    <MenuItem value={gn} key={gn}>{gn}</MenuItem>
-                                                ))}
-
-                                            </Select>
-                                        </FormControl>
-                                    ) : fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length > 0 ? (
-                                        <FormControl className={`${classes.formControl} ${highlightedInputs[index]?.value? classes.highlighted : ''}`}>
-                                            <InputLabel id="value-select-label">Value</InputLabel>
-                                            <Select
-                                                labelId="value-select-label"
-                                                value={filter.value}
-                                                onChange={(event) =>
-                                                    handleFilterChange(index, "value", event.target.value)
-                                                }
-                                            >
-                                                {fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.map(allowableValue => (
-                                                    <MenuItem key={allowableValue} value={allowableValue}>
-                                                        {allowableValue}
-                                                    </MenuItem>
-                                                ))}
-                                            </Select>
-                                        </FormControl>
-                                    ) : (
-                                        <TextField
-                                            label="Value"
-                                            className={`${classes.formControl} ${highlightedInputs[index]?.value? classes.highlighted : ''}`}
-                                            value={filter.value}
-                                            onChange={(event) =>
-                                                handleFilterChange(index, 'value', event.target.value)
-                                            }
-                                        />
-                                    )}
-
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        onClick={() => handleRemoveFilter(index)}
-                                    >
-                                        Remove Filter
-                                    </Button>
-                                </div>
-                            ))}
-                        </div>
-                    </CardContent>
-
-                    <CardActions className={classes.cardActions}>
-                        <div className={classes.submitAndExternal}>
-                            <Button
-                                onClick={handleSubmit}
-                                type="submit"
-                                variant="contained"
-                                color="primary"
-                            >
-                                Search
-                            </Button>
-                        </div>
-                    </CardActions>
-                </form>
-            </Card>
-        </StyleRoot>
+                <CardActionsJustify>
+                    <SubmitAndExternal>
+                        <Button
+                            onClick={handleSubmit}
+                            type="submit"
+                            variant="contained"
+                            color="primary"
+                        >
+                            Search
+                        </Button>
+                    </SubmitAndExternal>
+                </CardActionsJustify>
+            </form>
+        </CardTransparent>
     )}
 
 
