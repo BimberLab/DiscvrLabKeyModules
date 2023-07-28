@@ -38,6 +38,7 @@ import '../VariantTable.css';
 import '../../jbrowse.css';
 import LoadingIndicator from './LoadingIndicator';
 import { BaseFeatureDataAdapter } from '@jbrowse/core/data_adapters/BaseAdapter';
+import { lastValueFrom } from 'rxjs';
 
 const VariantTableWidget = observer(props => {
     const { assembly, trackId, parsedLocString, sessionId, session, pluginManager } = props
@@ -315,20 +316,22 @@ const VariantTableWidget = observer(props => {
             const parsedLocString = parseLocString(row.contig + ":" + row.start + ".." + row.end, isValidRefNameForAssembly)
             const refName = assembly.getCanonicalRefName(parsedLocString.refName)
 
-            const ret = a.getFeatures({
+            const featuresObservable = a.getFeatures({
                 refName: refName,
                 start: row.start - 1,
                 end: row.end
-            } as NoAssemblyRegion)
+            } as NoAssemblyRegion).pipe(toArray())
 
-            const extendedFeatures = await ret.pipe(toArray()).toPromise()
+            const extendedFeatures = await lastValueFrom(featuresObservable)
 
             // TODO: sanity check this to ensure we have the right feature, especially if there are different alleles
             if (extendedFeatures.length > 1) {
 
             }
 
-            const feature = extendedFeatures[0];
+            const feature = extendedFeatures[0]
+            console.log(feature)
+            console.log(row)
 
             const trackId = getConf(track, 'trackId')
             const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])

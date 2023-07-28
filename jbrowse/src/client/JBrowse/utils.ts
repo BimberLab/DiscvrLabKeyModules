@@ -4,7 +4,7 @@ import { createViewState, loadPlugins } from '@jbrowse/react-linear-genome-view'
 import { ActionURL, Ajax } from '@labkey/api';
 import { getGridNumericOperators, GridColDef } from '@mui/x-data-grid';
 import { multiModalOperator, multiValueComparator } from './VariantSearch/constants';
-import { VcfFeature } from '@jbrowse/plugin-variants';
+import { ParsedLocString } from '@jbrowse/core/util';
 
 export function arrayMax(array) {
     return Array.isArray(array) ? Math.max(...array) : array
@@ -223,10 +223,14 @@ export function navigateToSearch(sessionId, locString, trackId, track?: any) {
     window.location.href = ActionURL.buildURL("jbrowse", "variantSearch.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
 }
 
-export function navigateToBrowser(sessionId, locString, trackGUID?: string, track?: any) {
+export function navigateToBrowser(sessionId: string, locString: string, trackGUID?: string, track?: any) {
     const sampleFilterURL = serializeSampleFilters(track)
     const infoFilterURL = serializeInfoFilters(track)
     window.location.href = ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackGUID: trackGUID, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
+}
+
+export function parsedLocStringToUrl(parsedLocString: ParsedLocString) {
+    return parsedLocString ? parsedLocString.refName + ":" + (parsedLocString.start+1) + ".." + parsedLocString.end : ""
 }
 
 export function getBrowserUrlNoFilters(sessionId, locString, trackGUID?: string, track?: any) {

@@ -1321,7 +1321,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
 
-        Assert.assertEquals("Incorrect URL param", "8510..8630", getUrlParam("loc"));
+        Assert.assertEquals("Incorrect URL param", "SIVmac239_Test:4,165..5,370", getUrlParam("location"));
     }
 
     private static final Locator TOP_ROW = Locator.tagWithAttribute("div", "aria-rowindex", "2");

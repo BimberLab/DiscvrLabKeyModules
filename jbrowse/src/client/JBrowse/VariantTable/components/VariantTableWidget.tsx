@@ -1,7 +1,7 @@
 import { observer } from 'mobx-react';
 import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
-import { Widget } from '@jbrowse/core/util';
+import { ParsedLocString, Widget } from '@jbrowse/core/util';
 import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache';
 import { AppBar, Box, Button, Dialog, Grid, MenuItem, Paper, Toolbar, Typography } from '@mui/material';
 import ScopedCssBaseline from '@mui/material/ScopedCssBaseline';
@@ -23,7 +23,7 @@ import {
   isVariant,
   navigateToBrowser,
   navigateToSearch,
-  navigateToTable,
+  navigateToTable, parsedLocStringToUrl,
   passesInfoFilters,
   passesSampleFilters
 } from '../../utils';
@@ -356,9 +356,20 @@ const VariantTableWidget = observer(props => {
       />
   )
 
-  const handleSearch = (locString) => {
+  const handleSearch = (queryString: string, locString: ParsedLocString, errorMessages?: string[]) => {
     if (locString) {
-      navigateToTable(sessionId, locString, trackId)
+      let start = parsedLocString.start ?? -1
+      let end = parsedLocString.end ?? -1
+      if (start === -1 || end === -1) {
+        alert('Location lacks a start or end, cannot use: ' + locString.refName)
+        return
+      }
+
+      navigateToTable(sessionId, parsedLocStringToUrl(locString), trackId)
+    }
+    else if (errorMessages?.length) {
+      alert(errorMessages.join("<br>"))
+      console.error('Error with search component: ' + errorMessages.join(", "))
     }
   }
 

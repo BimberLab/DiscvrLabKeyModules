@@ -5,8 +5,9 @@ import './search.css';
 
 import LogSession from '../Browser/plugins/LogSession/index';
 import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index';
-import { fetchSession, navigateToBrowser } from '../utils';
+import { fetchSession, navigateToBrowser, parsedLocStringToUrl } from '../utils';
 import StandaloneSearchComponent from './components/StandaloneSearchComponent';
+import { ParsedLocString } from '@jbrowse/core/util';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
@@ -35,14 +36,18 @@ const StandaloneSearch = observer(({ sessionId, selectedRegion }: { sessionId: a
     const { session } = state
     const assemblyName = state.config.assembly.name
 
-    const handleSearch = (locString) => {
+    const handleSearch = (queryString: string, locString: ParsedLocString, errorMessages?: string[]) => {
         if (locString) {
-            navigateToBrowser(sessionId, locString)
+            navigateToBrowser(sessionId, parsedLocStringToUrl(locString))
+        }
+        else if (errorMessages?.length) {
+            alert(errorMessages.join("<br>"))
+            console.error('Error with search component: ' + errorMessages.join(", "))
         }
     }
 
     return (
-        <StandaloneSearchComponent session={session} onSelect={handleSearch} assemblyName={assemblyName} selectedRegion={selectedRegion}/>
+        <StandaloneSearchComponent session={session} onSelect={handleSearch} assemblyName={assemblyName} selectedRegion={selectedRegion} forVariantTable={false}/>
     )
 })
 
