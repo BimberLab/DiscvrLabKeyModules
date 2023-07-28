@@ -46,7 +46,7 @@ const VariantTableWidget = observer(props => {
     return assemblyManager.isValidRefName(refName, props.assemblyName)
   }
 
-  const parsedLocString = locString ? parseLocString(locString, isValidRefNameForAssembly) : null
+  const [isValidLocString, setIsValidLocString] = useState(true)
 
   const track = view.tracks.find(
       t => t.configuration.trackId === trackId,
@@ -237,7 +237,6 @@ const VariantTableWidget = observer(props => {
 
   // Menu management
   const [anchorFilterMenu, setAnchorFilterMenu] = useState(null)
-  const [isValidLocString, setIsValidLocString] = useState(true)
 
   // False until initial data load or an error. If we load w/o a query string, also treat as loaded:
   const [sessionInfoLoaded, setSessionInfoLoaded] = useState(false)
@@ -249,22 +248,6 @@ const VariantTableWidget = observer(props => {
   const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({});
   const [gridColumns, setGridColumns] = useState<GridColDef[]>([])
 
-  if (locString){
-    const regionLength = parsedLocString.end - parsedLocString.start
-    const maxRegionSize = 900000
-    if (isNaN(regionLength)) {
-      alert("Must include start/stop in location: " + locString)
-      setAwaitingData(false)
-      setIsValidLocString(false)
-    }
-    else if (regionLength > maxRegionSize) {
-      alert("Location " + locString + " is too large to load.")
-      setAwaitingData(false)
-      setIsValidLocString(false)
-    }
-  }
-
-  // API call to retrieve the requested features.
   useEffect(() => {
     // First grab session info.
     if (!sessionInfoLoaded) {
@@ -283,6 +266,30 @@ const VariantTableWidget = observer(props => {
   }, [])
 
   useEffect(() => {
+    let parsedLocString = null
+
+    try {
+      parsedLocString = locString ? parseLocString(locString, isValidRefNameForAssembly) : null
+    }
+    catch (e) {
+      alert('Error: ' + e.message)
+      setIsValidLocString(false)
+    }
+
+    if (parsedLocString && isValidLocString) {
+      const regionLength = parsedLocString.end - parsedLocString.start
+      const maxRegionSize = 900000
+      if (isNaN(regionLength)) {
+        alert("Must include start/stop in location: " + locString)
+        setAwaitingData(false)
+        setIsValidLocString(false)
+      } else if (regionLength > maxRegionSize) {
+        alert("Location " + locString + " is too large to load.")
+        setAwaitingData(false)
+        setIsValidLocString(false)
+      }
+    }
+
     if (sessionInfoLoaded && parsedLocString != null && !awaitingData) {
       setAwaitingData(true)
       fetchData(parsedLocString, adapter).then(x => setAwaitingData(false))
