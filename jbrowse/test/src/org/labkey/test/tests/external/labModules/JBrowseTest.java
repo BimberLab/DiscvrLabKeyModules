@@ -1393,6 +1393,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.tagWithAttribute("button", "data-testid", "track_menu_icon"));
         waitAndClickAndWait(Locator.tagContainingText("span", "View As Table"));
         waitForTableLoadingToDisappear();
+        waitForElement(Locator.tagWithText("div", "ATGGCTCCTG")); // indicates the data loaded
         waitAndClick(Locator.tagWithText("button", "Filter"));
         waitAndClick(Locator.tagWithText("li", "Filter By Attributes"));
         WebElement filterValTable = Locator.tagWithId("input", "standard-number").findElement(getDriver());
