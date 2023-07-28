@@ -3,8 +3,8 @@ import { RefNameAutocomplete } from '@jbrowse/plugin-linear-genome-view';
 import { fetchResults } from '@jbrowse/plugin-linear-genome-view/esm/LinearGenomeView/components/util';
 import { ParsedLocString, parseLocString } from '@jbrowse/core/util';
 
-export default function StandaloneSearchComponent(props: { session: any, selectedRegion: string, assemblyName: string, onSelect: (queryString: string, parsedLocString: ParsedLocString, errors?: string[]) => void, forVariantTable?: boolean}) {
-    const { session, selectedRegion, assemblyName, onSelect, forVariantTable } = props
+export default function StandaloneSearchComponent(props: { session: any, selectedRegion: string, assemblyName: string, onSelect: (queryString: string, parsedLocString: ParsedLocString, errors?: string[]) => void, forVariantTable?: boolean, fieldMinWidth?: number}) {
+    const { session, selectedRegion, assemblyName, onSelect, forVariantTable, fieldMinWidth = 175 } = props
 
     const { view } = session
     const { textSearchManager, assemblyManager } = session
@@ -26,6 +26,7 @@ export default function StandaloneSearchComponent(props: { session: any, selecte
         <span style={forVariantTable ? {display: 'inline-block', marginRight: '14px'} : {}}>
         <RefNameAutocomplete
             model={view}
+            minWidth={fieldMinWidth}
             assemblyName={assemblyName ?? undefined}
             fetchResults={doFetch}
             value={selectedRegion}
@@ -78,7 +79,7 @@ export default function StandaloneSearchComponent(props: { session: any, selecte
                     if (uniqueContigs.length !== 1) {
                         console.error("Invalid location: " + option.label)
                         console.log(option)
-                        return onSelect(null, null, ['Invalid location: ' + option.label])
+                        return onSelect(option.label, null, ['Invalid location: ' + option.label])
                     }
                     else {
                         return onSelect(option.label, {refName: contigs[0], start: minVal, end: maxVal})
@@ -101,7 +102,7 @@ export default function StandaloneSearchComponent(props: { session: any, selecte
                 margin: 'normal',
                 variant: 'outlined',
                 helperText: forVariantTable ? undefined : 'Enter a gene or location',
-                style: { margin: 7, minWidth: '175px' },
+                style: { margin: 7 },
                 InputProps: {
                     style: {
                         paddingBottom: 0,

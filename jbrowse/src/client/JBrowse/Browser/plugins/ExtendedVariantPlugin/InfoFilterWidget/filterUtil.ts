@@ -52,6 +52,10 @@ export function deserializeFilters(filters) {
         return filterList
     }
 
+    if (!Array.isArray(filters)) {
+        filters = [filters]
+    }
+
     for (const filter of filters){
         if (!isSerializedFilterStringValid(filter)) {
             continue

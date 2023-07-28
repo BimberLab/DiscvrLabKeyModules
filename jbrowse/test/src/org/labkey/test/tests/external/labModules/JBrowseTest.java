@@ -1321,7 +1321,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
 
-        Assert.assertEquals("Incorrect URL param", "SIVmac239_Test:4,165..5,370", getUrlParam("location"));
+        Assert.assertEquals("Incorrect URL param", "SIVmac239_Test:4,165..5,370", getUrlParam("location", true));
     }
 
     private static final Locator TOP_ROW = Locator.tagWithAttribute("div", "aria-rowindex", "2");
@@ -1399,6 +1399,10 @@ public class JBrowseTest extends BaseWebDriverTest
         Assert.assertEquals("Incorrect filter value", "0.0009728", filterValTable.getAttribute("value"));
 
         testVariantTableComparators();
+
+        // Ensure the grid works w/o bring provided a location:
+        beginAt("/" + getProjectName() + "/jbrowse-variantTable.view?session=mgap&trackId=mgap_hg38");
+        waitForElement(Locator.tagWithText("div", "No rows"));
     }
 
     private void waitForTableLoadingToDisappear()

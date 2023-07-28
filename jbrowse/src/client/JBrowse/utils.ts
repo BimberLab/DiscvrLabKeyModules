@@ -2,8 +2,14 @@ import { isEmptyObject } from 'jquery';
 import jexl from 'jexl';
 import { createViewState, loadPlugins } from '@jbrowse/react-linear-genome-view';
 import { ActionURL, Ajax } from '@labkey/api';
-import { getGridNumericOperators, GridColDef } from '@mui/x-data-grid';
-import { multiModalOperator, multiValueComparator } from './VariantSearch/constants';
+import {
+    getGridNumericOperators,
+    GridCellParams,
+    GridColDef,
+    GridComparatorFn,
+    GridFilterItem,
+    GridFilterOperator
+} from '@mui/x-data-grid';
 import { ParsedLocString } from '@jbrowse/core/util';
 
 export function arrayMax(array) {
@@ -230,6 +236,17 @@ export function navigateToBrowser(sessionId: string, locString: string, trackGUI
 }
 
 export function parsedLocStringToUrl(parsedLocString: ParsedLocString) {
+    if (!parsedLocString) {
+        return ''
+    }
+
+    const start = parsedLocString.start ?? -1
+    const end = parsedLocString.end ?? -1
+
+    if (start === -1 || end === -1) {
+        return parsedLocString.refName
+    }
+
     return parsedLocString ? parsedLocString.refName + ":" + (parsedLocString.start+1) + ".." + parsedLocString.end : ""
 }
 
@@ -633,3 +650,52 @@ export function getOperatorsForField(fieldObj: FieldModel): string[] {
     return allowedOperators
 }
 
+export const multiValueComparator: GridComparatorFn = (v1, v2) => {
+    return arrayMax(parseCellValue(v1)) - arrayMax(parseCellValue(v2))
+}
+
+export const multiModalOperator = (operator: GridFilterOperator) => {
+    const getApplyFilterFn = (
+        filterItem: GridFilterItem,
+        column: GridColDef,
+    ) => {
+        const innerFilterFn = operator.getApplyFilterFn(filterItem, column);
+        if (!innerFilterFn) {
+            return innerFilterFn;
+        }
+
+        return (params: GridCellParams) => {
+            let cellValue = parseCellValue(params.value)
+
+            switch(filterItem.operator) {
+                case "!=":
+                    return cellValue.map(val => val == Number(filterItem.value)).every((val) => val == false)
+                case "=":
+                    return cellValue.map(val => val == Number(filterItem.value)).includes(true)
+                case ">":
+                    return arrayMax(cellValue) > Number(filterItem.value)
+                case "<":
+                    return arrayMax(cellValue) < Number(filterItem.value)
+                case "<=":
+                    return arrayMax(cellValue) <= Number(filterItem.value)
+                case ">=":
+                    return arrayMax(cellValue) >= Number(filterItem.value)
+                case "isEmpty":
+                    return cellValue.length == 0
+                case "isNotEmpty":
+                    return cellValue.length > 0
+                default:
+                    return true
+            }
+        }
+    }
+
+    return {
+        ...operator,
+        getApplyFilterFn,
+    }
+}
+
+export const parseCellValue = (cellValue) => String(cellValue ?? "").split(",").map(str => {
+    return Number(str);
+})
