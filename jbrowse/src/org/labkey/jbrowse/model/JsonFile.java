@@ -1369,7 +1369,7 @@ public class JsonFile
 
     public File getExpectedLocationOfLuceneIndexStats(boolean throwIfNotFound)
     {
-        return new File(getExpectedLocationOfLuceneIndexStats(throwIfNotFound).getPath() + ".stats.txt");
+        return new File(getExpectedLocationOfLuceneIndex(throwIfNotFound).getPath() + ".stats.txt");
     }
 
     public File getExpectedLocationOfLuceneIndex(boolean throwIfNotFound)
