@@ -12,7 +12,6 @@ import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.ext4cmp.Ext4CmpRef;
 import org.labkey.test.util.ext4cmp.Ext4FieldRef;
 import org.labkey.test.util.ext4cmp.Ext4GridRef;
-import org.labkey.test.util.external.labModules.LabModuleHelper;
 import org.openqa.selenium.By;
 
 import java.io.File;
@@ -143,7 +142,7 @@ public class JBrowseTestHelper
         test.waitForElement(Locator.tagWithAttribute("button", "title", "close this track").notHidden());
         test.waitForElement(Locator.tagWithClassContaining("button", "MuiButtonBase-root").notHidden(), WebDriverWrapper.WAIT_FOR_PAGE); //this is the icon from the track label
 
-        test.waitForElementToDisappear(Locator.tagWithText("div", "Loading...")); //track data
-        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading..."));
+        test.waitForElementToDisappear(Locator.tagWithText("div", "Loading")); //track data
+        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading").withClass("MuiTypography-root")); // the track data
     }
 }
