@@ -13,6 +13,8 @@ import org.labkey.test.util.ext4cmp.Ext4CmpRef;
 import org.labkey.test.util.ext4cmp.Ext4FieldRef;
 import org.labkey.test.util.ext4cmp.Ext4GridRef;
 import org.openqa.selenium.By;
+import org.openqa.selenium.StaleElementReferenceException;
+import org.openqa.selenium.WebElement;
 
 import java.io.File;
 import java.util.stream.Collector;
@@ -144,5 +146,21 @@ public class JBrowseTestHelper
 
         test.waitForElementToDisappear(Locator.tagWithText("div", "Loading")); //track data
         test.waitForElementToDisappear(Locator.tagWithText("p", "Loading").withClass("MuiTypography-root")); // the track data
+    }
+
+    public static long getTotalVariantFeatures(BaseWebDriverTest test)
+    {
+        Locator l = Locator.tagWithAttribute("svg", "data-testid", "svgfeatures").append(Locator.tag("polygon"));
+        try
+        {
+            return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).count();
+        }
+        catch (StaleElementReferenceException e)
+        {
+            test.log("Stale elements, retrying");
+            WebDriverWrapper.sleep(5000);
+
+            return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).count();
+        }
     }
 }
