@@ -203,7 +203,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                             handleFilterChange(index, "field", event.target.value)
                                         }
                                     >
-                                        <MenuItem value="">
+                                        <MenuItem value="" style={{ display: 'none' }}>
                                             <em>None</em>
                                         </MenuItem>
                                         {fieldTypeInfo.map((field) => (
@@ -223,7 +223,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                             handleFilterChange(index, "operator", event.target.value)
                                         }
                                     >
-                                        <MenuItem value="None">
+                                        <MenuItem value="None" style={{ display: 'none' }}>
                                             <em>None</em>
                                         </MenuItem>
 
