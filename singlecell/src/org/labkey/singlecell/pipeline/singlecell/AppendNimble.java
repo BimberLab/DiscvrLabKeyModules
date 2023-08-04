@@ -30,7 +30,11 @@ public class AppendNimble extends AbstractRDiscvrStep
                     ToolParameterDescriptor.create("nimbleGenomes", "Genomes", "Genomes to include", "singlecell-nimbleappendpanel", new JSONObject()
                     {{
                         put("allowBlank", false);
-                    }}, null)
+                    }}, null),
+                    ToolParameterDescriptor.create("retainAmbiguousFeatures", "Retain Ambiguous Features", "If checked, features hitting more than one reference will be retained", "checkbox", new JSONObject()
+                    {{
+                        put("check", false);
+                    }}, false)
             ), Arrays.asList("sequenceanalysis/field/GenomeField.js", "/singlecell/panel/NimbleAppendPanel.js"), null);
         }
 

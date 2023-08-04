@@ -1,16 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { observer } from 'mobx-react';
-import { createTheme } from '@material-ui/core/styles';
+import { createTheme } from '@mui/material/styles';
 import './search.css';
 
 import LogSession from '../Browser/plugins/LogSession/index';
 import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index';
-import { fetchSession } from '../utils';
+import { fetchSession, navigateToBrowser, parsedLocStringToUrl } from '../utils';
 import StandaloneSearchComponent from './components/StandaloneSearchComponent';
+import { ParsedLocString } from '@jbrowse/core/util';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
-const StandaloneSearch = observer(({ sessionId, tableUrl, trackId, selectedRegion }: { sessionId: any, tableUrl: boolean, trackId?: string, selectedRegion?: string}) => {
+const StandaloneSearch = observer(({ sessionId, selectedRegion }: { sessionId: any, selectedRegion?: string}) => {
     if (!sessionId){
         return(<p>No session Id provided. Please have your site admin use the customize icon to set the session ID for this webpart.</p>)
     }
@@ -35,8 +36,18 @@ const StandaloneSearch = observer(({ sessionId, tableUrl, trackId, selectedRegio
     const { session } = state
     const assemblyName = state.config.assembly.name
 
+    const handleSearch = (queryString: string, locString: ParsedLocString, errorMessages?: string[]) => {
+        if (locString) {
+            navigateToBrowser(sessionId, parsedLocStringToUrl(locString))
+        }
+        else if (errorMessages?.length) {
+            alert(errorMessages.join("<br>"))
+            console.error('Error with search component: ' + errorMessages.join(", "))
+        }
+    }
+
     return (
-        <StandaloneSearchComponent session={session} tableUrl={tableUrl} trackId={trackId} assemblyName={assemblyName} selectedRegion={selectedRegion}/>
+        <StandaloneSearchComponent session={session} onSelect={handleSearch} assemblyName={assemblyName} selectedRegion={selectedRegion} forVariantTable={false}/>
     )
 })
 

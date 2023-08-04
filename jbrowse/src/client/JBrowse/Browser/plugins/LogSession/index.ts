@@ -1,5 +1,5 @@
 import Plugin from '@jbrowse/core/Plugin'
-import InfoIcon from '@material-ui/icons/Info'
+import InfoIcon from '@mui/icons-material/Info'
 import { getSnapshot } from "mobx-state-tree";
 import { getSession } from '@jbrowse/core/util'
 

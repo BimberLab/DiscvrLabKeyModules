@@ -2,8 +2,15 @@ import { isEmptyObject } from 'jquery';
 import jexl from 'jexl';
 import { createViewState, loadPlugins } from '@jbrowse/react-linear-genome-view';
 import { ActionURL, Ajax } from '@labkey/api';
-import { getGridNumericColumnOperators, GridColDef } from '@mui/x-data-grid';
-import { multiModalOperator, multiValueComparator } from './VariantSearch/constants';
+import {
+    getGridNumericOperators,
+    GridCellParams,
+    GridColDef,
+    GridComparatorFn,
+    GridFilterItem,
+    GridFilterOperator
+} from '@mui/x-data-grid';
+import { ParsedLocString } from '@jbrowse/core/util';
 
 export function arrayMax(array) {
     return Array.isArray(array) ? Math.max(...array) : array
@@ -71,7 +78,7 @@ export function passesSampleFilters(feature, sampleIDs){
     return false
 }
 
-function isVariant(gt) {
+export function isVariant(gt) {
     return !(gt === "./." || gt === ".|." || gt === "0/0" || gt === "0|0")
 }
 
@@ -118,8 +125,8 @@ export async function fetchSession(queryParam, sessionId, nativePlugins, refThem
                     "palette": {
                         primary: {main: themeSecondaryColor},
                         secondary: {main: themePrimaryColor},
-                        tertiary: refTheme.palette.augmentColor({main: grey}),
-                        quaternary: refTheme.palette.augmentColor({main: mandarin}),
+                        tertiary: refTheme.palette.augmentColor({color: {main: grey}}),
+                        quaternary: refTheme.palette.augmentColor({color: {main: mandarin}}),
                     }
                 }
             }
@@ -222,10 +229,25 @@ export function navigateToSearch(sessionId, locString, trackId, track?: any) {
     window.location.href = ActionURL.buildURL("jbrowse", "variantSearch.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
 }
 
-export function navigateToBrowser(sessionId, locString, trackGUID?: string, track?: any) {
+export function navigateToBrowser(sessionId: string, locString: string, trackGUID?: string, track?: any) {
     const sampleFilterURL = serializeSampleFilters(track)
     const infoFilterURL = serializeInfoFilters(track)
     window.location.href = ActionURL.buildURL("jbrowse", "jbrowse.view", null, {session: sessionId, location: locString, trackGUID: trackGUID, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
+}
+
+export function parsedLocStringToUrl(parsedLocString: ParsedLocString) {
+    if (!parsedLocString) {
+        return ''
+    }
+
+    const start = parsedLocString.start ?? -1
+    const end = parsedLocString.end ?? -1
+
+    if (start === -1 || end === -1) {
+        return parsedLocString.refName
+    }
+
+    return parsedLocString ? parsedLocString.refName + ":" + (parsedLocString.start+1) + ".." + parsedLocString.end : ""
 }
 
 export function getBrowserUrlNoFilters(sessionId, locString, trackGUID?: string, track?: any) {
@@ -249,7 +271,7 @@ function serializeInfoFilters(track) {
         return undefined
     }
 
-    if (!track.configuration.displays[0].renderer.infoFilters.valueJSON || isEmptyObject(track.configuration.displays[0].renderer.infoFilters.valueJSON)) {
+    if (!track.configuration.displays[0].renderer.infoFilters.valueJSON || isEmptyObject(track.configuration.displays[0].renderer.infoFilters.valueJSON)  || !track.configuration.displays[0].renderer.infoFilters.valueJSON.length) {
         return undefined
     }
 
@@ -432,12 +454,16 @@ export class FieldModel {
     isHidden: boolean
     colWidth: number
     formatString: string
-    orderKey: number
+    orderKey: number = 999
     allowableValues: string[]
     category: string
     url: string
     flex: number
     supportsFilter: boolean = true
+
+    getLabel(): string {
+        return this.label ?? this.name
+    }
 
     getMuiType(): string {
         let muiFieldType;
@@ -469,9 +495,12 @@ export class FieldModel {
             flex: this.flex || 1,
             headerAlign: 'left',
             align: "left",
-            //TODO: consider whether we really need a separate isHidden
-            hide: this.isHidden || this.isInDefaultColumns === false
+            hideable: true
         }
+
+        //TODO: consider whether we really need a separate isHidden
+        //hide: this.isHidden || this.isInDefaultColumns === false
+
 
         // TODO: can we pass the JEXL format string here? How does this impact filter/sorting?
         // if (this.formatString) {
@@ -485,7 +514,7 @@ export class FieldModel {
         // TODO: does this really apply here? Can we drop it?
         if (this.isMultiValued) {
             gridCol.sortComparator = multiValueComparator
-            gridCol.filterOperators = getGridNumericColumnOperators().map(op => multiModalOperator(op))
+            gridCol.filterOperators = getGridNumericOperators().map(op => multiModalOperator(op))
         }
 
         return gridCol
@@ -621,3 +650,52 @@ export function getOperatorsForField(fieldObj: FieldModel): string[] {
     return allowedOperators
 }
 
+export const multiValueComparator: GridComparatorFn = (v1, v2) => {
+    return arrayMax(parseCellValue(v1)) - arrayMax(parseCellValue(v2))
+}
+
+export const multiModalOperator = (operator: GridFilterOperator) => {
+    const getApplyFilterFn = (
+        filterItem: GridFilterItem,
+        column: GridColDef,
+    ) => {
+        const innerFilterFn = operator.getApplyFilterFn(filterItem, column);
+        if (!innerFilterFn) {
+            return innerFilterFn;
+        }
+
+        return (params: GridCellParams) => {
+            let cellValue = parseCellValue(params.value)
+
+            switch(filterItem.operator) {
+                case "!=":
+                    return cellValue.map(val => val == Number(filterItem.value)).every((val) => val == false)
+                case "=":
+                    return cellValue.map(val => val == Number(filterItem.value)).includes(true)
+                case ">":
+                    return arrayMax(cellValue) > Number(filterItem.value)
+                case "<":
+                    return arrayMax(cellValue) < Number(filterItem.value)
+                case "<=":
+                    return arrayMax(cellValue) <= Number(filterItem.value)
+                case ">=":
+                    return arrayMax(cellValue) >= Number(filterItem.value)
+                case "isEmpty":
+                    return cellValue.length == 0
+                case "isNotEmpty":
+                    return cellValue.length > 0
+                default:
+                    return true
+            }
+        }
+    }
+
+    return {
+        ...operator,
+        getApplyFilterFn,
+    }
+}
+
+export const parseCellValue = (cellValue) => String(cellValue ?? "").split(",").map(str => {
+    return Number(str);
+})

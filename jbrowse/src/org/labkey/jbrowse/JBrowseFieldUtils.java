@@ -24,11 +24,11 @@ public class JBrowseFieldUtils
     public static final String VARIABLE_SAMPLES = "variableSamples";
 
     // These fields are always indexed in DISCVRSeq, and present in all VCFs (or created client-side in ExtendedVariantAdapter
-    private static final Map<String, JBrowseFieldDescriptor> DEFAULT_FIELDS = new LinkedHashMap<>() {{
+    public static final Map<String, JBrowseFieldDescriptor> DEFAULT_FIELDS = new LinkedHashMap<>() {{
         put("contig", new JBrowseFieldDescriptor("contig", "This is the chromosome/contig", true, true, VCFHeaderLineType.String, 1).label("Chromosome"));
         put("start", new JBrowseFieldDescriptor("start", "The start position of this variant", true, true, VCFHeaderLineType.Integer, 2).label("Start"));
-        put("ref", new JBrowseFieldDescriptor("ref", "The reference allele", true, true, VCFHeaderLineType.String, 3).label("Ref Allele"));
-        put("end", new JBrowseFieldDescriptor("end", "The end position of this variant", true, true, VCFHeaderLineType.Integer, 4).label("End"));
+        put("end", new JBrowseFieldDescriptor("end", "The end position of this variant", false, true, VCFHeaderLineType.Integer, 3).label("End"));
+        put("ref", new JBrowseFieldDescriptor("ref", "The reference allele", true, true, VCFHeaderLineType.String, 4).label("Ref Allele"));
         put("alt", new JBrowseFieldDescriptor("alt", "The alternate allele", true, true, VCFHeaderLineType.String, 5).label("Alt Allele"));
         put("genomicPosition", new JBrowseFieldDescriptor("genomicPosition", "", false, true, VCFHeaderLineType.Integer, 6).hidden(true).label("Genomic Position"));
         put("variableSamples", new JBrowseFieldDescriptor(VARIABLE_SAMPLES, "All samples with this variant", true, true, VCFHeaderLineType.Character, 7).multiValued(true).label("Samples With Variant"));

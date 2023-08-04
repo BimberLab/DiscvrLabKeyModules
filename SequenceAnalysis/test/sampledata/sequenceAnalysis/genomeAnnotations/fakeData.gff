@@ -1,5 +1,5 @@
-SIVmac239	SS_probe	probe	2691	2805	.	+	.	gene_id=Gag; transcript_id=Gag; Identity=94.6
-SIVmac239	SS_probe	probe	4165	4237	.	+	.	gene_id=Gag; transcript_id=Gag; Identity=93
-SIVmac239	SS_probe	probe	5251	5370	.	+	.	gene_id=Gag; transcript_id=Gag; Identity=92.4
-SIVmac239	SS_probe	probe	8510	8630	.	+	.	gene_id=Gag; transcript_id=Gag; Identity=95
-SIVmac239	SS_probe	probe	10373	10493	.	+	.	gene_id=Gag; transcript_id=Gag; Identity=95
+SIVmac239	SS_probe	probe	2691	2805	.	+	.	gene_id=Gene0; transcript_id=Gene0; Identity=94.6
+SIVmac239	SS_probe	probe	4165	4237	.	+	.	gene_id=Gene1; transcript_id=Gene1; Identity=93
+SIVmac239	SS_probe	probe	5251	5370	.	+	.	gene_id=Gene1; transcript_id=Gene1; Identity=92.4
+SIVmac239	SS_probe	probe	8510	8630	.	+	.	gene_id=Gene3; transcript_id=Gene3; Identity=95
+SIVmac239	SS_probe	probe	10373	10493	.	+	.	gene_id=Gene4; transcript_id=Gene4; Identity=95

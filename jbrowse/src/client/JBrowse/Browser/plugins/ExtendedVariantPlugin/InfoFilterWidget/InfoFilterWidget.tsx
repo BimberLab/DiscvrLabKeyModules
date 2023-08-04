@@ -1,4 +1,3 @@
-import { style as styles } from './style';
 import { filterMap } from './filters';
 import { readConfObject } from '@jbrowse/core/configuration';
 import { getSession } from '@jbrowse/core/util';
@@ -6,33 +5,47 @@ import React from 'react';
 import {
     Box,
     Button,
-    ClickAwayListener,
     Dialog,
     DialogActions,
     DialogContent,
     DialogContentText,
     DialogTitle,
     FormControl,
-    Grow,
+    Menu,
     MenuItem,
-    MenuList,
-    Paper,
-    Popper,
     Table,
     TableBody
-} from '@material-ui/core';
+} from '@mui/material';
 
 import InfoFilterRow from './InfoFilterRow';
 import { SessionWithWidgets } from '@jbrowse/core/util/types';
 import { observer } from 'mobx-react';
+import { styled } from '@mui/material/styles';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 export default jbrowse => {
+    const FormControlButtonBar = styled(FormControl)(({ theme }) => ({
+        margin: theme.spacing(1),
+        padding: theme.spacing(2),
+        minWidth: 400,
+        display: 'flex'
+    }))
+
+    const ButtonS = styled(Button)(({ theme }) => ({
+        maxWidth: 150,
+        marginRight: theme.spacing(2)
+    }))
+
+    const TableNoPaddingBlock = styled(Table)(({ theme }) => ({
+        padding: 0,
+        display: 'block'
+    }))
 
     function FilterForm(props){
-        const classes = styles()
         const { model } = props
         let track = model.track
 
+        // @ts-ignore
         const displays = readConfObject(track, 'displays')
         const initialFilters = displays[0].renderer.infoFilters || []
 
@@ -49,6 +62,7 @@ export default jbrowse => {
                 return false
             }
 
+            // TODO: data-driven
             for (const filter of filters){
                 const tokens = filter.split(':')
                 if (tokens.length !== 3) {
@@ -91,11 +105,7 @@ export default jbrowse => {
 
         // Based on: https://mui.com/components/menus/#menulist-composition
         const [open, setOpen] = React.useState(false);
-        const anchorRef = React.useRef(null);
-
-        const handleToggle = () => {
-            setOpen((prevOpen) => !prevOpen);
-        };
+        const buttonRef = React.useRef(null);
 
         const handleAlertClose = () => {
             setAlertOpen(false);
@@ -110,111 +120,65 @@ export default jbrowse => {
             setInfoFilters([...infoFilters])
         }
 
-        const handleClose = (event) => {
-            if (anchorRef.current && anchorRef.current.contains(event.target)) {
-                return;
-            }
-
+        const handleMenuClose = () => {
             setOpen(false)
-        };
-
-        // return focus to the button when we transitioned from !open -> open
-        const prevOpen = React.useRef(open);
-        React.useEffect(() => {
-            if (prevOpen.current === true && open === false) {
-                anchorRef.current.focus();
-            }
-
-            prevOpen.current = open;
-        }, [open])
+        }
 
         return(
-                <>
-                    <div style={{padding: '5px' }}>
+            <>
+                <div style={{padding: '5px' }}>
                     Only show variants where:
-                    <Table className={classes.table}>
+                    <TableNoPaddingBlock>
                         <TableBody>
                             {infoFilters.map((filterStr, key) =>
-                                    <InfoFilterRow key={key} filterStr={filterStr} filterChangeHandler={filterChangeHandler} deleteHandler={onRowDelete} rowIdx={Number(key)} hasSubmitted={hasSubmitted}/>
+                                <InfoFilterRow key={key} filterStr={filterStr} filterChangeHandler={filterChangeHandler} deleteHandler={onRowDelete} rowIdx={Number(key)} hasSubmitted={hasSubmitted}/>
                             )}
                         </TableBody>
-                    </Table>
-                    <FormControl className={classes.addNewControl} >
-                        <Box padding={'5px'} mr="5px">
-                        <Button
-                                className={classes.button}
-                                ref={anchorRef}
-                                id="composition-button"
-                                aria-controls={open ? 'composition-menu' : undefined}
-                                aria-expanded={open ? 'true' : undefined}
-                                aria-haspopup="true"
-                                onClick={handleToggle}
+                    </TableNoPaddingBlock>
+                    <FormControlButtonBar>
+                        <Box padding={'5px'}>
+                            <Button
+                                ref={buttonRef}
+                                sx={{maxWidth: 150, marginRight: 2}}
                                 variant="contained"
+                                onClick={() => setOpen(!open)}
+                                endIcon={<KeyboardArrowDownIcon />}
                                 color="primary">
-                            Add Filter
-                        </Button>
-                        <Popper
-                                open={open}
-                                anchorEl={anchorRef.current}
-                                role={undefined}
-                                placement="bottom-start"
-                                transition
-                                disablePortal
-                        >
-                            {({ TransitionProps, placement }) => (
-                                    <Grow
-                                            {...TransitionProps}
-                                            style={{
-                                                transformOrigin:
-                                                        placement === 'bottom-start' ? 'left top' : 'left bottom',
-                                            }}
-                                    >
-                                        <Paper>
-                                            <ClickAwayListener onClickAway={handleClose}>
-                                                <MenuList
-                                                        autoFocusItem={open}
-                                                        id="composition-menu"
-                                                        aria-labelledby="composition-button"
-                                                >
-                                                        {
-                                                            Object.entries(filterMap).map(([key, val]) =>
-                                                                    <MenuItem value={key} key={key} onClick={handleMenuChange} data-field-name={key}>
-                                                                        {val.title || key}
-                                                                    </MenuItem>
-                                                            )
-                                                        }
-                                                </MenuList>
-                                            </ClickAwayListener>
-                                        </Paper>
-                                    </Grow>
-                            )}
-                        </Popper>
-                        <Button className={classes.button} onClick={handleFilterSubmit} variant="contained" color="primary">
-                            Apply
-                        </Button>
-                        <Button className={classes.button} onClick={clearFilters} variant="contained" color="primary">
-                            Clear Filters
-                        </Button>
+                                Add Filter
+                            </Button>
+                            <Menu open={open} onClose={handleMenuClose} anchorEl={buttonRef.current}>
+                                {Object.entries(filterMap).map(([key, val]) =>
+                                    <MenuItem value={key} key={key} onClick={handleMenuChange} data-field-name={key}>
+                                        {val.title || key}
+                                    </MenuItem>
+                                )}
+                            </Menu>
+                            <ButtonS onClick={handleFilterSubmit} variant="contained" color="primary">
+                                Apply
+                            </ButtonS>
+                            <ButtonS onClick={clearFilters} variant="contained" color="primary">
+                                Clear Filters
+                            </ButtonS>
                         </Box>
-                    </FormControl>
-                    </div>
-                    <Dialog
-                            open={alertOpen}
-                            onClose={handleAlertClose}
-                            aria-labelledby="alert-dialog-title"
-                            aria-describedby="alert-dialog-description"
-                    >
-                        <DialogTitle id="alert-dialog-title">Invalid Filters</DialogTitle>
-                        <DialogContent>
-                            <DialogContentText id="alert-dialog-description">
-                                One or more filters is not complete. Either fill out all fields or use the 'x' buttons to remove invalid filters
-                            </DialogContentText>
-                        </DialogContent>
-                        <DialogActions>
-                            <Button onClick={handleAlertClose}>OK</Button>
-                        </DialogActions>
-                    </Dialog>
-                </>
+                    </FormControlButtonBar>
+                </div>
+                <Dialog
+                    open={alertOpen}
+                    onClose={handleAlertClose}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                >
+                    <DialogTitle id="alert-dialog-title">Invalid Filters</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText id="alert-dialog-description">
+                            One or more filters is not complete. Either fill out all fields or use the 'x' buttons to remove invalid filters
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleAlertClose}>OK</Button>
+                    </DialogActions>
+                </Dialog>
+            </>
         )
     }
 

@@ -1,5 +1,6 @@
 import { ConfigurationSchema } from '@jbrowse/core/configuration';
-import { default as rendererSchema } from '@jbrowse/plugin-svg/src/SvgFeatureRenderer/configSchema';
+import { svgFeatureRendererConfigSchema} from '@jbrowse/plugin-svg'
+
 import { generateSchemeJexl } from "../ColorWidget/colorUtil";
 
 export default ConfigurationSchema(
@@ -27,7 +28,7 @@ export default ConfigurationSchema(
     },
     {
         explicitlyTyped: true,
-        baseConfiguration: rendererSchema,
+        baseConfiguration: svgFeatureRendererConfigSchema,
         preProcessSnapshot: s => {
             const snap = JSON.parse(JSON.stringify(s))
             snap.palette = snap.palette || 'IMPACT'

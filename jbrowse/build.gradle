@@ -37,7 +37,6 @@ def jbPkgTask = project.tasks.named("npm_run_jb-pkg")
 jbPkgTask.configure {
     outputs.cacheIf {false}
 
-    inputs.dir(project.file("./node_modules/@jbrowse/cli")).withPathSensitivity(PathSensitivity.RELATIVE)
     outputs.dir(project.file("./resources/external/jb-cli"))
 }
 

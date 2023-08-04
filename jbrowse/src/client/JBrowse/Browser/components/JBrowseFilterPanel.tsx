@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react';
-import { Box, Button } from '@material-ui/core';
+import { Box, Button } from '@mui/material';
 import React from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import {
@@ -46,6 +46,7 @@ const JBrowseFilterPanel = observer(props => {
 
     const filterDisplayItems = []
     for (const track of tracks) {
+        // @ts-ignore
         const activeSamples = getConf(track, ['displays', '0', 'renderer', 'activeSamples'])
         const trackId = getConf(track, ['trackId'])
         if (activeSamples) {
