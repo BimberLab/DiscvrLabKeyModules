@@ -446,9 +446,10 @@ const VariantTableWidget = observer(props => {
                                         <Typography variant="h6">{widgetType.heading}</Typography>
                                     </Toolbar>
                                 </AppBar>
-                                <ScopedCssBaseline>
-                                    <ReactComponent model={visibleWidget}/>
-                                </ScopedCssBaseline>
+
+                                <Box sx={{ margin: '12px' }}>
+                                    <ReactComponent model={visibleWidget} style={{ margin: '12px' }}/>
+                                </Box>
                             </Paper>
                         </Dialog>
                     )
@@ -456,7 +457,6 @@ const VariantTableWidget = observer(props => {
             }
 
             <div style={{ marginBottom: "10px", display: "flex", alignItems: "center" }}>
-
                 <div style={{ flex: 1 }}>
                     {filters.map((filter, index) => {
                         if ((filter as any).field == "" || (filter as any).operator == "" || (filter as any).value == "" ) {
