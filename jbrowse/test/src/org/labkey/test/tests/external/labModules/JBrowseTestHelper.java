@@ -138,7 +138,7 @@ public class JBrowseTestHelper
     {
         Locator.XPathLocator l = getTrackLocator(test, trackId, true);
         test.waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
-        l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]")).notHidden().append("/..");
+        l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]")).notHidden().parent().append("/*[name()='polygon']");
         test.waitForElement(l);
 
         return By.xpath(l.toXpath());
