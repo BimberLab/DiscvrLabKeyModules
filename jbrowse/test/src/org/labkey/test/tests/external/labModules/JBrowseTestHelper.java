@@ -13,6 +13,7 @@ import org.labkey.test.util.ext4cmp.Ext4CmpRef;
 import org.labkey.test.util.ext4cmp.Ext4FieldRef;
 import org.labkey.test.util.ext4cmp.Ext4GridRef;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 
@@ -35,8 +36,9 @@ public class JBrowseTestHelper
                             return list.get(0);
                         }
 
-                        throw new IllegalStateException("Expected single element, found: " + list.size());
+                        throw new IllegalStateException("Expected single element, found: " + list.size() + ", " + list.stream().map(WebElement::getLocation).map(Point::toString).collect(Collectors.joining(" / ")));
                     }
+
                     return list.get(0);
                 }
         );
