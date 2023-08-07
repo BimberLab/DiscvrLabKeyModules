@@ -25,11 +25,16 @@ public class JBrowseTestHelper
     public static final File MGAP_TEST_VCF = new File(TestFileUtils.getLabKeyRoot(), "server/modules/DiscvrLabKeyModules/jbrowse/resources/web/jbrowse/mgap/mGap.v2.1.subset.vcf.gz");
     public static final File GRCH37_GENOME = new File(TestFileUtils.getLabKeyRoot(), "server/modules/DiscvrLabKeyModules/jbrowse/resources/web/jbrowse/mgap/GRCh37_small.fasta");
 
-    public static <T> Collector<T, ?, T> toSingleton() {
+    public static Collector<WebElement, ?, WebElement> toSingleton() {
         return Collectors.collectingAndThen(
                 Collectors.toList(),
                 list -> {
                     if (list.size() != 1) {
+                        long uniqueLocations = list.stream().map(WebElement::getLocation).distinct().count();
+                        if (uniqueLocations == 1) {
+                            return list.get(0);
+                        }
+
                         throw new IllegalStateException("Expected single element, found: " + list.size());
                     }
                     return list.get(0);
@@ -153,14 +158,16 @@ public class JBrowseTestHelper
         Locator l = Locator.tagWithAttribute("svg", "data-testid", "svgfeatures").append(Locator.tag("polygon"));
         try
         {
-            return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).count();
+            // NOTE: JBrowse renders features using multiple blocks per track, and these tracks can redundantly render identical features on top of one another.
+            // Counting unique locations is indirect, but should result in unique features
+            return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).map(WebElement::getLocation).distinct().count();
         }
         catch (StaleElementReferenceException e)
         {
             test.log("Stale elements, retrying");
             WebDriverWrapper.sleep(5000);
 
-            return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).count();
+            return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).map(WebElement::getLocation).distinct().count();
         }
     }
 }
