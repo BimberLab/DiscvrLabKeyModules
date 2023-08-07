@@ -13,6 +13,7 @@ import org.labkey.test.util.ext4cmp.Ext4CmpRef;
 import org.labkey.test.util.ext4cmp.Ext4FieldRef;
 import org.labkey.test.util.ext4cmp.Ext4GridRef;
 import org.openqa.selenium.By;
+import org.openqa.selenium.Point;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 
@@ -25,13 +26,19 @@ public class JBrowseTestHelper
     public static final File MGAP_TEST_VCF = new File(TestFileUtils.getLabKeyRoot(), "server/modules/DiscvrLabKeyModules/jbrowse/resources/web/jbrowse/mgap/mGap.v2.1.subset.vcf.gz");
     public static final File GRCH37_GENOME = new File(TestFileUtils.getLabKeyRoot(), "server/modules/DiscvrLabKeyModules/jbrowse/resources/web/jbrowse/mgap/GRCh37_small.fasta");
 
-    public static <T> Collector<T, ?, T> toSingleton() {
+    public static Collector<WebElement, ?, WebElement> toSingleton() {
         return Collectors.collectingAndThen(
                 Collectors.toList(),
                 list -> {
                     if (list.size() != 1) {
-                        throw new IllegalStateException("Expected single element, found: " + list.size());
+                        long uniqueLocations = list.stream().map(WebElement::getLocation).distinct().count();
+                        if (uniqueLocations == 1) {
+                            return list.get(0);
+                        }
+
+                        throw new IllegalStateException("Expected single element, found: " + list.size() + ", " + list.stream().map(WebElement::getLocation).map(Point::toString).collect(Collectors.joining(" / ")));
                     }
+
                     return list.get(0);
                 }
         );
@@ -129,9 +136,18 @@ public class JBrowseTestHelper
 
     public static By getVariantWithinTrack(BaseWebDriverTest test, String trackId, String variantText)
     {
+        return getVariantWithinTrack(test, trackId, variantText, true);
+    }
+
+    public static By getVariantWithinTrack(BaseWebDriverTest test, String trackId, String variantText, boolean appendPolygon)
+    {
         Locator.XPathLocator l = getTrackLocator(test, trackId, true);
         test.waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
-        l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]")).notHidden().append("/..");
+        l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]")).notHidden().parent();
+        if (appendPolygon){
+            l = l.append("/*[name()='polygon']");
+        }
+
         test.waitForElement(l);
 
         return By.xpath(l.toXpath());
@@ -153,14 +169,16 @@ public class JBrowseTestHelper
         Locator l = Locator.tagWithAttribute("svg", "data-testid", "svgfeatures").append(Locator.tag("polygon"));
         try
         {
-            return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).count();
+            // NOTE: JBrowse renders features using multiple blocks per track, and these tracks can redundantly render identical features on top of one another.
+            // Counting unique locations is indirect, but should result in unique features
+            return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).map(WebElement::getLocation).distinct().count();
         }
         catch (StaleElementReferenceException e)
         {
             test.log("Stale elements, retrying");
             WebDriverWrapper.sleep(5000);
 
-            return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).count();
+            return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).map(WebElement::getLocation).distinct().count();
         }
     }
 }
