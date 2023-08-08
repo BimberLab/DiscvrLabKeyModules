@@ -1,7 +1,5 @@
 import org.labkey.gradle.util.BuildUtils;
 
-final String luceneVersion="9.4.2"
-
 repositories {
 	mavenCentral()
 	// Added for org.clojars.chapmanb:sam dependency required by com.github.samtools:htsjdk
