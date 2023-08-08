@@ -17,6 +17,11 @@ module.exports = {
         generateLib: true,
         path: './src/client/JBrowse/Search/webpart'
     },{
+        name: 'variantSearch',
+        title: 'Variant Search',
+        permission: 'read',
+        path: './src/client/JBrowse/VariantSearch'
+    },{
         name: 'variantTable',
         title: 'Variant Table',
         permission: 'read',

@@ -94,14 +94,4 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
             helper.prepareGenome(id);
         }
     }
-
-    @Override
-    public void complete(SequenceAnalysisJobSupport support, AnalysisModel model, Collection<SequenceOutputFile> outputFilesCreated) throws PipelineJobException
-    {
-        getPipelineCtx().getLogger().debug("Total sequence outputs created: " + outputFilesCreated.size());
-        for (SequenceOutputFile so : outputFilesCreated)
-        {
-            NimbleHelper.importQualityMetrics(so, getPipelineCtx().getJob());
-        }
-    }
 }

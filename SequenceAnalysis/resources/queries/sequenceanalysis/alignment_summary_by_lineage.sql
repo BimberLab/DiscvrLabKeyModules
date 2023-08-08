@@ -34,6 +34,7 @@ select
       SELECT distinct asj.alignment_id from sequenceanalysis.alignment_summary_junction asj WHERE asj.ref_nt_id.locus = a.loci and asj.status = true
     )
   ) as float)), 2) as percent_from_locus,
+  group_concat(distinct a.rowid, ',') as rowids
 
 FROM (
 

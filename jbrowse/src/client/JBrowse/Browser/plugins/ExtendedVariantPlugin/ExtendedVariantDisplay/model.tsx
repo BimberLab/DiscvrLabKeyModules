@@ -1,14 +1,13 @@
 import { ConfigurationReference, getConf } from '@jbrowse/core/configuration';
 import { AnyConfigurationModel, } from '@jbrowse/core/configuration/configurationSchema';
 import { getContainingTrack, getContainingView, getSession } from '@jbrowse/core/util';
-import FilterListIcon from '@material-ui/icons/FilterList';
-import VisibilityIcon from '@material-ui/icons/Visibility';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import configSchemaF from './configSchema';
 import { getEnv, IAnyStateTreeNode, types } from 'mobx-state-tree';
-import PaletteIcon from '@material-ui/icons/Palette';
-import { default as SetMaxHeightDlg } from '@jbrowse/plugin-linear-genome-view/src/LinearBasicDisplay/components/SetMaxHeight';
+import PaletteIcon from '@mui/icons-material/Palette';
 import { LinearGenomeViewModel } from '@jbrowse/plugin-linear-genome-view';
-import { navigateToTable } from '../../../../utils';
+import { navigateToSearch, navigateToTable } from '../../../../utils';
 
 function getContainingTrackWithConfig(node: IAnyStateTreeNode): IAnyStateTreeNode & { configuration: AnyConfigurationModel } {
    return getContainingTrack(node) as any;
@@ -52,7 +51,8 @@ export default jbrowse => {
             const session = getSession(self)
             const track = getContainingTrackWithConfig(self)
 
-            const trackId = getConf(track, 'trackId')
+            // @ts-ignore
+            const trackId = getConf(track, ['trackId'])
             const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])
 
             const widgetId = 'Variant-' + trackId;
@@ -80,7 +80,7 @@ export default jbrowse => {
             onClick: () => {
                const session = getSession(self)
                const track = getContainingTrackWithConfig(self)
-               const widgetId = 'Variant-' + getConf(track, 'trackId');
+               const widgetId = 'InfoFilterWidget-' + getConf(track, 'trackId');
                const filterWidget = session.addWidget(
                   'InfoFilterWidget',
                   widgetId,
@@ -95,7 +95,7 @@ export default jbrowse => {
             onClick: () => {
                const session = getSession(self)
                const track = getContainingTrackWithConfig(self)
-               const widgetId = 'Variant-' + getConf(track, 'trackId');
+               const widgetId = 'ColorWidget-' + getConf(track, 'trackId');
                const colorWidget = session.addWidget(
                   'ColorWidget',
                   widgetId,
@@ -111,7 +111,7 @@ export default jbrowse => {
             onClick: () => {
                const session = getSession(self)
                const track = getContainingTrackWithConfig(self)
-               const widgetId = 'Variant-' + getConf(track, 'trackId');
+               const widgetId = 'SampleFilterWidget-' + getConf(track, 'trackId');
                const sampleFilterWidget = session.addWidget(
                   'SampleFilterWidget',
                   widgetId,
@@ -171,54 +171,58 @@ export default jbrowse => {
             },
 
             trackMenuItems() {
-               return [
-                  filterMenu, sampleFilterMenu, colorMenu,
-                  {
-                     label: 'Show labels',
-                     icon: VisibilityIcon,
-                     type: 'checkbox',
-                     checked: self.showLabels,
+               const buttons = [filterMenu, sampleFilterMenu, colorMenu, {
+                  label: 'Show labels',
+                  icon: VisibilityIcon,
+                  type: 'checkbox',
+                  checked: self.showLabels,
+                  onClick: () => {
+                     self.toggleShowLabels()
+                  }
+               }, {
+                  label: 'Display mode',
+                  icon: VisibilityIcon,
+                  subMenu: [
+                     'compact',
+                     'reducedRepresentation',
+                     'normal',
+                     'collapse',
+                  ].map(val => ({
+                     label: val,
                      onClick: () => {
-                        self.toggleShowLabels()
-                     }
-                  },
-                  {
-                     label: 'Display mode',
-                     icon: VisibilityIcon,
-                     subMenu: [
-                        'compact',
-                        'reducedRepresentation',
-                        'normal',
-                        'collapse',
-                     ].map(val => ({
-                        label: val,
-                        onClick: () => {
-                           self.setDisplayMode(val)
-                        },
-                     })),
-                  },
-                  {
-                     label: 'Set max height',
-                     onClick: () => {
-                        getSession(self).queueDialog((doneCallback: Function) => [
-                           SetMaxHeightDlg,
-                           { model: self, handleClose: doneCallback },
-                        ])
+                        self.setDisplayMode(val)
                      },
-                  },
-                  {
-                     label: 'View As Table',
+                  })),
+               }, {
+                  label: 'View As Table',
+                  onClick: () => {
+                     const track = getContainingTrackWithConfig(self)
+                     const view = getContainingView(self) as LinearGenomeViewModel
+
+                     const region = view.getSelectedRegions(undefined, undefined)[0]
+                     const location = region.refName + ':' + (1+region.start) + '..' + (1+region.end)
+                     const sessionId = view.id;
+                     navigateToTable(sessionId, location, track.configuration.trackId, track)
+                  }
+               }]
+
+               const supportsLuceneIndex = getConf(self, ['renderer', 'supportsLuceneIndex'])
+               if (supportsLuceneIndex) {
+                  buttons.push({
+                     label: 'Variant Search',
                      onClick: () => {
                         const track = getContainingTrackWithConfig(self)
                         const view = getContainingView(self) as LinearGenomeViewModel
-                        
+
                         const region = view.getSelectedRegions(undefined, undefined)[0]
-                        const location = region.refName + ':' + region.start + '..' + region.end
+                        const location = region.refName + ':' + (1+region.start) + '..' + (1+region.end)
                         const sessionId = view.id;
-                        navigateToTable(sessionId, location, track.configuration.trackId, track)
-                     },
-                  }
-              ]
+                        navigateToSearch(sessionId, location, track.configuration.trackId, track)
+                     }
+                  })
+               }
+
+               return buttons
             }
          }
       })

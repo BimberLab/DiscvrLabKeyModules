@@ -237,6 +237,7 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
 
         if (handler instanceof VariantProcessingStep.SupportsScatterGather)
         {
+            ctx.getLogger().debug("Running additional merge tasks");
             ((VariantProcessingStep.SupportsScatterGather) handler).performAdditionalMergeTasks(ctx, getPipelineJob(), manager, genome, toConcat);
         }
 

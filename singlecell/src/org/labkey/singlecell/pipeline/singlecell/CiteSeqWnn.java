@@ -1,10 +1,11 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import org.json.JSONObject;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class CiteSeqWnn extends AbstractCellMembraneStep
@@ -18,7 +19,11 @@ public class CiteSeqWnn extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("CiteSeqWnn", "Seurat WNN", "Seurat", "This will run DimRedux steps on the ADT data.", List.of(), null, null);
+            super("CiteSeqWnn", "Seurat WNN", "Seurat", "This will run DimRedux steps on the ADT data.", List.of(
+                    SeuratToolParameter.create("assayName", "Assay Name", "The assay to use", "textfield", new JSONObject(){{
+
+                    }}, "ADT")
+            ), null, null);
         }
 
         @Override

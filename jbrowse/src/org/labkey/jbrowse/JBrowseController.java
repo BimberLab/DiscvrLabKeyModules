@@ -20,6 +20,7 @@ import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
+import htsjdk.variant.vcf.VCFHeaderLineType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -41,6 +42,7 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
 import org.labkey.api.jbrowse.JBrowseService;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleHtmlView;
@@ -713,6 +715,7 @@ public class JBrowseController extends SpringActionController
                 resp = getDemoSession("external/mGAPSession.json");
                 resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("activeSamples", "m00004,m00005");
                 resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("palette", "AF");
+                resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("supportsLuceneIndex", true);
                 resp.getJSONArray("tracks").getJSONObject(0).getJSONArray("displays").getJSONObject(0).getJSONObject("renderer").put("infoFilters", new JSONArray(){{
                     put("AF:gt:0.1");
                 }});
@@ -800,54 +803,34 @@ public class JBrowseController extends SpringActionController
         }
     }
 
-    @RequiresPermission(AdminPermission.class)
-    public static class LuceneQueryAction extends ReadOnlyApiAction<LuceneQueryForm>
+    @RequiresPermission(ReadPermission.class)
+    public static class GetIndexedFieldsAction extends ReadOnlyApiAction<LuceneQueryForm>
     {
         @Override
         public ApiResponse execute(LuceneQueryForm form, BindException errors)
         {
-            JBrowseSession session = JBrowseSession.getForId(form.getSessionId());
-            if (session == null)
-            {
-                errors.reject(ERROR_MSG, "Unable to find JBrowse session: " + form.getSessionId());
-                return null;
-            }
-
-            JsonFile track = session.getTrack(getUser(), form.getTrackId());
-            if (track == null)
-            {
-                errors.reject(ERROR_MSG, "Unable to find track with ID: " + form.getTrackId());
-                return null;
-            }
-
-            if (!track.shouldHaveFreeTextSearch())
-            {
-                errors.reject(ERROR_MSG, "This track does not support free text search: " + form.getTrackId());
-                return null;
-            }
-
-            if (!track.doExpectedSearchIndexesExist())
-            {
-                errors.reject(ERROR_MSG, "The lucene index has not been created for this track: " + form.getTrackId());
-                return null;
-            }
-
-            File indexPath = track.getExpectedLocationOfLuceneIndex(true);
-
-            // TODO: execute lucene query and get results. Below is a total guess on what the client should provide for paging:
-            int pageSize = form.getPageSize();
-            int offset = form.getOffset();
-
             try
             {
-                JSONObject results = new JSONObject();
+                JBrowseSession session = JBrowseFieldUtils.getSession(form.getSessionId());
+                JsonFile jsonFile = JBrowseFieldUtils.getTrack(session, form.getTrackId(), getUser());
 
-                //TODO: we should probably stream this
+                Map<String, JBrowseFieldDescriptor> fields = JBrowseFieldUtils.getIndexedFields(jsonFile, getUser(), getContainer());
+                JSONObject results = new JSONObject();
+                JSONArray data = new JSONArray();
+                Set<String> indexedFields = new HashSet<>();
+                for (Map.Entry<String, JBrowseFieldDescriptor> entry : fields.entrySet()) {
+                    data.put(entry.getValue().toJSON());
+                    indexedFields.add(entry.getValue().getFieldName());
+                }
+
+                results.put("fields", data);
+                results.put("groups", JBrowseServiceImpl.get().getGroupNames(getUser(), getContainer()));
+                results.put("promotedFilters", JBrowseServiceImpl.get().getPromotedFilters(indexedFields, getUser(), getContainer()));
+
                 return new ApiSimpleResponse(results);
             }
-            catch (Exception e)
+            catch (IllegalArgumentException e)
             {
-                _log.error("Error in LuceneQuery", e);
                 errors.reject(ERROR_MSG, e.getMessage());
                 return null;
             }
@@ -856,9 +839,98 @@ public class JBrowseController extends SpringActionController
         @Override
         public void validateForm(LuceneQueryForm form, Errors errors)
         {
-            if ((form.getSearchString() == null || form.getSessionId() == null))
+            if ((form.getTrackId() == null || form.getSessionId() == null))
             {
-                errors.reject(ERROR_MSG, "Must provide search string and the JBrowse session ID");
+                errors.reject(ERROR_MSG, "Must provide trackId and the JBrowse session ID");
+            }
+            else if (!isValidUUID(form.getTrackId()))
+            {
+                errors.reject(ERROR_MSG, "Invalid track ID: " + form.getTrackId());
+            }
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public static class ResolveVcfFieldsAction extends ReadOnlyApiAction<ResolveVcfFieldsForm>
+    {
+        @Override
+        public ApiResponse execute(ResolveVcfFieldsForm form, BindException errors)
+        {
+            try
+            {
+                JSONObject ret = new JSONObject();
+                if (form.isIncludeDefaultFields())
+                {
+                    JBrowseFieldUtils.DEFAULT_FIELDS.forEach((key, val) -> ret.put(key, val.toJSON()));
+                }
+
+                for (String key : form.getInfoKeys())
+                {
+                    // NOTE: leave type null and let the client figure it out using the VCF header. In most cases this wont matter for presentation
+                    JBrowseFieldDescriptor fd = new JBrowseFieldDescriptor(key, null, false, false, null, null);
+                    JBrowseServiceImpl.get().customizeField(getUser(), getContainer(), fd);
+
+                    ret.put(key, fd.toJSON());
+                }
+
+                return new ApiSimpleResponse(ret);
+            }
+            catch (IllegalArgumentException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+        }
+
+        @Override
+        public void validateForm(ResolveVcfFieldsForm form, Errors errors)
+        {
+            if (form.getInfoKeys() == null)
+            {
+                errors.reject(ERROR_MSG, "Must provide list of field keys to inspect");
+            }
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public static class LuceneQueryAction extends ReadOnlyApiAction<LuceneQueryForm>
+    {
+        @Override
+        public ApiResponse execute(LuceneQueryForm form, BindException errors)
+        {
+            JBrowseLuceneSearch searcher;
+            try
+            {
+                searcher = JBrowseLuceneSearch.create(form.getSessionId(), form.getTrackId(), getUser());
+            }
+            catch (IllegalArgumentException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+
+            try
+            {
+                return new ApiSimpleResponse(searcher.doSearch(getUser(), PageFlowUtil.decode(form.getSearchString()), form.getPageSize(), form.getOffset()));
+            }
+            catch (Exception e)
+            {
+                _log.error("Error in JBrowse lucene query", e);
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+        }
+
+        @Override
+        public void validateForm(LuceneQueryForm form, Errors errors)
+        {
+            if ((form.getSearchString() == null || form.getSessionId() == null || form.getTrackId() == null))
+            {
+                errors.reject(ERROR_MSG, "Must provide search string, track ID, and the JBrowse session ID");
+            }
+            else if (!isValidUUID(form.getTrackId()))
+            {
+                errors.reject(ERROR_MSG, "Invalid track ID: " + form.getTrackId());
             }
         }
     }
@@ -872,9 +944,9 @@ public class JBrowseController extends SpringActionController
         // This is the GUID
         private String _trackId;
 
-        private int _pageSize = 1000;
+        private int _pageSize = 100;
 
-        private int offset = -1;
+        private int _offset = 0;
 
         public String getSearchString()
         {
@@ -908,12 +980,12 @@ public class JBrowseController extends SpringActionController
 
         public int getOffset()
         {
-            return offset;
+            return _offset;
         }
 
         public void setOffset(int offset)
         {
-            this.offset = offset;
+            _offset = offset;
         }
 
         public String getTrackId()
@@ -924,6 +996,32 @@ public class JBrowseController extends SpringActionController
         public void setTrackId(String trackId)
         {
             _trackId = trackId;
+        }
+    }
+
+    public static class ResolveVcfFieldsForm
+    {
+        private String[] infoKeys;
+        private boolean includeDefaultFields = false;
+
+        public String[] getInfoKeys()
+        {
+            return infoKeys;
+        }
+
+        public void setInfoKeys(String[] infoKeys)
+        {
+            this.infoKeys = infoKeys;
+        }
+
+        public boolean isIncludeDefaultFields()
+        {
+            return includeDefaultFields;
+        }
+
+        public void setIncludeDefaultFields(boolean includeDefaultFields)
+        {
+            this.includeDefaultFields = includeDefaultFields;
         }
     }
 }

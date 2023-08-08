@@ -1,10 +1,10 @@
 import React from 'react';
 import { mount } from 'enzyme';
-import { mocked } from 'ts-jest/utils';
-import { jest, beforeEach, describe, expect, test } from '@jest/globals';
+import { mocked } from 'jest-mock';
+import { describe, expect, jest, test } from '@jest/globals';
 
-import { Ajax, Utils, ActionURL} from '@labkey/api';
-import View from "./Browser"
+import { Ajax } from '@labkey/api';
+import View from './Browser';
 
 const mockData =
 {
@@ -89,7 +89,7 @@ jest.mock('@labkey/api', () => {
         }
     }
 })
-const mockedRequest = mocked(Ajax, true)
+const mockedRequest = mocked(Ajax)
 
 describe('JBrowse 2 Browser', () => {
 

@@ -11,8 +11,7 @@ for (datasetId in names(seuratObjects)) {
   seuratObj <- readRDS(seuratObjects[[datasetId]])
 
   for (genomeId in names(nimbleGenomes)) {
-    #TODO: dropAmbiguousFeatures
-    seuratObj <- Rdiscvr::DownloadAndAppendNimble(seuratObject = seuratObj, allowableGenomes = genomeId, targetAssayName = nimbleGenomes[[genomeId]], enforceUniqueFeatureNames = TRUE)
+    seuratObj <- Rdiscvr::DownloadAndAppendNimble(seuratObject = seuratObj, allowableGenomes = genomeId, targetAssayName = nimbleGenomes[[genomeId]], enforceUniqueFeatureNames = TRUE, dropAmbiguousFeatures = !retainAmbiguousFeatures)
   }
 
   saveData(seuratObj, datasetId)

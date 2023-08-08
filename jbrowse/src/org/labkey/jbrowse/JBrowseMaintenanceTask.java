@@ -264,7 +264,7 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
             {
                 File expectedFile = j.getLocationOfProcessedTrack(false);
                 boolean error = false;
-                if (expectedFile != null && !expectedFile.exists())
+                if (j.shouldBeCopiedToProcessDir() && expectedFile != null && !expectedFile.exists())
                 {
                     log.error("Missing expected file: " + expectedFile.getPath());
                     error = true;
@@ -272,7 +272,13 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
 
                 if (!j.doExpectedSearchIndexesExist())
                 {
-                    log.error("Missing search indexes: " + expectedFile.getPath());
+                    log.error("Missing trix search indexes: " + expectedFile.getPath());
+                    error = true;
+                }
+
+                if (j.shouldHaveFreeTextSearch() && !j.getExpectedLocationOfLuceneIndex(false).exists())
+                {
+                    log.error("Missing lucene search indexes: " + expectedFile.getPath());
                     error = true;
                 }
 

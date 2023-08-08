@@ -66,6 +66,18 @@ Ext4.define('SequenceAnalysis.panel.VariantFilterPanel', {
 							this.addFilter('Depth100', 'vc.hasAttribute(\'DP\') && DP > 100.0');
 						}
 					},{
+						text: 'High IMPACT',
+						scope: this,
+						handler: function(gridBtn){
+							this.addFilter('High-IMPACT', 'IMPACT == \'HIGH\'');
+						}
+					},{
+						text: 'CADD PH',
+						scope: this,
+						handler: function(gridBtn){
+							this.addFilter('CADD_PH', 'CADD_PH > 25');
+						}
+					},{
 						text: 'No Genotypes Called',
 						scope: this,
 						handler: function(gridBtn){
@@ -100,7 +112,7 @@ Ext4.define('SequenceAnalysis.panel.VariantFilterPanel', {
 					editor: {
 						xtype: 'textfield',
 						allowBlank: false,
-						stripCharsRe: /(^['"]+)|(['"]+$)/g
+						stripCharsRe: /(^["]+)|(["]+$)/g
 					}
 				//}, {
 				//	dataIndex: 'invert',

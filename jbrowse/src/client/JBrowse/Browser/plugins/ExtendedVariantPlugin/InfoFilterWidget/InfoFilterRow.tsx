@@ -1,10 +1,10 @@
-import {observer} from "mobx-react";
-import {style as styles} from "./style";
+import { observer } from 'mobx-react';
 
-import React, {useState} from "react";
-import {FormControl, IconButton, MenuItem, Select, TableCell, TableRow, TextField, Tooltip} from "@material-ui/core";
-import {filterMap} from "./filters";
-import ClearIcon from "@material-ui/icons/Clear";
+import React from 'react';
+import { FormControl, IconButton, MenuItem, Select, TableCell, TableRow, TextField, Tooltip } from '@mui/material';
+import { filterMap } from './filters';
+import ClearIcon from '@mui/icons-material/Clear';
+import { styled } from '@mui/material/styles';
 
 export const OPERATOR_TO_DISPLAY = {
     lt: "<",
@@ -34,8 +34,24 @@ function convertFilterObjToString(filter) {
     return [filter.field, filter.operator || '', filter.value || ''].join(':')
 }
 
+const FormControlNumValue = styled(FormControl)(({ theme }) => ({
+    margin: theme.spacing(1),
+    minWidth: 100
+}))
+
+const FormControlCategorical = styled(FormControl)(({ theme }) => ({
+    margin: theme.spacing(1),
+    padding: theme.spacing(2),
+    minWidth: 100,
+    display: 'flex'
+}))
+
+const TableCellCenteredPadded = styled(TableCell)(({ theme }) => ({
+    textAlign: 'center',
+    padding: theme.spacing(0.75, 0, 0.75, 1),
+}))
+
 const InfoFilterRow = observer(props => {
-    const classes = styles()
     const { rowIdx, filterStr, filterChangeHandler, deleteHandler, hasSubmitted } = props
     const filterObj = convertFilterStringToObj(filterStr)
 
@@ -57,88 +73,88 @@ const InfoFilterRow = observer(props => {
         const fieldDef = filterMap[filterObj.field]
         if (fieldDef.dataType === 'number') {
             return (
-                    <FormControl className={classes.numValueControl}>
-                        <TextField
-                                id="standard-number"
-                                type="number"
-                                inputProps={{
-                                    inputMode: "numeric",
-                                    min: fieldDef.minValue ? Number(fieldDef.minValue) : undefined,
-                                    max: fieldDef.maxValue ? Number(fieldDef.maxValue) : undefined
-                                }}
-                                value={filterObj.value}
-                                required={true}
-                                error={hasSubmitted && !filterObj.value}
-                                onChange={handleValueChange}
-                        />
-                    </FormControl>
+                <FormControlNumValue>
+                    <TextField
+                        id="standard-number"
+                        type="number"
+                        inputProps={{
+                            inputMode: "numeric",
+                            min: fieldDef.minValue ? Number(fieldDef.minValue) : undefined,
+                            max: fieldDef.maxValue ? Number(fieldDef.maxValue) : undefined
+                        }}
+                        value={filterObj.value}
+                        required={true}
+                        error={hasSubmitted && !filterObj.value}
+                        onChange={handleValueChange}
+                    />
+                </FormControlNumValue>
             )
         } else if (filterObj) {
             return (
-                    <FormControl className={classes.formControl}>
-                        <div>
-                            <Select
-                                    labelId="category-select-label"
-                                    id="category-select"
-                                    value={filterObj.value}
-                                    required={true}
-                                    error={hasSubmitted && !filterObj.value}
-                                    onChange={handleValueChange}
-                            >
-                                {filterMap[filterObj["field"]].options.map((option) => (
-                                        <MenuItem key={option} value={option}>
-                                            {option}
-                                        </MenuItem>
-                                ))}
-                            </Select>
-                        </div>
-                    </FormControl>
+                <FormControlCategorical>
+                    <div>
+                        <Select
+                            labelId="category-select-label"
+                            id="category-select"
+                            value={filterObj.value}
+                            required={true}
+                            error={hasSubmitted && !filterObj.value}
+                            onChange={handleValueChange}
+                        >
+                            {filterMap[filterObj["field"]].options.map((option) => (
+                                <MenuItem key={option} value={option}>
+                                    {option}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </div>
+                </FormControlCategorical>
             )
         }
     })
 
     return (
-            <>
-                <TableRow>
-                    <TableCell className={classes.tableCell}>
-                        {filterMap[filterObj["field"]].title || filterObj["field"]}
-                    </TableCell>
-                    <TableCell className={classes.tableCell}>
-                        <FormControl className={classes.formControl}>
-                            <Select
-                                    labelId="category-select-label"
-                                    id="category-select"
-                                    value={filterObj.operator || ''}
-                                    error={hasSubmitted && !filterObj.operator}
-                                    onChange={handleOperatorChange}
-                                    required={true}
-                                    displayEmpty
-                            >
-                                <MenuItem disabled value="">
-                                    <em>Operator</em>
-                                </MenuItem>
-                                {filterMap[filterObj["field"]].operators.map(operatorStr => {
-                                    return (
-                                            <MenuItem value={operatorStr} key={operatorStr}>
-                                                {OPERATOR_TO_DISPLAY[operatorStr]}
-                                            </MenuItem>
-                                    )
-                                })}
-                            </Select>
-                        </FormControl>
-                    </TableCell>
-                    <TableCell className={classes.tableCell}>
-                        {getValueComponent(filterObj)}
-                    </TableCell>
-                    <TableCell className={classes.tableCell}>
-                        <Tooltip title="Remove filter" aria-label="remove" placement="bottom">
-                            <IconButton aria-label="remove filter" onClick={handleFilterDelete}>
-                                <ClearIcon />
-                            </IconButton>
-                        </Tooltip>
-                    </TableCell>
-                </TableRow>
-            </>
+        <>
+            <TableRow>
+                <TableCellCenteredPadded>
+                    {filterMap[filterObj["field"]].title || filterObj["field"]}
+                </TableCellCenteredPadded>
+                <TableCellCenteredPadded>
+                    <FormControlCategorical>
+                        <Select
+                            labelId="category-select-label"
+                            id="category-select"
+                            value={filterObj.operator || ''}
+                            error={hasSubmitted && !filterObj.operator}
+                            onChange={handleOperatorChange}
+                            required={true}
+                            displayEmpty
+                        >
+                            <MenuItem disabled value="">
+                                <em>Operator</em>
+                            </MenuItem>
+                            {filterMap[filterObj["field"]].operators.map(operatorStr => {
+                                return (
+                                    <MenuItem value={operatorStr} key={operatorStr}>
+                                        {OPERATOR_TO_DISPLAY[operatorStr]}
+                                    </MenuItem>
+                                )
+                            })}
+                        </Select>
+                    </FormControlCategorical>
+                </TableCellCenteredPadded>
+                <TableCellCenteredPadded>
+                    {getValueComponent(filterObj)}
+                </TableCellCenteredPadded>
+                <TableCellCenteredPadded>
+                    <Tooltip title="Remove filter" aria-label="remove" placement="bottom">
+                        <IconButton aria-label="remove filter" onClick={handleFilterDelete}>
+                            <ClearIcon />
+                        </IconButton>
+                    </Tooltip>
+                </TableCellCenteredPadded>
+            </TableRow>
+        </>
     )
 })
 
