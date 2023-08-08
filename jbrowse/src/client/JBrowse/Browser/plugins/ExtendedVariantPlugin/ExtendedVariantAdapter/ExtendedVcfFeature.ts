@@ -19,29 +19,6 @@ export default class ExtendedVcfFeature extends VcfFeature {
         return map ? map[propKey] :  null
     }
 
-    static calculateVariableSamples(variant: {
-        REF: string
-        POS: number
-        ALT: string[]
-        CHROM: string
-        INFO: any
-        ID: string[]
-        SAMPLES: object
-    }) {
-        if (variant.SAMPLES) {
-            variant.INFO['_variableSamples'] = [];
-            Object.keys(variant.SAMPLES).forEach(function(sampleId) {
-                // Maintain a cached list of all non-WT samples at this position:
-                const gt = variant.SAMPLES[sampleId]["GT"][0]
-                if (!(gt === "./." || gt === ".|." || gt === "0/0" || gt === "0|0")) {
-                    variant.INFO['_variableSamples'].push(sampleId)
-                }
-            })
-        }
-
-        return(variant)
-    }
-
     static extractImpact(variant:  {
         REF: string
         POS: number
@@ -50,6 +27,11 @@ export default class ExtendedVcfFeature extends VcfFeature {
         INFO: any
         ID: string[]
     }) {
+        // Only append if not present:
+        if (variant.INFO["IMPACT"]) {
+            return(variant);
+        }
+
         if (!variant.INFO["ANN"]) {
             return(variant);
         }

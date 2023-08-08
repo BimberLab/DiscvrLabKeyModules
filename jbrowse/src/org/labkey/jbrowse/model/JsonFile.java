@@ -535,6 +535,10 @@ public class JsonFile
                 put("mouseover", "jexl:'Position: ' + formatWithCommas(get(feature,'POS'))");
                 put("renderer", new JSONObject(){{
                     put("type", "ExtendedVariantRenderer");
+                    if (shouldHaveFreeTextSearch())
+                    {
+                        put("supportsLuceneIndex", true);
+                    }
                     //put("showLabels", false);
                     //put("labels", new JSONObject(){{
                     //    put("description", "jexl:get(feature,'POS')");
@@ -770,6 +774,11 @@ public class JsonFile
         return (needsGzip() && !isGzipped()) || doIndex() || shouldHaveFreeTextSearch();
     }
 
+    public boolean shouldBeCopiedToProcessDir()
+    {
+        return (needsGzip() && !isGzipped());
+    }
+
     public boolean isGzipped()
     {
         String fn = getSourceFileName();
@@ -961,13 +970,13 @@ public class JsonFile
         return luceneDir.exists();
     }
 
-    public @NotNull List<String> getInfoFieldsToIndex(@Nullable String... defaults)
+    public @NotNull List<String> getInfoFieldsToIndex()
     {
         JSONObject config = getExtraTrackConfig();
         String rawFields = config == null ? null : StringUtils.trimToNull(config.optString("infoFieldsForFullTextSearch"));
         if (rawFields == null)
         {
-            return defaults == null ? Collections.emptyList() : Arrays.asList(defaults);
+            return Collections.emptyList();
         }
 
         return Arrays.asList(rawFields.split(","));
@@ -980,8 +989,21 @@ public class JsonFile
         DISCVRSeqRunner runner = new DISCVRSeqRunner(log);
         if (!runner.jarExists())
         {
-            log.error("Unable to find DISCVRSeq.jar, skiping lucene index creation");
+            log.error("Unable to find DISCVRSeq.jar, skipping lucene index creation");
             return;
+        }
+
+        File indexDir = getExpectedLocationOfLuceneIndex(false);
+        if (indexDir != null && indexDir.exists())
+        {
+            try
+            {
+                FileUtils.deleteDirectory(getExpectedLocationOfLuceneIndex(false));
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
         }
 
         List<String> args = runner.getBaseArgs("VcfToLuceneIndexer");
@@ -989,13 +1011,25 @@ public class JsonFile
         args.add(getExpData().getFile().getPath());
 
         args.add("-O");
-        args.add(getExpectedLocationOfLuceneIndex(false).getPath());
+        args.add(indexDir.getPath());
 
-        List<String> infoFieldsForFullTextSearch = getInfoFieldsToIndex("AF");
+        List<String> infoFieldsForFullTextSearch = getInfoFieldsToIndex();
         for (String field : infoFieldsForFullTextSearch)
         {
             args.add("-IF");
             args.add(field);
+        }
+
+        args.add("--allow-missing-fields");
+
+        args.add("--index-stats");
+        args.add(getExpectedLocationOfLuceneIndexStats(false).getPath());
+
+        JSONObject config = getExtraTrackConfig();
+        if (config != null && !config.isNull("lenientLuceneProcessing") && config.getBoolean("lenientLuceneProcessing"))
+        {
+            args.add("--validation-stringency");
+            args.add("LENIENT");
         }
 
         runner.execute(args);
@@ -1147,7 +1181,7 @@ public class JsonFile
     public boolean isVisibleByDefault()
     {
         JSONObject json = getExtraTrackConfig();
-        if (json == null || json.get("visibleByDefault") == null)
+        if (json == null || json.opt("visibleByDefault") == null)
             return false;
 
         return Boolean.parseBoolean(json.get("visibleByDefault").toString());
@@ -1331,6 +1365,11 @@ public class JsonFile
 
         JSONObject json = getExtraTrackConfig();
         return json != null && json.optBoolean("createFullTextIndex", false);
+    }
+
+    public File getExpectedLocationOfLuceneIndexStats(boolean throwIfNotFound)
+    {
+        return new File(getExpectedLocationOfLuceneIndex(throwIfNotFound).getPath() + ".stats.txt");
     }
 
     public File getExpectedLocationOfLuceneIndex(boolean throwIfNotFound)

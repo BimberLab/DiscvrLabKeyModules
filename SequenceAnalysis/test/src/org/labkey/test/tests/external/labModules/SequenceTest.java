@@ -130,7 +130,7 @@ public class SequenceTest extends BaseWebDriverTest
 
         if (_createdGenomeId == null)
         {
-            _createdGenomeId = createReferenceGenome(this);
+            _createdGenomeId = createMac239ReferenceGenome(this, 0);
         }
 
         importReadsetMetadata();
@@ -1379,18 +1379,34 @@ public class SequenceTest extends BaseWebDriverTest
 
     private static void ensureSIVmac239exists(BaseWebDriverTest test) throws Exception
     {
+        String sequence = read239FromFile();
+
+        ensureRefSeqExists(test, GENOME_SEQ_NAME, sequence);
+
+        //verify virus_strains query
+        SelectRowsCommand sr = new SelectRowsCommand("sequenceanalysis", "virus_strains");
+        Connection cn = new Connection(WebTestHelper.getBaseURL(), PasswordUtil.getUsername(), PasswordUtil.getPassword());
+        sr.addFilter(new Filter("name", GENOME_SEQ_NAME, Filter.Operator.EQUAL));
+        SelectRowsResponse resp = sr.execute(cn, test.getContainerId());
+        assertTrue(resp.getRowCount().intValue() > 0);
+        test.log("total viral sequences: " + resp.getRowCount() + " in container: " + test.getCurrentContainerPath());
+    }
+
+    public static void ensureRefSeqExists(BaseWebDriverTest test, String seqName, String ntSequence) throws Exception
+    {
         Connection cn = new Connection(WebTestHelper.getBaseURL(), PasswordUtil.getUsername(), PasswordUtil.getPassword());
         SelectRowsCommand sr = new SelectRowsCommand("sequenceanalysis", "ref_nt_sequences");
-        sr.addFilter(new Filter("name", GENOME_SEQ_NAME, Filter.Operator.EQUAL));
+        sr.addFilter(new Filter("name", seqName, Filter.Operator.EQUAL));
+        sr.addFilter(new Filter("subset", seqName, Filter.Operator.EQUAL));
+
         SelectRowsResponse resp = sr.execute(cn, test.getContainerId());
         if (resp.getRowCount().intValue() == 0)
         {
-            test.log("creating SIVMac239_Test sequence in container: " + test.getCurrentContainerPath());
+            test.log("creating " + seqName + " sequence in container: " + test.getCurrentContainerPath());
             Map<String, Object> row = new HashMap<>();
-            row.put("name", GENOME_SEQ_NAME);
-            row.put("subset", GENOME_SEQ_NAME);
-            String sequence = read239FromFile();
-            row.put("sequence", sequence);
+            row.put("name", seqName);
+            row.put("subset", seqName);
+            row.put("sequence", ntSequence);
             row.put("category", "Virus");
 
             InsertRowsCommand ic = new InsertRowsCommand("sequenceanalysis", "ref_nt_sequences");
@@ -1399,22 +1415,20 @@ public class SequenceTest extends BaseWebDriverTest
         }
         else
         {
-            test.log("SIVMac239_Test sequence already exists for container: " + test.getCurrentContainerPath());
+            test.log("Sequence: " + seqName + " already exists for container: " + test.getCurrentContainerPath());
             String subset = (String)resp.getRows().get(0).get("subset");
             test.log("subset: " + subset);
         }
-
-        //verify virus_strains query
-        sr = new SelectRowsCommand("sequenceanalysis", "virus_strains");
-        sr.addFilter(new Filter("name", GENOME_SEQ_NAME, Filter.Operator.EQUAL));
-        resp = sr.execute(cn, test.getContainerId());
-        assertTrue(resp.getRowCount().intValue() > 0);
-        test.log("total viral sequences: " + resp.getRowCount() + " in container: " + test.getCurrentContainerPath());
     }
 
     private static String read239FromFile() throws Exception
     {
         File fasta = new File(_sampleData, "Ref_DB.fasta");
+        return readSeqFromFile(fasta);
+    }
+
+    public static String readSeqFromFile(File fasta) throws Exception
+    {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(fasta), StandardCharsets.UTF_8)))
         {
             StringBuilder sb = new StringBuilder();
@@ -1442,30 +1456,30 @@ public class SequenceTest extends BaseWebDriverTest
         return resp.getRowCount().intValue();
     }
 
-    public static Integer createReferenceGenome(BaseWebDriverTest test) throws Exception
-    {
-        return createReferenceGenome(test, 0);
-    }
-
     public static final String GENOME_SEQ_NAME = "SIVmac239_Test";
 
-    public static Integer createReferenceGenome(BaseWebDriverTest test, int expectedChildJobs) throws Exception
+    public static Integer createMac239ReferenceGenome(BaseWebDriverTest test, int expectedChildJobs) throws Exception
     {
-        test.log("creating SIVmac239 reference genome");
-        test.beginAt("/sequenceanalysis/" + test.getContainerId() + "/begin.view");
-
         //verify SIVmac239_Test NT sequence exists:
         ensureSIVmac239exists(test);
+
+        return createReferenceGenome(test, expectedChildJobs, TEST_GENOME_NAME, GENOME_SEQ_NAME);
+    }
+
+    public static Integer createReferenceGenome(BaseWebDriverTest test, int expectedChildJobs, String genomeName, String seqName) throws Exception
+    {
+        test.log("creating reference genome: " + genomeName);
+        test.beginAt("/sequenceanalysis/" + test.getContainerId() + "/begin.view");
 
         int existingPipelineJobs = SequenceTest.getTotalPipelineJobs(test);
 
         test.waitAndClickAndWait(Locator.linkContainingText("Reference Sequences"));
         DataRegionTable dr = new DataRegionTable("query", test);
-        dr.setFilter("name", "Equals", GENOME_SEQ_NAME);
+        dr.setFilter("name", "Equals", seqName);
         dr.checkCheckbox(0);
         dr.clickHeaderMenu("More Actions", false, "Create Reference Genome");
         new Window.WindowFinder(test.getDriver()).withTitle("Create Reference Genome").waitFor();
-        Ext4FieldRef.getForLabel(test, "Name").setValue(TEST_GENOME_NAME);
+        Ext4FieldRef.getForLabel(test, "Name").setValue(genomeName);
         String description = "This is a reference genome description";
         Ext4FieldRef.getForLabel(test, "Description").setValue(description);
         Ext4FieldRef.getForLabel(test, "Skip Aligner Index Creation").setChecked(true);  //skip this since it requires sequence tools
@@ -1477,7 +1491,7 @@ public class SequenceTest extends BaseWebDriverTest
 
         Connection cn = new Connection(WebTestHelper.getBaseURL(), PasswordUtil.getUsername(), PasswordUtil.getPassword());
         SelectRowsCommand sr = new SelectRowsCommand("sequenceanalysis", "reference_libraries");
-        sr.addFilter(new Filter("name", TEST_GENOME_NAME, Filter.Operator.EQUAL));
+        sr.addFilter(new Filter("name", genomeName, Filter.Operator.EQUAL));
         sr.addFilter(new Filter("description", description, Filter.Operator.EQUAL));
         SelectRowsResponse resp = sr.execute(cn, test.getContainerId());
 
@@ -1580,6 +1594,8 @@ public class SequenceTest extends BaseWebDriverTest
         Ext4ComboRef.getForLabel(test, "Category").setValue(category);
         Ext4FieldRef.getForLabel(test, "Description").setValue(description);
         Ext4ComboRef.getForLabel(test, "Reference Genome").setComboByDisplayValue(genomeName);
+        sleep(100);
+        Assert.assertEquals("Genome name not set", Ext4ComboRef.getForLabel(test, "Reference Genome").getDisplayValue(), genomeName);
 
         Ext4FileFieldRef fileField = test._ext4Helper.queryOne("field[fieldLabel=File]", Ext4FileFieldRef.class);
         fileField.setToFile(toAdd);

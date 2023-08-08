@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
-import { Menu, Button } from "@material-ui/core"
+import React from 'react';
+import { Button, Menu } from '@mui/material';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 
 export default function MenuButton(props) {
   return (
@@ -10,6 +11,7 @@ export default function MenuButton(props) {
           aria-haspopup="true"
           onClick={props.handleClick}
           color="primary" variant="contained"
+          endIcon={<KeyboardArrowDownIcon />}
         >
         {props.text}
       </Button>

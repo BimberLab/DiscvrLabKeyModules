@@ -1,5 +1,7 @@
 import org.labkey.gradle.util.BuildUtils;
 
+final String luceneVersion="9.4.2"
+
 repositories {
 	mavenCentral()
 	// Added for org.clojars.chapmanb:sam dependency required by com.github.samtools:htsjdk
@@ -13,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    implementation "com.github.samtools:htsjdk:${htsjdkVersion}"
+    apiImplementation "com.github.samtools:htsjdk:${htsjdkVersion}"
 	BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "apiJarFile")
 	BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:DiscvrLabKeyModules:SequenceAnalysis", depProjectConfig: "apiJarFile")
 	BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:DiscvrLabKeyModules:SequenceAnalysis", depProjectConfig: "runtimeElements")
@@ -23,6 +25,11 @@ dependencies {
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "published", depExtension: "module")
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:DiscvrLabKeyModules:SequenceAnalysis", depProjectConfig: "published", depExtension: "module")
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: BuildUtils.getPlatformModuleProjectPath(project.gradle, "pipeline"), depProjectConfig: "published", depExtension: "module")
+
+	external "org.apache.lucene:lucene-analysis-common:${luceneVersion}"
+	external "org.apache.lucene:lucene-core:${luceneVersion}"
+	external "org.apache.lucene:lucene-queryparser:${luceneVersion}"
+	external "org.apache.lucene:lucene-backward-codecs:${luceneVersion}"
 }
 
 def jbPkgTask = project.tasks.named("npm_run_jb-pkg")
@@ -30,7 +37,6 @@ def jbPkgTask = project.tasks.named("npm_run_jb-pkg")
 jbPkgTask.configure {
     outputs.cacheIf {false}
 
-    inputs.dir(project.file("./node_modules/@jbrowse/cli")).withPathSensitivity(PathSensitivity.RELATIVE)
     outputs.dir(project.file("./resources/external/jb-cli"))
 }
 

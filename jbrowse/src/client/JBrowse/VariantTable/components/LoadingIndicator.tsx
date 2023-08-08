@@ -1,17 +1,15 @@
-import { Backdrop, CircularProgress } from '@material-ui/core';
+import { Backdrop, CircularProgress } from '@mui/material';
 import React from 'react';
-import { makeStyles } from '@material-ui/core/styles';
+import { styled } from '@mui/material/styles';
 
 export default function LoadingIndicator(props: {isOpen: boolean}) {
-    const classes = makeStyles((theme) => ({
-        backdrop: {
-            zIndex: theme.zIndex.drawer + 1,
-            color: '#fff',
-        },
-    }))();
+    const SBackdrop = styled(Backdrop)(({ theme }) => ({
+        zIndex: theme.zIndex.drawer + 1,
+        color: '#fff',
+    }))
 
-    return(<Backdrop className={classes.backdrop} open={props.isOpen}>
+    return(<SBackdrop open={props.isOpen}>
             <CircularProgress color="inherit" />
-        </Backdrop>
+        </SBackdrop>
     )
 }

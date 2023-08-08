@@ -11,13 +11,13 @@
       "adapter": {
         "type": "BgzipFastaAdapter",
         "fastaLocation": {
-          "uri": "https://jbrowse.org/genomes/GRCh38/fasta/hg38.prefix.fa.gz"
+          "uri": "<%=contextPath%>/jbrowse/mgap/GRCh37_small.fasta.gz"
         },
         "faiLocation": {
-          "uri": "https://jbrowse.org/genomes/GRCh38/fasta/hg38.prefix.fa.gz.fai"
+          "uri": "<%=contextPath%>/jbrowse/mgap/GRCh37_small.fasta.gz.fai"
         },
         "gziLocation": {
-          "uri": "https://jbrowse.org/genomes/GRCh38/fasta/hg38.prefix.fa.gz.gzi"
+          "uri": "<%=contextPath%>/jbrowse/mgap/GRCh37_small.fasta.gz.gzi"
         }
       }
     },
@@ -30,12 +30,12 @@
       }
     }
   },
-  "location": "1:116,589,906..117,411,914",
+  "location": "1:1..10,224",
   "tracks": [
     {
       "type": "ExtendedVariantTrack",
       "trackId": "mgap_hg38",
-      "name": "mgap",
+      "name": "mGAP",
       "assemblyNames": [
         "hg38"
       ],
@@ -57,7 +57,7 @@
         {
           "type": "ExtendedVariantDisplay",
           "displayId": "mgap_hg38-ExtendedVariantDisplay",
-          "maxDisplayedBpPerPx": 2000,
+          "maxDisplayedBpPerPx": 5000,
           "mouseover": "jexl:'Position: ' + formatWithCommas(get(feature,'POS'))",
           "renderer": {
             "type": "ExtendedVariantRenderer"
