@@ -1,21 +1,27 @@
 import { colorSchemes } from './colorSchemes';
-import { style as styles } from './style';
 import { getSession } from '@jbrowse/core/util';
 import { readConfObject } from '@jbrowse/core/configuration';
 import { generateSchemeJexl } from './colorUtil';
 
-import { Button, FormControl, InputLabel, MenuItem, Select } from '@material-ui/core';
+import { Button, FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 import React, { useState } from 'react';
 import SchemeTable from './SchemeComponent';
 import { SessionWithWidgets } from '@jbrowse/core/util/types';
 import { observer } from 'mobx-react';
+import { styled } from '@mui/material/styles';
 
 export default jbrowse => {
+    const FormControlS = styled(FormControl)(({ theme }) => ({
+        margin: theme.spacing(2),
+        padding: theme.spacing(1, 3, 1, 1),
+        minWidth: 100,
+    }))
+
     function ColorSchemePicker(props){
-        const classes = styles()
         const { model } = props
         const { track } = model
 
+        // @ts-ignore
         const displays = readConfObject(track, ['displays']) || []
         let paletteName = displays[0].renderer.palette
         paletteName = paletteName || 'IMPACT'
@@ -45,7 +51,7 @@ export default jbrowse => {
         return(
                 <>
                     <div style={{padding: '5px' }}>
-                    <FormControl className={classes.schemeControl}>
+                    <FormControlS>
                         <InputLabel id="category-select-label">Color Using</InputLabel>
                         <Select
                                 labelId="category-select-label"
@@ -55,10 +61,10 @@ export default jbrowse => {
                         >
                             {menuItems}
                         </Select>
-                    </FormControl>
+                    </FormControlS>
                     <SchemeTable colorScheme={colorSchemes[palette]}/>
                     <p/>
-                    <Button className={classes.applyButton} onClick={onApply} variant="contained" color="primary">
+                    <Button onClick={onApply} variant="contained" color="primary">
                         Apply
                     </Button>
                     </div>

@@ -30,7 +30,7 @@ public class SelectSamplesStep extends AbstractCommandPipelineStep<SelectVariant
     public static String SAMPLE_INCLUDE = "sampleNameToInclude";
     public static String SAMPLE_EXCLUDE = "sampleNameToExclude";
 
-    public SelectSamplesStep(PipelineStepProvider provider, PipelineContext ctx)
+    public SelectSamplesStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new SelectVariantsWrapper(ctx.getLogger()));
     }

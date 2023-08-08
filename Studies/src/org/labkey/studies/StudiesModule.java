@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.studies.StudiesService;
 import org.labkey.api.view.WebPartFactory;
 
 import java.util.Collection;
@@ -44,6 +45,8 @@ public class StudiesModule extends DefaultModule
     protected void init()
     {
         addController(StudiesController.NAME, StudiesController.class);
+
+        StudiesService.setInstance(StudiesServiceImpl.get());
     }
 
     @Override

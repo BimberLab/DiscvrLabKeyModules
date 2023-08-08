@@ -1,12 +1,18 @@
-import { readConfObject } from '@jbrowse/core/configuration'
-import { PropTypes as CommonPropTypes } from '@jbrowse/core/util/types/mst'
-import { emphasize } from '@jbrowse/core/util/color'
-import { observer } from 'mobx-react'
-import ReactPropTypes from 'prop-types'
-import React from 'react'
-import { isUTR } from '@jbrowse/plugin-svg/src/SvgFeatureRenderer/components/util'
+import { readConfObject } from '@jbrowse/core/configuration';
+import { PropTypes as CommonPropTypes } from '@jbrowse/core/util/types/mst';
+import { emphasize } from '@jbrowse/core/util/color';
+import { observer } from 'mobx-react';
+import ReactPropTypes from 'prop-types';
+import React from 'react';
+import { Feature } from '@jbrowse/core/util/simpleFeature';
 
 const utrHeightFraction = 0.65
+
+function isUTR(feature: Feature) {
+  return /(\bUTR|_UTR|untranslated[_\s]region)\b/.test(
+      feature.get('type') || '',
+  )
+}
 
 function Diamond(props) {
   const {
@@ -28,11 +34,9 @@ function Diamond(props) {
     height *= utrHeightFraction
   }
 
-  const strand = feature.get('strand')
-  const direction = strand * (reversed ? -1 : 1)
-  const color = isUTR(feature)
-    ? readConfObject(config, 'color3', { feature })
-    : readConfObject(config, 'color1', { feature })
+  // @ts-ignore
+  const color = readConfObject(config, (isUTR(feature) ? 'color3' : 'color1'), { feature })
+
   let emphasizedColor
   try {
     emphasizedColor = emphasize(color, 0.3)

@@ -160,7 +160,7 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
     }
 
     @Override
-    public TaskPipeline getTaskPipeline()
+    public TaskPipeline<?> getTaskPipeline()
     {
         return  PipelineJobService.get().getTaskPipeline(new TaskId(SequenceOutputHandlerJob.class));
     }

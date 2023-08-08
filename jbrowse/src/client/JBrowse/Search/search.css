@@ -1,5 +1,6 @@
+/* this updates the search auto-complete field to remove the tiny grey rectangle from the field legend*/
 fieldset.MuiOutlinedInput-notchedOutline > legend {
-    border-style: none;
+    border: none !important;
 }
 
 /* this updates the search field itself */
@@ -17,7 +18,7 @@ p.MuiTypography-root {
     font-size: 14px;
 }
 
-/* This corrects for the search box 'search for location' text being shifted downward. */
+/* This corrects for the search box 'search for location' text being shifted downward in the search autocomplete component. */
 .MuiAutocomplete-inputRoot[class*="MuiOutlinedInput-root"] {
     padding: 0 !important;
 }

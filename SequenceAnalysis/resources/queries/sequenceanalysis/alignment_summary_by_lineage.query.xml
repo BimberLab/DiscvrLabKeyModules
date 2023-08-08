@@ -38,6 +38,10 @@
                             </conditionalFormat>
                         </conditionalFormats>
                     </column>
+                    <column columnName="rowids">
+                        <columnTitle>RowIds</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
                 </columns>
             </table>
         </tables>

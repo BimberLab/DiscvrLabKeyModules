@@ -1,27 +1,34 @@
 package org.labkey.jbrowse;
 
-import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Container;
 import org.labkey.api.jbrowse.DemographicsSource;
+import org.labkey.api.jbrowse.GroupsProvider;
+import org.labkey.api.jbrowse.JBrowseFieldCustomizer;
+import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
 import org.labkey.api.jbrowse.JBrowseService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.security.User;
+import org.labkey.api.util.logging.LogHelper;
 import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Created by bimber on 11/3/2016.
@@ -29,9 +36,11 @@ import java.util.Set;
 public class JBrowseServiceImpl extends JBrowseService
 {
     private static final JBrowseServiceImpl _instance = new JBrowseServiceImpl();
-    private final Logger _log = LogManager.getLogger(JBrowseServiceImpl.class);
+    private final Logger _log = LogHelper.getLogger(JBrowseServiceImpl.class, "Messages related to the JBrowse service");
 
     private final Set<DemographicsSource> _sources = new HashSet<>();
+    private final List<GroupsProvider> _providers = new ArrayList<>();
+    private final List<JBrowseFieldCustomizer> _customizers = new ArrayList<>();
 
     private JBrowseServiceImpl()
     {
@@ -87,6 +96,18 @@ public class JBrowseServiceImpl extends JBrowseService
         _sources.add(source);
     }
 
+    @Override
+    public void registerGroupsProvider(GroupsProvider provider)
+    {
+        _providers.add(provider);
+    }
+
+    @Override
+    public void registerFieldCustomizer(JBrowseFieldCustomizer customizer)
+    {
+        _customizers.add(customizer);
+    }
+
     public Map<String, Map<String, Object>> resolveSubjects(List<String> subjects, User u, Container c)
     {
         Map<String, Map<String, Object>> ret = new HashMap<>();
@@ -115,6 +136,112 @@ public class JBrowseServiceImpl extends JBrowseService
         }
 
         return ret;
+    }
+
+    public void customizeField(User u, Container c, JBrowseFieldDescriptor field) {
+        // NOTE: providers will be registered on module startup, which will be in dependency order.
+        // Process them here in reverse dependency order, so we prioritize end modules
+        List<JBrowseFieldCustomizer> customizers = new ArrayList<>(_customizers);
+        Collections.reverse(customizers);
+        for (JBrowseFieldCustomizer fc : customizers) {
+            if (fc.isAvailable(c, u)) {
+                fc.customizeField(field, c, u);
+            }
+        }
+    }
+
+    /***
+     * @param groupName
+     * @param u
+     * @param c
+     * @return
+     */
+    public List<String> resolveGroups(String trackId, String groupName, User u, Container c)
+    {
+        // NOTE: providers will be registered on module startup, which will be in dependency order.
+        // Process them here in reverse dependency order to prioritize end modules
+        List<GroupsProvider> providers = new ArrayList<>(_providers);
+        Collections.reverse(providers);
+        for (GroupsProvider gp : providers)
+        {
+            if (gp.isAvailable(c, u))
+            {
+                try
+                {
+                    List<String> members = gp.getGroupMembers(trackId, groupName, c, u);
+                    if (members != null)
+                    {
+                        return members;
+                    }
+                }
+                catch (Exception e)
+                {
+                    _log.error(e.getMessage(), e);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public List<String> getGroupNames(User u, Container c)
+    {
+        Set<String> groups = new TreeSet<>();
+
+        // NOTE: providers will be registered on module startup, which will be in dependency order.
+        // Process them here in reverse dependency order to prioritize end modules
+        List<GroupsProvider> providers = new ArrayList<>(_providers);
+        Collections.reverse(providers);
+        for (GroupsProvider gp : providers)
+        {
+            if (gp.isAvailable(c, u))
+            {
+                try
+                {
+                    List<String> gn = gp.getGroupNames(c, u);
+                    if (gn != null)
+                    {
+                        groups.addAll(gn);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _log.error(e.getMessage(), e);
+                }
+            }
+        }
+
+        return new ArrayList<>(groups);
+    }
+
+    public List<String> getPromotedFilters(Collection<String> indexedFields, User u, Container c)
+    {
+        Set<String> filters = new TreeSet<>();
+
+        // NOTE: providers will be registered on module startup, which will be in dependency order.
+        // Process them here in reverse dependency order to prioritize end modules
+        List<JBrowseFieldCustomizer> customizers = new ArrayList<>(_customizers);
+        Collections.reverse(customizers);
+        for (JBrowseFieldCustomizer customizer : customizers)
+        {
+            if (customizer.isAvailable(c, u))
+            {
+                try
+                {
+                    List<String> gn = customizer.getPromotedFilters(indexedFields, c, u);
+                    if (gn != null)
+                    {
+                        filters.addAll(gn);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _log.error(e.getMessage(), e);
+                }
+            }
+        }
+
+        return new ArrayList<>(filters);
     }
 
     public Map<String, String> getDemographicsFields(User u, Container c)
