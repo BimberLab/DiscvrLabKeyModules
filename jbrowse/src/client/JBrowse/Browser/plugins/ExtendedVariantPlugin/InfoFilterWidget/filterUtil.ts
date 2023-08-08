@@ -1,9 +1,4 @@
-import {filterMap} from "./filters"
-
-// 'unexpanded' indicates the raw, unconverted format of a filter. Generally generated from the config file or filter UI. Contains a field, an operator and a value, delineated by ':'
-// 'expanded' indicates that the filter's field, operator and values have been combined into their full functioning expression. Contains a field and an an expression, delineated by ':'
-// unexpanded ex: "AF:lt:0.1"
-// expanded ex:   "AF:variant.INFO.AF[0] < 0.1"
+import { filterMap } from './filters';
 
 export const operators = {
     lt: "<",
@@ -55,6 +50,10 @@ export function deserializeFilters(filters) {
     let filterList = []
     if (!filters){
         return filterList
+    }
+
+    if (!Array.isArray(filters)) {
+        filters = [filters]
     }
 
     for (const filter of filters){

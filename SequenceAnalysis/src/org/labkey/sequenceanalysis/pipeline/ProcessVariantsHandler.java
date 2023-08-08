@@ -501,7 +501,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
     {
         BcftoolsRunner wrapper = new BcftoolsRunner(log);
 
-        return wrapper.executeWithOutput(Arrays.asList(wrapper.getBcfToolsPath().getPath(), "index", "-n", vcf.getPath()));
+        return StringUtils.trimToNull(wrapper.executeWithOutput(Arrays.asList(wrapper.getBcfToolsPath().getPath(), "index", "-n", vcf.getPath())));
     }
 
     public static String getVCFLineCount(File vcf, Logger log, boolean passOnly, boolean useBcfTools) throws PipelineJobException
@@ -528,7 +528,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         String cat = vcf.getName().endsWith(".gz") ? "zcat" : "cat";
         SimpleScriptWrapper wrapper = new SimpleScriptWrapper(null);
 
-        String ret = wrapper.executeWithOutput(Arrays.asList("/bin/bash", "-c", cat + " \"" + vcf.getPath() + "\" | grep -v \"#\" | " + (passOnly ? "awk ' $7 == \"PASS\" || $7 == \"\\.\" ' | " : "") + "wc -l | awk \" { print $1 } \""));
+        String ret = StringUtils.trimToNull(wrapper.executeWithOutput(Arrays.asList("/bin/bash", "-c", cat + " \"" + vcf.getPath() + "\" | grep -v \"#\" | " + (passOnly ? "awk ' $7 == \"PASS\" || $7 == \"\\.\" ' | " : "") + "wc -l | awk \" { print $1 } \"")));
 
         //NOTE: unsure how to get awk to omit this warning, so discard it:
         //the warning is: escape '\.' treated as plain '.'
@@ -877,10 +877,9 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         List<PipelineStepCtx<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(job, VariantProcessingStep.class);
         for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
         {
-            VariantProcessingStep step = stepCtx.getProvider().create(ctx);
-            if (step instanceof VariantProcessingStep.SupportsScatterGather)
+            if (stepCtx.getProvider() instanceof VariantProcessingStep.SupportsScatterGather ssg)
             {
-                ((VariantProcessingStep.SupportsScatterGather)step).performAdditionalMergeTasks(ctx, job, manager, genome, orderedScatterOutputs);
+                ssg.performAdditionalMergeTasks(ctx, job, manager, genome, orderedScatterOutputs);
             }
         }
     }

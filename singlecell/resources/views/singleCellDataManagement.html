@@ -23,7 +23,7 @@
                     header: 'Data and Processing',
                     items: [{
                         name: '10x GEX Libraries Needing Alignment',
-                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.totalAlignments~eq': 0, 'query.totalForwardReads~isnonblank': null, 'query.application~contains': 'single', 'query.status~isblank': null, 'query.isArchived~eq': 0, 'query.librarytype~contains': 'GEX', 'query.sort': 'name'})
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.totalAlignments~eq': 0, 'query.totalForwardReads~isnonblank': null, 'query.application~contains': 'single', 'query.status~isblank': null, 'query.isArchived~eq': 0, 'query.librarytype~contains': 'GEX', 'query.librarytype~doesnotcontain': 'Multiome', 'query.sort': 'name'})
                     },{
                         name: '10x VDJ Libraries Needing Alignment',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.totalAlignments~eq': 0, 'query.totalForwardReads~isnonblank': null, 'query.application~contains': 'single', 'query.status~isblank': null, 'query.isArchived~eq': 0, 'query.librarytype~doesnotcontain': 'BCR', 'query.librarytype~contains': 'VDJ', 'query.sort': 'name'})

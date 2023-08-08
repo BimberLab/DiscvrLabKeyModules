@@ -108,6 +108,12 @@ Ext4.define('JBrowse.window.ModifyJsonConfigWindow', {
                             this.addAttribute('infoFieldsForFullTextSearch', null, 'STRING');
                         }
                     },{
+                        text: 'Allow Lenient Validation for Search Index',
+                        scope: this,
+                        handler: function (gridBtn) {
+                            this.addAttribute('lenientLuceneProcessing', true, 'BOOLEAN');
+                        }
+                    },{
                         text: 'Other',
                         scope: this,
                         handler: function (gridBtn) {

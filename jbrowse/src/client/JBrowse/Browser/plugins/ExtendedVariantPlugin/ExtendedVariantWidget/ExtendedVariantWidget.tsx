@@ -1,28 +1,60 @@
-import {FIELD_NAME_MAP, IGNORED_INFO_FIELDS, INFO_FIELD_GROUPS} from "./fields";
-import {Chart} from "react-google-charts";
-import {style as styles} from "./style";
-import {getGenotypeURL} from "../../../../utils";
+import { FIELD_NAME_MAP } from './fields';
+import { Chart } from 'react-google-charts';
+import { FieldModel, getGenotypeURL } from '../../../../utils';
+import { ActionURL, Ajax } from '@labkey/api';
+import React, { useEffect, useState } from 'react';
+import { BaseCard, FeatureDetails } from '@jbrowse/core/BaseFeatureWidget/BaseFeatureDetail';
+import { Paper, Table, TableBody, TableCell, TableHead, TableRow, Tooltip } from '@mui/material';
+import { observer, PropTypes as MobxPropTypes } from 'mobx-react';
+import { styled } from '@mui/material/styles';
 
 export default jbrowse => {
-    const {
-        Paper,
-        Table,
-        TableBody,
-        TableCell,
-        TableHead,
-        TableRow,
-        Tooltip
-    } = jbrowse.jbrequire('@material-ui/core')
-    const { observer, PropTypes: MobxPropTypes } = jbrowse.jbrequire('mobx-react')
-    const React = jbrowse.jbrequire('react')
-    const { useState, useEffect } = React
-    const { FeatureDetails, BaseCard } = jbrowse.jbrequire('@jbrowse/core/BaseFeatureWidget/BaseFeatureDetail')
+    const TableNoPaddingBlock = styled(Table)(({ theme }) => ({
+        padding: 0,
+        display: 'block'
+    }))
+
+    const TableRowBgGrey = styled(TableRow)(({ theme }) => ({
+        background: theme.palette.grey[100]
+    }))
+
+    const Link = styled('div')(({ theme }) => ({
+        padding: theme.spacing(5)
+    }))
+
+    const TableRowFlexWrap = styled(TableRow)(({ theme }) => ({
+        display: 'flex',
+        flexWrap: 'wrap'
+    }))
+
+    const TableCellFieldName = styled(TableCell)(({ theme }) => ({
+        wordBreak: 'break-all',
+        minWidth: 120,
+        borderBottom: '1px solid #0003',
+        background: theme.palette.grey[200],
+        marginRight: theme.spacing(1),
+        padding: theme.spacing(0.5)
+    }))
+
+    const TableCellFieldValue = styled(TableCell)(({ theme }) => ({
+        wordBreak: 'break-word',
+        maxWidth: 500,
+        padding: theme.spacing(0.5),
+        overflow: 'auto'
+    }))
+
+    const Message = styled('div')(({ theme }) => ({
+        paddingTop: theme.spacing(5),
+        paddingLeft: theme.spacing(5),
+        paddingRight: theme.spacing(5),
+        maxWidth: 500
+    }))
 
     function round(value, decimals) {
         return Number(Math.round(Number(value+'e'+decimals)) + 'e-'+decimals);
     }
 
-    function makeAnnTable(data, classes){
+    function makeAnnTable(data){
         const geneNames = []
         const tableBodyRows = []
         for (let lineStr of data){
@@ -46,49 +78,54 @@ export default jbrowse => {
         }
 
         return(
-                <BaseCard title="Predicted Function">
-                    <Table className={classes.table}>
-                        <TableHead>
-                            <TableRow className={classes.paperRoot}>
-                                <TableCell>Effect</TableCell>
-                                <TableCell>Impact</TableCell>
-                                <TableCell>Gene Name</TableCell>
-                                <TableCell>Position/Consequence</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {tableBodyRows}
-                        </TableBody>
-                    </Table>
-                </BaseCard>
+            <BaseCard title="Predicted Function">
+                <TableNoPaddingBlock>
+                    <TableHead>
+                        <TableRowBgGrey>
+                            <TableCell>Effect</TableCell>
+                            <TableCell>Impact</TableCell>
+                            <TableCell>Gene Name</TableCell>
+                            <TableCell>Position/Consequence</TableCell>
+                        </TableRowBgGrey>
+                    </TableHead>
+                    <TableBody>
+                        {tableBodyRows}
+                    </TableBody>
+                </TableNoPaddingBlock>
+            </BaseCard>
         )
     }
 
-    function makeDisplays(feat, displays, classes, infoMap){
+    function makeDisplays(feat, displays, featureInfoFields, infoFields){
+        if (!infoFields) {
+            return null
+        }
+
         const propertyJSX = []
         for (let display of displays){
             const tempProp = []
             for (let propertyName of display.properties){
                 // This value is not in the header, and is probably injected programmatically, so skip:
-                if (!infoMap[propertyName]) {
+                if (!featureInfoFields[propertyName]) {
                     continue
                 }
 
                 const value = feat["INFO"][propertyName]
-                const fieldTitle = FIELD_NAME_MAP[propertyName]?.title || propertyName
-                const tooltip = infoMap[propertyName] ? infoMap[propertyName].Description : null
+                const fieldTitle = infoFields[propertyName]?.label || FIELD_NAME_MAP[propertyName]?.title || propertyName
+                const tooltip = infoFields[propertyName]?.description || featureInfoFields[propertyName]?.Description
                 if (value){
                     tempProp.push(
-                            <TableRow key={propertyName + "-field"} className={classes.fieldRow}>
+                            <TableRowFlexWrap key={propertyName + "-field"}>
                                 <Tooltip title={tooltip}>
-                                    <TableCell className={classes.fieldName}>
+                                    <TableCellFieldName>
                                         {fieldTitle}
-                                    </TableCell>
+                                    </TableCellFieldName>
                                 </Tooltip>
-                                <TableCell key={propertyName + "-val"} className={classes.fieldValue}>
+                                <TableCellFieldValue key={propertyName + "-val"}>
+                                    {/* TODO: use JEXL and formatString */}
                                     {Array.isArray(value) ? value.join(', ') :  value}
-                                </TableCell>
-                            </TableRow>
+                                </TableCellFieldValue>
+                            </TableRowFlexWrap>
                     )
                 }
             }
@@ -97,46 +134,48 @@ export default jbrowse => {
                 propertyJSX.push(tempProp)
             }
         }
+
         const displayJSX = []
         for (let i = 0; i < propertyJSX.length; i++){
             displayJSX.push(
                     <BaseCard key={displays[i].title} title={displays[i].title}>
-                        <Table className={classes.table}>
+                        <TableNoPaddingBlock>
                             <TableBody>
                                 {propertyJSX[i]}
                             </TableBody>
-                        </Table>
+                        </TableNoPaddingBlock>
                     </BaseCard>
             )
         }
         return displayJSX
     }
 
-    function inferSections(feat) {
-        const sections = []
+    function inferSections(feat, infoFields: Map<string, FieldModel>) {
+        if (!infoFields) {
+            return []
+        }
 
-        for (const [key, sectionConfig] of Object.entries(INFO_FIELD_GROUPS)) {
-            const section = {
-                title: sectionConfig.title,
-                description: sectionConfig.description,
-                properties: []
+        const sectionMap = {}
+        for (const [key, fieldDescriptor] of Object.entries(infoFields)) {
+            if (!fieldDescriptor.category) {
+                continue
             }
 
-            for (const fieldName of sectionConfig.tags) {
-                if (feat["INFO"][fieldName]) {
-                    section.properties.push(fieldName)
+            if (!sectionMap[fieldDescriptor.category]) {
+                sectionMap[fieldDescriptor.category] = {
+                    title: fieldDescriptor.category,
+                    properties: []
                 }
             }
 
-            if (section.properties.length) {
-                sections.push(section)
-            }
+            sectionMap[fieldDescriptor.category].properties.push(fieldDescriptor.name)
         }
 
-        return sections
+        const keys = Object.keys(sectionMap).sort()
+        return keys.map((x) => sectionMap[x])
     }
 
-    function makeChart(samples, feat, classes, trackId){
+    function makeChart(samples, feat, trackId){
         // Abort if there are no samples
         if (!samples || Object.keys(samples).length === 0) {
             return null;
@@ -251,18 +290,18 @@ export default jbrowse => {
             setState(
                     <div>
                         <BaseCard title="Allele Frequencies">
-                            <Table className={classes.table}>
+                            <TableNoPaddingBlock>
                                 <TableHead>
-                                    <TableRow className={classes.paperRoot}>
+                                    <TableRowBgGrey>
                                         <TableCell>Sequence</TableCell>
                                         <TableCell>Fraction</TableCell>
                                         <TableCell>Count</TableCell>
-                                    </TableRow>
+                                    </TableRowBgGrey>
                                 </TableHead>
                                 <TableBody>
                                     {alleleTableRows}
                                 </TableBody>
-                            </Table>
+                            </TableNoPaddingBlock>
                         </BaseCard>
                         <BaseCard title={gtTitle}>
                             <Chart
@@ -282,20 +321,20 @@ export default jbrowse => {
                                     // For tests
                                     rootProps={{ 'data-testid': '6' }}
                             />
-                            <div className={classes.link}>
+                            <Link>
                                 {href}
-                            </div>
+                            </Link>
                         </BaseCard>
                     </div>)
         }, []);
         return state
     }
     function CreatePanel(props) {
-        const classes = styles()
         const { model } = props
         const detailsConfig = JSON.parse(JSON.stringify(model.detailsConfig || {}))
         const feature = model.featureData
-        const infoMap = feature.parser.metadata.INFO
+        const featureInfoFields = feature.parser.metadata.INFO
+        const [infoFields, setInfoFields] = useState<Map<string, FieldModel>>(null)
 
         const feat = JSON.parse(JSON.stringify(feature))
         const { samples } = feat
@@ -306,14 +345,37 @@ export default jbrowse => {
             console.error('Error! No trackId')
         }
 
+        const infoKeys = Object.keys(feat.INFO)
+        let isApiSubscribed = true
+        useEffect(() => {
+            Ajax.request({
+                url: ActionURL.buildURL('jbrowse', 'resolveVcfFields.api'),
+                method: 'POST',
+                success: async function(res){
+                    if (isApiSubscribed) {
+                        const fields: Map<string, FieldModel> = JSON.parse(res.response);
+                        setInfoFields(fields)
+                    }
+                },
+                failure: function(res){
+                    console.error("There was an error while fetching field types: " + res.status + "\n Status Body: " + res.statusText)
+                },
+                params: {infoKeys: infoKeys},
+            });
+
+            return () => {
+                isApiSubscribed = false;
+            };
+        }, [infoKeys])
+
         let annTable;
         if (feat["INFO"]["ANN"]){
-            annTable = makeAnnTable(feat["INFO"]["ANN"], classes)
+            annTable = makeAnnTable(feat["INFO"]["ANN"])
             delete feat["INFO"]["ANN"]
         }
 
-        const sections = detailsConfig.sections || inferSections(feat)
-        const displays = makeDisplays(feat, sections, classes, infoMap)
+        const sections = detailsConfig.sections || inferSections(feat, infoFields)
+        const displays = makeDisplays(feat, sections, featureInfoFields, infoFields)
 
         // If a given INFO field is used in a specific section, dont include in the catch-all INFO section:
         for (let i in sections){
@@ -322,15 +384,18 @@ export default jbrowse => {
             }
         }
 
-        for (const fieldName of IGNORED_INFO_FIELDS) {
-            if (feat["INFO"][fieldName]) {
-                delete feat["INFO"][fieldName]
+        if (infoFields) {
+            const ignoredFields = Object.values(infoFields).filter((x: FieldModel) => !!x.isHidden).map((x: FieldModel) => x.name)
+            for (const fieldName of ignoredFields) {
+                if (feat["INFO"][fieldName]) {
+                    delete feat["INFO"][fieldName]
+                }
             }
         }
 
-        const message = detailsConfig.message ? <div className={classes.message} >{detailsConfig.message}</div> : null
+        const message = detailsConfig.message ? <Message >{detailsConfig.message}</Message> : null
         const infoConfig = [{
-            title: "Info",
+            title: "Other Fields",
             properties: []
         }]
 
@@ -338,11 +403,11 @@ export default jbrowse => {
             infoConfig[0].properties.push(infoEntry)
         }
 
-        const infoDisplays = makeDisplays(feat, infoConfig, classes, infoMap)
+        const infoDisplays = makeDisplays(feat, infoConfig, featureInfoFields, infoFields)
         feat["INFO"] = null
 
         return (
-                <Paper className={classes.root} data-testid="extended-variant-widget">
+                <Paper data-testid="extended-variant-widget">
                     {message}
                     <FeatureDetails
                             feature={feat}
@@ -351,7 +416,7 @@ export default jbrowse => {
                     {annTable}
                     {displays}
                     {infoDisplays}
-                    {makeChart(samples, feat, classes, trackId)}
+                    {makeChart(samples, feat, trackId)}
                 </Paper>
         )
     }

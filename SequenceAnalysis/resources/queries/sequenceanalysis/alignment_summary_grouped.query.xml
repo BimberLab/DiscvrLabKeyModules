@@ -50,6 +50,18 @@
                             </conditionalFormat>
                         </conditionalFormats>
                     </column>
+                    <column columnName="rowids">
+                        <columnTitle>RowIds</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="nAlignments">
+                        <columnTitle># Alignments</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="nLoci">
+                        <columnTitle># Loci</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
                 </columns>
             </table>
         </tables>
