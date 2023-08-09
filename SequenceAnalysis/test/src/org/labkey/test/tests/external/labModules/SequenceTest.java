@@ -1312,7 +1312,7 @@ public class SequenceTest extends BaseWebDriverTest
         //make sure custom delete actions work:
         _helper.clickNavPanelItemAndWait("Readsets:", 1);
         DataRegionTable dr = new DataRegionTable.DataRegionFinder(getDriver()).withName("query").waitFor();
-        dr.setFilter("name", "Equals One Of (example usage: a;b;c)", filter);
+        dr.setFilter("name", "Equals One Of", filter);
         dr.checkAllOnPage();
 
         Assert.assertEquals("Should have three rows", 3, dr.getCheckedCount());
