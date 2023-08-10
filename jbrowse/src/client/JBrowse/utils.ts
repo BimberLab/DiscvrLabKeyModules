@@ -583,7 +583,10 @@ export class Filter implements FilterType {
         const searchStringsArray = decodedSearchString.split("&").filter((x) => x !== "all")
 
         return searchStringsArray.map((item) => {
-            const [field, operator, value] = item.split(",")
+            const parts = item.split(",");
+            const field = parts[0];
+            const operator = parts[1];
+            const value = parts.slice(2).join(",");
             return Object.assign(new Filter(), { field: field, operator: operator, value: value })
         })
     }

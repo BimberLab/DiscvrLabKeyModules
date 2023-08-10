@@ -98,7 +98,8 @@ const FilterForm = (props: FilterFormProps ) => {
                     return i !== index;
                 })
             );
-        }};
+        }
+    };
 
     const handleFilterChange = (index, key, value) => {
         const newFilters = filters.map((filter, i) => {

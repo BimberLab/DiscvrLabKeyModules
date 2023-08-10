@@ -11,7 +11,7 @@ import {
     GridToolbarExport
 } from '@mui/x-data-grid';
 import SearchIcon from '@mui/icons-material/Search';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { AppBar, Box, Button, Dialog, Paper, Popover, Toolbar, Tooltip, Typography } from '@mui/material';
 import ArrowPagination from './ArrowPagination';
@@ -337,9 +337,6 @@ const VariantTableWidget = observer(props => {
             }
 
             const feature = extendedFeatures[0]
-            console.log(feature)
-            console.log(row)
-
             const trackId = getConf(track, 'trackId')
             const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])
             const widgetId = 'Variant-' + trackId;
@@ -409,6 +406,7 @@ const VariantTableWidget = observer(props => {
             </Tooltip>
         );
     };
+
 
     const filterModal = (
         <FilterFormModal
