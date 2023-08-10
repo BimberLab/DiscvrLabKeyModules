@@ -10,7 +10,6 @@ import {
     GridToolbarDensitySelector,
     GridToolbarExport
 } from '@mui/x-data-grid';
-import ScopedCssBaseline from '@mui/material/ScopedCssBaseline';
 import SearchIcon from '@mui/icons-material/Search';
 import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
@@ -406,7 +405,7 @@ const VariantTableWidget = observer(props => {
     const renderHeaderCell = (params) => {
         return (
             <Tooltip title={params.colDef.description}>
-                <div>{params.colDef.headerName}</div>
+                <div style={{fontSize: 16}}>{params.colDef.headerName}</div>
             </Tooltip>
         );
     };
