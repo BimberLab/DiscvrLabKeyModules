@@ -217,7 +217,7 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
                     json = (JSONObject)value;
                 }
 
-                if (json.get("fileId") != null)
+                if (!json.isNull("fileId"))
                 {
                     ExpData d = ExperimentService.get().getExpData(json.getInt("fileId"));
                     if (d != null)
@@ -241,7 +241,7 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
                 throw new PipelineJobException("Improper interval data: " + intervalText);
             }
 
-            if (intervalJson.get("fileId") != null)
+            if (!intervalJson.isNull("fileId"))
             {
                 File d = support.getCachedData(intervalJson.getInt("fileId"));
                 if (d.exists())
@@ -254,7 +254,7 @@ public class SelectVariantsStep extends AbstractCommandPipelineStep<SelectVarian
                     throw new PipelineJobException("Unable to find file: " + d.getPath());
                 }
             }
-            else if (intervalJson.get("intervals") != null)
+            else if (!intervalJson.isNull("intervals"))
             {
                 String[] intervals = intervalJson.getString("intervals").split(";");
                 for (String i : intervals)
