@@ -307,11 +307,6 @@ const VariantTableWidget = observer(props => {
 
     const showDetailsWidget = (rowIdx: number, params: any) => {
         (async () => {
-            /*let a = adapter;
-
-            if (!a) {
-                a = await getAdapterInstance();
-            }*/
             let a = await getAdapterInstance();
 
             const row = features[rowIdx] as any
