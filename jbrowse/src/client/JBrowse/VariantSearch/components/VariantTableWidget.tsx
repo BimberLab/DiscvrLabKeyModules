@@ -213,7 +213,6 @@ const VariantTableWidget = observer(props => {
     }
 
     // Contains all features from the API call once the useEffect finished
-    //const [features, setFeatures] = useState<ExtendedVcfFeature[]>([])
     const [features, setFeatures] = useState<any[]>([])
     const [columns, setColumns] = useState<GridColDef[]>([])
 

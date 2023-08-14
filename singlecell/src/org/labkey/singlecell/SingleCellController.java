@@ -346,12 +346,12 @@ public class SingleCellController extends SpringActionController
 
     private static List<Map<String, Object>> parseRows(SimpleApiJsonForm form, String propName, Container container) throws ApiUsageException
     {
-        if (!form.getNewJsonObject().has(propName))
+        if (!form.getJsonObject().has(propName))
         {
             throw new ApiUsageException("Missing property: " + propName);
         }
 
-        JSONArray arr = form.getNewJsonObject().getJSONArray(propName);
+        JSONArray arr = form.getJsonObject().getJSONArray(propName);
 
         List<Map<String, Object>> ret = new ArrayList<>();
         JsonUtil.toJSONObjectList(arr).forEach(m -> {

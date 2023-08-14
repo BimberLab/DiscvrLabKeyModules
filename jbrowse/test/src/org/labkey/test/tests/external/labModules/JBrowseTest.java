@@ -299,18 +299,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private long getTotalVariantFeatures()
     {
-        Locator l = Locator.tagWithAttribute("svg", "data-testid", "svgfeatures").append(Locator.tag("polygon"));
-        try
-        {
-            return Locator.findElements(getDriver(), l).stream().filter(WebElement::isDisplayed).count();
-        }
-        catch (StaleElementReferenceException e)
-        {
-            log("Stale elements, retrying");
-            sleep(5000);
-
-            return Locator.findElements(getDriver(), l).stream().filter(WebElement::isDisplayed).count();
-        }
+        return JBrowseTestHelper.getTotalVariantFeatures(this);
     }
 
     private void testLoadingConfigFilters(){
@@ -431,7 +420,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
-        WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "deletion TA -> T")).stream().filter(WebElement::isDisplayed).findFirst().orElseThrow();
+        WebElement toClick = getDriver().findElements(JBrowseTestHelper.getVariantWithinTrack(this, "mgap_hg38", "deletion TA -> T", false)).stream().filter(WebElement::isDisplayed).findFirst().orElseThrow();
         actions.click(toClick).perform();
         waitForElement(Locator.tagContainingText("div", "Aut molestiae temporibus nesciunt."));
     }

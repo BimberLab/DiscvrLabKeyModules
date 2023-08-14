@@ -23,7 +23,6 @@ repositories {
 configurations.all {
     resolutionStrategy {
         force "com.sun.activation:jakarta.activation:${activationVersion}"
-        force "javax.xml.bind:jaxb-api:2.3.0"  // CONSIDER: Exclude jaxb-api? It's essentially the same jar as jakarta.xml.bind-api (below)
         // NOTE: this should be kept in sync with mcc module:
         force "jakarta.xml.bind:jakarta.xml.bind-api:${jaxbVersion}"
     }
@@ -61,8 +60,8 @@ dependencies {
             ),
             {
                 // Exclude activation jars from webapp to avoid classloader conflicts with <tomcat>/lib/javax.activation.jar
-                exclude group: 'jakarta.activation', module: 'jakarta.activation-api'
                 exclude group: 'com.sun.activation', module: 'jakarta.activation'
+                exclude group: 'javax.activation', module: 'javax.activation-api'
             }
     )
 
@@ -79,8 +78,8 @@ dependencies {
             ),
             {
                 // Exclude activation jars from webapp to avoid classloader conflicts with <tomcat>/lib/javax.activation.jar
-                exclude group: 'jakarta.activation', module: 'jakarta.activation-api'
                 exclude group: 'com.sun.activation', module: 'jakarta.activation'
+                exclude group: 'javax.activation', module: 'javax.activation-api'
             }
     )
 
@@ -116,7 +115,7 @@ dependencies {
     BuildUtils.addExternalDependency(
             project,
             new ExternalDependency(
-                    "com.github.broadinstitute:picard:2.27.4",
+                    "com.github.broadinstitute:picard:3.0.0",
                     "Picard Tools Lib",
                     "PicardTools",
                     "https://github.com/broadinstitute/picard",
@@ -189,11 +188,11 @@ if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null &
     }
 }
 
-project.task("copyJars",
-        type: Copy,
-        group: "Build",
-        description: "Copy commons-math3 JAR to module's lib directory",
+project.tasks.register("copyJars", Copy)
         { CopySpec copy ->
+            copy.group = "Build"
+            copy.description = "Copy commons-math3 JAR to module's lib directory"
+
             copy.setDuplicatesStrategy(DuplicatesStrategy.EXCLUDE)
             copy.from(project.configurations.external)
             copy.into new File("${project.labkey.explodedModuleLibDir}")
@@ -201,7 +200,6 @@ project.task("copyJars",
                 "**commons-math3-**.jar"
             }
         }
-)
 
-project.tasks.module.dependsOn(project.tasks.copyJars)
-project.tasks.copyJars.mustRunAfter(project.tasks.populateExplodedLib)
+project.tasks.named('module').configure { dependsOn(project.tasks.copyJars) }
+project.tasks.named('copyJars').configure { mustRunAfter(project.tasks.populateExplodedLib) }

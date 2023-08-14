@@ -993,12 +993,25 @@ public class JsonFile
             return;
         }
 
+        File indexDir = getExpectedLocationOfLuceneIndex(false);
+        if (indexDir != null && indexDir.exists())
+        {
+            try
+            {
+                FileUtils.deleteDirectory(getExpectedLocationOfLuceneIndex(false));
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
         List<String> args = runner.getBaseArgs("VcfToLuceneIndexer");
         args.add("-V");
         args.add(getExpData().getFile().getPath());
 
         args.add("-O");
-        args.add(getExpectedLocationOfLuceneIndex(false).getPath());
+        args.add(indexDir.getPath());
 
         List<String> infoFieldsForFullTextSearch = getInfoFieldsToIndex();
         for (String field : infoFieldsForFullTextSearch)
@@ -1008,6 +1021,9 @@ public class JsonFile
         }
 
         args.add("--allow-missing-fields");
+
+        args.add("--index-stats");
+        args.add(getExpectedLocationOfLuceneIndexStats(false).getPath());
 
         JSONObject config = getExtraTrackConfig();
         if (config != null && !config.isNull("lenientLuceneProcessing") && config.getBoolean("lenientLuceneProcessing"))
@@ -1349,6 +1365,11 @@ public class JsonFile
 
         JSONObject json = getExtraTrackConfig();
         return json != null && json.optBoolean("createFullTextIndex", false);
+    }
+
+    public File getExpectedLocationOfLuceneIndexStats(boolean throwIfNotFound)
+    {
+        return new File(getExpectedLocationOfLuceneIndex(throwIfNotFound).getPath() + ".stats.txt");
     }
 
     public File getExpectedLocationOfLuceneIndex(boolean throwIfNotFound)
