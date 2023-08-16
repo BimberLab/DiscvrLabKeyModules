@@ -53,8 +53,7 @@ public class TestCase extends Assert
         if (project == null)
         {
             project = ContainerManager.createContainer(ContainerManager.getRoot(), PROJECT_NAME);
-            Set<Module> modules = new HashSet<>();
-            modules.addAll(project.getActiveModules());
+            Set<Module> modules = new HashSet<>(project.getActiveModules());
             modules.add(ModuleLoader.getInstance().getModule(ClusterModule.class));
             project.setActiveModules(modules);
         }
@@ -102,12 +101,12 @@ public class TestCase extends Assert
     public void basicTest() throws Exception
     {
         Container c = ContainerManager.getForPath(PROJECT_NAME);
-        for (RemoteExecutionEngine engine : PipelineJobService.get().getRemoteExecutionEngines())
+        for (RemoteExecutionEngine<?> engine : PipelineJobService.get().getRemoteExecutionEngines())
         {
             _log.info("testing engine: " + engine.getType());
             if (engine instanceof AbstractClusterExecutionEngine)
             {
-                runTestJob(c, TestContext.get().getUser(), (AbstractClusterExecutionEngine) engine);
+                runTestJob(c, TestContext.get().getUser(), (AbstractClusterExecutionEngine<?>) engine);
             }
         }
     }
@@ -140,7 +139,7 @@ public class TestCase extends Assert
         }
     }
 
-    public static void runTestJob(Container c, User u, AbstractClusterExecutionEngine engine) throws PipelineJobException
+    public static void runTestJob(Container c, User u, AbstractClusterExecutionEngine<?> engine) throws PipelineJobException
     {
         boolean orig = engine.isDebug();
         try
