@@ -54,7 +54,7 @@ public class ClusterPipelineJob extends PipelineJob
         _location = location;
     }
 
-    public static ClusterPipelineJob createJob(Container c, User user, String jobName, ClusterService.ClusterRemoteTask runnable, RemoteExecutionEngine engine, File logFile) throws PipelineValidationException
+    public static ClusterPipelineJob createJob(Container c, User user, String jobName, ClusterService.ClusterRemoteTask runnable, RemoteExecutionEngine<?> engine, File logFile) throws PipelineValidationException
     {
         if (!logFile.exists())
         {
@@ -134,7 +134,7 @@ public class ClusterPipelineJob extends PipelineJob
     }
 
     @Override
-    public TaskPipeline getTaskPipeline()
+    public TaskPipeline<?> getTaskPipeline()
     {
         return PipelineJobService.get().getTaskPipeline(_taskPipelineId);
     }
@@ -161,9 +161,9 @@ public class ClusterPipelineJob extends PipelineJob
         }
 
         @Override
-        public Task createTask(PipelineJob job)
+        public Task<ClusterTaskFactory> createTask(PipelineJob job)
         {
-            return new Task<ClusterTaskFactory>(this, job)
+            return new Task<>(this, job)
             {
                 @NotNull
                 @Override

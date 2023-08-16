@@ -35,7 +35,7 @@ public class PipelineStartup
     {
         if (PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
         {
-            for (RemoteExecutionEngine engine : PipelineJobService.get().getRemoteExecutionEngines())
+            for (RemoteExecutionEngine<?> engine : PipelineJobService.get().getRemoteExecutionEngines())
             {
                 try
                 {
