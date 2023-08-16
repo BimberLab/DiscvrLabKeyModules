@@ -10,7 +10,7 @@ import {
     GridFilterItem,
     GridFilterOperator
 } from '@mui/x-data-grid';
-import { ParsedLocString } from '@jbrowse/core/util';
+import { ParsedLocString, parseLocString } from '@jbrowse/core/util';
 
 export function arrayMax(array) {
     return Array.isArray(array) ? Math.max(...array) : array
@@ -223,14 +223,21 @@ export function navigateToTable(sessionId, locString, trackId, track?: any) {
     window.location.href = ActionURL.buildURL("jbrowse", "variantTable.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
 }
 
-export function navigateToSearch(sessionId, locString, parsedLocString: ParsedLocString, trackId, track?: any) {
+export function navigateToSearch(sessionId, locString, trackId, track?: any) {
     const sampleFilterURL = serializeSampleFilters(track)
     const infoFilterURL = serializeInfoFilters(track)
 
-    const contig = parsedLocString.refName;
-    const start = parsedLocString.start;
-    const end = parsedLocString.end;
-    window.location.href = ActionURL.buildURL("jbrowse", "variantSearch.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL, searchString: serializeLocationToLuceneQuery(contig, start, end)})
+    let searchString = null
+    if (locString) {
+        const parsedLocString = parseLocString(locString, () => { return true})
+        const contig = parsedLocString.refName;
+        const start = parsedLocString.start;
+        const end = parsedLocString.end;
+
+        searchString = serializeLocationToLuceneQuery(contig, start, end)
+    }
+
+    window.location.href = ActionURL.buildURL("jbrowse", "variantSearch.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL, searchString: searchString})
 }
 
 export function navigateToBrowser(sessionId: string, locString: string, trackGUID?: string, track?: any) {
