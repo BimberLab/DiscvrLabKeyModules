@@ -23,12 +23,9 @@ import org.junit.experimental.categories.Category;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.categories.InDevelopment;
-import org.labkey.test.pages.queryextensions.BeginPage;
 
 import java.util.Collections;
 import java.util.List;
-
-import static org.junit.Assert.*;
 
 @Category({InDevelopment.class})
 public class QueryExtensionsTest extends BaseWebDriverTest
