@@ -91,7 +91,7 @@ function VariantTable() {
                 <ErrorBoundary>
                     <JBrowseFilterPanel session={state.session}/>
                     <VariantTableWidget assembly={assembly} assemblyName={assemblyName} trackId={trackId} locString={locString}
-                                        sessionId={sessionId} session={session} pluginManager={pluginManager} parsedLocString={parsedLocString}/>
+                                        sessionId={sessionId} session={session} pluginManager={pluginManager} />
                 </ErrorBoundary>
             </div>
         </ThemeProvider>

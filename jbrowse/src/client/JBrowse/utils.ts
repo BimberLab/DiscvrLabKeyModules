@@ -223,13 +223,13 @@ export function navigateToTable(sessionId, locString, trackId, track?: any) {
     window.location.href = ActionURL.buildURL("jbrowse", "variantTable.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
 }
 
-export function navigateToSearch(sessionId, locString, trackId, track?: any) {
+export function navigateToSearch(sessionId, locString, trackId, isValidRefNameForAssembly, track?: any) {
     const sampleFilterURL = serializeSampleFilters(track)
     const infoFilterURL = serializeInfoFilters(track)
 
     let searchString = null
     if (locString) {
-        const parsedLocString = parseLocString(locString, () => { return true})
+        const parsedLocString = parseLocString(locString, isValidRefNameForAssembly)
         const contig = parsedLocString.refName;
         const start = parsedLocString.start;
         const end = parsedLocString.end;

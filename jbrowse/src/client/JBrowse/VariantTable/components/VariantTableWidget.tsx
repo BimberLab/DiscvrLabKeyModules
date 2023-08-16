@@ -37,7 +37,7 @@ import { ActionURL, Ajax } from '@labkey/api';
 import { deserializeFilters } from '../../Browser/plugins/ExtendedVariantPlugin/InfoFilterWidget/filterUtil';
 
 const VariantTableWidget = observer(props => {
-  const { assembly, assemblyName, trackId, locString, parsedLocString, sessionId, session, pluginManager } = props
+  const { assembly, assemblyName, trackId, locString, sessionId, session, pluginManager } = props
   const { view, assemblyManager } = session
 
   const isValidRefNameForAssembly = function(refName: string, assemblyName?: string) {
@@ -78,7 +78,7 @@ const VariantTableWidget = observer(props => {
         navigateToBrowser(sessionId, locString, trackId, track)
         break;
       case "luceneRedirect":
-        navigateToSearch(sessionId, locString, trackId, track)
+        navigateToSearch(sessionId, locString, trackId, isValidRefNameForAssembly, track)
         break;
     }
   }
