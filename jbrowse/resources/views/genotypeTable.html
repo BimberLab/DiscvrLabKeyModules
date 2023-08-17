@@ -28,9 +28,10 @@
                 $.each(rows, function(idx, row){
                     var contig = row.contig;
                     var start = row.start;
+                    var refAllele = row.refAllele;
 
                     $.each(row.genotypes, function(idx, gt){
-                        var r = [contig, start, gt.sample];
+                        var r = [contig, start, refAllele, gt.sample];
 
                         var d = demographics[gt.sample] || {};
                         $.each(demographicsFields, function(field, displayName) {
@@ -45,6 +46,7 @@
                 var columns = [
                     {title: 'Contig'},
                     {title: 'Position'},
+                    {title: 'Reference Allele'},
                     {title: 'Sample Name'}
                 ];
 

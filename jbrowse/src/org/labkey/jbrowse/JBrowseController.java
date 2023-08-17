@@ -582,6 +582,7 @@ public class JBrowseController extends SpringActionController
                         pos.put("contig", vc.getContig());
                         pos.put("start", vc.getStart());
                         pos.put("end", vc.getEnd());
+                        pos.put("refAllele", vc.getReference().getBaseString());
 
                         JSONArray genotypes = new JSONArray();
                         for (Genotype g : vc.getGenotypes())
