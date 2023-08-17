@@ -12,6 +12,7 @@ import VariantTableWidget from './components/VariantTableWidget';
 import { fetchSession } from '../utils';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import LoadingIndicator from './components/LoadingIndicator';
+import deepmerge from '@mui/utils/deepmerge';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
@@ -20,6 +21,18 @@ function VariantTable() {
     const sessionId = queryParam.get('session') || queryParam.get('database') || queryParam.get('sessionId')
     const locString = queryParam.get('location') || queryParam.get('loc')
     const refTheme = createTheme()
+
+    const themeAdditions = {
+        components: {
+            MuiTooltip: {
+                styleOverrides: {
+                    tooltip: {
+                        fontSize: '0.8rem',
+                    },
+                },
+            },
+        },
+    };
 
     if (!sessionId){
         return(<p>No session Id provided.</p>)
@@ -66,7 +79,7 @@ function VariantTable() {
 
             setState(state)
             // @ts-ignore
-            setTheme(createJBrowseTheme(readConfObject(state.config.configuration, 'theme')))
+            setTheme(createTheme(deepmerge(createJBrowseTheme(readConfObject(state.config.configuration, 'theme')), themeAdditions)))
         }
 
         // NOTE: pass trackId for activeTracks, to ensure view.tracks contains it
