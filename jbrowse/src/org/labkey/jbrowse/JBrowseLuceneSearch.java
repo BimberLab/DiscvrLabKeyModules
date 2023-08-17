@@ -261,6 +261,7 @@ public class JBrowseLuceneSearch
             }
 
             results.put("data", data);
+            results.put("totalHits", topDocs.totalHits.value);
 
             //TODO: we should probably stream this
             return results;

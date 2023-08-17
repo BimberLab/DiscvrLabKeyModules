@@ -393,7 +393,7 @@ function generateLuceneString(field, operator, value) {
   return luceneQueryString;
 }
 
-export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, successCallback, failureCallback) {
+export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pageSize, successCallback, failureCallback) {
     if (!offset) {
         offset = 0
     }
@@ -423,7 +423,7 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, su
         failure: function(res) {
             failureCallback("There was an error: " + res.status + "\n Status Body: " + res.responseText + "\n Session ID:" + sessionId)
         },
-        params: {"searchString": createEncodedFilterString(filters, true), "sessionId": sessionId, "trackId": trackGUID, "offset": offset},
+        params: {"searchString": createEncodedFilterString(filters, true), "sessionId": sessionId, "trackId": trackGUID, "offset": offset, "pageSize": pageSize},
     });
 }
 

@@ -62,6 +62,7 @@ const VariantTableWidget = observer(props => {
 
             return obj
         }))
+        setTotalHits(data.totalHits)
         setDataLoaded(true)
     }
 
@@ -69,7 +70,9 @@ const VariantTableWidget = observer(props => {
         session.hideWidget(widget)
     }
 
-    function handleQuery(passedFilters) {
+    function handleQuery(passedFilters, pageQueryModel = pageSizeModel) {
+        const { page = pageSizeModel.page, pageSize = pageSizeModel.pageSize } = pageQueryModel;
+
         const encodedSearchString = createEncodedFilterString(passedFilters, false);
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.set("searchString", encodedSearchString);
@@ -77,7 +80,7 @@ const VariantTableWidget = observer(props => {
 
         setFilters(passedFilters);
         setDataLoaded(false)
-        fetchLuceneQuery(passedFilters, sessionId, trackGUID, currentOffset, (json)=>{handleSearch(json)}, (error) => {setDataLoaded(true);setError(error)});
+        fetchLuceneQuery(passedFilters, sessionId, trackGUID, page, pageSize, (json)=>{handleSearch(json)}, (error) => {setDataLoaded(true);setError(error)});
     }
 
     const TableCellWithPopover = (props: { value: any }) => {
@@ -218,6 +221,7 @@ const VariantTableWidget = observer(props => {
 
     const [filterModalOpen, setFilterModalOpen] = useState(false);
     const [filters, setFilters] = useState([]);
+    const [totalHits, setTotalHits] = useState(0);
     const [fieldTypeInfo, setFieldTypeInfo] = useState<FieldModel[]>([]);
     const [allowedGroupNames, setAllowedGroupNames] = useState<string[]>([]);
     const [promotedFilters, setPromotedFilters] = useState<Map<string, Filter[]>>(null);
@@ -384,7 +388,13 @@ const VariantTableWidget = observer(props => {
             columnVisibilityModel={columnVisibilityModel}
             pageSizeOptions={[10,25,50,100]}
             paginationModel={ pageSizeModel }
-            onPaginationModelChange= {(newModel) => setPageSizeModel(newModel)}
+            rowCount={ totalHits }
+            //loading={ tableQuerying }
+            paginationMode="server"
+            onPaginationModelChange= {(newModel) => {
+                setPageSizeModel(newModel)
+                handleQuery(filters, newModel)
+            }}
             onColumnVisibilityModelChange={(model) => {
                 setColumnVisibilityModel(model)
             }}
@@ -461,13 +471,6 @@ const VariantTableWidget = observer(props => {
                             </Button>
                         );
                     })}
-                </div>
-
-                <div style={{ marginLeft: "auto" }}>
-                    <ArrowPagination
-                        offset={currentOffset}
-                        onOffsetChange={handleOffsetChange}
-                    />
                 </div>
             </div>
 
