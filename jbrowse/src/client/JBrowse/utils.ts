@@ -228,7 +228,7 @@ export function navigateToSearch(sessionId, locString, trackId, isValidRefNameFo
     const infoFilterURL = serializeInfoFilters(track)
 
     let searchString = null
-    if (locString) {
+    if (locString && isValidRefNameForAssembly) {
         const parsedLocString = parseLocString(locString, isValidRefNameForAssembly)
         const contig = parsedLocString.refName;
         const start = parsedLocString.start;
