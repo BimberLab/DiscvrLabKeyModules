@@ -41,12 +41,13 @@ jobs:
           GENERATE_DIST: ${{ env.DEFAULT_BRANCH == github.ref_name && '1' || '0' }}
 
       - name: Publish Release
+        id: publish-release
         if: ${{ env.DEFAULT_BRANCH == github.ref_name && github.event_name == 'push' && github.base_ref == '' }}
         env:
           GH_TOKEN: "${{ secrets.PAT }}"
         runs: |
-          COUNT=`gh release list | grep 'latest' | wc -l`
-          if [ $COUNT 1 == '0' ];then gh release delete 'latest' --cleanup-tag -y; fi
+          COUNT=$(gh release list | grep 'latest' | wc -l)
+          if [ $COUNT != '0' ];then gh release delete 'latest' --cleanup-tag -y; fi
           
           git tag "latest"
           git push -f origin "latest"
