@@ -47,7 +47,7 @@ jobs:
           GH_TOKEN: "${{ secrets.PAT }}"
         run: |
           LK_VERSION=$(cat /home/runner/work/_temp/_github_home/lkDist/release.txt | sed 's/-SNAPSHOT//g')
-          cd /home/runner/work/_temp/_github_home/labkey_build/${LK_VERSION}/server/modules/DiscvrLabKeyModules
+          cd /home/runner/work/_temp/_github_home/labkey_build/${LK_VERSION}/server/server/modules/DiscvrLabKeyModules
           COUNT=$(gh release list | grep 'latest' | wc -l)
           if [ $COUNT != '0' ];then gh release delete 'latest' --cleanup-tag -y; fi
           
