@@ -10,9 +10,8 @@ import {
     GridToolbarDensitySelector,
     GridToolbarExport
 } from '@mui/x-data-grid';
-import ScopedCssBaseline from '@mui/material/ScopedCssBaseline';
 import SearchIcon from '@mui/icons-material/Search';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { AppBar, Box, Button, Dialog, Paper, Popover, Toolbar, Tooltip, Typography } from '@mui/material';
 import ArrowPagination from './ArrowPagination';
@@ -69,11 +68,14 @@ const VariantTableWidget = observer(props => {
         session.hideWidget(widget)
     }
 
-    function handleQuery(passedFilters) {
+    function handleQuery(passedFilters, pushToHistory) {
         const encodedSearchString = createEncodedFilterString(passedFilters, false);
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.set("searchString", encodedSearchString);
-        window.history.pushState(null, "", currentUrl.toString());
+
+        if (pushToHistory) {
+          window.history.pushState(null, "", currentUrl.toString());
+        }
 
         setFilters(passedFilters);
         setDataLoaded(false)
@@ -235,6 +237,11 @@ const VariantTableWidget = observer(props => {
 
     // API call to retrieve the requested features.
     useEffect(() => {
+        const handlePopState = () => {
+          window.location.reload();
+        };
+        window.addEventListener('popstate', handlePopState);
+
         async function fetch() {
             await fetchFieldTypeInfo(sessionId, trackGUID,
                 (fields: FieldModel[], groups: string[], promotedFilters: Map<string, Filter[]>) => {
@@ -256,7 +263,7 @@ const VariantTableWidget = observer(props => {
                     setAllowedGroupNames(groups)
                     setPromotedFilters(promotedFilters)
 
-                    handleQuery(searchStringToInitialFilters(fields.map((x) => x.name)))
+                    handleQuery(searchStringToInitialFilters(fields.map((x) => x.name)), false)
                 },
                 (error) => {
                     setError(error)
@@ -264,6 +271,9 @@ const VariantTableWidget = observer(props => {
         }
 
         fetch()
+        return () => {
+          window.removeEventListener('popstate', handlePopState);
+        };
 
     }, [pluginManager, parsedLocString, session.visibleWidget])
 
@@ -296,11 +306,6 @@ const VariantTableWidget = observer(props => {
 
     const showDetailsWidget = (rowIdx: number, params: any) => {
         (async () => {
-            /*let a = adapter;
-
-            if (!a) {
-                a = await getAdapterInstance();
-            }*/
             let a = await getAdapterInstance();
 
             const row = features[rowIdx] as any
@@ -326,9 +331,6 @@ const VariantTableWidget = observer(props => {
             }
 
             const feature = extendedFeatures[0]
-            console.log(feature)
-            console.log(row)
-
             const trackId = getConf(track, 'trackId')
             const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])
             const widgetId = 'Variant-' + trackId;
@@ -394,10 +396,11 @@ const VariantTableWidget = observer(props => {
     const renderHeaderCell = (params) => {
         return (
             <Tooltip title={params.colDef.description}>
-                <div>{params.colDef.headerName}</div>
+                <div style={{fontSize: 16}}>{params.colDef.headerName}</div>
             </Tooltip>
         );
     };
+
 
     const filterModal = (
         <FilterFormModal
@@ -408,7 +411,7 @@ const VariantTableWidget = observer(props => {
                 fieldTypeInfo: fieldTypeInfo,
                 allowedGroupNames: allowedGroupNames,
                 promotedFilters: promotedFilters,
-                handleQuery: (filters) => handleQuery(filters)
+                handleQuery: (filters) => handleQuery(filters, true)
             }}
         />
     );
@@ -434,22 +437,27 @@ const VariantTableWidget = observer(props => {
                                         <Typography variant="h6">{widgetType.heading}</Typography>
                                     </Toolbar>
                                 </AppBar>
-                                <ScopedCssBaseline>
-                                    <ReactComponent model={visibleWidget}/>
-                                </ScopedCssBaseline>
+
+                                <Box sx={{ margin: '12px' }}>
+                                    <ReactComponent model={visibleWidget} style={{ margin: '12px' }}/>
+                                </Box>
                             </Paper>
                         </Dialog>
                     )
                 })
             }
 
-
             <div style={{ marginBottom: "10px", display: "flex", alignItems: "center" }}>
-
                 <div style={{ flex: 1 }}>
                     {filters.map((filter, index) => {
                         if ((filter as any).field == "" || (filter as any).operator == "" || (filter as any).value == "" ) {
-                            return null;
+                            return (<Button
+                                key={index}
+                                onClick={() => setFilterModalOpen(true)}
+                                style={{ border: "1px solid gray", margin: "5px" }}
+                                >
+                                No filters
+                            </Button>)
                         }
                         return (
                             <Button

@@ -78,7 +78,7 @@ const VariantTableWidget = observer(props => {
         navigateToBrowser(sessionId, locString, trackId, track)
         break;
       case "luceneRedirect":
-        navigateToSearch(sessionId, locString, trackId, track)
+        navigateToSearch(sessionId, locString, trackId, isValidRefNameForAssembly, track)
         break;
     }
   }
