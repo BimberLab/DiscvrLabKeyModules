@@ -42,10 +42,14 @@ jobs:
 
       - name: Publish Release
         if: ${{ env.DEFAULT_BRANCH == github.ref_name && github.event_name == 'push' && github.base_ref == '' }}
-        uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.PAT }}"
-          automatic_release_tag: "latest"
-          prerelease: true
-          title: "Development Build: ${{ env.DEFAULT_BRANCH }}"
-          files: /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*
+        env:
+          GH_TOKEN: "${{ secrets.PAT }}"
+        runs: |
+          COUNT=`gh release list | grep 'latest' | wc -l`
+          if [ $COUNT 1 == '0' ];then gh release delete 'latest' --cleanup-tag -y; fi
+          
+          git tag "latest"
+          git push -f origin "latest"
+          
+          gh release create 'latest' --verify-tag --generate-notes --prerelease --title: "Development Build: ${{ env.DEFAULT_BRANCH }}"
+          gh release upload 'latest' /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*
