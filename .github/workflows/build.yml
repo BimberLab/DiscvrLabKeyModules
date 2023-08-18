@@ -45,7 +45,7 @@ jobs:
         if: ${{ env.DEFAULT_BRANCH == github.ref_name && github.event_name == 'push' && github.base_ref == '' }}
         env:
           GH_TOKEN: "${{ secrets.PAT }}"
-        runs: |
+        run: |
           COUNT=$(gh release list | grep 'latest' | wc -l)
           if [ $COUNT != '0' ];then gh release delete 'latest' --cleanup-tag -y; fi
           
