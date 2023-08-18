@@ -40,12 +40,13 @@ jobs:
           # Only generate the distribution if this is the default branch
           GENERATE_DIST: ${{ env.DEFAULT_BRANCH == github.ref_name && '1' || '0' }}
 
-      - name: Publish Release
+      - name: Publish Latest  Release
         id: publish-release
         if: ${{ env.DEFAULT_BRANCH == github.ref_name && github.event_name == 'push' && github.base_ref == '' }}
         env:
           GH_TOKEN: "${{ secrets.PAT }}"
         run: |
+          cd /github/home/labkey_build/23.7/server/modules/DiscvrLabKeyModules
           COUNT=$(gh release list | grep 'latest' | wc -l)
           if [ $COUNT != '0' ];then gh release delete 'latest' --cleanup-tag -y; fi
           

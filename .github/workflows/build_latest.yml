@@ -36,13 +36,18 @@ jobs:
         env:
           GENERATE_DIST: 1
 
-      # See: https://github.com/marketplace/actions/automatic-releases
-      - name: Deploy Build
-        if: ${{ env.DEFAULT_BRANCH == github.ref_name }}
-        uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.PAT }}"
-          automatic_release_tag: "latest"
-          prerelease: true
-          title: "Development Build: ${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}"
-          files: /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*
+      - name: Publish Latest Release
+        id: publish-release
+        if: ${{ env.DEFAULT_BRANCH == github.ref_name && github.event_name == 'push' && github.base_ref == '' }}
+        env:
+          GH_TOKEN: "${{ secrets.PAT }}"
+        run: |
+          cd /github/home/labkey_build/23.7/server/modules/DiscvrLabKeyModules
+          COUNT=$(gh release list | grep 'latest' | wc -l)
+          if [ $COUNT != '0' ];then gh release delete 'latest' --cleanup-tag -y; fi
+          
+          git tag "latest"
+          git push -f origin "latest"
+          
+          gh release create 'latest' --verify-tag --generate-notes --prerelease --title: "Development Build: ${{ env.DEFAULT_BRANCH }}"
+          gh release upload 'latest' /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*
