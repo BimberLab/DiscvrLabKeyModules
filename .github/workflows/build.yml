@@ -53,5 +53,5 @@ jobs:
           
           git push -f origin "latest"
           
-          gh release create 'latest' --verify-tag --generate-notes --prerelease --title: "Development Build: ${{ env.DEFAULT_BRANCH }}"
+          gh release create 'latest' --verify-tag --generate-notes --prerelease --title "Development Build: ${{ env.DEFAULT_BRANCH }}"
           gh release upload 'latest' /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*
