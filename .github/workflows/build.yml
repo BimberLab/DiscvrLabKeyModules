@@ -40,12 +40,18 @@ jobs:
           # Only generate the distribution if this is the default branch
           GENERATE_DIST: ${{ env.DEFAULT_BRANCH == github.ref_name && '1' || '0' }}
 
-      - name: Publish Release
+      - name: Publish Latest  Release
+        id: publish-release
         if: ${{ env.DEFAULT_BRANCH == github.ref_name && github.event_name == 'push' && github.base_ref == '' }}
-        uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.PAT }}"
-          automatic_release_tag: "latest"
-          prerelease: true
-          title: "Development Build: ${{ env.DEFAULT_BRANCH }}"
-          files: /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*
+        env:
+          GH_TOKEN: "${{ secrets.PAT }}"
+        run: |
+          LK_VERSION=$(cat /home/runner/work/_temp/_github_home/lkDist/release.txt | sed 's/-SNAPSHOT//g')
+          cd /home/runner/work/_temp/_github_home/labkey_build/${LK_VERSION}/server/server/modules/DiscvrLabKeyModules
+          COUNT=$(gh release list | grep 'latest' | wc -l)
+          if [ $COUNT != '0' ];then gh release delete 'latest' --cleanup-tag -y; fi
+          
+          git push -f origin "latest"
+          
+          gh release create 'latest' --verify-tag --generate-notes --prerelease --title "Development Build: ${{ env.DEFAULT_BRANCH }}"
+          gh release upload 'latest' /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*

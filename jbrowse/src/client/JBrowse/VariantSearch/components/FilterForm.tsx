@@ -98,17 +98,30 @@ const FilterForm = (props: FilterFormProps ) => {
                     return i !== index;
                 })
             );
-        }};
+        }
+    };
 
     const handleFilterChange = (index, key, value) => {
         const newFilters = filters.map((filter, i) => {
             if (i === index) {
-                return Object.assign(new Filter(), { ...filter, [key]: value });
+                const updatedFilter = Object.assign(new Filter(), { ...filter, [key]: value });
+
+                if (key === "operator") {
+                    if (value === "is empty" || value === "is not empty") {
+                        updatedFilter.value = '';
+                    }
+
+                    if (value === "in set" || filter.operator === "in set") {
+                        updatedFilter.value = ''; 
+                    }
+                }
+
+                return updatedFilter;
             }
             return filter;
         });
 
-        localSetFilters(newFilters)
+        localSetFilters(newFilters);
     };
 
     const handleSubmit = (event) => {
@@ -203,7 +216,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                             handleFilterChange(index, "field", event.target.value)
                                         }
                                     >
-                                        <MenuItem value="">
+                                        <MenuItem value="" style={{ display: 'none' }}>
                                             <em>None</em>
                                         </MenuItem>
                                         {fieldTypeInfo.map((field) => (
@@ -223,7 +236,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                             handleFilterChange(index, "operator", event.target.value)
                                         }
                                     >
-                                        <MenuItem value="None">
+                                        <MenuItem value="None" style={{ display: 'none' }}>
                                             <em>None</em>
                                         </MenuItem>
 
@@ -262,6 +275,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                         <Select
                                             labelId="value-select-label"
                                             value={filter.value}
+                                            disabled={filter.operator === "is empty" || filter.operator === "is not empty"}
                                             onChange={(event) =>
                                                 handleFilterChange(index, "value", event.target.value)
                                             }
@@ -278,6 +292,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                         label="Value"
                                         sx={ highlightedInputs[index]?.value ? highlightedSx : null }
                                         value={filter.value}
+                                        disabled={filter.operator === "is empty" || filter.operator === "is not empty"}
                                         onChange={(event) =>
                                             handleFilterChange(index, 'value', event.target.value)
                                         }

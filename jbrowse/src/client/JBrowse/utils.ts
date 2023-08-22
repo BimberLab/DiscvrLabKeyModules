@@ -10,7 +10,7 @@ import {
     GridFilterItem,
     GridFilterOperator
 } from '@mui/x-data-grid';
-import { ParsedLocString } from '@jbrowse/core/util';
+import { ParsedLocString, parseLocString } from '@jbrowse/core/util';
 
 export function arrayMax(array) {
     return Array.isArray(array) ? Math.max(...array) : array
@@ -223,10 +223,21 @@ export function navigateToTable(sessionId, locString, trackId, track?: any) {
     window.location.href = ActionURL.buildURL("jbrowse", "variantTable.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
 }
 
-export function navigateToSearch(sessionId, locString, trackId, track?: any) {
+export function navigateToSearch(sessionId, locString, trackId, isValidRefNameForAssembly, track?: any) {
     const sampleFilterURL = serializeSampleFilters(track)
     const infoFilterURL = serializeInfoFilters(track)
-    window.location.href = ActionURL.buildURL("jbrowse", "variantSearch.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL})
+
+    let searchString = null
+    if (locString && isValidRefNameForAssembly) {
+        const parsedLocString = parseLocString(locString, isValidRefNameForAssembly)
+        const contig = parsedLocString.refName;
+        const start = parsedLocString.start;
+        const end = parsedLocString.end;
+
+        searchString = serializeLocationToLuceneQuery(contig, start, end)
+    }
+
+    window.location.href = ActionURL.buildURL("jbrowse", "variantSearch.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL, searchString: searchString})
 }
 
 export function navigateToBrowser(sessionId: string, locString: string, trackGUID?: string, track?: any) {
@@ -299,6 +310,16 @@ export function getGenotypeURL(trackId, contig, start, end) {
     }
 
     return ActionURL.buildURL("jbrowse", "genotypeTable.view", null, {trackId: trackId, chr: contig, start: start, stop: end})
+}
+
+export function serializeLocationToLuceneQuery(contig, start, end) {
+    const filters = [
+        {field: "contig", operator: "equals", value: contig.toString()},
+        {field: "start", operator: ">=", value: start.toString()},
+        {field: "end", operator: "<=", value: end.toString()}
+    ]
+
+    return createEncodedFilterString(filters, false)
 }
 
 function generateLuceneString(field, operator, value) {
@@ -583,7 +604,10 @@ export class Filter implements FilterType {
         const searchStringsArray = decodedSearchString.split("&").filter((x) => x !== "all")
 
         return searchStringsArray.map((item) => {
-            const [field, operator, value] = item.split(",")
+            const parts = item.split(",");
+            const field = parts[0];
+            const operator = parts[1];
+            const value = parts.slice(2).join(",");
             return Object.assign(new Filter(), { field: field, operator: operator, value: value })
         })
     }

@@ -268,9 +268,9 @@ public class JBrowseLuceneSearch
         }
     }
 
-    public static class DefaultJBrowseCustomizer extends AbstractJBrowseFieldCustomizer
+    public static class DefaultJBrowseFieldCustomizer extends AbstractJBrowseFieldCustomizer
     {
-        public DefaultJBrowseCustomizer()
+        public DefaultJBrowseFieldCustomizer()
         {
             super(ModuleLoader.getInstance().getModule(JBrowseModule.class));
         }

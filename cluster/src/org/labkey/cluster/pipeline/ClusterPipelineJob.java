@@ -169,6 +169,8 @@ public class ClusterPipelineJob extends PipelineJob
                 @Override
                 public RecordedActionSet run() throws PipelineJobException
                 {
+                    job.setStatus(TaskStatus.running, "I am running!");
+
                     ((ClusterPipelineJob)getJob()).getRunnable().run(getJob().getLogger());
 
                     return new RecordedActionSet();

@@ -5,6 +5,7 @@ import { createTheme } from '@mui/material/styles';
 import { readConfObject } from '@jbrowse/core/configuration';
 import { createJBrowseTheme } from '@jbrowse/core/ui';
 import { ThemeProvider } from '@mui/material';
+import { parseLocString } from '@jbrowse/core/util';
 import LogSession from '../Browser/plugins/LogSession/index';
 import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/index';
 import VariantTableWidget from './components/VariantTableWidget';
@@ -35,6 +36,7 @@ function VariantTable() {
     const [state, setState] = useState(null);
     const [theme, setTheme] = useState(null);
     const [view, setView] = useState(null);
+    const [parsedLocString, setParsedLocString] = useState(null)
     const [pluginManager, setPluginManager] = useState(null);
     const [assembly, setAssembly] = useState<Assembly>(null);
     const [assemblyName, setAssemblyName] = useState<string>(null)
@@ -53,6 +55,15 @@ function VariantTable() {
             setView(view)
             setPluginManager(pluginManager)
             setState(state)
+
+            const isValidRefNameForAssembly = function(refName: string, assemblyName?: string) {
+                return assemblyManager.isValidRefName(refName, assemblyNames[0])
+            }
+
+            if (locString) {
+                const parsedLocString = parseLocString(locString, isValidRefNameForAssembly)
+                setParsedLocString(parsedLocString)
+            }
 
             // @ts-ignore
             setTheme(createJBrowseTheme(readConfObject(state.config.configuration, 'theme')))
@@ -80,7 +91,7 @@ function VariantTable() {
                 <ErrorBoundary>
                     <JBrowseFilterPanel session={state.session}/>
                     <VariantTableWidget assembly={assembly} assemblyName={assemblyName} trackId={trackId} locString={locString}
-                                        sessionId={sessionId} session={session} pluginManager={pluginManager}/>
+                                        sessionId={sessionId} session={session} pluginManager={pluginManager} />
                 </ErrorBoundary>
             </div>
         </ThemeProvider>
