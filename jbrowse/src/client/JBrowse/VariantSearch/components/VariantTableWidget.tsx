@@ -14,7 +14,6 @@ import SearchIcon from '@mui/icons-material/Search';
 import React, { useEffect, useState, useMemo } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { AppBar, Box, Button, Dialog, Paper, Popover, Toolbar, Tooltip, Typography } from '@mui/material';
-import ArrowPagination from './ArrowPagination';
 import { FilterFormModal } from './FilterFormModal';
 import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache';
 import { NoAssemblyRegion } from '@jbrowse/core/util/types';
@@ -41,8 +40,6 @@ const VariantTableWidget = observer(props => {
     const { assemblyNames, assemblyManager } = session
     const { view } = session
 
-    const currentOffset = parseInt(new URLSearchParams(window.location.search).get('offset') || '0');
-
     // The code expects a proper GUID, yet the trackId is a string containing the GUID + filename
     const trackGUID = truncateToValidGUID(props.trackId)
 
@@ -61,6 +58,7 @@ const VariantTableWidget = observer(props => {
 
             return obj
         }))
+        setTotalHits(data.totalHits)
         setDataLoaded(true)
     }
 
@@ -68,10 +66,14 @@ const VariantTableWidget = observer(props => {
         session.hideWidget(widget)
     }
 
-    function handleQuery(passedFilters, pushToHistory) {
+    function handleQuery(passedFilters, pushToHistory, pageQueryModel = pageSizeModel) {
+        const { page = pageSizeModel.page, pageSize = pageSizeModel.pageSize } = pageQueryModel;
+
         const encodedSearchString = createEncodedFilterString(passedFilters, false);
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.set("searchString", encodedSearchString);
+        currentUrl.searchParams.set("page", page.toString());
+        currentUrl.searchParams.set("pageSize", pageSize.toString());
 
         if (pushToHistory) {
           window.history.pushState(null, "", currentUrl.toString());
@@ -79,7 +81,7 @@ const VariantTableWidget = observer(props => {
 
         setFilters(passedFilters);
         setDataLoaded(false)
-        fetchLuceneQuery(passedFilters, sessionId, trackGUID, currentOffset, (json)=>{handleSearch(json)}, (error) => {setDataLoaded(true);setError(error)});
+        fetchLuceneQuery(passedFilters, sessionId, trackGUID, page, pageSize, (json)=>{handleSearch(json)}, (error) => {setDataLoaded(true); setError(error)});
     }
 
     const TableCellWithPopover = (props: { value: any }) => {
@@ -220,6 +222,7 @@ const VariantTableWidget = observer(props => {
 
     const [filterModalOpen, setFilterModalOpen] = useState(false);
     const [filters, setFilters] = useState([]);
+    const [totalHits, setTotalHits] = useState(0);
     const [fieldTypeInfo, setFieldTypeInfo] = useState<FieldModel[]>([]);
     const [allowedGroupNames, setAllowedGroupNames] = useState<string[]>([]);
     const [promotedFilters, setPromotedFilters] = useState<Map<string, Filter[]>>(null);
@@ -233,7 +236,10 @@ const VariantTableWidget = observer(props => {
     // False until initial data load or an error:
     const [dataLoaded, setDataLoaded] = useState(!parsedLocString)
 
-    const [pageSizeModel, setPageSizeModel] = React.useState<GridPaginationModel>({ page: 0, pageSize: 50 });
+    const urlParams = new URLSearchParams(window.location.search);
+    const page = parseInt(urlParams.get('page') || '0');
+    const pageSize = parseInt(urlParams.get('pageSize') || '50');
+    const [pageSizeModel, setPageSizeModel] = React.useState<GridPaginationModel>({ page, pageSize });
 
     // API call to retrieve the requested features.
     useEffect(() => {
@@ -386,7 +392,12 @@ const VariantTableWidget = observer(props => {
             columnVisibilityModel={columnVisibilityModel}
             pageSizeOptions={[10,25,50,100]}
             paginationModel={ pageSizeModel }
-            onPaginationModelChange= {(newModel) => setPageSizeModel(newModel)}
+            rowCount={ totalHits }
+            paginationMode="server"
+            onPaginationModelChange = {(newModel) => {
+                setPageSizeModel(newModel)
+                handleQuery(filters, true, newModel)
+            }}
             onColumnVisibilityModelChange={(model) => {
                 setColumnVisibilityModel(model)
             }}
@@ -469,13 +480,6 @@ const VariantTableWidget = observer(props => {
                             </Button>
                         );
                     })}
-                </div>
-
-                <div style={{ marginLeft: "auto" }}>
-                    <ArrowPagination
-                        offset={currentOffset}
-                        onOffsetChange={handleOffsetChange}
-                    />
                 </div>
             </div>
 
