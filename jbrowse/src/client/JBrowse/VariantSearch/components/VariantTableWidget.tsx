@@ -43,8 +43,10 @@ const VariantTableWidget = observer(props => {
     // The code expects a proper GUID, yet the trackId is a string containing the GUID + filename
     const trackGUID = truncateToValidGUID(props.trackId)
 
+    // NOTE: since the trackId is GUID+filename, allow exact string matching, or a match on the GUID portion alone.
+    // Upstream code might only have access to the GUID and translating to the trackId isnt always easy
     const track = view.tracks.find(
-        t => t.configuration.trackId === trackId,
+        t => t.configuration.trackId === trackId || truncateToValidGUID(t.configuration.trackId).toUpperCase() === trackGUID.toUpperCase()
     )
 
     if (!track) {
