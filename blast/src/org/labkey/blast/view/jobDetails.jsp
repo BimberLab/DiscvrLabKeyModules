@@ -74,7 +74,7 @@
                             schemaName: 'blast',
                             queryName: 'blast_jobs',
                             filterArray: [
-                                LABKEY.Filter.create('objectid', <%=q(job.getObjectid())%>, LABKEY.Filter.Types.EQUAL)
+                                LABKEY.Filter.create('objectid', <%=q(h(job.getObjectid()))%>, LABKEY.Filter.Types.EQUAL)
                             ]
                         }
                     },{
@@ -82,7 +82,7 @@
                     },{
                         layout: 'hbox',
                         border: false,
-                        hidden: !<%=hasRun%>,
+                        hidden: !<%=h(hasRun)%>,
                         items: [{
                             xtype: 'combo',
                             fieldLabel: 'Choose Output Format',
@@ -92,7 +92,7 @@
                             valueField: 'id',
                             labelWidth: 150,
                             width: 600,
-                            value: <%=q(outputFormat == null ? null : outputFormat.name())%>,
+                            value: <%=q(h(outputFormat == null ? null : outputFormat.name()))%>,
                             store: {
                                 type: 'array',
                                 fields: ['label', 'id'],
@@ -123,7 +123,7 @@
                                     return;
                                 }
 
-                                window.location = LABKEY.ActionURL.buildURL('blast', 'jobDetails', null, {outputFmt: fmt, jobId: <%=q(job.getObjectid())%>});
+                                window.location = LABKEY.ActionURL.buildURL('blast', 'jobDetails', null, {outputFmt: fmt, jobId: <%=q(h(job.getObjectid()))%>});
                             }
                         },{
                             xtype: 'button',
@@ -139,7 +139,7 @@
                                 var newForm = Ext4.DomHelper.append(document.getElementsByTagName('body')[0],
                                                 '<form method="POST" action="' + LABKEY.ActionURL.buildURL("blast", "downloadBlastResults") + '">' +
                                                 '<input type="hidden" name="fileName" value="' + Ext4.htmlEncode('blastResults.txt') + '" />' +
-                                                '<input type="hidden" name="jobId" value="' + <%=q(job.getObjectid())%> + '" />' +
+                                                '<input type="hidden" name="jobId" value="' + <%=q(h(job.getObjectid()))%> + '" />' +
                                                 '<input type="hidden" name="outputFormat" value="' + fmt + '" />' +
                                                 '</form>');
                                 newForm.submit();
@@ -164,7 +164,7 @@
 
             getResultItems: function(){
                 var ret = [];
-                if (!<%=hasRun%>){
+                if (!<%=h(hasRun)%>){
                     ret.push({
                         xtype: 'panel',
                         minHeight: 200,
@@ -191,13 +191,13 @@
 
         Ext4.create('BLAST.panel.BlastDetailsPanel', {
 
-        }).render(<%=q(renderTarget)%>);
+        }).render(<%=q(h(renderTarget))%>);
     });
 
 </script>
 
-<div id=<%=q(renderTarget)%>></div>
-<div id=<%=q(renderTarget + "_results")%>>
+<div id=<%=q(h(renderTarget))%>></div>
+<div id=<%=q(h(renderTarget + "_results"))%>>
     <%
         if (job.isHasRun())
         {
