@@ -1,8 +1,8 @@
 package org.labkey.blast.model;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,18 +23,20 @@ import org.labkey.blast.BLASTManager;
 import org.labkey.blast.BLASTSchema;
 import org.labkey.blast.BLASTWrapper;
 
+import javax.servlet.jsp.JspWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+
+import static org.labkey.api.util.HtmlString.unsafe;
 
 /**
  * User: bimber
@@ -320,7 +322,14 @@ public class BlastJob implements Serializable
             return;
         }
 
-        outputFormat.processResults(output, out);
+        if (out instanceof JspWriter jsp)
+        {
+            jsp.print(unsafe(outputFormat.processResults(output)));
+        }
+        else
+        {
+            out.write(outputFormat.processResults(output));
+        }
     }
 
     public boolean hasError(User u)
@@ -381,16 +390,15 @@ public class BlastJob implements Serializable
             private Map<String, Summary> _perfectHitSummary;
 
             @Override
-            public void processResults(File results, Writer out) throws IOException, PipelineJobException
+            public String processResults(File results) throws IOException, PipelineJobException
             {
                 //summary of perfect hits by query seq
-                try (StringWriter writer = new StringWriter())
+                try (StringWriter out = new StringWriter())
                 {
                     _perfectHitSummary = new HashMap<>();
 
-                    new BLASTWrapper(_log).runBlastFormatter(results, BLAST_OUTPUT_FORMAT.alignmentSummary, writer);
-
-                    Scanner scan = new Scanner(writer.getBuffer().toString());
+                    String resultsText = new BLASTWrapper(_log).runBlastFormatter(results, BLAST_OUTPUT_FORMAT.alignmentSummary);
+                    Scanner scan = new Scanner(resultsText);
                     while (scan.hasNextLine())
                     {
                         String line = scan.nextLine();
@@ -420,7 +428,7 @@ public class BlastJob implements Serializable
                             String qseq = tokens[8];
                             String sseq = tokens[9];
 
-                            int i=0;
+                            int i = 0;
                             int qmatch = 0;
                             int qmismatch = 0;
                             while (i < qseq.length())
@@ -448,58 +456,60 @@ public class BlastJob implements Serializable
                             }
                         }
                     }
-                }
 
-                out.write("<br><br><b>Summary of Perfect Hits:</b><br>");
-                out.write("<table border=1 cellpadding=\"3\" style=\"border-collapse: collapse;\"><tr><td>Query</td><td># Perfect Hits</td><td>Reference Names</td><td>Alignment Length</td><td>Query Length</td><td>Reference Length</td></tr>");
-                for (String qname : _perfectHitSummary.keySet())
-                {
-                    out.write("<tr>");
-                    out.write("<td>" + qname + "</td>");
-                    out.write("<td>" + _perfectHitSummary.get(qname).hitMap.size() + "</td>");
-
-                    StringBuilder sNameCell = new StringBuilder();
-                    StringBuilder alignLengthCell = new StringBuilder();
-                    StringBuilder qLengthCell = new StringBuilder();
-                    StringBuilder sLengthCell = new StringBuilder();
-
-                    Summary s = _perfectHitSummary.get(qname);
-                    String br = "";
-                    for (String sname : s.hitMap.keySet())
+                    out.write("<br><br><b>Summary of Perfect Hits:</b><br>");
+                    out.write("<table border=1 cellpadding=\"3\" style=\"border-collapse: collapse;\"><tr><td>Query</td><td># Perfect Hits</td><td>Reference Names</td><td>Alignment Length</td><td>Query Length</td><td>Reference Length</td></tr>");
+                    for (String qname : _perfectHitSummary.keySet())
                     {
-                        for (Alignment a : s.hitMap.get(sname))
+                        out.write("<tr>");
+                        out.write("<td>" + qname + "</td>");
+                        out.write("<td>" + _perfectHitSummary.get(qname).hitMap.size() + "</td>");
+
+                        StringBuilder sNameCell = new StringBuilder();
+                        StringBuilder alignLengthCell = new StringBuilder();
+                        StringBuilder qLengthCell = new StringBuilder();
+                        StringBuilder sLengthCell = new StringBuilder();
+
+                        Summary s = _perfectHitSummary.get(qname);
+                        String br = "";
+                        for (String sname : s.hitMap.keySet())
                         {
-                            sNameCell.append(br);
-                            sNameCell.append(sname);
+                            for (Alignment a : s.hitMap.get(sname))
+                            {
+                                sNameCell.append(br);
+                                sNameCell.append(sname);
 
-                            alignLengthCell.append(br);
-                            alignLengthCell.append(a.alignLength);
+                                alignLengthCell.append(br);
+                                alignLengthCell.append(a.alignLength);
 
-                            qLengthCell.append(br);
-                            qLengthCell.append(a.qLength);
+                                qLengthCell.append(br);
+                                qLengthCell.append(a.qLength);
 
-                            sLengthCell.append(br);
-                            sLengthCell.append(a.sLength);
+                                sLengthCell.append(br);
+                                sLengthCell.append(a.sLength);
 
-                            br = "<br>";
+                                br = "<br>";
+                            }
                         }
+
+                        out.write("<td>" + sNameCell + "</td>");
+                        out.write("<td>" + alignLengthCell + "</td>");
+                        out.write("<td>" + qLengthCell + "</td>");
+                        out.write("<td>" + sLengthCell + "</td>");
+
+                        out.write("</tr>");
                     }
 
-                    out.write("<td>" + sNameCell + "</td>");
-                    out.write("<td>" + alignLengthCell + "</td>");
-                    out.write("<td>" + qLengthCell + "</td>");
-                    out.write("<td>" + sLengthCell + "</td>");
+                    out.write("</table><br><br>");
+                    out.write("<hr>");
 
-                    out.write("</tr>");
+                    out.write("<b>BLAST Output:</b>");
+                    out.write("<pre>");
+                    out.write(new BLASTWrapper(_log).runBlastFormatter(results, BLAST_OUTPUT_FORMAT.flatQueryAnchoredWithIdentities));
+                    out.write("</pre>");
+
+                    return out.toString();
                 }
-
-                out.write("</table><br><br>");
-                out.write("<hr>");
-
-                out.write("<b>BLAST Output:</b>");
-                out.write("<pre>");
-                new BLASTWrapper(_log).runBlastFormatter(results, BLAST_OUTPUT_FORMAT.flatQueryAnchoredWithIdentities, out);
-                out.write("</pre>");
             }
 
             private void appendHit(String qname, String sname, int qLen, int sLen, int alignLen)
@@ -547,15 +557,15 @@ public class BlastJob implements Serializable
             return _supportsHTML;
         }
 
-        public void processResults(File results, Writer out) throws IOException, PipelineJobException
+        public String processResults(File results) throws IOException, PipelineJobException
         {
             if (_processor == null)
             {
-                new BLASTWrapper(_log).runBlastFormatter(results, this, out);
+                return new BLASTWrapper(_log).runBlastFormatter(results, this);
             }
             else
             {
-                _processor.processResults(results, out);
+                return _processor.processResults(results);
             }
         }
 
@@ -563,7 +573,7 @@ public class BlastJob implements Serializable
 
     public interface BlastResultProcessor
     {
-        void processResults(File results, Writer out) throws IOException, PipelineJobException;
+        String processResults(File results) throws IOException, PipelineJobException;
     }
 }
 

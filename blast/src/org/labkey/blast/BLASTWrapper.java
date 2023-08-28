@@ -3,7 +3,6 @@ package org.labkey.blast;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
@@ -15,7 +14,6 @@ import org.labkey.blast.model.BlastJob;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -94,7 +92,7 @@ public class BLASTWrapper extends AbstractCommandWrapper
             }
         }
 
-        executeBlast(args, null);
+        executeBlast(args, false);
         if (!outputFile.exists())
         {
             throw new PipelineJobException("Expected file not created: " + outputFile.getPath());
@@ -103,7 +101,7 @@ public class BLASTWrapper extends AbstractCommandWrapper
         return outputFile;
     }
 
-    public void runBlastFormatter(File inputFile, BlastJob.BLAST_OUTPUT_FORMAT outputFormat, Writer out) throws PipelineJobException, IOException
+    public String runBlastFormatter(File inputFile, BlastJob.BLAST_OUTPUT_FORMAT outputFormat) throws PipelineJobException, IOException
     {
         File exe = getExe("blast_formatter", null);
         if (!exe.exists())
@@ -120,7 +118,7 @@ public class BLASTWrapper extends AbstractCommandWrapper
         args.add("-outfmt");
         args.add(outputFormat.getCmd());
 
-        executeBlast(args, out);
+        return executeBlast(args, true);
     }
 
     public File createDatabase(String dbName, String title, File fastaFile, File dbDir, Logger log) throws PipelineJobException, IOException
@@ -174,7 +172,7 @@ public class BLASTWrapper extends AbstractCommandWrapper
         args.add("-out");
         args.add(outFile.getPath());
 
-        executeBlast(args, null);
+        executeBlast(args, false);
 
         File[] files = dbDir.listFiles(new FilenameFilter()
         {
@@ -208,7 +206,7 @@ public class BLASTWrapper extends AbstractCommandWrapper
         indexArgs.add("-iformat");
         indexArgs.add("blastdb");
 
-        executeBlast(indexArgs, null);
+        executeBlast(indexArgs, false);
 
         File[] idxFiles = dbDir.listFiles(new FilenameFilter()
         {
@@ -228,7 +226,7 @@ public class BLASTWrapper extends AbstractCommandWrapper
         return outFile;
     }
 
-    private void executeBlast(List<String> args, @Nullable Writer writer) throws PipelineJobException, IOException
+    private @Nullable String executeBlast(List<String> args, boolean retainOutput) throws PipelineJobException, IOException
     {
         StringBuilder output = new StringBuilder();
 
@@ -238,20 +236,14 @@ public class BLASTWrapper extends AbstractCommandWrapper
             getLogger().info(StringUtils.join(args, " "));
         }
 
-        if (writer == null)
+        if (retainOutput)
         {
-            execute(args);
+            return executeWithOutput(args);
         }
         else
         {
-            String ret = executeWithOutput(args);
-            writer.write(ret);
-        }
-
-
-        if (getLogger() != null && output.length() > 0)
-        {
-            getLogger().info(output.toString());
+            execute(args);
+            return null;
         }
     }
 

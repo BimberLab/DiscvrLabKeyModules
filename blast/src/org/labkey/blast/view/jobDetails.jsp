@@ -205,18 +205,18 @@
             {
                 if (!outputFormat.supportsHTML())
                 {
-                    out.print("<pre>");
+                    out.print(unsafe("<pre>"));
                 }
                 job.getResults(outputFormat, out);
 
                 if (!outputFormat.supportsHTML())
                 {
-                    out.print("</pre>");
+                    out.print(unsafe("</pre>"));
                 }
             }
             else
             {
-                out.print("Either no output format specified, or an invalid option was provided.");
+                out.print(h("Either no output format specified, or an invalid option was provided."));
             }
         }
         else if (job.hasError(getUser()))
