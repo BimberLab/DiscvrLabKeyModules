@@ -19,6 +19,7 @@ import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.security.User;
+import org.labkey.api.util.HtmlString;
 import org.labkey.blast.BLASTManager;
 import org.labkey.blast.BLASTSchema;
 import org.labkey.blast.BLASTWrapper;
@@ -322,9 +323,10 @@ public class BlastJob implements Serializable
             return;
         }
 
+        String results = outputFormat.processResults(output);
         if (out instanceof JspWriter jsp)
         {
-            jsp.print(unsafe(outputFormat.processResults(output)));
+            jsp.print(outputFormat.supportsHTML() ? unsafe(results) : HtmlString.of(results));
         }
         else
         {

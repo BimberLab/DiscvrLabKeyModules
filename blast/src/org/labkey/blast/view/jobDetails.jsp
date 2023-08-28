@@ -141,6 +141,7 @@
                                                 '<input type="hidden" name="fileName" value="' + Ext4.htmlEncode('blastResults.txt') + '" />' +
                                                 '<input type="hidden" name="jobId" value="' + <%=q(h(job.getObjectid()))%> + '" />' +
                                                 '<input type="hidden" name="outputFormat" value="' + fmt + '" />' +
+                                                '<input type="hidden" name="X-LABKEY-CSRF" value="' + Ext4.htmlEncode(LABKEY.CSRF) + '" />' +
                                                 '</form>');
                                 newForm.submit();
 
