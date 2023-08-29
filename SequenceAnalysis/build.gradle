@@ -156,6 +156,7 @@ dependencies {
     apiImplementation "org.apache.commons:commons-math3:${commonsMath3Version}"
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:LabDevKitModules:laboratory", depProjectConfig: "published", depExtension: "module")
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "published", depExtension: "module")
+    BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:DiscvrLabKeyModules:discvrcore", depProjectConfig: "published", depExtension: "module")
 }
 
 

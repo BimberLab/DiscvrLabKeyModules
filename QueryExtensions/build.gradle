@@ -6,5 +6,4 @@ plugins {
 
 dependencies {
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:DiscvrLabKeyModules:discvrcore", depProjectConfig: "published", depExtension: "module")
-    BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:DiscvrLabKeyModules:discvrcore", depProjectConfig: "published", depExtension: "module")
 }
