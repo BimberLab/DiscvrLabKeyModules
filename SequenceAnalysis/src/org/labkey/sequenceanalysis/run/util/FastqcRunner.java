@@ -385,17 +385,20 @@ public class FastqcRunner
             throw new RuntimeException("Not found: " + commonsMath.getPath());
         }
 
-        File jhdf5 = new File(libDir, "cisd-jhdf5-14.12.6.jar");
+        // NOTE: the maven repo has been unreliable, but we could ultimately switch to use that:
+        //File jhdf5 = new File(libDir, "cisd-jhdf5-14.12.6.jar");
+        File jhdf5 = new File(libDir.getParentFile(), "external/cisd-jhdf5.jar");
         if (!jhdf5.exists())
         {
             throw new RuntimeException("Not found: " + jhdf5.getPath());
         }
 
-        File base64 = new File(libDir, "base64-2.3.8.jar");
-        if (!base64.exists())
-        {
-            throw new RuntimeException("Not found: " + base64.getPath());
-        }
+        // NOTE: FastQC expects an alternate package name within this JAR, so use their packaged code instead:
+//        File base64 = new File(libDir, "base64-2.3.8.jar");
+//        if (!base64.exists())
+//        {
+//            throw new RuntimeException("Not found: " + base64.getPath());
+//        }
 
         List<String> classPath = new ArrayList<>();
         classPath.add(".");
@@ -404,7 +407,6 @@ public class FastqcRunner
         classPath.add(jbzip2.getPath());
         classPath.add(commonsMath.getPath());
         classPath.add(jhdf5.getPath());
-        classPath.add(base64.getPath());
 
         params.add("-classpath");
         params.add(StringUtils.join(classPath, File.pathSeparator));
