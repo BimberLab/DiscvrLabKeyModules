@@ -220,8 +220,8 @@ public class FastqcRunner
             return "";
         }
 
-        String output = "";
-        String header = "<div class=\"fastqc_overview\"><h2>File Summary:</h2><ul>";
+        StringBuilder output = new StringBuilder();
+        StringBuilder header = new StringBuilder("<div class=\"fastqc_overview\"><h2>File Summary:</h2><ul>");
 
         try
         {
@@ -233,7 +233,7 @@ public class FastqcRunner
                 File htmlFile = getExpectedHtmlFile(f);
                 if (!htmlFile.exists())
                 {
-                    output += "<p>Unable to find output for file: " + f.getName() + "</p>";
+                    output.append("<p>Unable to find output for file: ").append(f.getName()).append("</p>");
                     continue;
                 }
 
@@ -268,16 +268,16 @@ public class FastqcRunner
                 css = "";
                 html = html.replaceAll("<link href=\"\" type=\"text/css\" rel=\"stylesheet\">\n", "");
 
-                output += delim + html;
+                output.append(delim).append(html);
                 delim = "<hr>";
 
                 //also build a header:
-                header += "<li><a href=\"#report_" + suffix + "\">" + title + "</a></li>";
+                header.append("<li><a href=\"#report_").append(suffix).append("\">").append(title).append("</a></li>");
 
                 //remove footer except on final file
                 if (counter < inputFiles.size() - 1)
                 {
-                    output = output.replaceAll("<div class=\"footer\">.*</div>", "");
+                    output = new StringBuilder(output.toString().replaceAll("<div class=\"footer\">.*</div>", ""));
                 }
 
                 counter++;
@@ -285,9 +285,9 @@ public class FastqcRunner
 
             if (inputFiles.size() > 1)
             {
-                header += "</ul><p /></div><hr>";
+                header.append("</ul><p /></div><hr>");
                 String tag = "<div class=\"fastqc\">";
-                output = output.replace(tag, tag + header);
+                output = new StringBuilder(output.toString().replace(tag, tag + header));
             }
         }
         catch (IOException e)
@@ -304,7 +304,7 @@ public class FastqcRunner
             }
         }
 
-        return output;
+        return output.toString();
     }
 
     private String readCompressedHtmlReport(File htmlFile) throws IOException
