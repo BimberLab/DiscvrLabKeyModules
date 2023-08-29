@@ -244,7 +244,7 @@ public class SequenceIntegrationTests
             Container project = ContainerManager.getForPath(projectName);
             if (project == null)
             {
-                project = ContainerManager.createContainer(ContainerManager.getRoot(), projectName);
+                project = ContainerManager.createContainer(ContainerManager.getRoot(), projectName, TestContext.get().getUser());
 
                 //disable search so we dont get conflicts when deleting folder quickly
                 ContainerManager.updateSearchable(project, false, TestContext.get().getUser());
