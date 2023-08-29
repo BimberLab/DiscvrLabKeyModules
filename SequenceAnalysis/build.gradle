@@ -11,9 +11,9 @@ import java.util.regex.Matcher
 repositories {
    mavenCentral()
    // Added for jhdf5 from FASTQC / sequence analysis module
-//   maven {
-//      url "https://maven.scijava.org/content/groups/public/"
-//   }
+   maven {
+      url "https://maven.scijava.org/content/groups/public/"
+   }
 }
 
 configurations.all {
@@ -92,19 +92,18 @@ dependencies {
             )
     )
 
-    // NOTE: this maven repo has been unreliable
-//    BuildUtils.addExternalDependency(
-//            project,
-//            new ExternalDependency(
-//                    'cisd:jhdf5:19.04.1',
-//                    'JHDF5',
-//                    'JHDF5',
-//                    'https://unlimited.ethz.ch/display/JHDF/',
-//                    ExternalDependency.BSD_LICENSE_NAME,
-//                    ExternalDependency.BSD_LICENSE_URL,
-//                    'JHDF5 is a Java binding for HDF5. Used by FastQC'
-//            )
-//    )
+    BuildUtils.addExternalDependency(
+            project,
+            new ExternalDependency(
+                    'cisd:jhdf5:19.04.1',
+                    'JHDF5',
+                    'JHDF5',
+                    'https://unlimited.ethz.ch/display/JHDF/',
+                    ExternalDependency.BSD_LICENSE_NAME,
+                    ExternalDependency.BSD_LICENSE_URL,
+                    'JHDF5 is a Java binding for HDF5. Used by FastQC'
+            )
+    )
 
     BuildUtils.addExternalDependency(
             project,

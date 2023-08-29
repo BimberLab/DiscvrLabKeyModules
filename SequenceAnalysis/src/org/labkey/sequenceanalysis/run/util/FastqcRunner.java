@@ -385,9 +385,7 @@ public class FastqcRunner
             throw new RuntimeException("Not found: " + commonsMath.getPath());
         }
 
-        // NOTE: the maven repo has been unreliable, but we could ultimately switch to use that:
-        //File jhdf5 = new File(libDir, "cisd-jhdf5-14.12.6.jar");
-        File jhdf5 = new File(libDir.getParentFile(), "external/cisd-jhdf5.jar");
+        File jhdf5 = new File(libDir, "cisd-jhdf5-14.12.6.jar");
         if (!jhdf5.exists())
         {
             throw new RuntimeException("Not found: " + jhdf5.getPath());
