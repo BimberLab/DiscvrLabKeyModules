@@ -62,14 +62,14 @@ public class AuditSummaryUserSchema extends SimpleUserSchema
 
     private AuditSummaryUserSchema(User user, Container container, DbSchema schema)
     {
-        super(DiscvrCoreModule.NAME, null, user, container, schema);
+        super(NAME, null, user, container, schema);
     }
 
     public static void register(final Module m)
     {
         final DbSchema dbSchema = DbSchema.get(DiscvrCoreModule.NAME, DbSchemaType.Module);
 
-        DefaultSchema.registerProvider(DiscvrCoreModule.NAME, new DefaultSchema.SchemaProvider(m)
+        DefaultSchema.registerProvider(NAME, new DefaultSchema.SchemaProvider(m)
         {
             @Override
             public QuerySchema createSchema(final DefaultSchema schema, Module module)
