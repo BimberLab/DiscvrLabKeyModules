@@ -367,13 +367,17 @@ public class FastqcRunner
         File libDir = new File(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getExplodedPath(), "lib");
 
         File fastqcDir = new File(libDir.getParentFile(), "external/fastqc");
-        File bzJar = new File(libDir, "bzip2-0.9.1.jar");
-        if (!bzJar.exists())
-            throw new RuntimeException("Not found: " + bzJar.getPath());
+        File jbzip2 = new File(libDir, "bzip2-0.9.1.jar");
+        if (!jbzip2.exists())
+        {
+            throw new RuntimeException("Not found: " + jbzip2.getPath());
+        }
 
-        File samJar = new File(libDir, "sam-1.96.jar");
-        if (!samJar.exists())
-            throw new RuntimeException("Not found: " + samJar.getPath());
+        File htsjdkJar = new File(libDir, "htsjdk-3.0.1.jar");
+        if (!htsjdkJar.exists())
+        {
+            throw new RuntimeException("Not found: " + htsjdkJar.getPath());
+        }
 
         File commonsMath = new File(libDir, "commons-math3-3.6.1.jar");
         if (!commonsMath.exists())
@@ -381,12 +385,26 @@ public class FastqcRunner
             throw new RuntimeException("Not found: " + commonsMath.getPath());
         }
 
+        File jhdf5 = new File(libDir, "cisd-jhdf5-14.12.6.jar");
+        if (!jhdf5.exists())
+        {
+            throw new RuntimeException("Not found: " + jhdf5.getPath());
+        }
+
+        File base64 = new File(libDir, "base64-2.3.8.jar");
+        if (!base64.exists())
+        {
+            throw new RuntimeException("Not found: " + base64.getPath());
+        }
+
         List<String> classPath = new ArrayList<>();
         classPath.add(".");
         classPath.add(fastqcDir.getPath());
-        classPath.add(samJar.getPath());
-        classPath.add(bzJar.getPath());
+        classPath.add(htsjdkJar.getPath());
+        classPath.add(jbzip2.getPath());
         classPath.add(commonsMath.getPath());
+        classPath.add(jhdf5.getPath());
+        classPath.add(base64.getPath());
 
         params.add("-classpath");
         params.add(StringUtils.join(classPath, File.pathSeparator));
