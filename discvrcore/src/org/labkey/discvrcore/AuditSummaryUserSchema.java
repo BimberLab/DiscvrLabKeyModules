@@ -138,7 +138,7 @@ public class AuditSummaryUserSchema extends SimpleUserSchema
         {
             if (st.getSqlDialect().isPostgreSQL())
             {
-                st.addColumn(new ExprColumn(st, FieldKey.fromString("primaryKey"), new SQLFragment("right(" + ExprColumn.STR_TABLE_ALIAS + ".lsid, position('.', reverse(" + ExprColumn.STR_TABLE_ALIAS + ".lsid))-1)"), JdbcType.VARCHAR, lsid));
+                st.addColumn(new ExprColumn(st, FieldKey.fromString("primaryKey"), new SQLFragment("right(" + ExprColumn.STR_TABLE_ALIAS + ".lsid, position('.' IN reverse(" + ExprColumn.STR_TABLE_ALIAS + ".lsid))-1)"), JdbcType.VARCHAR, lsid));
             }
             else if (ti.getSqlDialect().isSqlServer())
             {
