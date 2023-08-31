@@ -516,13 +516,11 @@ public class JBrowseController extends SpringActionController
                 errors.reject(ERROR_MSG, "Must provide the trackId");
                 return;
             }
-            else
+
+            if (!isValidUUID(form.getTrackId()))
             {
-                if (!isValidUUID(form.getTrackId()))
-                {
-                    errors.reject(ERROR_MSG, "Invalid track ID: " + form.getTrackId());
-                    return;
-                }
+                errors.reject(ERROR_MSG, "Invalid track ID: " + form.getTrackId());
+                return;
             }
 
             List<JsonFile> jsonFiles = getJsonFiles(form);
@@ -582,6 +580,7 @@ public class JBrowseController extends SpringActionController
                         pos.put("contig", vc.getContig());
                         pos.put("start", vc.getStart());
                         pos.put("end", vc.getEnd());
+                        pos.put("refAllele", vc.getReference().getBaseString());
 
                         JSONArray genotypes = new JSONArray();
                         for (Genotype g : vc.getGenotypes())

@@ -261,15 +261,16 @@ public class JBrowseLuceneSearch
             }
 
             results.put("data", data);
+            results.put("totalHits", topDocs.totalHits.value);
 
             //TODO: we should probably stream this
             return results;
         }
     }
 
-    public static class DefaultJBrowseCustomizer extends AbstractJBrowseFieldCustomizer
+    public static class DefaultJBrowseFieldCustomizer extends AbstractJBrowseFieldCustomizer
     {
-        public DefaultJBrowseCustomizer()
+        public DefaultJBrowseFieldCustomizer()
         {
             super(ModuleLoader.getInstance().getModule(JBrowseModule.class));
         }

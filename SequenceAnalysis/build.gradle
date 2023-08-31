@@ -10,13 +10,9 @@ import java.util.regex.Matcher
 
 repositories {
    mavenCentral()
-   // Added for org.clojars.chapmanb:sam dependency required by com.github.samtools:htsjdk
+   // Added for jhdf5 from FASTQC / sequence analysis module
    maven {
-      url "https://clojars.org/repo"
-   }
-   // Added for org.clojars.chapmanb:sam
-   maven {
-      url "https://maven.scijava.org/content/groups/public"
+      url "https://maven.scijava.org/content/groups/public/"
    }
 }
 
@@ -99,13 +95,26 @@ dependencies {
     BuildUtils.addExternalDependency(
             project,
             new ExternalDependency(
-                    'org.clojars.chapmanb:sam:1.96',
-                    'picard tools',
-                    'picard tools',
-                    'http://sourceforge.net/projects/picard/',
+                    'cisd:jhdf5:19.04.1',
+                    'JHDF5',
+                    'JHDF5',
+                    'https://unlimited.ethz.ch/display/JHDF/',
+                    ExternalDependency.BSD_LICENSE_NAME,
+                    ExternalDependency.BSD_LICENSE_URL,
+                    'JHDF5 is a Java binding for HDF5. Used by FastQC'
+            )
+    )
+
+    BuildUtils.addExternalDependency(
+            project,
+            new ExternalDependency(
+                    'net.iharder:base64:2.3.8',
+                    'Base64',
+                    'Base64',
+                    'http://iharder.net/base64/',
                     ExternalDependency.MIT_LICENSE_NAME,
                     ExternalDependency.MIT_LICENSE_URL,
-                    'Library for working with SAM/BAM files.  Used by FastQC'
+                    'Library for Base64 encoding. Used by FastQC'
             )
     )
     implementation "net.sf.opencsv:opencsv:${opencsvVersion}"
@@ -156,6 +165,7 @@ dependencies {
     apiImplementation "org.apache.commons:commons-math3:${commonsMath3Version}"
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:LabDevKitModules:laboratory", depProjectConfig: "published", depExtension: "module")
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "published", depExtension: "module")
+    BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:DiscvrLabKeyModules:discvrcore", depProjectConfig: "published", depExtension: "module")
 }
 
 

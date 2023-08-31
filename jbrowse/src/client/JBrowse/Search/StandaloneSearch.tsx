@@ -47,7 +47,7 @@ const StandaloneSearch = observer(({ sessionId, selectedRegion }: { sessionId: a
     }
 
     return (
-        <StandaloneSearchComponent session={session} onSelect={handleSearch} assemblyName={assemblyName} selectedRegion={selectedRegion} forVariantTable={false}/>
+        <StandaloneSearchComponent session={session} onSelect={handleSearch} assemblyName={assemblyName} selectedRegion={selectedRegion} forVariantTable={false} fieldMinWidth={200}/>
     )
 })
 

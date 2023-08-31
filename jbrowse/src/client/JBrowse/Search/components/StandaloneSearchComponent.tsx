@@ -86,7 +86,11 @@ export default function StandaloneSearchComponent(props: { session: any, selecte
                     }
                 }
                 else if (option.label) {
-                    parsedLocString = parseLocString(option.label, isValidRefNameForAssembly)
+                    try {
+                        parsedLocString = parseLocString(option.label, isValidRefNameForAssembly)
+                    } catch (e) {
+                        // ignore
+                    }
                 }
 
                 if (parsedLocString) {

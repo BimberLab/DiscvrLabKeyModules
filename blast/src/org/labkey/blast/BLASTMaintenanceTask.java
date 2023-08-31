@@ -23,6 +23,7 @@ import org.labkey.blast.model.BlastJob;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -73,6 +74,40 @@ public class BLASTMaintenanceTask implements MaintenanceTask
                         log.info("also deleted " + deleted + " blast jobs associated with this database");
                     }
                 }
+
+                transaction.commit();
+            }
+        }
+
+        //delete DBs linked to a genome that no longer exists
+        sqlDB = new SQLFragment("SELECT max(d.rowId) as maxRowId, d.container, d.libraryId FROM " + BLASTSchema.NAME + "." + BLASTSchema.TABLE_DATABASES + " d GROUP BY d.libraryId, d.container HAVING count(*) > 1");
+        ss = new SqlSelector(BLASTSchema.getInstance().getSchema().getScope(), sqlDB);
+        if (ss.exists())
+        {
+            final List<String> objectIds = new ArrayList<>();
+            ss.forEach(rs -> {
+                int libraryId = rs.getInt("libraryId");
+                int maxRowId = rs.getInt("maxRowId");
+                String container = rs.getString("container");
+
+                List<String> toDelete = new SqlSelector(BLASTSchema.getInstance().getSchema().getScope(), new SQLFragment("SELECT objectId FROM " + BLASTSchema.NAME + "." + BLASTSchema.TABLE_DATABASES + " WHERE libraryId = ? AND rowId != ? AND container = ?", libraryId, maxRowId, container)).getArrayList(String.class);
+                objectIds.addAll(toDelete);
+            });
+
+            try (DbScope.Transaction transaction = BLASTSchema.getInstance().getSchema().getScope().ensureTransaction())
+            {
+                objectIds.forEach(objectId -> {
+                    log.info("deleting duplicate BLAST DB: " + objectId);
+
+                    Table.delete(BLASTSchema.getInstance().getSchema().getTable(BLASTSchema.TABLE_DATABASES), objectId);
+
+                    SqlExecutor ex = new SqlExecutor(BLASTSchema.getInstance().getSchema().getScope());
+                    int deleted = ex.execute(new SQLFragment("DELETE FROM " + BLASTSchema.NAME + "." + BLASTSchema.TABLE_BLAST_JOBS + " WHERE databaseid = ? ", objectId));
+                    if (deleted > 0)
+                    {
+                        log.info("also deleted " + deleted + " blast jobs associated with this database");
+                    }
+                });
 
                 transaction.commit();
             }

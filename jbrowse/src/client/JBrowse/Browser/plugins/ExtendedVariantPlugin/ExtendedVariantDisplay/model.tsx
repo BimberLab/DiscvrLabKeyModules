@@ -217,7 +217,7 @@ export default jbrowse => {
                         const region = view.getSelectedRegions(undefined, undefined)[0]
                         const location = region.refName + ':' + (1+region.start) + '..' + (1+region.end)
                         const sessionId = view.id;
-                        navigateToSearch(sessionId, location, track.configuration.trackId, track)
+                        navigateToSearch(sessionId, location, track.configuration.trackId, null, track)
                      }
                   })
                }

@@ -10,12 +10,10 @@ import {
     GridToolbarDensitySelector,
     GridToolbarExport
 } from '@mui/x-data-grid';
-import ScopedCssBaseline from '@mui/material/ScopedCssBaseline';
 import SearchIcon from '@mui/icons-material/Search';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { AppBar, Box, Button, Dialog, Paper, Popover, Toolbar, Tooltip, Typography } from '@mui/material';
-import ArrowPagination from './ArrowPagination';
 import { FilterFormModal } from './FilterFormModal';
 import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache';
 import { NoAssemblyRegion } from '@jbrowse/core/util/types';
@@ -42,13 +40,13 @@ const VariantTableWidget = observer(props => {
     const { assemblyNames, assemblyManager } = session
     const { view } = session
 
-    const currentOffset = parseInt(new URLSearchParams(window.location.search).get('offset') || '0');
-
     // The code expects a proper GUID, yet the trackId is a string containing the GUID + filename
     const trackGUID = truncateToValidGUID(props.trackId)
 
+    // NOTE: since the trackId is GUID+filename, allow exact string matching, or a match on the GUID portion alone.
+    // Upstream code might only have access to the GUID and translating to the trackId isnt always easy
     const track = view.tracks.find(
-        t => t.configuration.trackId === trackId,
+        t => t.configuration.trackId === trackId || truncateToValidGUID(t.configuration.trackId).toUpperCase() === trackGUID.toUpperCase()
     )
 
     if (!track) {
@@ -62,6 +60,7 @@ const VariantTableWidget = observer(props => {
 
             return obj
         }))
+        setTotalHits(data.totalHits)
         setDataLoaded(true)
     }
 
@@ -69,15 +68,22 @@ const VariantTableWidget = observer(props => {
         session.hideWidget(widget)
     }
 
-    function handleQuery(passedFilters) {
+    function handleQuery(passedFilters, pushToHistory, pageQueryModel = pageSizeModel) {
+        const { page = pageSizeModel.page, pageSize = pageSizeModel.pageSize } = pageQueryModel;
+
         const encodedSearchString = createEncodedFilterString(passedFilters, false);
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.set("searchString", encodedSearchString);
-        window.history.pushState(null, "", currentUrl.toString());
+        currentUrl.searchParams.set("page", page.toString());
+        currentUrl.searchParams.set("pageSize", pageSize.toString());
+
+        if (pushToHistory) {
+          window.history.pushState(null, "", currentUrl.toString());
+        }
 
         setFilters(passedFilters);
         setDataLoaded(false)
-        fetchLuceneQuery(passedFilters, sessionId, trackGUID, currentOffset, (json)=>{handleSearch(json)}, (error) => {setDataLoaded(true);setError(error)});
+        fetchLuceneQuery(passedFilters, sessionId, trackGUID, page, pageSize, (json)=>{handleSearch(json)}, (error) => {setDataLoaded(true); setError(error)});
     }
 
     const TableCellWithPopover = (props: { value: any }) => {
@@ -218,6 +224,7 @@ const VariantTableWidget = observer(props => {
 
     const [filterModalOpen, setFilterModalOpen] = useState(false);
     const [filters, setFilters] = useState([]);
+    const [totalHits, setTotalHits] = useState(0);
     const [fieldTypeInfo, setFieldTypeInfo] = useState<FieldModel[]>([]);
     const [allowedGroupNames, setAllowedGroupNames] = useState<string[]>([]);
     const [promotedFilters, setPromotedFilters] = useState<Map<string, Filter[]>>(null);
@@ -231,10 +238,18 @@ const VariantTableWidget = observer(props => {
     // False until initial data load or an error:
     const [dataLoaded, setDataLoaded] = useState(!parsedLocString)
 
-    const [pageSizeModel, setPageSizeModel] = React.useState<GridPaginationModel>({ page: 0, pageSize: 50 });
+    const urlParams = new URLSearchParams(window.location.search);
+    const page = parseInt(urlParams.get('page') || '0');
+    const pageSize = parseInt(urlParams.get('pageSize') || '50');
+    const [pageSizeModel, setPageSizeModel] = React.useState<GridPaginationModel>({ page, pageSize });
 
     // API call to retrieve the requested features.
     useEffect(() => {
+        const handlePopState = () => {
+          window.location.reload();
+        };
+        window.addEventListener('popstate', handlePopState);
+
         async function fetch() {
             await fetchFieldTypeInfo(sessionId, trackGUID,
                 (fields: FieldModel[], groups: string[], promotedFilters: Map<string, Filter[]>) => {
@@ -256,7 +271,7 @@ const VariantTableWidget = observer(props => {
                     setAllowedGroupNames(groups)
                     setPromotedFilters(promotedFilters)
 
-                    handleQuery(searchStringToInitialFilters(fields.map((x) => x.name)))
+                    handleQuery(searchStringToInitialFilters(fields.map((x) => x.name)), false)
                 },
                 (error) => {
                     setError(error)
@@ -264,6 +279,9 @@ const VariantTableWidget = observer(props => {
         }
 
         fetch()
+        return () => {
+          window.removeEventListener('popstate', handlePopState);
+        };
 
     }, [pluginManager, parsedLocString, session.visibleWidget])
 
@@ -296,11 +314,6 @@ const VariantTableWidget = observer(props => {
 
     const showDetailsWidget = (rowIdx: number, params: any) => {
         (async () => {
-            /*let a = adapter;
-
-            if (!a) {
-                a = await getAdapterInstance();
-            }*/
             let a = await getAdapterInstance();
 
             const row = features[rowIdx] as any
@@ -326,9 +339,6 @@ const VariantTableWidget = observer(props => {
             }
 
             const feature = extendedFeatures[0]
-            console.log(feature)
-            console.log(row)
-
             const trackId = getConf(track, 'trackId')
             const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])
             const widgetId = 'Variant-' + trackId;
@@ -384,7 +394,12 @@ const VariantTableWidget = observer(props => {
             columnVisibilityModel={columnVisibilityModel}
             pageSizeOptions={[10,25,50,100]}
             paginationModel={ pageSizeModel }
-            onPaginationModelChange= {(newModel) => setPageSizeModel(newModel)}
+            rowCount={ totalHits }
+            paginationMode="server"
+            onPaginationModelChange = {(newModel) => {
+                setPageSizeModel(newModel)
+                handleQuery(filters, true, newModel)
+            }}
             onColumnVisibilityModelChange={(model) => {
                 setColumnVisibilityModel(model)
             }}
@@ -394,10 +409,11 @@ const VariantTableWidget = observer(props => {
     const renderHeaderCell = (params) => {
         return (
             <Tooltip title={params.colDef.description}>
-                <div>{params.colDef.headerName}</div>
+                <div style={{fontSize: 16}}>{params.colDef.headerName}</div>
             </Tooltip>
         );
     };
+
 
     const filterModal = (
         <FilterFormModal
@@ -408,7 +424,7 @@ const VariantTableWidget = observer(props => {
                 fieldTypeInfo: fieldTypeInfo,
                 allowedGroupNames: allowedGroupNames,
                 promotedFilters: promotedFilters,
-                handleQuery: (filters) => handleQuery(filters)
+                handleQuery: (filters) => handleQuery(filters, true)
             }}
         />
     );
@@ -434,22 +450,27 @@ const VariantTableWidget = observer(props => {
                                         <Typography variant="h6">{widgetType.heading}</Typography>
                                     </Toolbar>
                                 </AppBar>
-                                <ScopedCssBaseline>
-                                    <ReactComponent model={visibleWidget}/>
-                                </ScopedCssBaseline>
+
+                                <Box sx={{ margin: '12px' }}>
+                                    <ReactComponent model={visibleWidget} style={{ margin: '12px' }}/>
+                                </Box>
                             </Paper>
                         </Dialog>
                     )
                 })
             }
 
-
             <div style={{ marginBottom: "10px", display: "flex", alignItems: "center" }}>
-
                 <div style={{ flex: 1 }}>
                     {filters.map((filter, index) => {
                         if ((filter as any).field == "" || (filter as any).operator == "" || (filter as any).value == "" ) {
-                            return null;
+                            return (<Button
+                                key={index}
+                                onClick={() => setFilterModalOpen(true)}
+                                style={{ border: "1px solid gray", margin: "5px" }}
+                                >
+                                No filters
+                            </Button>)
                         }
                         return (
                             <Button
@@ -461,13 +482,6 @@ const VariantTableWidget = observer(props => {
                             </Button>
                         );
                     })}
-                </div>
-
-                <div style={{ marginLeft: "auto" }}>
-                    <ArrowPagination
-                        offset={currentOffset}
-                        onOffsetChange={handleOffsetChange}
-                    />
                 </div>
             </div>
 
