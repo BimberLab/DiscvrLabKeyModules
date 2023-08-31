@@ -523,6 +523,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         _resourceSettings.add(settings);
     }
 
+    @Override
     public Set<JobResourceSettings> getResourceSettings()
     {
         return _resourceSettings;
