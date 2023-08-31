@@ -2,6 +2,7 @@ package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.Map;
 
 /**
@@ -12,4 +13,6 @@ public interface HasJobParams
     Map<String, String> getJobParams();
 
     JSONObject getParameterJson();
+
+    File getParametersFile();
 }
