@@ -53,8 +53,7 @@ public class TestCase extends Assert
         if (project == null)
         {
             project = ContainerManager.createContainer(ContainerManager.getRoot(), PROJECT_NAME, TestContext.get().getUser());
-            Set<Module> modules = new HashSet<>();
-            modules.addAll(project.getActiveModules());
+            Set<Module> modules = new HashSet<>(project.getActiveModules());
             modules.add(ModuleLoader.getInstance().getModule(ClusterModule.class));
             project.setActiveModules(modules);
         }
@@ -140,7 +139,7 @@ public class TestCase extends Assert
         }
     }
 
-    public static void runTestJob(Container c, User u, AbstractClusterExecutionEngine engine) throws PipelineJobException
+    public static void runTestJob(Container c, User u, AbstractClusterExecutionEngine<?> engine) throws PipelineJobException
     {
         boolean orig = engine.isDebug();
         try

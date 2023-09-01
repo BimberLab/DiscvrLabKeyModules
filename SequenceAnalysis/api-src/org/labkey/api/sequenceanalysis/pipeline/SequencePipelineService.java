@@ -144,4 +144,6 @@ abstract public class SequencePipelineService
 
     // Note: this primarily exists for testing. The returned TaskFileManager does not have key values set: SequenceJob, WorkingDir (File) and WorkDirectory
     abstract public TaskFileManager getTaskFileManager();
+
+    abstract public Set<JobResourceSettings> getResourceSettings();
 }

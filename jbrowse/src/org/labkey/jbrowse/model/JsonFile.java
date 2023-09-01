@@ -531,7 +531,7 @@ public class JsonFile
             put(new JSONObject(){{
                 put("type", "ExtendedVariantDisplay");
                 put("displayId", getJsonTrackId() + "-ExtendedVariantDisplay");
-                put("maxDisplayedBpPerPx", 2000);
+                put("maxFeatureScreenDensity", 100);
                 put("mouseover", "jexl:'Position: ' + formatWithCommas(get(feature,'POS'))");
                 put("renderer", new JSONObject(){{
                     put("type", "ExtendedVariantRenderer");
@@ -549,6 +549,11 @@ public class JsonFile
                 if (json != null && json.has("additionalFeatureMsg"))
                 {
                     getJSONObject("renderer").put("message", json.getString("additionalFeatureMsg"));
+                }
+
+                if (json != null && json.has("trackHeight"))
+                {
+                    put("height", json.getInt("trackHeight"));
                 }
             }});
         }});

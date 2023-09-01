@@ -220,8 +220,8 @@ public class FastqcRunner
             return "";
         }
 
-        String output = "";
-        String header = "<div class=\"fastqc_overview\"><h2>File Summary:</h2><ul>";
+        StringBuilder output = new StringBuilder();
+        StringBuilder header = new StringBuilder("<div class=\"fastqc_overview\"><h2>File Summary:</h2><ul>");
 
         try
         {
@@ -233,7 +233,7 @@ public class FastqcRunner
                 File htmlFile = getExpectedHtmlFile(f);
                 if (!htmlFile.exists())
                 {
-                    output += "<p>Unable to find output for file: " + f.getName() + "</p>";
+                    output.append("<p>Unable to find output for file: ").append(f.getName()).append("</p>");
                     continue;
                 }
 
@@ -268,16 +268,16 @@ public class FastqcRunner
                 css = "";
                 html = html.replaceAll("<link href=\"\" type=\"text/css\" rel=\"stylesheet\">\n", "");
 
-                output += delim + html;
+                output.append(delim).append(html);
                 delim = "<hr>";
 
                 //also build a header:
-                header += "<li><a href=\"#report_" + suffix + "\">" + title + "</a></li>";
+                header.append("<li><a href=\"#report_").append(suffix).append("\">").append(title).append("</a></li>");
 
                 //remove footer except on final file
                 if (counter < inputFiles.size() - 1)
                 {
-                    output = output.replaceAll("<div class=\"footer\">.*</div>", "");
+                    output = new StringBuilder(output.toString().replaceAll("<div class=\"footer\">.*</div>", ""));
                 }
 
                 counter++;
@@ -285,9 +285,9 @@ public class FastqcRunner
 
             if (inputFiles.size() > 1)
             {
-                header += "</ul><p /></div><hr>";
+                header.append("</ul><p /></div><hr>");
                 String tag = "<div class=\"fastqc\">";
-                output = output.replace(tag, tag + header);
+                output = new StringBuilder(output.toString().replace(tag, tag + header));
             }
         }
         catch (IOException e)
@@ -304,7 +304,7 @@ public class FastqcRunner
             }
         }
 
-        return output;
+        return output.toString();
     }
 
     private String readCompressedHtmlReport(File htmlFile) throws IOException
@@ -367,13 +367,17 @@ public class FastqcRunner
         File libDir = new File(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME).getExplodedPath(), "lib");
 
         File fastqcDir = new File(libDir.getParentFile(), "external/fastqc");
-        File bzJar = new File(libDir, "bzip2-0.9.1.jar");
-        if (!bzJar.exists())
-            throw new RuntimeException("Not found: " + bzJar.getPath());
+        File jbzip2 = new File(libDir, "bzip2-0.9.1.jar");
+        if (!jbzip2.exists())
+        {
+            throw new RuntimeException("Not found: " + jbzip2.getPath());
+        }
 
-        File samJar = new File(libDir, "sam-1.96.jar");
-        if (!samJar.exists())
-            throw new RuntimeException("Not found: " + samJar.getPath());
+        File htsjdkJar = new File(libDir, "htsjdk-4.0.0.jar");
+        if (!htsjdkJar.exists())
+        {
+            throw new RuntimeException("Not found: " + htsjdkJar.getPath());
+        }
 
         File commonsMath = new File(libDir, "commons-math3-3.6.1.jar");
         if (!commonsMath.exists())
@@ -381,12 +385,26 @@ public class FastqcRunner
             throw new RuntimeException("Not found: " + commonsMath.getPath());
         }
 
+        File jhdf5 = new File(libDir, "jhdf5-19.04.1.jar");
+        if (!jhdf5.exists())
+        {
+            throw new RuntimeException("Not found: " + jhdf5.getPath());
+        }
+
+        // NOTE: FastQC expects an alternate package name within this JAR, so use their packaged code instead:
+//        File base64 = new File(libDir, "base64-2.3.8.jar");
+//        if (!base64.exists())
+//        {
+//            throw new RuntimeException("Not found: " + base64.getPath());
+//        }
+
         List<String> classPath = new ArrayList<>();
         classPath.add(".");
         classPath.add(fastqcDir.getPath());
-        classPath.add(samJar.getPath());
-        classPath.add(bzJar.getPath());
+        classPath.add(htsjdkJar.getPath());
+        classPath.add(jbzip2.getPath());
         classPath.add(commonsMath.getPath());
+        classPath.add(jhdf5.getPath());
 
         params.add("-classpath");
         params.add(StringUtils.join(classPath, File.pathSeparator));

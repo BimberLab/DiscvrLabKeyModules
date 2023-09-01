@@ -249,7 +249,7 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 				name: 'maxSamplesPerWorkspace',
 				label: 'Max Samples Per Workspace',
 				description: 'If multiple input gVCFs are provided, the pipeline will batch samples into workspaces with at most this many samples',
-				defaultValue: 3000
+				defaultValue: 4000
 			},{
 				fieldXtype: 'ldk-integerfield',
 				name: 'batchSize',

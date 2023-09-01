@@ -18,9 +18,9 @@ package org.labkey.discvrcore;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.data.Container;
 import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
 
 import java.util.Collection;
@@ -60,6 +60,7 @@ public class DiscvrCoreModule extends DefaultModule
     protected void init()
     {
         addController(DiscvrCoreController.NAME, DiscvrCoreController.class);
+        AuditSummaryUserSchema.register(this);
     }
 
     @Override
@@ -70,15 +71,15 @@ public class DiscvrCoreModule extends DefaultModule
 
     @Override
     @NotNull
-    public Collection<String> getSummary(Container c)
-    {
-        return Collections.emptyList();
-    }
-
-    @Override
-    @NotNull
     public Set<String> getSchemaNames()
     {
         return Collections.singleton(DiscvrCoreSchema.NAME);
+    }
+
+
+    @Override
+    public @NotNull Set<Class> getIntegrationTests()
+    {
+        return PageFlowUtil.set(AuditSummaryUserSchema.TestCase.class);
     }
 }
