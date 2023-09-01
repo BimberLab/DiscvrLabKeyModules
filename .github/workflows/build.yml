@@ -26,6 +26,8 @@ jobs:
         run: |
           DEFAULT_BRANCH='${{ fromJson(steps.get_default_branch.outputs.data).default_branch }}'
           echo 'Default branch: '$DEFAULT_BRANCH
+          echo 'Event: ${{ github.event_name }}'
+          echo 'Repository: ${{ github.repository }}'
           echo "DEFAULT_BRANCH=${DEFAULT_BRANCH}" >> $GITHUB_ENV
         id: default-branch
 
