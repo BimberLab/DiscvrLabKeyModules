@@ -106,11 +106,7 @@ public class TestCase extends Assert
             _log.info("testing engine: " + engine.getType());
             if (engine instanceof AbstractClusterExecutionEngine<?> acee)
             {
-<<<<<<< HEAD
                 runTestJob(c, TestContext.get().getUser(), acee);
-=======
-                runTestJob(c, TestContext.get().getUser(), (AbstractClusterExecutionEngine<?>) engine);
->>>>>>> origin/discvr-23.7
             }
         }
     }
