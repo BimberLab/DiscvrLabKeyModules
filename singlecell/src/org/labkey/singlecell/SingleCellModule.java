@@ -177,6 +177,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new RunPCA.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunPHATE.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunSingleR.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunConga.Provider());
         SequencePipelineService.get().registerPipelineStep(new FindClustersAndDimRedux.Provider());
         SequencePipelineService.get().registerPipelineStep(new SplitSeurat.Provider());
         SequencePipelineService.get().registerPipelineStep(new SubsetSeurat.Provider());
