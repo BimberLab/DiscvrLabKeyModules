@@ -14,15 +14,15 @@ for (datasetId in names(seuratObjects)) {
 
     if (!is.null(fieldToIterate)) {
         print(paste0('Will iterate all values of field: ', fieldToIterate))
-        if (!fieldToIterate %in% names(seuratObj@metadata)) {
+        if (!fieldToIterate %in% names(seuratObj@meta.data)) {
             stop(paste0('Missing field: ', fieldToIterate))
         }
 
-        if (!(is.factor(seuratObj@metadata[[fieldToIterate]]) || is.character(seuratObj@metadata[[fieldToIterate]]))) {
+        if (!(is.factor(seuratObj@meta.data[[fieldToIterate]]) || is.character(seuratObj@meta.data[[fieldToIterate]]))) {
             stop(paste0('Field to iterate must be a character or factor: ', fieldToIterate))
         }
 
-        values <- sort(unique(seuratObj@metadata[[fieldToIterate]]))
+        values <- sort(unique(seuratObj@meta.data[[fieldToIterate]]))
         for (value in values) {
             cells <- colnames(seuratObj)[seuratObj@meta.data[[fieldToIterate]] == value]
             ss <- subset(seuratObj, cells = cells)
