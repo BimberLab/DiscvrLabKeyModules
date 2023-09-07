@@ -1,11 +1,14 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
 import org.json.JSONObject;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -48,11 +51,38 @@ public class RunConga extends AbstractRDiscvrStep
         }
     }
 
-    // TODO: can we include the HTML in the actual seurat report?
-
     @Override
     public String getFileSuffix()
     {
         return "conga";
+    }
+
+    @Override
+    public Output execute(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
+    {
+        Output output = super.execute(ctx, inputObjects, outputPrefix);
+
+        // Add the HTML files:
+        File[] outputDirs = ctx.getOutputDir().listFiles(f -> f.isDirectory() && f.getName().startsWith("conga_output"));
+        if (outputDirs == null || outputDirs.length == 0)
+        {
+            return output;
+        }
+
+        for (File dir : outputDirs)
+        {
+            File expectedFile = new File(dir, "conga_output_results_summary.html");
+            if (!expectedFile.exists())
+            {
+                throw new PipelineJobException("Unable to find HTML file: " + expectedFile.getPath());
+            }
+
+
+            output.addSequenceOutput(expectedFile, "CoNGA Report: " + inputObjects.get(0).getDatasetName(), "CoNGA Report", inputObjects.get(0).getReadsetId(), ctx.getSequenceSupport().getCachedGenomes().iterator().next().getGenomeId(), null, null);
+        }
+
+        //TODO: handle subset reports?
+
+        return output;
     }
 }

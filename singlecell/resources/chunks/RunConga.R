@@ -10,7 +10,7 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
-    seuratObj <- Rdiscvr::RunCoNGA(seuratObj, organism = organism, assayName = assayName, congaMetadataPrefix = paste0(congaMetadataPrefix, '.'))
+    seuratObj <- Rdiscvr::RunCoNGA(seuratObj, organism = organism, assayName = assayName, congaMetadataPrefix = paste0(congaMetadataPrefix, '.'), runCongaOutputFilePrefix = 'conga_output')
 
     if (!is.null(fieldToIterate)) {
         print(paste0('Will iterate all values of field: ', fieldToIterate))
@@ -28,8 +28,14 @@ for (datasetId in names(seuratObjects)) {
             ss <- subset(seuratObj, cells = cells)
             print(paste0('Processing subset: ', value, ' with ', ncol(ss), ' cells'))
             prefix <- paste0(congaMetadataPrefix, '.', value, '.')
+            ss <- Rdiscvr::RunCoNGA(ss,
+                                    organism = organism,
+                                    assayName = assayName,
+                                    congaMetadataPrefix = prefix,
+                                    runCongaOutputDirectory = paste0('conga_output_', value),
+                                    runCongaOutputFilePrefix = 'conga_output'
+            )
 
-            ss <- Rdiscvr::RunCoNGA(ss, organism = organism, assayName = assayName, congaMetadataPrefix = prefix)
             fieldsToAppend <- grep(x = names(ss@meta.data), pattern = paste0('^', prefix), value = TRUE)
             toAppend <- ss@meta.data[fieldsToAppend]
             seuratObj <- Seurat::AddMetaData(seuratObj, toAppend)
