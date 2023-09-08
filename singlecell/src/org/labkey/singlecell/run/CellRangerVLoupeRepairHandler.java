@@ -84,7 +84,7 @@ public class CellRangerVLoupeRepairHandler extends AbstractParameterizedOutputHa
                         throw new PipelineJobException("Missing file: " + allContigs.getPath());
                     }
 
-                    if (new File(allContigs.getPath() + ".orig").exists())
+                    if (!new File(allContigs.getPath() + ".orig").exists())
                     {
                         CellRangerVDJWrapper.replaceGammaDeltaSuffix(allContigs, ctx.getLogger());
                     }
@@ -99,7 +99,7 @@ public class CellRangerVLoupeRepairHandler extends AbstractParameterizedOutputHa
                         throw new PipelineJobException("Missing file: " + filteredContigs.getPath());
                     }
 
-                    if (new File(filteredContigs.getPath() + ".orig").exists())
+                    if (!new File(filteredContigs.getPath() + ".orig").exists())
                     {
                         CellRangerVDJWrapper.replaceGammaDeltaSuffix(filteredContigs, ctx.getLogger());
                     }
