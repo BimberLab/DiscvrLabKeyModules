@@ -31,7 +31,7 @@ public class RunConga extends AbstractRDiscvrStep
                         put("storeValues", "human;rhesus");
                         put("delimiter", ";");
                         put("joinReturnValue", true);
-                    }}, null, null, false, false),
+                    }}, null, null, true, false),
                     SeuratToolParameter.create("congaMetadataPrefix", "CoNGA Metadata Prefix", "This string will be used as a prefix for the resulting metadata fields. Note: this will always have a period added to the end, so avoid delimiters in this field", "textfield", new JSONObject(){{
 
                     }}, "conga"),
@@ -48,7 +48,7 @@ public class RunConga extends AbstractRDiscvrStep
                         put("storeValues", "convert;inkscape;rsvg");
                         put("delimiter", ";");
                         put("joinReturnValue", true);
-                    }}, null, null, false, false)
+                    }}, null, null, true, false)
             ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
