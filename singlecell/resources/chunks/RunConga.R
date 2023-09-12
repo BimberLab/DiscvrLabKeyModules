@@ -10,7 +10,7 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
-    seuratObj <- Rdiscvr::RunCoNGA(seuratObj, organism = organism, assayName = assayName, congaMetadataPrefix = paste0(congaMetadataPrefix, '.'), runCongaOutputFilePrefix = 'conga_output')
+    seuratObj <- Rdiscvr::RunCoNGA(seuratObj, organism = organism, assayName = assayName, congaMetadataPrefix = paste0(congaMetadataPrefix, '.'), runCongaOutputFilePrefix = 'conga_output', pngConversionTool = pngConversionTool)
 
     if (!is.null(fieldToIterate)) {
         print(paste0('Will iterate all values of field: ', fieldToIterate))
