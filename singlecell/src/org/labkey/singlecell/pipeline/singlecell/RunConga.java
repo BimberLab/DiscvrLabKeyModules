@@ -44,7 +44,7 @@ public class RunConga extends AbstractRDiscvrStep
                     SeuratToolParameter.create("pngConversionTool", "PNG Conversion Tool", "The png to svg utility for CoNGA to use", "ldk-simplecombo", new JSONObject()
                     {{
                         put("multiSelect", false);
-                        put("allowBlank", false);
+                        put("allowBlank", true);
                         put("storeValues", "convert;inkscape;rsvg");
                         put("delimiter", ";");
                         put("joinReturnValue", true);
