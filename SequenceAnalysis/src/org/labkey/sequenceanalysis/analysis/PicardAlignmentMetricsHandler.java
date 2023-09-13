@@ -25,6 +25,7 @@ import org.labkey.sequenceanalysis.run.util.AlignmentSummaryMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectInsertSizeMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWithNonZeroCoverageWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWrapper;
+import org.labkey.sequenceanalysis.run.util.MarkDuplicatesWrapper;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -53,6 +54,9 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                     put("checked", true);
                 }}, false),
                 ToolParameterDescriptor.create("collectWgsNonZero", "Run WGS Metrics Over Non-Zero Coverage", "If checked, Picard CollectWgsMetricsWithNonZeroCoverage will be run", "checkbox", new JSONObject(){{
+                    put("checked", false);
+                }}, false),
+                ToolParameterDescriptor.create("markDuplicates", "Run MarkDuplicates", "If checked, Picard CollectWgsMetricsWithNonZeroCoverage will be run", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false)
         ));
@@ -156,6 +160,13 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                         metricsFiles.add(mf4);
                     }
 
+                    File mf5 = new MarkDuplicatesWrapper(job.getLogger()).getMetricsFile(m.getAlignmentFileObject());
+                    if (mf5.exists())
+                    {
+                        action.addOutput(mf5, "Duplication Metrics", false);
+                        metricsFiles.add(mf5);
+                    }
+
                     TableInfo ti = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
                     for (File f : metricsFiles)
                     {
@@ -195,6 +206,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
             boolean collectInsertSize = params.optBoolean("collectInsertSize", false);
             boolean collectWgs = params.optBoolean("collectWgs", false);
             boolean collectWgsNonZero = params.optBoolean("collectWgsNonZero", false);
+            boolean runMarkDuplicates = params.optBoolean("markDuplicates", false);
 
             int i = 1;
             for (SequenceOutputFile o : inputFiles)
@@ -243,6 +255,28 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                     File metricsHistogram = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics.pdf");
                     CollectInsertSizeMetricsWrapper wrapper = new CollectInsertSizeMetricsWrapper(job.getLogger());
                     wrapper.executeCommand(o.getFile(), metricsFile, metricsHistogram);
+                }
+
+                if (runMarkDuplicates)
+                {
+                    job.getLogger().info("running MarkDuplicates");
+                    job.setStatus(PipelineJob.TaskStatus.running, "RUNNING MARKDUPLICATES");
+                    MarkDuplicatesWrapper wrapper = new MarkDuplicatesWrapper(job.getLogger());
+                    File metricsFile = wrapper.getMetricsFile(o.getFile());
+                    File tempBam = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".markDuplicates.bam");
+                    ctx.getFileManager().addIntermediateFile(tempBam);
+                    ctx.getFileManager().addIntermediateFile(new File(tempBam.getPath() + ".bai"));
+
+                    if (tempBam.exists())
+                    {
+                        tempBam.delete();
+                    }
+
+                    wrapper.executeCommand(o.getFile(), tempBam, null);
+                    if (!metricsFile.exists())
+                    {
+                        throw new PipelineJobException("Unable to find file: " + metricsFile);
+                    }
                 }
             }
 

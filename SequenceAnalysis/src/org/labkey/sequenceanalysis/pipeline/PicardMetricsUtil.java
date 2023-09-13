@@ -4,12 +4,11 @@ import htsjdk.samtools.SamPairUtil;
 import htsjdk.samtools.metrics.MetricBase;
 import htsjdk.samtools.metrics.MetricsFile;
 import org.apache.commons.beanutils.ConversionException;
-import org.apache.commons.io.Charsets;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.reader.Readers;
 import picard.analysis.AlignmentSummaryMetrics;
 import picard.analysis.CollectWgsMetricsWithNonZeroCoverage;
 import picard.analysis.InsertSizeMetrics;
@@ -18,9 +17,7 @@ import picard.sam.DuplicationMetrics;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -38,9 +35,9 @@ public class PicardMetricsUtil
             throw new PipelineJobException("Unable to find file: " + f.getPath());
         }
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), Charsets.UTF_8)))
+        try (BufferedReader reader = Readers.getReader(f))
         {
-            MetricsFile metricsFile = new MetricsFile();
+            MetricsFile<MetricBase,?> metricsFile = new MetricsFile<>();
             metricsFile.read(reader);
             List<MetricBase> metrics = metricsFile.getMetrics();
             if (metrics.get(0).getClass() == DuplicationMetrics.class)
