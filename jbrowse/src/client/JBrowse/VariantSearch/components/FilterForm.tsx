@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
-import Select from '@mui/material/Select';
+import Select from 'react-select';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
@@ -209,83 +209,56 @@ const FilterForm = (props: FilterFormProps ) => {
                             <FilterRow key={index} >
                                 <FormControlMinWidth sx={ highlightedInputs[index]?.field ? highlightedSx : null }>
                                     <InputLabel id="field-label">Field</InputLabel>
-                                    <Select
-                                        labelId="field-label"
-                                        value={filter.field}
-                                        onChange={(event) =>
-                                            handleFilterChange(index, "field", event.target.value)
-                                        }
-                                    >
-                                        <MenuItem value="" style={{ display: 'none' }}>
-                                            <em>None</em>
-                                        </MenuItem>
-                                        {fieldTypeInfo.map((field) => (
-                                            <MenuItem key={field.name} value={field.name}>
-                                                {field.label ?? field.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
+                                        <Select 
+                                         menuPortalTarget={document.body}
+                                         menuPosition={'fixed'}  // Position menu as fixed to break out of overflow
+                                         menuShouldBlockScroll={true}  // Block scroll while the dropdown is open
+                                         styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                         options={fieldTypeInfo.map(field => ({ label: field.label ?? field.name, value: field.name }))}
+                                         onChange={(selected) => handleFilterChange(index, "field", selected.value)}
+                                         value={{ label: filter.field, value: filter.field }}
+                                        />
                                 </FormControlMinWidth>
 
                                 <FormControlMinWidth sx={ highlightedInputs[index]?.operator ? highlightedSx : null } >
                                     <InputLabel id="operator-label">Operator</InputLabel>
-                                    <Select
-                                        labelId="operator-label"
-                                        value={filter.operator}
-                                        onChange={(event) =>
-                                            handleFilterChange(index, "operator", event.target.value)
-                                        }
-                                    >
-                                        <MenuItem value="None" style={{ display: 'none' }}>
-                                            <em>None</em>
-                                        </MenuItem>
-
-                                        {getOperatorsForField(fieldTypeInfo.find(obj => obj.name === filter.field)) ? (
-                                            getOperatorsForField(fieldTypeInfo.find(obj => obj.name === filter.field)).map((operator) => (
-                                                <MenuItem key={operator} value={operator}>
-                                                    {operator}
-                                                </MenuItem>
-                                            ))
-                                        ) : (
-                                            <MenuItem></MenuItem>
-                                        )}
-
-                                    </Select>
+                                    <Select 
+                                        menuPortalTarget={document.body}
+                                        menuPosition={'fixed'}  // Position menu as fixed to break out of overflow
+                                        menuShouldBlockScroll={true}  // Block scroll while the dropdown is open
+                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                        options={getOperatorsForField(fieldTypeInfo.find(obj => obj.name === filter.field)).map(operator => ({ label: operator, value: operator }))}
+                                        onChange={(selected) => handleFilterChange(index, "operator", selected.value)}
+                                        value={{ label: filter.operator, value: filter.operator }}
+                                    />
                                 </FormControlMinWidth>
 
                                 {filter.operator === "in set" ? (
                                     <FormControlMinWidth sx={ highlightedInputs[index]?.value ? highlightedSx : null } >
                                         <InputLabel id="value-select-label">Value</InputLabel>
                                         <Select
-                                            labelId="value-select-label"
-                                            value={filter.value}
-                                            onChange={(event) =>
-                                                handleFilterChange(index, "value", event.target.value)
-                                            }
-                                        >
-                                            {allowedGroupNames?.map((gn) => (
-                                                <MenuItem value={gn} key={gn}>{gn}</MenuItem>
-                                            ))}
-
-                                        </Select>
+                                            menuPortalTarget={document.body}
+                                            menuPosition={'fixed'}  // Position menu as fixed to break out of overflow
+                                            menuShouldBlockScroll={true}  // Block scroll while the dropdown is open
+                                            styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                            options={allowedGroupNames.map(gn => ({ label: gn, value: gn }))}
+                                            onChange={(selected) => handleFilterChange(index, "value", selected.value)}
+                                            value={{ label: filter.value, value: filter.value }}
+                                        />
                                     </FormControlMinWidth>
                                 ) : fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length > 0 ? (
                                     <FormControlMinWidth sx={ highlightedInputs[index]?.value ? highlightedSx : null } >
                                         <InputLabel id="value-select-label">Value</InputLabel>
                                         <Select
-                                            labelId="value-select-label"
-                                            value={filter.value}
-                                            disabled={filter.operator === "is empty" || filter.operator === "is not empty"}
-                                            onChange={(event) =>
-                                                handleFilterChange(index, "value", event.target.value)
-                                            }
-                                        >
-                                            {fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.map(allowableValue => (
-                                                <MenuItem key={allowableValue} value={allowableValue}>
-                                                    {allowableValue}
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
+                                            menuPortalTarget={document.body}
+                                            menuPosition={'fixed'}  // Position menu as fixed to break out of overflow
+                                            menuShouldBlockScroll={true}  // Block scroll while the dropdown is open
+                                            styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                            isMulti={fieldTypeInfo.find(obj => obj.name === filter.field)?.isMultiValued}
+                                            options={fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues.map(value => ({ label: value, value }))}
+                                            onChange={(selected) => handleFilterChange(index, "value", selected?.map(s => s.value).join(',') || '')}
+                                            value={filter.value.split(',').map(value => ({ label: value, value }))}
+                                        />
                                     </FormControlMinWidth>
                                 ) : (
                                     <TextFieldMinWidth
