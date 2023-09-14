@@ -28,7 +28,7 @@ public class RunConga extends AbstractRDiscvrStep
                     {{
                         put("multiSelect", false);
                         put("allowBlank", false);
-                        put("storeValues", "human;rhesus");
+                        put("storeValues", "human;rhesus;human_gd;rhesus_gd");
                         put("delimiter", ";");
                         put("joinReturnValue", true);
                     }}, null, null, true, false),
