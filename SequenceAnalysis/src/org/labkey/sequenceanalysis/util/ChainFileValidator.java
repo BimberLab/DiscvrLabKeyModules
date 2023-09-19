@@ -289,7 +289,7 @@ public class ChainFileValidator
         if (!_cachedReferencesByGenome.containsKey(genomeId))
         {
             final Map<String, String> cachedReferences = new CaseInsensitiveHashMap<>();
-            SqlSelector ss = new SqlSelector(DbScope.getLabKeyScope(), new SQLFragment("SELECT r.rowid, r.name, r.genbank, r.refSeqId FROM sequenceanalysis.ref_nt_sequences r WHERE r.rowid IN (SELECT ref_nt_id FROM sequenceanalysis.reference_library_members m WHERE m.library_id = ?) ", genomeId));
+            SqlSelector ss = new SqlSelector(DbScope.getLabKeyScope(), new SQLFragment("SELECT r.rowid, r.name, r.genbank, r.refSeqId, r.aliases FROM sequenceanalysis.ref_nt_sequences r WHERE r.rowid IN (SELECT ref_nt_id FROM sequenceanalysis.reference_library_members m WHERE m.library_id = ?) ", genomeId));
             ss.forEach(new Selector.ForEachBlock<ResultSet>()
             {
                 @Override
@@ -316,6 +316,19 @@ public class ChainFileValidator
                     if (StringUtils.trimToNull(rs.getString("refSeqId")) != null)
                     {
                         cachedReferences.put(rs.getString("refSeqId"), rs.getString("name"));
+                    }
+
+                    if (StringUtils.trimToNull(rs.getString("aliases")) != null)
+                    {
+                        final String[] aliases = rs.getString("aliases").split(",");
+                        final String seqName = rs.getString("name");
+                        Arrays.stream(aliases).forEach(x -> {
+                            x = StringUtils.trimToNull(x);
+                            if (x != null)
+                            {
+                                cachedReferences.put(x, seqName);
+                            }
+                        });
                     }
                 }
             });
