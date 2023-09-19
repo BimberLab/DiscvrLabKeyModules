@@ -67,6 +67,9 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--keep-autoconv"), "constFid", "Keep Autoconversion Products", "If checked, the plink intermediate files are temporarily retained. This might be helpful to debug failures.", "checkbox", new JSONObject(){{
                         put("checked", false);
                     }}, false),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--maf"), "maf", "MAF Filter", "If provided, variants below this threshold are skipped.", "ldk-numberfield", new JSONObject(){{
+                        put("decimalPrecision", 2);
+                    }}, 0.01),
                     ToolParameterDescriptor.create("splitByApplication", "Split by Application", "If checked, one iteration of PCA will be performed for each application (defined by the readset).", "checkbox", null, false),
                     ToolParameterDescriptor.create("allowableApplications", "Allowable Applications", "If Split By Application is used, then it will search readsets to find those where the VCF sample matches the readset name. This is an option extra filter that can be added, to limit to search to a specific set of applications.", "ldk-simplelabkeycombo", new JSONObject(){{
                         put("schemaName", "sequenceanalysis");
