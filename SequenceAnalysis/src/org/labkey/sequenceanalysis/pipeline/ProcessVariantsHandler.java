@@ -872,14 +872,14 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
     }
 
     @Override
-    public void performAdditionalMergeTasks(JobContext ctx, PipelineJob job, TaskFileManager manager, ReferenceGenome genome, List<File> orderedScatterOutputs) throws PipelineJobException
+    public void performAdditionalMergeTasks(JobContext ctx, PipelineJob job, TaskFileManager manager, ReferenceGenome genome, List<File> orderedScatterOutputs, List<String> orderedJobDirs) throws PipelineJobException
     {
         List<PipelineStepCtx<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(job, VariantProcessingStep.class);
         for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
         {
             if (stepCtx.getProvider() instanceof VariantProcessingStep.SupportsScatterGather ssg)
             {
-                ssg.performAdditionalMergeTasks(ctx, job, manager, genome, orderedScatterOutputs);
+                ssg.performAdditionalMergeTasks(ctx, job, manager, genome, orderedScatterOutputs, orderedJobDirs);
             }
         }
     }
