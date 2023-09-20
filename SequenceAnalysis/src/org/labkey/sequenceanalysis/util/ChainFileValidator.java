@@ -174,6 +174,12 @@ public class ChainFileValidator
             int totalChainIdUpdated = 0;
             int totalPassing = 0;
             File output = new File(chainFile.getParentFile(), FileUtil.getBaseName(chainFile) + "-cleaned." + FileUtil.getExtension(chainFile));
+            boolean isGzip = output.getPath().toLowerCase().endsWith("gz");
+            if (isGzip)
+            {
+                output = new File(output.getParentFile(), FileUtil.getBaseName(output));
+            }
+
             try (BufferedWriter writer = IOUtil.openFileForBufferedUtf8Writing(output);BufferedLineReader reader = new BufferedLineReader(IOUtil.openFileForReading(chainFile)))
             {
                 String line;
