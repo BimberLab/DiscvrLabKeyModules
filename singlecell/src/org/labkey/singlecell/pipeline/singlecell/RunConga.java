@@ -79,14 +79,19 @@ public class RunConga extends AbstractRDiscvrStep
 
         for (File dir : outputDirs)
         {
+            String sn = null;
+            if (dir.getName().startsWith("conga_output_"))
+            {
+                sn = dir.getName().replaceAll("conga_output_", "");
+            }
+
             File expectedFile = new File(dir, "conga_output_results_summary.html");
             if (!expectedFile.exists())
             {
                 throw new PipelineJobException("Unable to find HTML file: " + expectedFile.getPath());
             }
 
-
-            output.addSequenceOutput(expectedFile, "CoNGA Report: " + inputObjects.get(0).getDatasetName(), "CoNGA Report", inputObjects.get(0).getReadsetId(), ctx.getSequenceSupport().getCachedGenomes().iterator().next().getGenomeId(), null, null);
+            output.addSequenceOutput(expectedFile, "CoNGA Report: " + inputObjects.get(0).getDatasetName() + (sn == null ? "" : ", subset: " + sn), "CoNGA Report", inputObjects.get(0).getReadsetId(), ctx.getSequenceSupport().getCachedGenomes().iterator().next().getGenomeId(), null, null);
         }
 
         //TODO: handle subset reports?
