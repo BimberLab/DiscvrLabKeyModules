@@ -411,6 +411,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             resumer.getFileManager().addIntermediateFile(outputFileIdx);
         }
 
+        File effectiveInput = currentVCF; //this will be tested at the end to determine if a new file was actually created
         for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
         {
             ctx.getLogger().info("Starting to run: " + stepCtx.getProvider().getLabel());
@@ -484,7 +485,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             resumer.setStepComplete(stepIdx, input.getPath(), action, currentVCF);
         }
 
-        if (currentVCF.exists())
+        if (currentVCF != null && currentVCF.exists() && !currentVCF.equals(effectiveInput))
         {
             resumer.getFileManager().removeIntermediateFile(currentVCF);
             resumer.getFileManager().removeIntermediateFile(new File(currentVCF.getPath() + ".tbi"));
