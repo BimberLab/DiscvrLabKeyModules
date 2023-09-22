@@ -96,6 +96,12 @@ public class SplitVcfBySamplesStep extends AbstractCommandPipelineStep<SplitVcfB
         job.getLogger().info("Merging additional track VCFs");
         File inputVCF = ((SequenceJob)getPipelineCtx().getJob()).getInputFiles().get(0);
         List<File> firstJobOutputs = findProducedVcfs(inputVCF, new File(ctx.getWorkingDirectory(), orderedJobDirs.get(0)));
+        job.getLogger().info("total VCFs found in job dir: " + firstJobOutputs.size());
+        if (firstJobOutputs.isEmpty())
+        {
+            throw new PipelineJobException("No VCFs found in folder: " + new File(ctx.getWorkingDirectory(), orderedJobDirs.get(0)));
+        }
+
         for (File fn : firstJobOutputs)
         {
             List<File> toConcat = orderedJobDirs.stream().map(jobDir -> {
