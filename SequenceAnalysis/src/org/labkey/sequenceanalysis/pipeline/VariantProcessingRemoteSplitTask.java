@@ -141,7 +141,14 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
                     throw new PipelineJobException(e);
                 }
 
-                getPipelineJob().getLogger().debug("Final scatter output: " + output.getPath());
+                if (output != null)
+                {
+                    getPipelineJob().getLogger().debug("Final scatter output: " + output.getPath());
+                }
+                else
+                {
+                    getPipelineJob().getLogger().debug("No primary scatter output produced");
+                }
             }
             else
             {
