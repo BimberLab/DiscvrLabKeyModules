@@ -209,7 +209,8 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         if (scatterOutputs.isEmpty())
         {
-            throw new PipelineJobException("Unable to find final VCF");
+            ctx.getLogger().info("No outputs of category: " + category + " were found");
+            return null;
         }
         else if (scatterOutputs.size() > 1)
         {
