@@ -205,10 +205,10 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
 
         ReferenceGenome genome = getPipelineJob().getSequenceSupport().getCachedGenome(genomeIds.iterator().next());
 
-        String basename = SequenceAnalysisService.get().getUnzippedBaseName(toConcat.get(0).getName());
         File combined = null;
         if (!toConcat.isEmpty())
         {
+            String basename = SequenceAnalysisService.get().getUnzippedBaseName(toConcat.get(0).getName());
             combined = new File(getPipelineJob().getAnalysisDirectory(), basename + ".vcf.gz");
             File combinedIdx = new File(combined.getPath() + ".tbi");
             if (combinedIdx.exists())
