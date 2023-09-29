@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Select from 'react-select';
+import AsyncSelect from 'react-select/async';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
@@ -131,6 +132,10 @@ const FilterForm = (props: FilterFormProps ) => {
         filters.forEach((filter, index) => {
             highlightedInputs[index] = { field: false, operator: false, value: false };
 
+            filter.field = filter.field ?? '';
+            filter.operator = filter.operator ?? '';
+            filter.value = filter.value ?? '';
+
             if (filter.field === '') {
                 highlightedInputs[index].field = true;
             }
@@ -208,21 +213,37 @@ const FilterForm = (props: FilterFormProps ) => {
                         {filters.map((filter, index) => (
                             <FilterRow key={index} >
                                 <FormControlMinWidth sx={ highlightedInputs[index]?.field ? highlightedSx : null }>
-                                    <InputLabel id="field-label">Field</InputLabel>
-                                        <Select 
-                                         menuPortalTarget={document.body}
-                                         menuPosition={'fixed'}  // Position menu as fixed to break out of overflow
-                                         menuShouldBlockScroll={true}  // Block scroll while the dropdown is open
-                                         styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                                         options={fieldTypeInfo.map(field => ({ label: field.label ?? field.name, value: field.name }))}
-                                         onChange={(selected) => handleFilterChange(index, "field", selected.value)}
-                                         value={{ label: filter.field, value: filter.field }}
-                                        />
+                                    {
+                                        filter.field ? 
+                                        null :
+                                        <InputLabel id={`field-select-${index}`}>Field</InputLabel>
+                                    }
+
+                                    <Select 
+                                        id={`field-select-${index}`}
+                                        inputId={`field-select-${index}`}
+                                        aria-labelledby={`field-select-${index}`}
+                                        menuPortalTarget={document.body}
+                                        menuPosition={'fixed'}  // Position menu as fixed to break out of overflow
+                                        menuShouldBlockScroll={true}  // Block scroll while the dropdown is open
+                                        styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                        options={fieldTypeInfo.map(field => ({ label: field.label ?? field.name, value: field.name }))}
+                                        onChange={(selected) => handleFilterChange(index, "field", selected.value)}
+                                        value={{ label: filter.field, value: filter.field }}
+                                    />
                                 </FormControlMinWidth>
 
                                 <FormControlMinWidth sx={ highlightedInputs[index]?.operator ? highlightedSx : null } >
-                                    <InputLabel id="operator-label">Operator</InputLabel>
+                                    {
+                                        filter.operator ? 
+                                        null :
+                                        <InputLabel id={`operator-select-${index}`}>Operator</InputLabel>
+                                    }
+
                                     <Select 
+                                        id={`operator-select-${index}`}
+                                        inputId={`operator-select-${index}`}
+                                        aria-labelledby={`operator-select-${index}`}
                                         menuPortalTarget={document.body}
                                         menuPosition={'fixed'}  // Position menu as fixed to break out of overflow
                                         menuShouldBlockScroll={true}  // Block scroll while the dropdown is open
@@ -235,8 +256,17 @@ const FilterForm = (props: FilterFormProps ) => {
 
                                 {filter.operator === "in set" ? (
                                     <FormControlMinWidth sx={ highlightedInputs[index]?.value ? highlightedSx : null } >
-                                        <InputLabel id="value-select-label">Value</InputLabel>
+                                        {
+                                          filter.value ? 
+                                            null :
+                                            <InputLabel id={`value-select-${index}`} >Value</InputLabel>
+                                        }
+
+                                        <InputLabel id={`value-select-${index}`} shrink>Value</InputLabel>
                                         <Select
+                                            id={`value-select-${index}`}
+                                            inputId={`value-select-${index}`}
+                                            aria-labelledby={`value-select-${index}`}
                                             menuPortalTarget={document.body}
                                             menuPosition={'fixed'}  // Position menu as fixed to break out of overflow
                                             menuShouldBlockScroll={true}  // Block scroll while the dropdown is open
@@ -248,16 +278,26 @@ const FilterForm = (props: FilterFormProps ) => {
                                     </FormControlMinWidth>
                                 ) : fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length > 0 ? (
                                     <FormControlMinWidth sx={ highlightedInputs[index]?.value ? highlightedSx : null } >
-                                        <InputLabel id="value-select-label">Value</InputLabel>
-                                        <Select
+                                        <AsyncSelect
+                                            id={`value-select-${index}`}
+                                            inputId={`value-select-${index}`}
+                                            aria-labelledby={`value-select-${index}`}
                                             menuPortalTarget={document.body}
-                                            menuPosition={'fixed'}  // Position menu as fixed to break out of overflow
-                                            menuShouldBlockScroll={true}  // Block scroll while the dropdown is open
-                                            styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
+                                            menuPosition={'fixed'}
+                                            menuShouldBlockScroll={true}
+                                            styles={{menuPortal: base => ({...base, zIndex: 9999})}}
                                             isMulti={fieldTypeInfo.find(obj => obj.name === filter.field)?.isMultiValued}
-                                            options={fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues.map(value => ({ label: value, value }))}
-                                            onChange={(selected) => handleFilterChange(index, "value", selected?.map(s => s.value).join(',') || '')}
-                                            value={filter.value.split(',').map(value => ({ label: value, value }))}
+                                            loadOptions={(inputValue, callback) => {
+                                                const fieldInfo = fieldTypeInfo.find(obj => obj.name === filter.field);
+
+                                                callback(
+                                                    (fieldInfo?.allowableValues || [])
+                                                    .filter(value => value.toLowerCase().includes(inputValue.toLowerCase()))
+                                                    .map(value => ({label: value, value}))
+                                                );
+                                            }}
+                                            onChange={(selected) => handleFilterChange(index, "value", selected?.length > 0 ? selected.map(s => s.value).join(',') : undefined)}
+                                            value={filter.value ? filter.value.split(',').map(value => ({label: value, value})) : undefined}
                                         />
                                     </FormControlMinWidth>
                                 ) : (

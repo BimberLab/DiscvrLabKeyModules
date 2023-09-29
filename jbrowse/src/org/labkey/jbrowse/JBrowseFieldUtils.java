@@ -4,7 +4,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFHeaderLineType;
 import htsjdk.variant.vcf.VCFInfoHeaderLine;
-import org.apache.logging.log4j.LogManager;
+import org.jetbrains.annotations.Nullable;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
@@ -14,6 +14,7 @@ import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -31,12 +32,12 @@ public class JBrowseFieldUtils
         put("ref", new JBrowseFieldDescriptor("ref", "The reference allele", true, true, VCFHeaderLineType.String, 4).label("Ref Allele"));
         put("alt", new JBrowseFieldDescriptor("alt", "The alternate allele", true, true, VCFHeaderLineType.String, 5).label("Alt Allele"));
         put("genomicPosition", new JBrowseFieldDescriptor("genomicPosition", "", false, true, VCFHeaderLineType.Integer, 6).hidden(true).label("Genomic Position"));
-        put("variableSamples", new JBrowseFieldDescriptor(VARIABLE_SAMPLES, "All samples with this variant", true, true, VCFHeaderLineType.Character, 7).multiValued(true).label("Samples With Variant"));
     }};
 
     public static Map<String, JBrowseFieldDescriptor> getIndexedFields(JsonFile jsonFile, User u, Container c)
     {
         Map<String, JBrowseFieldDescriptor> ret = new LinkedHashMap<>(DEFAULT_FIELDS);
+        ret.put(VARIABLE_SAMPLES, getVariableSamplesField(jsonFile));
 
         File vcf = jsonFile.getTrackFile();
         if (!vcf.exists())
@@ -65,6 +66,25 @@ public class JBrowseFieldUtils
 
         return ret;
     }
+
+    public static JBrowseFieldDescriptor getVariableSamplesField(@Nullable JsonFile jsonFile) {
+        JBrowseFieldDescriptor field = new JBrowseFieldDescriptor(VARIABLE_SAMPLES, "All samples with this variant", true, true, VCFHeaderLineType.Character, 7).multiValued(true).label("Samples With Variant");
+        if (jsonFile != null) {
+            File vcf = jsonFile.getTrackFile();
+            if (vcf == null || !vcf.exists()) {
+                String msg = "Unable to find VCF file for track: " + jsonFile.getObjectId();
+                _log.error(msg + ", expected: " + (vcf == null ? "null" : vcf.getPath()));
+                return null;
+            }
+
+            try (VCFFileReader reader = new VCFFileReader(vcf)) {
+                field.allowableValues(reader.getHeader().getSampleNamesInOrder());
+            }
+        }
+
+        return field;
+    }
+
 
     public static JBrowseSession getSession(String sessionId)
     {
