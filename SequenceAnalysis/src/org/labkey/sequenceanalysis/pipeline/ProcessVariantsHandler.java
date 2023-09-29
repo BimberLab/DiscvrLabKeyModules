@@ -879,7 +879,8 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         List<PipelineStepCtx<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(job, VariantProcessingStep.class);
         for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
         {
-            if (stepCtx.getProvider() instanceof VariantProcessingStep.SupportsScatterGather ssg)
+            VariantProcessingStep vps = stepCtx.getProvider().create(ctx);
+            if (vps instanceof VariantProcessingStep.SupportsScatterGather ssg)
             {
                 ssg.performAdditionalMergeTasks(ctx, job, manager, genome, orderedScatterOutputs, orderedJobDirs);
             }
