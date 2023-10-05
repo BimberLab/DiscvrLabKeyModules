@@ -114,7 +114,7 @@ public class FastqcRunner
                 }
                 else
                 {
-                    _logger.error("ZIP file not found, expected: " + zip.getPath());
+                    throw new IOException("ZIP file not found, expected: " + zip.getPath());
                 }
 
                 //force compression
@@ -179,11 +179,6 @@ public class FastqcRunner
         if (gz.isType(f))
         {
             basename = FileUtil.getBaseName(basename);
-        }
-
-        if (f.getName().endsWith(".fq.gz") || f.getName().endsWith(".fq"))
-        {
-            basename = basename + ".fq";
         }
 
         return basename;

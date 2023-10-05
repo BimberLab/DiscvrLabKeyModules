@@ -46,6 +46,9 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
                     }}, null),
                     ToolParameterDescriptor.create("chromosomeCounts", "Chromosome Counts", "If selected, GATK ChromosomeCounts annotations, including AF and AC, will be annotated.", "checkbox", new JSONObject(){{
                         put("checked", false);
+                    }}, null),
+                    ToolParameterDescriptor.create("impact", "IMPACT", "If selected, the Impact annotation will run, which parses the SnpEff ANN field into multiple discrete INFO fields.", "checkbox", new JSONObject(){{
+                        put("checked", false);
                     }}, null)
             ), null, "");
         }
@@ -95,6 +98,12 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
         {
             options.add("-A");
             options.add("ChromosomeCounts");
+        }
+
+        if (getProvider().getParameterByName("impact").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
+        {
+            options.add("-A");
+            options.add("Impact");
         }
 
         if (intervals != null)

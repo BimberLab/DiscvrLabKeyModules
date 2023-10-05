@@ -924,7 +924,23 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                     data.push(comment || 'Please QC individually and pool in equal amounts per lane');
                                 }
                                 else if (instrument === 'Novogene-New') {
-                                    data = ['Premade-10X transcriptome library'];
+                                    let libraryType = 'Premade-10X Single Cell Transcriptome Library';
+                                    switch (suffix) {
+                                        case 'GEX':
+                                            libraryType = 'Premade-10X Single Cell Transcriptome Library';
+                                            break;
+                                        case 'TCR':
+                                            libraryType = 'Premade-10X VDJ Library';
+                                            break;
+                                        case 'HTO':
+                                        case 'CITE':
+                                            libraryType = 'Premade-10X Feature Barcode Library';
+                                            break;
+                                        default:
+                                            console.error('Unknown suffix: ' + suffix);
+                                    }
+
+                                    data = [libraryType];
                                     data.push(r.plateAlias ? r.plateAlias : samplePrefix + r.plateId.replace(/-/g, '_'));
                                     data.push(sampleName);
                                     data.push(suffix === 'HTO' ? 'Lane sequencing-With Demultiplexing' : 'Partial lane sequencing-With Demultiplexing');

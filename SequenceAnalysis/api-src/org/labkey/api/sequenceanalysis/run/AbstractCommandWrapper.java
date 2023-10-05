@@ -253,7 +253,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
     {
         if (_log == null)
         {
-              return  LogManager.getLogger("NoOpLogger");
+              return LogManager.getLogger("NoOpLogger");
         }
 
         return _log;

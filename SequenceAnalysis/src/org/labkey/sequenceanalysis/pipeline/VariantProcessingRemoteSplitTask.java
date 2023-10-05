@@ -117,8 +117,13 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
                 {
                     output = ((SequenceOutputHandler.TracksVCF)handler).finalizeScatterJobOutput(ctx, output);
 
-                    // If the output is still under the work dir, translate path. Otherwise it was already copied to the the source dir
-                    if (output.getPath().startsWith(_wd.getDir().getPath()))
+                    // If the output is still under the work dir, translate path. Otherwise it was already copied to the source dir
+                    if (output == null)
+                    {
+                        ctx.getLogger().debug("No output produced, adding null to scatter outputs");
+                        getPipelineJob().getScatterJobOutputs().put(getPipelineJob().getIntervalSetName(), null);
+                    }
+                    else if (output.getPath().startsWith(_wd.getDir().getPath()))
                     {
                         //NOTE: the VCF will be copied back to the source dir, so translate paths
                         String path = _wd.getRelativePath(output);
@@ -136,7 +141,14 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
                     throw new PipelineJobException(e);
                 }
 
-                getPipelineJob().getLogger().debug("Final scatter output: " + output.getPath());
+                if (output != null)
+                {
+                    getPipelineJob().getLogger().debug("Final scatter output: " + output.getPath());
+                }
+                else
+                {
+                    getPipelineJob().getLogger().debug("No primary scatter output produced");
+                }
             }
             else
             {
