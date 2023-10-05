@@ -51,7 +51,7 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 					renderer: function(val){
 						const store = this.up('singlecell-nimblealignpanel').genomeField.store
 						if (val && store) {
-							const recIdx = store.find('rowid', val);
+							const recIdx = store.find('rowid', val, 0, false, false, true);
 							return recIdx === -1 ? '[' + val + ']' : store.getAt(recIdx).get('name');
 						}
 						else if (val) {

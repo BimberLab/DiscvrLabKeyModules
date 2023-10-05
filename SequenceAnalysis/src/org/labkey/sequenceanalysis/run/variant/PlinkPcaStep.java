@@ -67,6 +67,9 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--keep-autoconv"), "constFid", "Keep Autoconversion Products", "If checked, the plink intermediate files are temporarily retained. This might be helpful to debug failures.", "checkbox", new JSONObject(){{
                         put("checked", false);
                     }}, false),
+                    ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--maf"), "maf", "MAF Filter", "If provided, variants below this threshold are skipped.", "ldk-numberfield", new JSONObject(){{
+                        put("decimalPrecision", 2);
+                    }}, 0.01),
                     ToolParameterDescriptor.create("splitByApplication", "Split by Application", "If checked, one iteration of PCA will be performed for each application (defined by the readset).", "checkbox", null, false),
                     ToolParameterDescriptor.create("allowableApplications", "Allowable Applications", "If Split By Application is used, then it will search readsets to find those where the VCF sample matches the readset name. This is an option extra filter that can be added, to limit to search to a specific set of applications.", "ldk-simplelabkeycombo", new JSONObject(){{
                         put("schemaName", "sequenceanalysis");
@@ -78,6 +81,7 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                         put("sortField", "application");
                     }}, null),
                     ToolParameterDescriptor.create("allowMissingSamples", "Allow Missing Samples", "When using split by application, this controls whether or not the job should fail if a matching readset cannot be found for specific samples.", "checkbox", null, false),
+                    ToolParameterDescriptor.create("fileSets", "File Set(s) For Readset Query", "If Split By Application is used, the system needs to query each sample name in the VCF and find the corresponding readset. If this is provided, this query will be limited to redsets where a gVCF exists and is tagged as one of these file sets", "sequenceanalysis-trimmingtextarea", null, null),
                     ToolParameterDescriptor.create(SelectSamplesStep.SAMPLE_INCLUDE, "Sample(s) Include", "Only the following samples will be included in the analysis.", "sequenceanalysis-trimmingtextarea", null, null),
                     ToolParameterDescriptor.create(SelectSamplesStep.SAMPLE_EXCLUDE, "Samples(s) To Exclude", "The following samples will be excluded from the analysis.", "sequenceanalysis-trimmingtextarea", null, null)
             ), List.of("sequenceanalysis/field/TrimmingTextArea.js"), "https://zzz.bwh.harvard.edu/plink/");
@@ -246,14 +250,29 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                             throw new PipelineJobException("Expected VCF to have samples: " + so.getFile().getPath());
                         }
 
+                        List<Integer> allowableReadsets = null;
+                        Container targetContainer = getPipelineCtx().getJob().getContainer().isWorkbook() ? getPipelineCtx().getJob().getContainer().getParent() : getPipelineCtx().getJob().getContainer();
+                        String fileSetsText = StringUtils.trimToNull(getProvider().getParameterByName("fileSets").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
+                        if (fileSetsText != null)
+                        {
+                            SimpleFilter fileSetFilter = new SimpleFilter(FieldKey.fromString("fileSets"), Arrays.asList(fileSetsText.split(";")), CompareType.CONTAINS_ONE_OF);
+                            fileSetFilter.addCondition(FieldKey.fromString("category"), "gVCF File");
+                            allowableReadsets = new TableSelector(QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), targetContainer, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), PageFlowUtil.set("readset"), fileSetFilter, null).getArrayList(Integer.class);
+                            getPipelineCtx().getLogger().debug("Limiting to file sets: " + fileSetsText + ", found " + allowableReadsets.size() + " readsets");
+                        }
+
                         for (String sample : header.getSampleNamesInOrder())
                         {
                             // Find readset:
-                            Container targetContainer = getPipelineCtx().getJob().getContainer().isWorkbook() ? getPipelineCtx().getJob().getContainer().getParent() : getPipelineCtx().getJob().getContainer();
                             SimpleFilter filter = new SimpleFilter(FieldKey.fromString("name"), sample).addCondition(FieldKey.fromString("status"), null, CompareType.ISBLANK);
                             if (allowableApplications != null)
                             {
                                 filter.addCondition(FieldKey.fromString("application"), allowableApplications, CompareType.IN);
+                            }
+
+                            if (allowableReadsets != null)
+                            {
+                                filter.addCondition(FieldKey.fromString("rowid"), allowableReadsets, CompareType.IN);
                             }
 
                             Collection<Map<String, Object>> results = new TableSelector(QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), targetContainer, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READSETS), PageFlowUtil.set("application", "rowid"), filter, null).getMapCollection();

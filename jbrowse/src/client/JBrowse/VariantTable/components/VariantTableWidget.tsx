@@ -104,7 +104,7 @@ const VariantTableWidget = observer(props => {
       if (!variant.get('INFO')['variableSamples'] && variant.get('SAMPLES')) {
         variant.get('INFO')['variableSamples'] = []
         Object.keys(variant.get('SAMPLES')).forEach(function(sampleId) {
-          const gt = variant.get('SAMPLES')[sampleId]["GT"][0]
+          const gt = variant.get('SAMPLES')[sampleId]["GT"] ? variant.get('SAMPLES')[sampleId]["GT"][0] : null
           if (isVariant(gt)) {
             variant.get('INFO')['variableSamples'].push(sampleId)
           }
