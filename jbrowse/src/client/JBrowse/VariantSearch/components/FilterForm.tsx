@@ -144,7 +144,9 @@ const FilterForm = (props: FilterFormProps ) => {
                 highlightedInputs[index].operator = true;
             }
 
-            if (filter.value === '') {
+            if (filter.operator === 'is empty' || filter.operator === 'is not empty') {
+                filter.value = '';
+            } else if (filter.value === '') {
                 highlightedInputs[index].value = true;
             }
         });
@@ -281,6 +283,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                             aria-labelledby={`value-select-${index}`}
                                             menuPortalTarget={document.body}
                                             menuPosition={'fixed'}
+                                            isDisabled={filter.operator === "is empty" || filter.operator === "is not empty"}
                                             menuShouldBlockScroll={true}
                                             styles={{menuPortal: base => ({...base, zIndex: 9999})}}
                                             isMulti={fieldTypeInfo.find(obj => obj.name === filter.field)?.isMultiValued}
@@ -344,6 +347,7 @@ const FilterForm = (props: FilterFormProps ) => {
                         <Button
                             onClick={handleSubmit}
                             type="submit"
+                            className="filter-form-select-button"
                             variant="contained"
                             color="primary"
                         >

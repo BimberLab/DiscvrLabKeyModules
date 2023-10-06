@@ -1537,8 +1537,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         waitForElement(Locator.tagWithClass("input", "MuiInputBase-inputSizeSmall")).sendKeys("C");
 
-        // TODO: index isnt very stable. we need to differentiate the modal button from the grid button bar:
-        waitAndClick(Locator.tagWithText("button", "Search").index(1));
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
 
         // indicates row is filtered:
         waitForElementToDisappear(Locator.tagWithText("span", "2"));
@@ -1553,7 +1552,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("li", "variable in")).click();
         waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("m00001");
         waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys(Keys.ENTER);
-        waitAndClick(Locator.tagWithText("button", "Search").index(1));
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
         waitForElement(Locator.tagWithText("span", "0.553"));
 
         clearFilterDialog("variableSamples variable in m00001");
@@ -1568,7 +1567,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("div", "m00005")).click();
         waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("m000");
         waitForElement(Locator.tagWithText("div", "m00004")).click();
-        waitAndClick(Locator.tagWithText("button", "Search").index(1));
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
         waitForElement(Locator.tagWithText("span", "0.3"));
 
         clearFilterDialog("variableSamples variable in all of m00005,m00004");
@@ -1581,9 +1580,20 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("li", "not variable in")).click();
         waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("m05710");
         waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys(Keys.ENTER);
-        waitAndClick(Locator.tagWithText("button", "Search").index(1));
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
         waitForElementToDisappear(Locator.tagWithText("span", "3.277E-4"));
 
         clearFilterDialog("variableSamples not variable in m05710");
+
+        // samples with variant isEmpty
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Samples With Variant")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "is empty")).click();
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElementToDisappear(Locator.tagWithText("span", "2"));
+
+        clearFilterDialog("variableSamples is empty");
     }
 }
