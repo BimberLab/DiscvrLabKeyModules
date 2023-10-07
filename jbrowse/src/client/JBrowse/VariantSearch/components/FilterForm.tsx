@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Select from '@mui/material/Select';
+import AsyncSelect from 'react-select/async';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
@@ -131,6 +132,10 @@ const FilterForm = (props: FilterFormProps ) => {
         filters.forEach((filter, index) => {
             highlightedInputs[index] = { field: false, operator: false, value: false };
 
+            filter.field = filter.field ?? '';
+            filter.operator = filter.operator ?? '';
+            filter.value = filter.value ?? '';
+
             if (filter.field === '') {
                 highlightedInputs[index].field = true;
             }
@@ -139,7 +144,9 @@ const FilterForm = (props: FilterFormProps ) => {
                 highlightedInputs[index].operator = true;
             }
 
-            if (filter.value === '') {
+            if (filter.operator === 'is empty' || filter.operator === 'is not empty') {
+                filter.value = '';
+            } else if (filter.value === '') {
                 highlightedInputs[index].value = true;
             }
         });
@@ -208,8 +215,8 @@ const FilterForm = (props: FilterFormProps ) => {
                         {filters.map((filter, index) => (
                             <FilterRow key={index} >
                                 <FormControlMinWidth sx={ highlightedInputs[index]?.field ? highlightedSx : null }>
-                                    <InputLabel id="field-label">Field</InputLabel>
-                                    <Select
+                                  <InputLabel id="field-label">Field</InputLabel>
+                                  <Select
                                         labelId="field-label"
                                         value={filter.field}
                                         onChange={(event) =>
@@ -266,8 +273,32 @@ const FilterForm = (props: FilterFormProps ) => {
                                             {allowedGroupNames?.map((gn) => (
                                                 <MenuItem value={gn} key={gn}>{gn}</MenuItem>
                                             ))}
-
                                         </Select>
+                                    </FormControlMinWidth>
+                                ) : fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length > 10 ? (
+                                    <FormControlMinWidth sx={ highlightedInputs[index]?.value ? highlightedSx : null } >
+                                        <AsyncSelect
+                                            id={`value-select-${index}`}
+                                            inputId={`value-select-${index}`}
+                                            aria-labelledby={`value-select-${index}`}
+                                            menuPortalTarget={document.body}
+                                            menuPosition={'fixed'}
+                                            isDisabled={filter.operator === "is empty" || filter.operator === "is not empty"}
+                                            menuShouldBlockScroll={true}
+                                            styles={{menuPortal: base => ({...base, zIndex: 9999})}}
+                                            isMulti={fieldTypeInfo.find(obj => obj.name === filter.field)?.isMultiValued}
+                                            loadOptions={(inputValue, callback) => {
+                                                const fieldInfo = fieldTypeInfo.find(obj => obj.name === filter.field);
+
+                                                callback(
+                                                    (fieldInfo?.allowableValues || [])
+                                                    .filter(value => value.toLowerCase().includes(inputValue.toLowerCase()))
+                                                    .map(value => ({label: value, value}))
+                                                );
+                                            }}
+                                            onChange={(selected) => handleFilterChange(index, "value", selected?.length > 0 ? selected.map(s => s.value).join(',') : undefined)}
+                                            value={filter.value ? filter.value.split(',').map(value => ({label: value, value})) : undefined}
+                                        />
                                     </FormControlMinWidth>
                                 ) : fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length > 0 ? (
                                     <FormControlMinWidth sx={ highlightedInputs[index]?.value ? highlightedSx : null } >
@@ -316,6 +347,7 @@ const FilterForm = (props: FilterFormProps ) => {
                         <Button
                             onClick={handleSubmit}
                             type="submit"
+                            className="filter-form-select-button"
                             variant="contained"
                             color="primary"
                         >
