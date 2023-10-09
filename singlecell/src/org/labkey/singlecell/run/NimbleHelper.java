@@ -589,10 +589,10 @@ public class NimbleHelper
             template = arr.getString(1);
             doGroup = arr.getBoolean(2);
 
-            String rawScore = arr.length() > 3 ? StringUtils.trimToNull(arr.getString(3)) : null;
+            String rawScore = arr.length() > 3 ? StringUtils.trimToNull(String.valueOf(arr.get(3))) : null;
             scorePercent = rawScore == null ? -1.0 : Double.parseDouble(rawScore);
 
-            String rawMismatches = arr.length() > 4 ? StringUtils.trimToNull(arr.getString(4)) : null;
+            String rawMismatches = arr.length() > 4 ? StringUtils.trimToNull(String.valueOf(arr.get(4))) : null;
             numMismatches = rawMismatches == null ? -1 : Integer.parseInt(rawMismatches);
 
             this.maxHitsToReport = maxHitsToReport;

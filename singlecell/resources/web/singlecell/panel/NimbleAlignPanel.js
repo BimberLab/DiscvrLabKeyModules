@@ -10,17 +10,17 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 	initComponent: function(){
 		Ext4.apply(this, {
 			style: 'padding: 10px;margins: 5px;',
-            minWidth: 750,
+            minWidth: 900,
 			border: true,
 			items: [{
 				html: 'This step will first run cellranger using the primary genome (selected above). The resulting BAM will be passed to nimble, which will align using each of the genomes selected below, creating supplemental feature counts. By default, the original cellranger output is discarded.',
-				maxWidth: 700,
+				maxWidth: 850,
 				border: false,
 				style: 'padding-bottom: 10px;'
 			},{
 				xtype: 'ldk-gridpanel',
 				clicksToEdit: 1,
-				width: 700,
+				width: 850,
 				tbar: [{
 					text: 'Add',
 					handler: function(btn){
