@@ -10,6 +10,7 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readRDS(seuratObjects[[datasetId]])
 
+    message('Processing entire dataset')
     seuratObj <- Rdiscvr::RunCoNGA(seuratObj, organism = organism, assayName = assayName, congaMetadataPrefix = paste0(congaMetadataPrefix, '.'), runCongaOutputFilePrefix = 'conga_output', pngConversionTool = pngConversionTool)
 
     if (!is.null(fieldToIterate)) {
@@ -24,6 +25,7 @@ for (datasetId in names(seuratObjects)) {
 
         values <- sort(unique(seuratObj@meta.data[[fieldToIterate]]))
         for (value in values) {
+            message(paste('Processing: ', value))
             cells <- colnames(seuratObj)[seuratObj@meta.data[[fieldToIterate]] == value]
             ss <- subset(seuratObj, cells = cells)
             print(paste0('Processing subset: ', value, ' with ', ncol(ss), ' cells'))
