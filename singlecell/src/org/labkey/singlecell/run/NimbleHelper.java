@@ -288,6 +288,12 @@ public class NimbleHelper
                 config.put("score_percent", genome.getScorePercent());
             }
 
+            if (genome.getNumMismatches() > 0)
+            {
+                getPipelineCtx().getLogger().debug("Using custom num_mismatches: " + genome.getNumMismatches());
+                config.put("num_mismatches", genome.getNumMismatches());
+            }
+
             getPipelineCtx().getLogger().info("Final config:");
             getPipelineCtx().getLogger().info(config.toString(1));
 
@@ -570,6 +576,7 @@ public class NimbleHelper
         private final boolean doGroup;
         private final int maxHitsToReport;
         private final double scorePercent;
+        private final int numMismatches;
 
         public NimbleGenome(JSONArray arr, int maxHitsToReport) throws PipelineJobException
         {
@@ -582,8 +589,11 @@ public class NimbleHelper
             template = arr.getString(1);
             doGroup = arr.getBoolean(2);
 
-            String rawScore = arr.length() > 3 ? StringUtils.trimToNull(arr.getString(3)) : null;
+            String rawScore = arr.length() > 3 ? StringUtils.trimToNull(String.valueOf(arr.get(3))) : null;
             scorePercent = rawScore == null ? -1.0 : Double.parseDouble(rawScore);
+
+            String rawMismatches = arr.length() > 4 ? StringUtils.trimToNull(String.valueOf(arr.get(4))) : null;
+            numMismatches = rawMismatches == null ? -1 : Integer.parseInt(rawMismatches);
 
             this.maxHitsToReport = maxHitsToReport;
         }
@@ -606,6 +616,11 @@ public class NimbleHelper
         public double getScorePercent()
         {
             return scorePercent;
+        }
+
+        public Integer getNumMismatches()
+        {
+            return numMismatches;
         }
     }
 }

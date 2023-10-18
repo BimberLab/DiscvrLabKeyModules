@@ -636,7 +636,7 @@ export function searchStringToInitialFilters(knownFieldNames: string[]) : Filter
 export function getOperatorsForField(fieldObj: FieldModel): string[] {
     const stringOperators = ["equals", "does not equal", "contains", "does not contain", "starts with", "ends with", "is empty", "is not empty"];
     const variableSamplesType = ["in set", "variable in", "not variable in", "variable in all of", "variable in any of", "not variable in any of", "not variable in one of", "is empty", "is not empty"];
-    const numericOperators = ["=", "!=", ">", ">=", "<", "<=", "is empty", "is not empty"];
+    const numericOperators = ["=", "!=", ">", ">=", "<", "<="];
     const noneOperators = [];
 
     // This can occur for the blank placeholder field:

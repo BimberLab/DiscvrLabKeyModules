@@ -220,6 +220,19 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                 name = name.replaceAll("TRG", locus) + suffix;
                             }
 
+                            // Special-case TRAVxx/DVxx lineages:
+                            if (lineage.startsWith("TRA") && lineage.contains("DV") && !lineage.contains("/DV"))
+                            {
+                                if (lineage.contains("-DV"))
+                                {
+                                    lineage = lineage.replace("-DV", "/DV");
+                                }
+                                else
+                                {
+                                    lineage = lineage.replace("DV", "/DV");
+                                }
+                            }
+
                             StringBuilder header = new StringBuilder();
                             header.append(">").append(i.get()).append("|").append(name).append(" ").append(lineage).append("|").append(lineage).append("|");
                             //translate into V_Region
