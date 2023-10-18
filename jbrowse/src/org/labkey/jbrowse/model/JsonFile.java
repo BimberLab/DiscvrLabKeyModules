@@ -1018,6 +1018,9 @@ public class JsonFile
         args.add("-O");
         args.add(indexDir.getPath());
 
+        args.add("--validation-stringency");
+        args.add("LENIENT");
+
         List<String> infoFieldsForFullTextSearch = getInfoFieldsToIndex();
         for (String field : infoFieldsForFullTextSearch)
         {
