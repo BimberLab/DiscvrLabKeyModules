@@ -86,7 +86,10 @@ jest.mock('@labkey/api', () => {
         },
         ActionURL: {
             buildURL: jest.fn()
-        }
+        },
+        getServerContext: jest.fn(() => {
+            return {devMode: true}
+        })
     }
 })
 const mockedRequest = mocked(Ajax)
@@ -110,7 +113,7 @@ describe('JBrowse 2 Browser', () => {
              return {} as XMLHttpRequest;
          });
         const wrapper = mount(<View />);
-        expect(wrapper.find('.MuiPaper-root')).toHaveLength(2)
+        expect(wrapper.find('.MuiPaper-root')).toHaveLength(4)
     });
 
 });
