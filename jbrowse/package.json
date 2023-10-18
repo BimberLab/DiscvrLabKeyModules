@@ -14,73 +14,52 @@
     "prepareCli": "rimraf ./buildCli && rimraf ./resources/external/jb-cli && npm install @jbrowse/cli@1.7.4 --prefix ./buildCli",
     "jb-pkg": "npm run prepareCli && npx pkg --outdir=./resources/external/jb-cli ./buildCli/node_modules/@jbrowse/cli && rimraf ./buildCli"
   },
-  "peerDependencies": {
-
-  },
   "dependencies": {
-    "@jbrowse/core": "^2.6.2",
-    "@jbrowse/plugin-variants": "^2.6.2",
-    "@jbrowse/plugin-svg": "^2.6.2",
-    "@jbrowse/plugin-linear-genome-view": "^2.6.2",
-    "@jbrowse/react-linear-genome-view": "^2.6.2",
-    "@labkey/api": "^1.22.0",
     "@gmod/vcf": "^5.0.10",
+    "@jbrowse/core": "^2.6.2",
+    "@jbrowse/plugin-linear-genome-view": "^2.6.2",
+    "@jbrowse/plugin-svg": "^2.6.2",
+    "@jbrowse/plugin-variants": "^2.6.2",
+    "@jbrowse/react-linear-genome-view": "^2.6.2",
+    "@labkey/api": "^1.25.0",
+    "@labkey/components": "^2.381.1",
+    "@mui/x-data-grid": "^6.0.1",
     "assert": "^2.0.0",
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
+    "child_process": "^1.0.2",
+    "fs": "^0.0.1-security",
     "jquery": "^3.7.0",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.5.31",
-    "@mui/x-data-grid": "^6.0.1",
     "node-polyfill-webpack-plugin": "2.0.1",
-    "@labkey/components": "^2.355.0",
-    "uuid": "^9.0.0",
     "path-browserify": "^1.0.1",
     "pkg": "^5.8.1",
     "react-data-grid": "7.0.0-beta.10",
     "react-google-charts": "^4.0.1",
+    "react-hot-loader": "^4.13.1",
+    "react-select": "^5.7.4",
     "regenerator-runtime": "^0.13.11",
     "stream-browserify": "^3.0.0",
     "typescript": "^5.1.6",
     "util": "^0.12.5",
+    "uuid": "^9.0.0",
     "vm-browserify": "^1.1.2",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz",
-    "fs": "^0.0.1-security",
-    "child_process": "^1.0.2",
-    "react-hot-loader": "^4.13.1"
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz"
   },
   "devDependencies": {
-    "@labkey/build": "6.10.0",
+    "@labkey/build": "6.15.0",
     "@types/jest": "^29.0.0",
-    "@types/jquery": "^3.0.0",
     "@types/jexl": "^2.3.1",
+    "@types/jquery": "^3.0.0",
     "@types/node": "^18.17.1",
+    "@wojtekmaj/enzyme-adapter-react-17": "^0.8.0",
     "enzyme": "^3.11.0",
     "jest": "^29.0.0",
     "jest-cli": "^29.0.0",
+    "jest-environment-jsdom": "^29.7.0",
     "jest-mock": "^29.0.0",
-    "ts-jest": "^29.0.0",
     "rimraf": "^3.0.2",
-    "@wojtekmaj/enzyme-adapter-react-17": "^0.8.0"
-  },
-  "jest": {
-    "globals": {
-      "LABKEY": {}
-    },
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js"
-    ],
-    "setupFilesAfterEnv": [
-      "<rootDir>/test/jest.setup.ts"
-    ],
-    "moduleNameMapper": {
-      "\\.(css|scss)$": "<rootDir>/test/styleMock.ts"
-    },
-    "testRegex": "(\\.(test|spec))\\.(ts|tsx)$",
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    }
+    "ts-jest": "^29.0.0"
   }
 }

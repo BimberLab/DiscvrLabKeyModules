@@ -23,7 +23,6 @@ import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -175,67 +174,70 @@ public class ChainFileValidator
             int totalChainIdUpdated = 0;
             int totalPassing = 0;
             File output = new File(chainFile.getParentFile(), FileUtil.getBaseName(chainFile) + "-cleaned." + FileUtil.getExtension(chainFile));
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(output, true)))
+            boolean isGzip = output.getPath().toLowerCase().endsWith("gz");
+            if (isGzip)
             {
-                try (BufferedLineReader reader = new BufferedLineReader(IOUtil.openFileForReading(chainFile)))
+                output = new File(output.getParentFile(), FileUtil.getBaseName(output));
+            }
+
+            try (BufferedWriter writer = IOUtil.openFileForBufferedUtf8Writing(output);BufferedLineReader reader = new BufferedLineReader(IOUtil.openFileForReading(chainFile)))
+            {
+                String line;
+                boolean skipCurrentChain = false;
+                while ((line = reader.readLine()) != null)
                 {
-                    String line;
-                    boolean skipCurrentChain = false;
-                    while ((line = reader.readLine()) != null)
+                    line = StringUtils.trimToEmpty(line);
+                    if (line.startsWith("chain"))
                     {
-                        line = StringUtils.trimToEmpty(line);
-                        if (line.startsWith("chain"))
+                        String[] chainFields = SPLITTER.split(line);
+
+                        try
                         {
-                            String[] chainFields = SPLITTER.split(line);
-
-                            try
+                            int chainId = Integer.parseInt(chainFields[12]);
+                            if (encounteredIds.contains(chainId))
                             {
-                                int chainId = Integer.parseInt(chainFields[12]);
-                                if (encounteredIds.contains(chainId))
-                                {
-                                    chainId = getNextChainId(chainId, uniqueIds);
-                                    totalChainIdUpdated++;
-                                }
-
-                                encounteredIds.add(chainId);
-                                chainFields[12] = String.valueOf(chainId);
-                            }
-                            catch (NumberFormatException e)
-                            {
-                                throw new IllegalArgumentException("Line " + reader.getLineNumber() + ": chain Id should be an integer: " + chainFields[12]);
+                                chainId = getNextChainId(chainId, uniqueIds);
+                                totalChainIdUpdated++;
                             }
 
-                            String sourceSeq = chainFields[2];
-                            if (sourceTranslations.containsKey(sourceSeq))
-                            {
-                                chainFields[2] = sourceTranslations.get(sourceSeq);
-                            }
-
-                            String targetSeq = chainFields[7];
-                            if (targetTranslations.containsKey(targetSeq))
-                            {
-                                chainFields[7] = targetTranslations.get(targetSeq);
-                            }
-
-                            if (sourceBlacklist.contains(sourceSeq) || targetBlacklist.contains(targetSeq))
-                            {
-                                skipCurrentChain = true;
-                                totalChainSkipped++;
-                                continue;
-                            }
-
-                            skipCurrentChain = false;
-                            totalPassing++;
-                            writer.write(StringUtils.join(chainFields, " "));
-                            writer.write('\n');
+                            encounteredIds.add(chainId);
+                            chainFields[12] = String.valueOf(chainId);
                         }
-                        else
+                        catch (NumberFormatException e)
                         {
-                            if (!skipCurrentChain)
-                            {
-                                writer.write(line);
-                                writer.write('\n');
-                            }
+                            throw new IllegalArgumentException("Line " + reader.getLineNumber() + ": chain Id should be an integer: " + chainFields[12]);
+                        }
+
+                        String sourceSeq = chainFields[2];
+                        if (sourceTranslations.containsKey(sourceSeq))
+                        {
+                            chainFields[2] = sourceTranslations.get(sourceSeq);
+                        }
+
+                        String targetSeq = chainFields[7];
+                        if (targetTranslations.containsKey(targetSeq))
+                        {
+                            chainFields[7] = targetTranslations.get(targetSeq);
+                        }
+
+                        if (sourceBlacklist.contains(sourceSeq) || targetBlacklist.contains(targetSeq))
+                        {
+                            skipCurrentChain = true;
+                            totalChainSkipped++;
+                            continue;
+                        }
+
+                        skipCurrentChain = false;
+                        totalPassing++;
+                        writer.write(StringUtils.join(chainFields, " "));
+                        writer.write('\n');
+                    }
+                    else
+                    {
+                        if (!skipCurrentChain)
+                        {
+                            writer.write(line);
+                            writer.write('\n');
                         }
                     }
                 }
@@ -289,7 +291,7 @@ public class ChainFileValidator
         if (!_cachedReferencesByGenome.containsKey(genomeId))
         {
             final Map<String, String> cachedReferences = new CaseInsensitiveHashMap<>();
-            SqlSelector ss = new SqlSelector(DbScope.getLabKeyScope(), new SQLFragment("SELECT r.rowid, r.name, r.genbank, r.refSeqId FROM sequenceanalysis.ref_nt_sequences r WHERE r.rowid IN (SELECT ref_nt_id FROM sequenceanalysis.reference_library_members m WHERE m.library_id = ?) ", genomeId));
+            SqlSelector ss = new SqlSelector(DbScope.getLabKeyScope(), new SQLFragment("SELECT r.rowid, r.name, r.genbank, r.refSeqId, r.aliases FROM sequenceanalysis.ref_nt_sequences r WHERE r.rowid IN (SELECT ref_nt_id FROM sequenceanalysis.reference_library_members m WHERE m.library_id = ?) ", genomeId));
             ss.forEach(new Selector.ForEachBlock<ResultSet>()
             {
                 @Override
@@ -316,6 +318,19 @@ public class ChainFileValidator
                     if (StringUtils.trimToNull(rs.getString("refSeqId")) != null)
                     {
                         cachedReferences.put(rs.getString("refSeqId"), rs.getString("name"));
+                    }
+
+                    if (StringUtils.trimToNull(rs.getString("aliases")) != null)
+                    {
+                        final String[] aliases = rs.getString("aliases").split(",");
+                        final String seqName = rs.getString("name");
+                        Arrays.stream(aliases).forEach(x -> {
+                            x = StringUtils.trimToNull(x);
+                            if (x != null)
+                            {
+                                cachedReferences.put(x, seqName);
+                            }
+                        });
                     }
                 }
             });

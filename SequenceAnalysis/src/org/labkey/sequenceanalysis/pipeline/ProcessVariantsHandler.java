@@ -209,7 +209,8 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         if (scatterOutputs.isEmpty())
         {
-            throw new PipelineJobException("Unable to find final VCF");
+            ctx.getLogger().info("No outputs of category: " + category + " were found");
+            return null;
         }
         else if (scatterOutputs.size() > 1)
         {
@@ -411,6 +412,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             resumer.getFileManager().addIntermediateFile(outputFileIdx);
         }
 
+        File effectiveInput = currentVCF; //this will be tested at the end to determine if a new file was actually created
         for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
         {
             ctx.getLogger().info("Starting to run: " + stepCtx.getProvider().getLabel());
@@ -484,7 +486,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             resumer.setStepComplete(stepIdx, input.getPath(), action, currentVCF);
         }
 
-        if (currentVCF.exists())
+        if (currentVCF != null && currentVCF.exists() && !currentVCF.equals(effectiveInput))
         {
             resumer.getFileManager().removeIntermediateFile(currentVCF);
             resumer.getFileManager().removeIntermediateFile(new File(currentVCF.getPath() + ".tbi"));
@@ -872,14 +874,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
     }
 
     @Override
-    public void performAdditionalMergeTasks(JobContext ctx, PipelineJob job, TaskFileManager manager, ReferenceGenome genome, List<File> orderedScatterOutputs) throws PipelineJobException
+    public void performAdditionalMergeTasks(JobContext ctx, PipelineJob job, TaskFileManager manager, ReferenceGenome genome, List<File> orderedScatterOutputs, List<String> orderedJobDirs) throws PipelineJobException
     {
         List<PipelineStepCtx<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(job, VariantProcessingStep.class);
         for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
         {
-            if (stepCtx.getProvider() instanceof VariantProcessingStep.SupportsScatterGather ssg)
+            VariantProcessingStep vps = stepCtx.getProvider().create(ctx);
+            if (vps instanceof VariantProcessingStep.SupportsScatterGather ssg)
             {
-                ssg.performAdditionalMergeTasks(ctx, job, manager, genome, orderedScatterOutputs);
+                ssg.performAdditionalMergeTasks(ctx, job, manager, genome, orderedScatterOutputs, orderedJobDirs);
             }
         }
     }

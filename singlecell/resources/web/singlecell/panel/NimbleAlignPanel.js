@@ -10,17 +10,17 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 	initComponent: function(){
 		Ext4.apply(this, {
 			style: 'padding: 10px;margins: 5px;',
-            minWidth: 750,
+            minWidth: 900,
 			border: true,
 			items: [{
 				html: 'This step will first run cellranger using the primary genome (selected above). The resulting BAM will be passed to nimble, which will align using each of the genomes selected below, creating supplemental feature counts. By default, the original cellranger output is discarded.',
-				maxWidth: 700,
+				maxWidth: 850,
 				border: false,
 				style: 'padding-bottom: 10px;'
 			},{
 				xtype: 'ldk-gridpanel',
 				clicksToEdit: 1,
-				width: 700,
+				width: 850,
 				tbar: [{
 					text: 'Add',
 					handler: function(btn){
@@ -41,7 +41,7 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 				},LABKEY.ext4.GRIDBUTTONS.DELETERECORD()],
 				store: {
 					type: 'array',
-					fields: ['genomeId', 'template', 'grouping', 'scorePercent']
+					fields: ['genomeId', 'template', 'grouping', 'scorePercent', 'numMismatches']
 				},
 				columns: [{
 					dataIndex: 'genomeId',
@@ -51,7 +51,7 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 					renderer: function(val){
 						const store = this.up('singlecell-nimblealignpanel').genomeField.store
 						if (val && store) {
-							const recIdx = store.find('rowid', val);
+							const recIdx = store.find('rowid', val, 0, false, false, true);
 							return recIdx === -1 ? '[' + val + ']' : store.getAt(recIdx).get('name');
 						}
 						else if (val) {
@@ -86,6 +86,16 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 					width: 150,
 					header: 'Min Pct Aligned',
 					editor: {
+						xtype: 'ldk-numberfield',
+						minValue: 0,
+						maxValue: 1,
+						decimalPrecision: 2
+					}
+				},{
+					dataIndex: 'numMismatches',
+					width: 150,
+					header: 'Max Mismatches',
+					editor: {
 						xtype: 'ldk-integerfield',
 						minValue: 0
 					}
@@ -99,7 +109,7 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 	getValue: function(){
 		var ret = [];
 		this.down('ldk-gridpanel').store.each(function(r, i) {
-			ret.push([r.data.genomeId, r.data.template, r.data.grouping || false, r.data.scorePercent || '']);
+			ret.push([r.data.genomeId, r.data.template, r.data.grouping || false, r.data.scorePercent || '', r.data.numMismatches || '']);
 		}, this);
 
 		return Ext4.isEmpty(ret) ? null : JSON.stringify(ret);
@@ -136,7 +146,8 @@ Ext4.define('SingleCell.panel.NimbleAlignPanel', {
 					genomeId: row[0],
 					template: row[1],
 					grouping: row[2],
-					scorePercent: row.length > 3 ? row[3] : null
+					scorePercent: row.length > 3 ? row[3] : null,
+					numMismatches: row.length > 4 ? row[4] : null
 				});
 				grid.store.add(rec);
 			}, this);

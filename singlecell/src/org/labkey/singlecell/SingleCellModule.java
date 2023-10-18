@@ -43,6 +43,7 @@ import org.labkey.singlecell.run.CellBenderLoupeHandler;
 import org.labkey.singlecell.run.CellRangerFeatureBarcodeHandler;
 import org.labkey.singlecell.run.CellRangerGexCountStep;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
+import org.labkey.singlecell.run.CellRangerVLoupeRepairHandler;
 import org.labkey.singlecell.run.NimbleAlignmentStep;
 import org.labkey.singlecell.run.NimbleAnalysis;
 import org.labkey.singlecell.run.VelocytoAlignmentStep;
@@ -169,7 +170,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new MergeSeurat.Provider());
         SequencePipelineService.get().registerPipelineStep(new NormalizeAndScale.Provider());
         SequencePipelineService.get().registerPipelineStep(new ClrNormalizeByGroup.Provider());
-
+        SequenceAnalysisService.get().registerFileHandler(new CellRangerVLoupeRepairHandler());
         SequencePipelineService.get().registerPipelineStep(new PrepareRawCounts.Provider());
 
         SequencePipelineService.get().registerPipelineStep(new RemoveCellCycle.Provider());
@@ -177,6 +178,8 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new RunPCA.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunPHATE.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunSingleR.Provider());
+        SequencePipelineService.get().registerPipelineStep(new ClassifyTNKByExpression.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunConga.Provider());
         SequencePipelineService.get().registerPipelineStep(new FindClustersAndDimRedux.Provider());
         SequencePipelineService.get().registerPipelineStep(new SplitSeurat.Provider());
         SequencePipelineService.get().registerPipelineStep(new SubsetSeurat.Provider());

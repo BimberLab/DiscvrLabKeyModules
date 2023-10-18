@@ -463,6 +463,17 @@ const VariantTableWidget = observer(props => {
             <div style={{ marginBottom: "10px", display: "flex", alignItems: "center" }}>
                 <div style={{ flex: 1 }}>
                     {filters.map((filter, index) => {
+                        if ((filter as any).field && ((filter as any).operator === "is empty" || (filter as any).operator === "is not empty") && !(filter as any).value) {
+                            return (
+                                <Button
+                                    key={index}
+                                    onClick={() => setFilterModalOpen(true)}
+                                    style={{ border: "1px solid gray", margin: "5px" }}
+                                >
+                                    {`${(filter as any).field} ${(filter as any).operator}`}
+                                </Button>
+                            );
+                        }
                         if ((filter as any).field == "" || (filter as any).operator == "" || (filter as any).value == "" ) {
                             return (<Button
                                 key={index}
@@ -476,8 +487,7 @@ const VariantTableWidget = observer(props => {
                             <Button
                                 key={index}
                                 onClick={() => setFilterModalOpen(true)}
-                                style={{ border: "1px solid gray", margin: "5px" }}
-                            >
+                                style={{ border: "1px solid gray", margin: "5px" }}                            >
                                 {`${(filter as any).field} ${(filter as any).operator} ${(filter as any).value}`}
                             </Button>
                         );

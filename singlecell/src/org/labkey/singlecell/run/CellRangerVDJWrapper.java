@@ -220,6 +220,19 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                 name = name.replaceAll("TRG", locus) + suffix;
                             }
 
+                            // Special-case TRAVxx/DVxx lineages:
+                            if (lineage.startsWith("TRA") && lineage.contains("DV") && !lineage.contains("/DV"))
+                            {
+                                if (lineage.contains("-DV"))
+                                {
+                                    lineage = lineage.replace("-DV", "/DV");
+                                }
+                                else
+                                {
+                                    lineage = lineage.replace("DV", "/DV");
+                                }
+                            }
+
                             StringBuilder header = new StringBuilder();
                             header.append(">").append(i.get()).append("|").append(name).append(" ").append(lineage).append("|").append(lineage).append("|");
                             //translate into V_Region
@@ -308,7 +321,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 output.addInput(getGenomeFasta(), "Input FASTA");
 
                 List<String> args = new ArrayList<>();
-                args.add(getWrapper().getExe(doGDParsing()).getPath());
+                args.add(getWrapper().getExe().getPath());
                 args.add("mkvdjref");
                 args.add("--seqs=" + getGenomeFasta().getPath());
                 args.add("--genome=" + indexDir.getName());
@@ -337,7 +350,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             AlignmentOutputImpl output = new AlignmentOutputImpl();
 
             List<String> args = new ArrayList<>();
-            args.add(getWrapper().getExe(doGDParsing()).getPath());
+            args.add(getWrapper().getExe().getPath());
             args.add("vdj");
 
             String idParam = StringUtils.trimToNull(getProvider().getParameterByName("id").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
@@ -469,155 +482,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
                 if (doGDParsing())
                 {
-                    getPipelineCtx().getLogger().info("Removing g/d prefixes from all_contig_annotations.csv file");
-                    File csv2 = new File(outdir, "all_contig_annotations2.csv");
-                    try (PrintWriter writer = PrintWriters.getPrintWriter(csv2); BufferedReader reader = Readers.getReader(csv))
-                    {
-                        String line;
-                        int totalD = 0;
-                        int totalG = 0;
-                        int lineIdx = 0;
-                        while ((line = reader.readLine()) != null)
-                        {
-                            lineIdx++;
-                            if (lineIdx > 1 && (line.contains("g,") || line.contains("d,")))
-                            {
-                                //Infer correct chain from the V, J and C genes
-                                String[] tokens = line.split(",", -1);  // -1 used to preserve trailing empty strings
-                                List<String> chains = new ArrayList<>();
-                                String vGeneChain = null;
-                                String jGeneChain = null;
-                                String cGeneChain = null;
-                                for (int idx : new Integer[]{6,8,9}) {
-                                    String val = StringUtils.trimToNull(tokens[idx]);
-                                    if (val != null)
-                                    {
-                                        if (val.endsWith("g"))
-                                        {
-                                            val = "TRG";
-                                        }
-                                        else if (val.endsWith("d"))
-                                        {
-                                            val = "TRD";
-                                        }
-                                        else
-                                        {
-                                            val = val.substring(0, 3);
-                                        }
-
-                                        chains.add(val);
-                                        if (idx == 6)
-                                        {
-                                            vGeneChain = val;
-                                        }
-                                        if (idx == 8)
-                                        {
-                                            jGeneChain = val;
-                                        }
-                                        else if (idx == 9)
-                                        {
-                                            cGeneChain = val;
-                                        }
-                                    }
-                                }
-
-                                Set<String> uniqueChains = new HashSet<>(chains);
-                                String originalChain = StringUtils.trimToNull(tokens[5]);
-
-                                // Recover TRDV/TRAJ/TRAC:
-                                if (uniqueChains.size() > 1)
-                                {
-                                    if (cGeneChain != null)
-                                    {
-                                        uniqueChains.clear();
-                                        uniqueChains.add(cGeneChain);
-                                    }
-                                    else if (uniqueChains.size() == 2)
-                                    {
-                                        if ("TRD".equals(vGeneChain) && "TRA".equals(jGeneChain))
-                                        {
-                                            uniqueChains.clear();
-                                            uniqueChains.add(vGeneChain);
-                                        }
-                                        if ("TRA".equals(vGeneChain) && "TRD".equals(jGeneChain))
-                                        {
-                                            uniqueChains.clear();
-                                            uniqueChains.add(vGeneChain);
-                                        }
-                                    }
-                                }
-
-                                if (uniqueChains.size() == 1)
-                                {
-                                    String chain = uniqueChains.iterator().next();
-                                    if (chain.equals("TRG"))
-                                    {
-                                        if (!originalChain.equals("TRA") && !"None".equals(originalChain))
-                                        {
-                                            getPipelineCtx().getLogger().info("Unexpected chain: original was " + originalChain + ", updated to " + chain + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
-                                        }
-
-                                        totalG++;
-                                    }
-                                    else if (chain.equals("TRD"))
-                                    {
-                                        if (!originalChain.equals("TRB") && !"None".equals(originalChain))
-                                        {
-                                            getPipelineCtx().getLogger().info("Unexpected chain: original was " + originalChain + ", updated to " + chain + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
-                                        }
-
-                                        totalD++;
-                                    }
-
-                                    tokens[5] = chain;
-                                }
-                                else
-                                {
-                                    getPipelineCtx().getLogger().warn("Multiple chains detected [" + StringUtils.join(chains, ",")+ "], leaving original call alone: " + originalChain  + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
-                                }
-
-                                // Now correct all the segments:
-                                for (int i = 0; i < tokens.length; i++)
-                                {
-                                    String token = tokens[i];
-                                    if (token.endsWith("g"))
-                                    {
-                                        token = token.replaceAll("^TRA", "TRG");
-                                        token = token.replaceAll("([VDJC])" + LINEAGE_NUMBER_ADDITION + "[dg]$", "$1");
-                                        token = token.replaceAll("g$", "");
-                                    }
-                                    else if (token.endsWith("d"))
-                                    {
-                                        token = token.replaceAll("^TRB", "TRD");
-                                        token = token.replaceAll("([VDJC])" + LINEAGE_NUMBER_ADDITION + "[dg]$", "$1");
-                                        token = token.replaceAll("d$", "");
-                                    }
-
-                                    tokens[i] = token;
-                                }
-
-                                line = StringUtils.join(tokens, ",");
-                            }
-
-                            writer.println(line);
-                        }
-
-                        getPipelineCtx().getLogger().info("\tTotal TRA->TRG changes: " + totalG);
-                        getPipelineCtx().getLogger().info("\tTotal TRB->TRD changes: " + totalD);
-                    }
-
-                    File orig = new File(csv.getPath() + ".orig");
-                    if (orig.exists())
-                    {
-                        getPipelineCtx().getLogger().debug("Original copy of CSV exists, will not copy over it");
-                        csv.delete();
-                    }
-                    else
-                    {
-                        FileUtils.moveFile(csv, new File(csv.getPath() + ".orig"));
-                    }
-
-                    FileUtils.moveFile(csv2, csv);
+                    replaceGammaDeltaSuffix(csv, getPipelineCtx().getLogger());
+                    replaceGammaDeltaSuffix(new File(csv.getParentFile(), "filtered_contig_annotations.csv"), getPipelineCtx().getLogger());
                 }
             }
             catch (IOException e)
@@ -912,9 +778,162 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         }
     }
 
-    protected File getExe(boolean includeGD)
+    protected File getExe()
     {
-        //NOTE: cellranger 4 doesnt work w/ custom libraries currently. update to CR4 when fixed
-        return SequencePipelineService.get().getExeForPackage("CELLRANGERPATH", includeGD ? "cellranger" : "cellranger-31");
+        return SequencePipelineService.get().getExeForPackage("CELLRANGERPATH", "cellranger");
+    }
+
+    public static void replaceGammaDeltaSuffix(File inputCsv, Logger log) throws IOException
+    {
+        log.info("Removing g/d prefixes from: " + inputCsv.getPath());
+
+        File csv2 = new File(inputCsv.getPath() + ".tmp");
+        try (PrintWriter writer = PrintWriters.getPrintWriter(csv2); BufferedReader reader = Readers.getReader(inputCsv))
+        {
+            String line;
+            int totalD = 0;
+            int totalG = 0;
+            int lineIdx = 0;
+            while ((line = reader.readLine()) != null)
+            {
+                lineIdx++;
+                if (lineIdx > 1 && (line.contains("g,") || line.contains("d,")))
+                {
+                    //Infer correct chain from the V, J and C genes
+                    String[] tokens = line.split(",", -1);  // -1 used to preserve trailing empty strings
+                    List<String> chains = new ArrayList<>();
+                    String vGeneChain = null;
+                    String jGeneChain = null;
+                    String cGeneChain = null;
+                    for (int idx : new Integer[]{6,8,9}) {
+                        String val = StringUtils.trimToNull(tokens[idx]);
+                        if (val != null)
+                        {
+                            if (val.endsWith("g"))
+                            {
+                                val = "TRG";
+                            }
+                            else if (val.endsWith("d"))
+                            {
+                                val = "TRD";
+                            }
+                            else
+                            {
+                                val = val.substring(0, 3);
+                            }
+
+                            chains.add(val);
+                            if (idx == 6)
+                            {
+                                vGeneChain = val;
+                            }
+                            if (idx == 8)
+                            {
+                                jGeneChain = val;
+                            }
+                            else if (idx == 9)
+                            {
+                                cGeneChain = val;
+                            }
+                        }
+                    }
+
+                    Set<String> uniqueChains = new HashSet<>(chains);
+                    String originalChain = StringUtils.trimToNull(tokens[5]);
+
+                    // Recover TRDV/TRAJ/TRAC:
+                    if (uniqueChains.size() > 1)
+                    {
+                        if (cGeneChain != null)
+                        {
+                            uniqueChains.clear();
+                            uniqueChains.add(cGeneChain);
+                        }
+                        else if (uniqueChains.size() == 2)
+                        {
+                            if ("TRD".equals(vGeneChain) && "TRA".equals(jGeneChain))
+                            {
+                                uniqueChains.clear();
+                                uniqueChains.add(vGeneChain);
+                            }
+                            if ("TRA".equals(vGeneChain) && "TRD".equals(jGeneChain))
+                            {
+                                uniqueChains.clear();
+                                uniqueChains.add(vGeneChain);
+                            }
+                        }
+                    }
+
+                    if (uniqueChains.size() == 1)
+                    {
+                        String chain = uniqueChains.iterator().next();
+                        if (chain.equals("TRG"))
+                        {
+                            if (!originalChain.equals("TRA") && !"None".equals(originalChain))
+                            {
+                                log.info("Unexpected chain: original was " + originalChain + ", updated to " + chain + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
+                            }
+
+                            totalG++;
+                        }
+                        else if (chain.equals("TRD"))
+                        {
+                            if (!originalChain.equals("TRB") && !"None".equals(originalChain))
+                            {
+                                log.info("Unexpected chain: original was " + originalChain + ", updated to " + chain + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
+                            }
+
+                            totalD++;
+                        }
+
+                        tokens[5] = chain;
+                    }
+                    else
+                    {
+                        log.warn("Multiple chains detected [" + StringUtils.join(chains, ",")+ "], leaving original call alone: " + originalChain  + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
+                    }
+
+                    // Now correct all the segments:
+                    for (int i = 0; i < tokens.length; i++)
+                    {
+                        String token = tokens[i];
+                        if (token.endsWith("g"))
+                        {
+                            token = token.replaceAll("^TRA", "TRG");
+                            token = token.replaceAll("([VDJC])" + LINEAGE_NUMBER_ADDITION + "[dg]$", "$1");
+                            token = token.replaceAll("g$", "");
+                        }
+                        else if (token.endsWith("d"))
+                        {
+                            token = token.replaceAll("^TRB", "TRD");
+                            token = token.replaceAll("([VDJC])" + LINEAGE_NUMBER_ADDITION + "[dg]$", "$1");
+                            token = token.replaceAll("d$", "");
+                        }
+
+                        tokens[i] = token;
+                    }
+
+                    line = StringUtils.join(tokens, ",");
+                }
+
+                writer.println(line);
+            }
+
+            log.info("\tTotal TRA->TRG changes: " + totalG);
+            log.info("\tTotal TRB->TRD changes: " + totalD);
+        }
+
+        File orig = new File(inputCsv.getPath() + ".orig");
+        if (orig.exists())
+        {
+            log.debug("Original copy of CSV exists, will not copy over it");
+            inputCsv.delete();
+        }
+        else
+        {
+            FileUtils.moveFile(inputCsv, new File(inputCsv.getPath() + ".orig"));
+        }
+
+        FileUtils.moveFile(csv2, inputCsv);
     }
 }

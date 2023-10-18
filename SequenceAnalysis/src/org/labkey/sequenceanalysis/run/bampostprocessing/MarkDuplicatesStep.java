@@ -26,7 +26,7 @@ import java.util.Arrays;
  */
 public class MarkDuplicatesStep extends AbstractCommandPipelineStep<MarkDuplicatesWrapper> implements BamProcessingStep
 {
-    public MarkDuplicatesStep(PipelineStepProvider provider, PipelineContext ctx)
+    public MarkDuplicatesStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new MarkDuplicatesWrapper(ctx.getLogger()));
     }

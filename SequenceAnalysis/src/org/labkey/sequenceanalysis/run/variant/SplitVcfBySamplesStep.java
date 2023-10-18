@@ -3,19 +3,24 @@ package org.labkey.sequenceanalysis.run.variant;
 import htsjdk.samtools.util.Interval;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractDiscvrSeqWrapper;
+import org.labkey.sequenceanalysis.pipeline.SequenceJob;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -23,14 +28,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class SplitVcfBySamplesStep extends AbstractCommandPipelineStep<SplitVcfBySamplesStep.Wrapper> implements VariantProcessingStep
+public class SplitVcfBySamplesStep extends AbstractCommandPipelineStep<SplitVcfBySamplesStep.Wrapper> implements VariantProcessingStep, VariantProcessingStep.SupportsScatterGather
 {
     public SplitVcfBySamplesStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new Wrapper(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<SelectSamplesStep>
+    public static class Provider extends AbstractVariantProcessingStepProvider<SelectSamplesStep> implements SupportsScatterGather
     {
         public Provider()
         {
@@ -67,20 +72,71 @@ public class SplitVcfBySamplesStep extends AbstractCommandPipelineStep<SplitVcfB
 
         output.addInput(inputVCF, "Input VCF");
 
+        return output;
+    }
+
+    private List<File> findProducedVcfs(File inputVCF, File outputDirectory)
+    {
+        List<File> ret = new ArrayList<>();
         String basename = SequenceAnalysisService.get().getUnzippedBaseName(inputVCF.getName());
         for (File f : outputDirectory.listFiles())
         {
             if (!f.getName().equals(inputVCF.getName()) && f.getName().startsWith(basename) && SequenceUtil.FILETYPE.vcf.getFileType().isType(f))
             {
-                output.addOutput(f, "Subset VCF");
-                output.addSequenceOutput(f, "Subset VCF: " + f.getName(), "VCF File", null, null, genome.getGenomeId(), null);
+                ret.add(f);
             }
         }
 
-        return output;
+        return ret;
     }
 
+    @Override
+    public void performAdditionalMergeTasks(SequenceOutputHandler.JobContext ctx, PipelineJob job, TaskFileManager manager, ReferenceGenome genome, List<File> orderedScatterOutputs, List<String> orderedJobDirs) throws PipelineJobException
+    {
+        job.getLogger().info("Merging additional track VCFs");
+        File inputVCF = ((SequenceJob)getPipelineCtx().getJob()).getInputFiles().get(0);
+        List<File> firstJobOutputs = findProducedVcfs(inputVCF, new File(ctx.getSourceDirectory(), orderedJobDirs.get(0)));
+        job.getLogger().info("total VCFs found in job dir: " + firstJobOutputs.size());
+        if (firstJobOutputs.isEmpty())
+        {
+            throw new PipelineJobException("No VCFs found in folder: " + new File(ctx.getSourceDirectory(), orderedJobDirs.get(0)));
+        }
 
+        for (File fn : firstJobOutputs)
+        {
+            List<File> toConcat = orderedJobDirs.stream().map(jobDir -> {
+                File f = new File(new File(getPipelineCtx().getSourceDirectory(), jobDir), fn.getName());
+                if (!f.exists())
+                {
+                    throw new IllegalStateException("Missing file: " + f.getPath());
+                }
+
+                ctx.getFileManager().addIntermediateFile(f);
+                ctx.getFileManager().addIntermediateFile(new File(f.getPath() + ".tbi"));
+
+                return f;
+            }).toList();
+
+            String basename = SequenceAnalysisService.get().getUnzippedBaseName(toConcat.get(0).getName());
+            File combined = new File(ctx.getSourceDirectory(), basename + ".vcf.gz");
+            File combinedIdx = new File(combined.getPath() + ".tbi");
+            if (combinedIdx.exists())
+            {
+                job.getLogger().info("VCF exists, will not recreate: " + combined.getPath());
+            }
+            else
+            {
+                combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, genome, job.getLogger(), true, null);
+            }
+
+            SequenceOutputFile so = new SequenceOutputFile();
+            so.setName("Subset VCF: " + fn);
+            so.setFile(combined);
+            so.setCategory("VCF File");
+            so.setLibrary_id(genome.getGenomeId());
+            manager.addSequenceOutput(so);
+        }
+    }
 
     public static class Wrapper extends AbstractDiscvrSeqWrapper
     {
