@@ -566,6 +566,7 @@ export async function fetchFieldTypeInfo(sessionId: string, trackId: string, suc
             successCallback(fields, groups, promotedFilters)
         },
         failure: function(res){
+            console.error(res)
             failureCallback("There was an error while fetching field types: " + res.status + "\n Status Body: " + res.statusText + "\n Session ID:" + sessionId)
         },
         params: {sessionId: sessionId, trackId: trackId},
