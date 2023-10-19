@@ -16,13 +16,13 @@
   },
   "dependencies": {
     "@gmod/vcf": "^5.0.10",
-    "@jbrowse/core": "^2.6.2",
-    "@jbrowse/plugin-linear-genome-view": "^2.6.2",
-    "@jbrowse/plugin-svg": "^2.6.2",
-    "@jbrowse/plugin-variants": "^2.6.2",
-    "@jbrowse/react-linear-genome-view": "^2.6.2",
+    "@jbrowse/core": "^2.7.0",
+    "@jbrowse/plugin-linear-genome-view": "^2.7.0",
+    "@jbrowse/plugin-svg": "^2.7.0",
+    "@jbrowse/plugin-variants": "^2.7.0",
+    "@jbrowse/react-linear-genome-view": "^2.7.0",
     "@labkey/api": "^1.25.0",
-    "@labkey/components": "^2.381.1",
+    "@labkey/components": "^2.0.0",
     "@mui/x-data-grid": "^6.0.1",
     "assert": "^2.0.0",
     "browserify-zlib": "^0.2.0",
@@ -44,8 +44,7 @@
     "typescript": "^5.1.6",
     "util": "^0.12.5",
     "uuid": "^9.0.0",
-    "vm-browserify": "^1.1.2",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.19.3/xlsx-0.19.3.tgz"
+    "vm-browserify": "^1.1.2"
   },
   "devDependencies": {
     "@labkey/build": "6.15.0",
