@@ -1,5 +1,6 @@
 package org.labkey.jbrowse.model;
 
+import htsjdk.samtools.util.FileExtensions;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.gff.Gff3Codec;
 import htsjdk.tribble.index.Index;
@@ -1098,8 +1099,17 @@ public class JsonFile
                     SequenceAnalysisService.get().sortGxf(log, finalLocation, null);
                 }
 
-                TabixRunner tabix = new TabixRunner(log);
-                tabix.execute(finalLocation);
+                // If JBrowse is using an unaltered input file, trust that index:
+                File expectedIdx = new File(finalLocation.getPath() + FileExtensions.TABIX_INDEX);
+                if (expectedIdx.exists() && getExpData().getFile().equals(finalLocation))
+                {
+                    log.debug("Existing index found, will not re-create: " + expectedIdx.getPath());
+                }
+                else
+                {
+                    TabixRunner tabix = new TabixRunner(log);
+                    tabix.execute(finalLocation);
+                }
             }
         }
     }
