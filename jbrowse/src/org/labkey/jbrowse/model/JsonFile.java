@@ -30,6 +30,7 @@ import org.labkey.api.files.FileContentService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
@@ -39,17 +40,18 @@ import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.api.sequenceanalysis.run.DISCVRSeqRunner;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
+import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.jbrowse.JBrowseManager;
 import org.labkey.jbrowse.JBrowseSchema;
+import org.labkey.jbrowse.pipeline.JBrowseLucenePipelineJob;
 import org.labkey.sequenceanalysis.run.util.TabixRunner;
 
 import javax.annotation.Nullable;
@@ -938,25 +940,52 @@ public class JsonFile
         if (shouldHaveFreeTextSearch())
         {
             File luceneDir = getExpectedLocationOfLuceneIndex(throwIfNotPrepared);
-            if (forceReprocess && luceneDir.exists())
-            {
-                try
-                {
-                    FileUtils.deleteDirectory(luceneDir);
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
-            }
+            long sizeInGb = targetFile.length() / (1024 * 1024 * 1024);
+            log.debug("preparing lucene index, VCF size: " + sizeInGb);
 
-            if (forceReprocess || !doesLuceneIndexExist())
+            if (!forceReprocess && doesLuceneIndexExist())
             {
-                prepareLuceneIndex(log);
+                log.debug("Existing lucene index found, will not re-create: " + luceneDir.getPath());
+            }
+            else if (sizeInGb > 50)
+            {
+                log.info("VCF is too large, submitting VcfToLuceneIndexer as a separate pipeline job");
+                final File vcf = targetFile;
+                JobRunner.getDefault().execute(() -> {
+                    try
+                    {
+                        PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainerObj());
+                        PipelineService.get().queueJob(new JBrowseLucenePipelineJob(getContainerObj(), null, root, vcf, luceneDir, getInfoFieldsToIndex(), allowLenientLuceneProcessing()));
+                    }
+                    catch (PipelineValidationException e)
+                    {
+                        log.error(e);
+                    }
+                });
             }
             else
             {
-                log.debug("Existing lucene index found, will not re-create: " + luceneDir.getPath());
+                if (forceReprocess && luceneDir.exists())
+                {
+                    try
+                    {
+                        log.debug("Deleting existing index: " + luceneDir.getPath());
+                        FileUtils.deleteDirectory(luceneDir);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+
+                if (forceReprocess || !doesLuceneIndexExist())
+                {
+                    JBrowseLucenePipelineJob.prepareLuceneIndex(targetFile, luceneDir, log, getInfoFieldsToIndex(), allowLenientLuceneProcessing());
+                }
+                else
+                {
+                    log.debug("Existing lucene index found, will not re-create: " + luceneDir.getPath());
+                }
             }
         }
 
@@ -988,60 +1017,10 @@ public class JsonFile
         return Arrays.asList(rawFields.split(","));
     }
 
-    private void prepareLuceneIndex(Logger log) throws PipelineJobException
+    private boolean allowLenientLuceneProcessing()
     {
-        log.debug("Generating VCF full text index for file: " + getExpData().getFile().getName());
-
-        DISCVRSeqRunner runner = new DISCVRSeqRunner(log);
-        if (!runner.jarExists())
-        {
-            log.error("Unable to find DISCVRSeq.jar, skipping lucene index creation");
-            return;
-        }
-
-        File indexDir = getExpectedLocationOfLuceneIndex(false);
-        if (indexDir != null && indexDir.exists())
-        {
-            try
-            {
-                FileUtils.deleteDirectory(getExpectedLocationOfLuceneIndex(false));
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-        }
-
-        List<String> args = runner.getBaseArgs("VcfToLuceneIndexer");
-        args.add("-V");
-        args.add(getExpData().getFile().getPath());
-
-        args.add("-O");
-        args.add(indexDir.getPath());
-
-        args.add("--validation-stringency");
-        args.add("LENIENT");
-
-        List<String> infoFieldsForFullTextSearch = getInfoFieldsToIndex();
-        for (String field : infoFieldsForFullTextSearch)
-        {
-            args.add("-IF");
-            args.add(field);
-        }
-
-        args.add("--allow-missing-fields");
-
-        args.add("--index-stats");
-        args.add(getExpectedLocationOfLuceneIndexStats(false).getPath());
-
         JSONObject config = getExtraTrackConfig();
-        if (config != null && !config.isNull("lenientLuceneProcessing") && config.getBoolean("lenientLuceneProcessing"))
-        {
-            args.add("--validation-stringency");
-            args.add("LENIENT");
-        }
-
-        runner.execute(args);
+        return config != null && !config.isNull("lenientLuceneProcessing") && config.getBoolean("lenientLuceneProcessing");
     }
 
     protected void createIndex(File finalLocation, Logger log, File idx, boolean throwIfNotPrepared) throws PipelineJobException
@@ -1383,11 +1362,6 @@ public class JsonFile
 
         JSONObject json = getExtraTrackConfig();
         return json != null && json.optBoolean("createFullTextIndex", false);
-    }
-
-    public File getExpectedLocationOfLuceneIndexStats(boolean throwIfNotFound)
-    {
-        return new File(getExpectedLocationOfLuceneIndex(throwIfNotFound).getPath() + ".stats.txt");
     }
 
     public File getExpectedLocationOfLuceneIndex(boolean throwIfNotFound)
