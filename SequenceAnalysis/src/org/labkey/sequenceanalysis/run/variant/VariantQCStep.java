@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.run.variant;
 
 import htsjdk.samtools.util.Interval;
+import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
@@ -16,6 +17,7 @@ import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,7 +42,10 @@ public class VariantQCStep extends AbstractPipelineStep implements VariantProces
                     ToolParameterDescriptor.create("writeJson", "Write Raw Data", "If selected, both an HTML report and a text file with the raw data will be created.", "checkbox", new JSONObject()
                     {{
                         put("checked", true);
-                    }}, true)
+                    }}, true),
+                    ToolParameterDescriptor.create("doCopyLocal", "Copy Input To Working Directory", "If selected, the input VCF will always be copied to the working directory, if it is not already present.", "checkbox", new JSONObject(){{
+                        put("checked", false);
+                    }}, false)
             ), null, "https://bimberlab.github.io/DISCVRSeq/");
         }
 
@@ -55,6 +60,39 @@ public class VariantQCStep extends AbstractPipelineStep implements VariantProces
     public Output processVariants(File inputVCF, File outputDirectory, ReferenceGenome genome, @Nullable List<Interval> intervals) throws PipelineJobException
     {
         VariantProcessingStepOutputImpl output = new VariantProcessingStepOutputImpl();
+
+        boolean doCopyLocal = getProvider().getParameterByName("doCopyLocal").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), boolean.class, false);
+        if (doCopyLocal)
+        {
+            File local = new File(outputDirectory, inputVCF.getName());
+            File localIdx = new File(local.getPath() + ".tbi");
+            if (!inputVCF.equals(local))
+            {
+                getPipelineCtx().getLogger().debug("Making local copy of VCF:");
+                if (local.exists())
+                {
+                    local.delete();
+                }
+
+                if (localIdx.exists())
+                {
+                    localIdx.delete();
+                }
+
+                try
+                {
+                    FileUtils.copyFile(inputVCF, local);
+                    FileUtils.copyFile(new File(inputVCF.getPath() + ".tbi"), localIdx);
+                    output.addIntermediateFile(local);
+                    output.addIntermediateFile(localIdx);
+                    inputVCF = local;
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+        }
 
         List<String> options = new ArrayList<>();
 
