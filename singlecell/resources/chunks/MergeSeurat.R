@@ -5,10 +5,10 @@ mergeBatch <- function(dat) {
     for (datasetId in names(dat)) {
         message(paste0('Loading: ', datasetId))
         if (doDiet) {
-            toMerge[[datasetId]] <- Seurat::DietSeurat(readRDS(dat[[datasetId]]))
+            toMerge[[datasetId]] <- Seurat::DietSeurat(readSeuratRDS(dat[[datasetId]]))
             gc()
         } else {
-            toMerge[[datasetId]] <- readRDS(dat[[datasetId]])
+            toMerge[[datasetId]] <- readSeuratRDS(dat[[datasetId]])
         }
     }
 

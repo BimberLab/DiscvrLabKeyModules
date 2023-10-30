@@ -1,6 +1,6 @@
 for (datasetId in names(seuratObjects)) {
     printName(datasetId)
-    seuratObj <- readRDS(seuratObjects[[datasetId]])
+    seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
     for (field in fieldNames) {
         if (ncol(Seurat::FetchData(seuratObj, vars = c('ident', field))) != 2) {

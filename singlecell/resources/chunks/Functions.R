@@ -128,6 +128,16 @@ addErrorMessage <- function(f) {
     errorMessages <<- c(errorMessages, f)
 }
 
+readSeuratRDS <- function(filePath) {
+    seuratObj <- readSeuratRDS(filePath)
+    if (!('version' %in% slotNames(seuratObj)) || package_version(seuratObj@version) < package_version('5.0.0')) {
+        print('Updating older seurat object')
+        seuratObj <- Seurat::UpdateSeuratObject(seuratObj)
+    }
+
+    return(seuratObj)
+}
+
 print('Updating future.globals.maxSize')
 options(future.globals.maxSize = Inf)
 

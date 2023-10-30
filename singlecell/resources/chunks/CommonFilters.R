@@ -1,7 +1,7 @@
 totalPassed <- 0
 for (datasetId in names(seuratObjects)) {
 	printName(datasetId)
-	seuratObj <- readRDS(seuratObjects[[datasetId]])
+	seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 	origCells <- ncol(seuratObj)
 
 	print(paste0('Initial cells for dataset ', datasetId, ': ', ncol(seuratObj)))

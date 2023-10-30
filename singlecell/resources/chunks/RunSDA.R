@@ -6,7 +6,7 @@ sdaFiles <- data.frame(DatasetId = character(), FileName = character())
 
  for (datasetId in names(seuratObjects)) {
     printName(datasetId)
-    seuratObj <- readRDS(seuratObjects[[datasetId]])
+    seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
     if (!is.null(maxAllowableCells) && maxAllowableCells > 0 && ncol(seuratObj) > maxAllowableCells) {
        stop(paste0('The object has ', ncol(seuratObj), ' which is above the maxAllowableCells: ', maxAllowableCells))
