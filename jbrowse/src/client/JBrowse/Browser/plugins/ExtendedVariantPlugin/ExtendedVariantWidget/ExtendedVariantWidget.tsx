@@ -182,7 +182,7 @@ export default jbrowse => {
         }
 
         const ref = feat["REF"];
-        const alt = feat["ALT"]
+        const alt = feat["ALT"] || []
 
         const [state, setState] = useState(null)
         useEffect(() => {

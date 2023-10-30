@@ -7,6 +7,7 @@
         <property name="factoryImpls">
             <list>
                 <bean class="org.labkey.jbrowse.pipeline.JBrowseSessionTask$Factory"/>
+                <bean class="org.labkey.jbrowse.pipeline.JBrowseLuceneTask$Factory"/>
             </list>
         </property>
         <property name="pipelines">
@@ -16,6 +17,14 @@
                     <property name="taskProgressionSpec">
                         <list>
                             <value type="java.lang.Class">org.labkey.jbrowse.pipeline.JBrowseSessionTask</value>
+                        </list>
+                    </property>
+                </bean>
+                <bean class="org.labkey.api.pipeline.TaskPipelineSettings">
+                    <constructor-arg type="java.lang.Class" value="org.labkey.jbrowse.pipeline.JBrowseLucenePipelineJob"/>
+                    <property name="taskProgressionSpec">
+                        <list>
+                            <value type="java.lang.Class">org.labkey.jbrowse.pipeline.JBrowseLuceneTask</value>
                         </list>
                     </property>
                 </bean>
