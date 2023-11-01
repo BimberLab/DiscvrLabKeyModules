@@ -129,7 +129,7 @@ addErrorMessage <- function(f) {
 }
 
 readSeuratRDS <- function(filePath) {
-    seuratObj <- readSeuratRDS(filePath)
+    seuratObj <- readRDS(filePath)
 
     # NOTE: this could be used after SeuratObject upgrades
     #if (!('version' %in% slotNames(seuratObj)) || package_version(seuratObj@version) < package_version('5.0.0')) {
