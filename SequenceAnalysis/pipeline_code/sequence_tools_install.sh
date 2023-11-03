@@ -510,17 +510,19 @@ then
     rm -Rf bcftools*
     rm -Rf $LKTOOLS_DIR/bcftools
 
-    wget $WGET_OPTS https://github.com/samtools/bcftools/releases/download/1.16/bcftools-1.16.tar.bz2
-    bunzip2 bcftools-1.16.tar.bz2
-    tar -xf bcftools-1.16.tar
-    echo "Compressing TAR"
-    bzip2 bcftools-1.16.tar
-    chmod 755 bcftools-1.16
-    cd bcftools-1.16
-    ./configure
+    wget $WGET_OPTS https://github.com/samtools/bcftools/releases/download/1.18/bcftools-1.18.tar.bz2
+    tar xjvf bcftools-1.18.tar.bz2
+    bzip2 bcftools-1.18.tar
+    chmod 755 bcftools-1.18
+    cd bcftools-1.18
+    rm -f plugins/liftover.c
+    wget $WGET_OPTS -P plugins https://raw.githubusercontent.com/freeseek/score/master/liftover.c
+
+    ./configure CFLAGS="-g -Wall -O2 -std=c99"
     make
 
     install ./bcftools $LKTOOLS_DIR
+    install ./plugins/liftover.so $LKTOOLS_DIR
 else
     echo "Already installed"
 fi
