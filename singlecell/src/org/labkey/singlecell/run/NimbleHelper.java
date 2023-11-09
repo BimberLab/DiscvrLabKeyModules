@@ -184,7 +184,7 @@ public class NimbleHelper
 
     private File getGenomeCsv(int genomeId, boolean forceWorkDir) throws PipelineJobException
     {
-        ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(genomeId, getPipelineCtx().getJob().getUser());
+        ReferenceGenome rg = getPipelineCtx().getSequenceSupport().getCachedGenome(genomeId);
         if (rg == null)
         {
             throw new PipelineJobException("Unable to find genome: " + genomeId);
@@ -206,7 +206,7 @@ public class NimbleHelper
 
     private File getGenomeFasta(int genomeId, boolean forceWorkDir) throws PipelineJobException
     {
-        ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(genomeId, getPipelineCtx().getJob().getUser());
+        ReferenceGenome rg = getPipelineCtx().getSequenceSupport().getCachedGenome(genomeId);
         if (rg == null)
         {
             throw new PipelineJobException("Unable to find genome: " + genomeId);
