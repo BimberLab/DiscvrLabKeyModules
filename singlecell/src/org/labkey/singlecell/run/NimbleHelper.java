@@ -1,6 +1,5 @@
 package org.labkey.singlecell.run;
 
-import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -10,14 +9,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
-import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
@@ -25,8 +19,8 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
-import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
@@ -36,7 +30,6 @@ import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
-import org.labkey.singlecell.SingleCellSchema;
 
 import javax.annotation.Nullable;
 import java.io.BufferedReader;
@@ -117,8 +110,16 @@ public class NimbleHelper
         }
 
         getPipelineCtx().getSequenceSupport().cacheGenome(rg);
+        if (AlignerIndexUtil.hasCachedIndex(getPipelineCtx(), "nimble", rg))
+        {
+            getPipelineCtx().getLogger().debug("Cached index found, will not re-create");
+            return;
+        }
+
         getPipelineCtx().getLogger().info("Preparing genome CSV/FASTA for " + rg.getName());
-        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(getGenomeCsv(genomeId)), ',', CSVWriter.NO_QUOTE_CHARACTER); PrintWriter fastaWriter = PrintWriters.getPrintWriter(getGenomeFasta(genomeId)))
+        File csv = getGenomeCsv(genomeId, true);
+        File fasta = getGenomeFasta(genomeId, true);
+        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(csv), ',', CSVWriter.NO_QUOTE_CHARACTER); PrintWriter fastaWriter = PrintWriters.getPrintWriter(fasta))
         {
             writer.writeNext(new String[]{"reference_genome", "name", "nt_length", "genbank", "category", "subset", "locus", "lineage", "sequence"});
 
@@ -147,20 +148,77 @@ public class NimbleHelper
                 fastaWriter.println(seq);
             });
         }
-        catch(IOException e)
+        catch (IOException e)
         {
             throw new PipelineJobException(e);
         }
+
+        File indexDir = AlignerIndexUtil.getIndexDir(rg, "nimble");
+        if (!indexDir.exists())
+        {
+            indexDir.mkdir();
+        }
+
+        for (File f : Arrays.asList(csv, fasta))
+        {
+            File cached = new File(indexDir, f.getName());
+            if (!cached.exists())
+            {
+                try
+                {
+                    getPipelineCtx().getLogger().debug("Caching file: " + cached.getPath());
+                    FileUtils.copyFile(f, cached);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+        }
     }
 
-    private File getGenomeCsv(int id)
+    private File getGenomeCsv(int genomeId) throws PipelineJobException
     {
-        return new File(getPipelineCtx().getSourceDirectory(), "genome." + id + ".csv");
+        return getGenomeCsv(genomeId, false);
     }
 
-    private File getGenomeFasta(int id)
+    private File getGenomeCsv(int genomeId, boolean forceWorkDir) throws PipelineJobException
     {
-        return new File(getPipelineCtx().getSourceDirectory(), "genome." + id + ".fasta");
+        ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(genomeId, getPipelineCtx().getJob().getUser());
+        if (rg == null)
+        {
+            throw new PipelineJobException("Unable to find genome: " + genomeId);
+        }
+
+        if (!forceWorkDir && AlignerIndexUtil.hasCachedIndex(getPipelineCtx(), "nimble", rg))
+        {
+            File indexDir = AlignerIndexUtil.getIndexDir(rg, "nimble");
+            return new File(indexDir, "genome." + genomeId + ".csv");
+        }
+
+        return new File(getPipelineCtx().getSourceDirectory(), "genome." + genomeId + ".csv");
+    }
+
+    private File getGenomeFasta(int genomeId) throws PipelineJobException
+    {
+        return getGenomeFasta(genomeId, false);
+    }
+
+    private File getGenomeFasta(int genomeId, boolean forceWorkDir) throws PipelineJobException
+    {
+        ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(genomeId, getPipelineCtx().getJob().getUser());
+        if (rg == null)
+        {
+            throw new PipelineJobException("Unable to find genome: " + genomeId);
+        }
+
+        if (!forceWorkDir && AlignerIndexUtil.hasCachedIndex(getPipelineCtx(), "nimble", rg))
+        {
+            File indexDir = AlignerIndexUtil.getIndexDir(rg, "nimble");
+            return new File(indexDir, "genome." + genomeId + ".fasta");
+        }
+
+        return new File(getPipelineCtx().getSourceDirectory(), "genome." + genomeId + ".fasta");
     }
 
     public void doNimbleAlign(File bam, PipelineStepOutput output, Readset rs, String basename) throws UnsupportedOperationException, PipelineJobException
