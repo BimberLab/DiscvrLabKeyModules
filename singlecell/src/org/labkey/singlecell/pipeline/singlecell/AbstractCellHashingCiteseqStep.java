@@ -19,7 +19,7 @@ import java.util.Map;
 
 abstract public class AbstractCellHashingCiteseqStep extends AbstractSingleCellPipelineStep
 {
-    public AbstractCellHashingCiteseqStep(PipelineStepProvider provider, PipelineContext ctx)
+    public AbstractCellHashingCiteseqStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx);
     }

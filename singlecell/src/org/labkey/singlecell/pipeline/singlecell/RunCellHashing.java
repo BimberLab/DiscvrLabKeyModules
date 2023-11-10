@@ -1,5 +1,6 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import au.com.bytecode.opencsv.CSVReader;
 import org.apache.commons.io.FileUtils;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
@@ -134,6 +135,36 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
                 }
 
                 hashingCalls = CellHashingService.get().generateHashingCallsForRawMatrix(parentReadset, output, ctx, params, existingCountMatrixUmiDir);
+
+                File metricFile = CellHashingService.get().getMetricsFile(hashingCalls);
+                if (!metricFile.exists())
+                {
+                    throw new PipelineJobException("Unable to find metrics file: " + metricFile.getPath());
+                }
+
+                try (CSVReader reader = new CSVReader(Readers.getReader(metricFile), '\t'))
+                {
+                    String[] line;
+                    while ((line = reader.readNext()) != null)
+                    {
+                        if ("HTOsDroppedAboveMinRetained".equals(line[1]))
+                        {
+                            String msg = "Hashing data contained HTOs with counts higher than those in the whitelist, this could indicate an error in the expected barcodes: " + line[2];
+                            if (params.failIfUnexpectedHtosFound)
+                            {
+                                throw new PipelineJobException(msg);
+                            }
+                            else
+                            {
+                                ctx.getLogger().warn(msg);
+                            }
+                        }
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
             }
             else if (htosPerReadset.size() == 1)
             {
