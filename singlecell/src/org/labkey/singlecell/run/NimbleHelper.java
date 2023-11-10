@@ -153,28 +153,18 @@ public class NimbleHelper
             throw new PipelineJobException(e);
         }
 
-        File indexDir = AlignerIndexUtil.getIndexDir(rg, "nimble");
-        if (!indexDir.exists())
+        AlignerIndexUtil.saveCachedIndex(false, getPipelineCtx(), getLocalIndexDir(genomeId, true), "nimble", rg);
+    }
+
+    private File getLocalIndexDir(int genomeId, boolean createIfMissing)
+    {
+        File dir = new File(getPipelineCtx().getSourceDirectory(), "genome." + genomeId);
+        if (createIfMissing && !dir.exists())
         {
-            indexDir.mkdir();
+            dir.mkdir();
         }
 
-        for (File f : Arrays.asList(csv, fasta))
-        {
-            File cached = new File(indexDir, f.getName());
-            if (!cached.exists())
-            {
-                try
-                {
-                    getPipelineCtx().getLogger().debug("Caching file: " + cached.getPath());
-                    FileUtils.copyFile(f, cached);
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
-            }
-        }
+        return dir;
     }
 
     private File getGenomeCsv(int genomeId) throws PipelineJobException
@@ -196,7 +186,7 @@ public class NimbleHelper
             return new File(indexDir, "genome." + genomeId + ".csv");
         }
 
-        return new File(getPipelineCtx().getSourceDirectory(), "genome." + genomeId + ".csv");
+        return checkForLegacyGenome(new File(getLocalIndexDir(genomeId, true), "genome." + genomeId + ".csv"));
     }
 
     private File getGenomeFasta(int genomeId) throws PipelineJobException
@@ -218,7 +208,37 @@ public class NimbleHelper
             return new File(indexDir, "genome." + genomeId + ".fasta");
         }
 
-        return new File(getPipelineCtx().getSourceDirectory(), "genome." + genomeId + ".fasta");
+        return checkForLegacyGenome(new File(getLocalIndexDir(genomeId, true), "genome." + genomeId + ".fasta"));
+    }
+
+    // TODO: This should ultimately be removed:
+    private File checkForLegacyGenome(File fileNewLocation) throws PipelineJobException
+    {
+        if (fileNewLocation.exists())
+        {
+            return fileNewLocation;
+        }
+
+        File oldLocation = new File(fileNewLocation.getParentFile().getParentFile(), fileNewLocation.getName());
+        if (oldLocation.exists())
+        {
+            getPipelineCtx().getLogger().debug("Genome file found in old location, moving: " + oldLocation.getPath());
+            if (!fileNewLocation.getParentFile().exists())
+            {
+                fileNewLocation.getParentFile().mkdir();
+            }
+
+            try
+            {
+                FileUtils.moveFile(oldLocation, fileNewLocation);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
+        return fileNewLocation;
     }
 
     public void doNimbleAlign(File bam, PipelineStepOutput output, Readset rs, String basename) throws UnsupportedOperationException, PipelineJobException
