@@ -138,13 +138,19 @@ for (datasetId in names(seuratObjects)) {
 		}
 
 		tryCatch({
-			cells <- Seurat::WhichCells(seuratObj, expression = HTO.Classification=='Negative')
-			if (length(cells) == 0) {
+			negativeCells <- Seurat::WhichCells(seuratObj, expression = HTO.Classification=='Negative')
+			if (length(negativeCells) == 0) {
+				print('All cells have hashing data')
+			} else if (length(negativeCells) == ncol(seuratObj)) {
 				print(paste0('There were no cells remaining after dropping cells where hashing is negative'))
 				seuratObj <- NULL
 			} else {
-				seuratObj <- subset(seuratObj, cells = cells, invert = TRUE)
+				expectedCells <- ncol(seuratObj) - length(negativeCells)
+				seuratObj <- subset(seuratObj, cells = negativeCells, invert = TRUE)
 				print(paste0('After removing cells with negative hashing calls: ', ncol(seuratObj)))
+				if (ncol(seuratObj) != expectedCells) {
+					stop(paste0('The subset for negative hashing cells did not work as expected. Expected cells: ', expectedCells, ', actual: ', ncol(seuratObj))
+				}
 			}
 		}, error = function(e){
 			if (!is.null(e) && e$message == 'Cannot find cells provided') {
