@@ -162,8 +162,11 @@ public class JBrowseLucenePipelineJob extends PipelineJob
         args.add("-O");
         args.add(indexDir.getPath());
 
-        args.add("--validation-stringency");
-        args.add("LENIENT");
+        if (allowLenientLuceneProcessing)
+        {
+            args.add("--validation-stringency");
+            args.add("LENIENT");
+        }
 
         for (String field : infoFieldsForFullTextSearch)
         {
