@@ -28,6 +28,7 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
@@ -38,6 +39,7 @@ import org.labkey.jbrowse.button.AddTrackButton;
 import org.labkey.jbrowse.button.ModifyTrackConfigButton;
 import org.labkey.jbrowse.button.ReprocessResourcesButton;
 import org.labkey.jbrowse.button.ReprocessSessionsButton;
+import org.labkey.jbrowse.pipeline.IndexVariantsStep;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineProvider;
 import org.labkey.jbrowse.query.JBrowseUserSchema;
 
@@ -108,6 +110,8 @@ public class JBrowseModule extends ExtendedSimpleModule
 
         WebdavService.get().registerPreGzippedExtensions("jsonz");
         WebdavService.get().registerPreGzippedExtensions("txtz");
+
+        SequencePipelineService.get().registerPipelineStep(new IndexVariantsStep.Provider());
     }
 
     @Override
