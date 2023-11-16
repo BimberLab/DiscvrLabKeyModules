@@ -110,7 +110,10 @@ public class JBrowseModule extends ExtendedSimpleModule
 
         WebdavService.get().registerPreGzippedExtensions("jsonz");
         WebdavService.get().registerPreGzippedExtensions("txtz");
+    }
 
+    public static void registerPipelineSteps()
+    {
         SequencePipelineService.get().registerPipelineStep(new IndexVariantsStep.Provider());
     }
 
