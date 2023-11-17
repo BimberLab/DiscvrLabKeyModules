@@ -1,5 +1,12 @@
 # Added to avoid celldex/ExperimentHub/BiocFileCache write errors
-Sys.setenv('HOME', '/dockerHomeDir')
+cacheDir <- '/BiocFileCache/.cache'
+if (dir.exists(cacheDir)) {
+   unlink(cacheDir, recursive = TRUE)
+}
+
+dir.create(cacheDir, recursive=TRUE)
+ExperimentHub::setExperimentHubOption('cache', cacheDir)
+library(ExperimentHub)
 
  for (datasetId in names(seuratObjects)) {
     printName(datasetId)
