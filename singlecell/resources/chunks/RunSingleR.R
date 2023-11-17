@@ -1,4 +1,7 @@
-for (datasetId in names(seuratObjects)) {
+# Added to avoid celldex/ExperimentHub/BiocFileCache write errors
+Sys.setenv('HOME', '/dockerHomeDir')
+
+ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
