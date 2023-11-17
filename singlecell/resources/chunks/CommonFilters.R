@@ -149,7 +149,7 @@ for (datasetId in names(seuratObjects)) {
 				seuratObj <- subset(seuratObj, cells = negativeCells, invert = TRUE)
 				print(paste0('After removing cells with negative hashing calls: ', ncol(seuratObj)))
 				if (ncol(seuratObj) != expectedCells) {
-					stop(paste0('The subset for negative hashing cells did not work as expected. Expected cells: ', expectedCells, ', actual: ', ncol(seuratObj))
+					stop(paste0('The subset for negative hashing cells did not work as expected. Expected cells: ', expectedCells, ', actual: ', ncol(seuratObj)))
 				}
 			}
 		}, error = function(e){
