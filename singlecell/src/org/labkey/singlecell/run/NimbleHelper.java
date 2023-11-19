@@ -252,8 +252,18 @@ public class NimbleHelper
             File genomeCsv = getGenomeCsv(genome.getGenomeId());
             File genomeFasta = getGenomeFasta(genome.getGenomeId());
             File refJson = prepareReference(genomeCsv, genomeFasta, genome, output);
-            output.addIntermediateFile(genomeCsv);
-            output.addIntermediateFile(genomeFasta);
+
+            // Only add these if they are in the local working directory:
+            if (genomeCsv.toPath().startsWith(getPipelineCtx().getWorkingDirectory().toPath()))
+            {
+                output.addIntermediateFile(genomeCsv);
+            }
+
+            if (genomeFasta.toPath().startsWith(getPipelineCtx().getWorkingDirectory().toPath()))
+            {
+                output.addIntermediateFile(genomeFasta);
+            }
+
             output.addIntermediateFile(refJson);
             jsons.add(refJson);
         }
