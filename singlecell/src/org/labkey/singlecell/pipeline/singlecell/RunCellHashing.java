@@ -152,6 +152,7 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
                             String msg = "Hashing data contained HTOs with counts higher than those in the whitelist, this could indicate an error in the expected barcodes: " + line[2];
                             if (params.failIfUnexpectedHtosFound)
                             {
+                                CellHashingService.get().copyHtmlLocally(ctx);
                                 throw new PipelineJobException(msg);
                             }
                             else
