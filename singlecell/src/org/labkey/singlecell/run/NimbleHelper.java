@@ -586,7 +586,6 @@ public class NimbleHelper
             dockerWriter.println(StringUtils.join(nimbleArgs, " "));
             dockerWriter.println("EXIT_CODE=$?");
             dockerWriter.println("echo 'Exit code: '$?");
-            dockerWriter.println("ls /work");
             dockerWriter.println("exit $EXIT_CODE");
         }
         catch (IOException e)
