@@ -17,8 +17,10 @@ import org.labkey.api.security.User;
 import org.labkey.api.util.logging.LogHelper;
 import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
+import org.labkey.jbrowse.pipeline.JBrowseLucenePipelineJob;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -60,7 +62,7 @@ public class JBrowseServiceImpl extends JBrowseService
         {
             try
             {
-                ret.prepareResource(log, false, true);
+                ret.prepareResource(u, log, false, true);
             }
             catch (PipelineJobException e)
             {
@@ -106,6 +108,12 @@ public class JBrowseServiceImpl extends JBrowseService
     public void registerFieldCustomizer(JBrowseFieldCustomizer customizer)
     {
         _customizers.add(customizer);
+    }
+
+    @Override
+    public void prepareLuceneIndex(File vcf, File indexDir, Logger log, List<String> infoFieldsForFullTextSearch, boolean allowLenientLuceneProcessing) throws PipelineJobException
+    {
+        JBrowseLucenePipelineJob.prepareLuceneIndex(vcf, indexDir, log, infoFieldsForFullTextSearch, allowLenientLuceneProcessing);
     }
 
     public Map<String, Map<String, Object>> resolveSubjects(List<String> subjects, User u, Container c)

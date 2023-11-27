@@ -51,6 +51,7 @@ import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.jbrowse.JBrowseManager;
 import org.labkey.jbrowse.JBrowseSchema;
+import org.labkey.jbrowse.pipeline.IndexVariantsStep;
 import org.labkey.jbrowse.pipeline.JBrowseLucenePipelineJob;
 import org.labkey.sequenceanalysis.run.util.TabixRunner;
 
@@ -297,7 +298,7 @@ public class JsonFile
         }
         else if (TRACK_TYPES.gff.getFileType().isType(targetFile.getFile()))
         {
-            ret = getGxfTrack(log, targetFile, rg);
+            ret = getGxfTrack(u, log, targetFile, rg);
         }
         else if (TRACK_TYPES.gtf.getFileType().isType(targetFile.getFile()))
         {
@@ -308,7 +309,7 @@ public class JsonFile
         }
         else if (TRACK_TYPES.bed.getFileType().isType(targetFile.getFile()))
         {
-            ret = getBedTrack(log, targetFile, rg);
+            ret = getBedTrack(u, log, targetFile, rg);
         }
         else if (TRACK_TYPES.bw.getFileType().isType(targetFile.getFile()))
         {
@@ -643,12 +644,12 @@ public class JsonFile
         return ret;
     }
 
-    private JSONObject getBedTrack(Logger log, ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
+    private JSONObject getBedTrack(User u, Logger log, ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
     {
         String adapterType = "BedTabixAdapter";
         String prefix = "bed";
 
-        return getTabixTrack(log, targetFile, rg, adapterType, prefix);
+        return getTabixTrack(u, log, targetFile, rg, adapterType, prefix);
     }
 
     private JSONObject getBigWigTrack(Logger log, ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
@@ -682,12 +683,12 @@ public class JsonFile
         return ret;
     }
 
-    private JSONObject getGxfTrack(Logger log, ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
+    private JSONObject getGxfTrack(User u, Logger log, ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
     {
         String adapterType = TRACK_TYPES.gff.getFileType().isType(targetFile.getFile()) ? "Gff3TabixAdapter" : "GtfTabixAdapter";
         String prefix = TRACK_TYPES.gff.getFileType().isType(targetFile.getFile()) ? "gff" : "gtf";
 
-        return getTabixTrack(log, targetFile, rg, adapterType, prefix);
+        return getTabixTrack(u, log, targetFile, rg, adapterType, prefix);
     }
 
     public String getTrackType()
@@ -729,7 +730,7 @@ public class JsonFile
         }
     }
 
-    private JSONObject getTabixTrack(Logger log, ExpData targetFile, ReferenceGenome rg, String adapterType, String prefix) throws PipelineJobException
+    private JSONObject getTabixTrack(User u, Logger log, ExpData targetFile, ReferenceGenome rg, String adapterType, String prefix) throws PipelineJobException
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
@@ -743,7 +744,7 @@ public class JsonFile
         }});
 
         // if not gzipped, we need to process it:
-        File gzipped = prepareResource(log, true, false);
+        File gzipped = prepareResource(u, log, true, false);
         final String url;
         if (!getExpData().getFile().equals(gzipped))
         {
@@ -809,7 +810,7 @@ public class JsonFile
         return !isGzipped() && (TRACK_TYPES.gff.getFileType().isType(fn) || TRACK_TYPES.gtf.getFileType().isType(fn) || TRACK_TYPES.bed.getFileType().isType(fn));
     }
 
-    public File prepareResource(Logger log, boolean throwIfNotPrepared, boolean forceReprocess) throws PipelineJobException
+    public File prepareResource(User u, Logger log, boolean throwIfNotPrepared, boolean forceReprocess) throws PipelineJobException
     {
         ExpData expData = getExpData();
         if (expData == null)
@@ -939,6 +940,13 @@ public class JsonFile
 
         if (shouldHaveFreeTextSearch())
         {
+            // TODO:
+            // Try to find a matching existing index:
+            // Container targetContainer = getContainerObj().isWorkbookOrTab() ? getContainerObj().getParent() : getContainerObj();
+            // TableInfo ti = QueryService.get().getUserSchema(u, targetContainer, JBrowseSchema.SEQUENCE_ANALYSIS).getTable("outputfiles");
+            // SimpleFilter filter = new SimpleFilter(FieldKey.fromString("category"), IndexVariantsStep.CATEGORY);
+            // filter.addCondition(FieldKey.fromString("library_id"), rg)
+
             File luceneDir = getExpectedLocationOfLuceneIndex(throwIfNotPrepared);
             long sizeInGb = targetFile.length() / (1024 * 1024 * 1024);
             log.debug("preparing lucene index, VCF size: " + sizeInGb);

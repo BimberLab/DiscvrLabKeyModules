@@ -114,10 +114,10 @@ abstract public class DbBackedJsonFile extends JsonFile
     abstract protected TableSelector getSelector();
 
     @Override
-    public File prepareResource(Logger log, boolean throwIfNotPrepared, boolean forceReprocess) throws PipelineJobException
+    public File prepareResource(User u, Logger log, boolean throwIfNotPrepared, boolean forceReprocess) throws PipelineJobException
     {
         createGtf(log, throwIfNotPrepared, forceReprocess);
-        return super.prepareResource(log, throwIfNotPrepared, forceReprocess);
+        return super.prepareResource(u, log, throwIfNotPrepared, forceReprocess);
     }
 
     public void createGtf(Logger log, boolean throwOnNotFound, boolean forceRecreate) throws PipelineJobException
