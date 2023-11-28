@@ -17,6 +17,8 @@ package org.labkey.api.sequenceanalysis;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.json.JSONObject;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
@@ -157,6 +159,11 @@ public class SequenceOutputFile implements Serializable
     public String getContainer()
     {
         return _container;
+    }
+
+    public Container getContainerObj()
+    {
+        return ContainerManager.getForId(_container);
     }
 
     public void setContainer(String container)

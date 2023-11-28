@@ -27,6 +27,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
+import org.labkey.api.jbrowse.JBrowseService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
@@ -58,6 +59,7 @@ import org.labkey.sequenceanalysis.run.util.TabixRunner;
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -940,12 +942,17 @@ public class JsonFile
 
         if (shouldHaveFreeTextSearch())
         {
-            // TODO:
-            // Try to find a matching existing index:
-            // Container targetContainer = getContainerObj().isWorkbookOrTab() ? getContainerObj().getParent() : getContainerObj();
-            // TableInfo ti = QueryService.get().getUserSchema(u, targetContainer, JBrowseSchema.SEQUENCE_ANALYSIS).getTable("outputfiles");
-            // SimpleFilter filter = new SimpleFilter(FieldKey.fromString("category"), IndexVariantsStep.CATEGORY);
-            // filter.addCondition(FieldKey.fromString("library_id"), rg)
+            // Try to find a matching existing index. Note: restrict to the same workbook as parent file, if present:
+            File existingLuceneDir = null;
+            if (getOutputFile() != null)
+            {
+                SequenceOutputFile so = SequenceOutputFile.getForId(getOutputFile());
+                SequenceOutputFile existingLuceneOutput = JBrowseService.get().findMatchingLuceneIndex(so, getInfoFieldsToIndex(), u, log);
+                if (existingLuceneOutput != null)
+                {
+                    existingLuceneDir = existingLuceneOutput.getFile().getParentFile();
+                }
+            }
 
             File luceneDir = getExpectedLocationOfLuceneIndex(throwIfNotPrepared);
             long sizeInGb = targetFile.length() / (1024 * 1024 * 1024);
@@ -954,6 +961,18 @@ public class JsonFile
             if (!forceReprocess && doesLuceneIndexExist())
             {
                 log.debug("Existing lucene index found, will not re-create: " + luceneDir.getPath());
+            }
+            else if (existingLuceneDir != null && existingLuceneDir.exists())
+            {
+                log.debug("Creating symlink to existing index: " + existingLuceneDir.getPath());
+                try
+                {
+                    Files.createSymbolicLink(existingLuceneDir.toPath(), existingLuceneDir.toPath());
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
             }
             else if (sizeInGb > 50)
             {
