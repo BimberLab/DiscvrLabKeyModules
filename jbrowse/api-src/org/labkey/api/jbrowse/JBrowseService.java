@@ -7,6 +7,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,4 +43,15 @@ abstract public class JBrowseService
     abstract public void registerFieldCustomizer(JBrowseFieldCustomizer customizer);
 
     abstract public void prepareLuceneIndex(File vcf, File indexDir, Logger log, List<String> infoFieldsForFullTextSearch, boolean allowLenientLuceneProcessing) throws PipelineJobException;
+
+    abstract public SequenceOutputFile findMatchingLuceneIndex(SequenceOutputFile vcfFile, List<String> infoFieldsToIndex, User u, @Nullable Logger log) throws PipelineJobException;
+
+    abstract public void registerLuceneIndexDetector(LuceneIndexDetector detector);
+
+    public interface LuceneIndexDetector
+    {
+        SequenceOutputFile findMatchingLuceneIndex(SequenceOutputFile vcfFile, List<String> infoFieldsToIndex, User u, @Nullable Logger log) throws PipelineJobException;
+
+        boolean isAvailable(Container c);
+    }
 }
