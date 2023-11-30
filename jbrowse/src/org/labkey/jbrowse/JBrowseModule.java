@@ -80,7 +80,6 @@ public class JBrowseModule extends ExtendedSimpleModule
     protected void init()
     {
         addController(JBrowseController.NAME, JBrowseController.class);
-        JBrowseService.setInstance(JBrowseServiceImpl.get());
         JBrowseService.get().registerFieldCustomizer(new JBrowseLuceneSearch.DefaultJBrowseFieldCustomizer());
         JBrowseService.get().registerGroupsProvider(new JBrowseLuceneSearch.TestJBrowseGroupProvider());
     }
@@ -114,6 +113,7 @@ public class JBrowseModule extends ExtendedSimpleModule
 
     public static void registerPipelineSteps()
     {
+        JBrowseService.setInstance(JBrowseServiceImpl.get());
         SequencePipelineService.get().registerPipelineStep(new IndexVariantsStep.Provider());
     }
 
