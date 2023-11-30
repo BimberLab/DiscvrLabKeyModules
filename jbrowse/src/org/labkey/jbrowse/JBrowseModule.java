@@ -80,8 +80,6 @@ public class JBrowseModule extends ExtendedSimpleModule
     protected void init()
     {
         addController(JBrowseController.NAME, JBrowseController.class);
-        JBrowseService.get().registerFieldCustomizer(new JBrowseLuceneSearch.DefaultJBrowseFieldCustomizer());
-        JBrowseService.get().registerGroupsProvider(new JBrowseLuceneSearch.TestJBrowseGroupProvider());
     }
 
     @Override
@@ -109,6 +107,9 @@ public class JBrowseModule extends ExtendedSimpleModule
 
         WebdavService.get().registerPreGzippedExtensions("jsonz");
         WebdavService.get().registerPreGzippedExtensions("txtz");
+
+        JBrowseService.get().registerFieldCustomizer(new JBrowseLuceneSearch.DefaultJBrowseFieldCustomizer());
+        JBrowseService.get().registerGroupsProvider(new JBrowseLuceneSearch.TestJBrowseGroupProvider());
     }
 
     public static void registerPipelineSteps()
