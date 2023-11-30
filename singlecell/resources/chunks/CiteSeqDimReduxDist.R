@@ -1,6 +1,6 @@
 for (datasetId in names(seuratObjects)) {
     printName(datasetId)
-    seuratObj <- readRDS(seuratObjects[[datasetId]])
+    seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
     if (!(assayName %in% names(seuratObj@assays))) {
         print(paste0(assayName, ' assay not present, skipping'))

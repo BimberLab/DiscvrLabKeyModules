@@ -378,7 +378,7 @@ public class SingleCellController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public static class GetMatchingSamplesAction extends ReadOnlyApiAction<SimpleApiJsonForm>
     {
-        final List<String> FIELDS = Arrays.asList("subjectId", "sampledate", "subjectid", "celltype", "tissue", "assaytype", "stim");
+        final List<String> FIELDS = Arrays.asList("subjectId", "sampledate", "subjectid", "celltype", "tissue", "assaytype", "stim", "treatment");
 
         @Override
         public Object execute(SimpleApiJsonForm form, BindException errors) throws Exception
