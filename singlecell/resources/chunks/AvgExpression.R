@@ -43,7 +43,7 @@ GenerateAveragedData <- function(seuratObj, groupFields, addMetadata) {
 
 for (datasetId in names(seuratObjects)) {
     printName(datasetId)
-    seuratObj <- readRDS(seuratObjects[[datasetId]])
+    seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
     seuratObj <- GenerateAveragedData(seuratObj, groupFields = groupFields, addMetadata = addMetadata)
     saveData(seuratObj, datasetId)

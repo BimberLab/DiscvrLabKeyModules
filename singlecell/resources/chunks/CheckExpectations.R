@@ -1,6 +1,6 @@
 for (datasetId in names(seuratObjects)) {
   printName(datasetId)
-  seuratObj <- readRDS(seuratObjects[[datasetId]])
+  seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
   if (requireSingleDatasetInput && length(unique(seuratObj$DatasetId)) > 1) {
     addErrorMessage(paste0('Seurat data prototypes must be a single dataset. Problem ID: ', datasetId))

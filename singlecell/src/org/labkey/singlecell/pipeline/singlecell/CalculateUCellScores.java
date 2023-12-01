@@ -23,8 +23,8 @@ public class CalculateUCellScores extends AbstractRiraStep
         {
             super("CalculateUCellScores", "Calculate UCell Scores", "Seurat", "This will generate UCell scores for a set of pre-defined gene modules", Arrays.asList(
                     SeuratToolParameter.create("storeRanks", "Store Ranks", "Passed directly to UCell::AddModuleScore_UCell.", "checkbox", new JSONObject(){{
-
-                    }}, false),
+                        put("checked", true);
+                    }}, true),
                     SeuratToolParameter.create("assayName", "Assay Name", "Passed directly to UCell::AddModuleScore_UCell.", "textfield", new JSONObject(){{
 
                     }}, "RNA"),

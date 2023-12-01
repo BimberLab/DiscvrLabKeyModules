@@ -1,6 +1,6 @@
 for (datasetId in names(seuratObjects)) {
     printName(datasetId)
-    seuratObj <- readRDS(seuratObjects[[datasetId]])
+    seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
     if (!(datasetId %in% names(featureData))) {
         stop(paste0('No CITE-seq information found for datasetId: ', datasetId))

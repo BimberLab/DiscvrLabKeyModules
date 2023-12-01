@@ -213,7 +213,7 @@ public class JBrowseSession
         {
             try
             {
-                x.prepareResource(log, false, false);
+                x.prepareResource(u, log, false, false);
             }
             catch (Exception e)
             {

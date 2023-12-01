@@ -1,6 +1,6 @@
 for (datasetId in names(seuratObjects)) {
     printName(datasetId)
-    seuratObj <- readRDS(seuratObjects[[datasetId]])
+    seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
     tryCatch({
         if (!(assayName %in% names(seuratObj@assays))) {

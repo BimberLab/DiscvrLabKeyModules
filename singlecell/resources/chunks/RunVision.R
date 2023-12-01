@@ -4,7 +4,7 @@ visionFiles <- data.frame(DatasetId = character(), FileName = character())
 
 for (datasetId in names(seuratObjects)) {
     printName(datasetId)
-    seuratObj <- readRDS(seuratObjects[[datasetId]])
+    seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
     visionObj <- CellMembrane::RunVisionForMSigDB(seuratObj, metadataCols = metadataCols)
     fileName <- paste0('vision.', datasetId, '.rds')

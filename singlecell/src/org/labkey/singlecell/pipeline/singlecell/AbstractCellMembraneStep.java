@@ -11,7 +11,7 @@ abstract public class AbstractCellMembraneStep extends AbstractSingleCellPipelin
 {
     public static String CONTAINER_NAME = "ghcr.io/bimberlabinternal/cellmembrane:latest";
 
-    public AbstractCellMembraneStep(PipelineStepProvider provider, PipelineContext ctx)
+    public AbstractCellMembraneStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx);
     }
@@ -26,5 +26,12 @@ abstract public class AbstractCellMembraneStep extends AbstractSingleCellPipelin
     public String getDockerContainerName()
     {
         return CONTAINER_NAME;
+    }
+
+    // NOTE: ExperimentHub and similar packages default to saving data to the user's home dir. Set a directory, to avoid issues when not running the container as root
+    @Override
+    public String getDockerHomeDir()
+    {
+        return "/dockerHomeDir";
     }
 }
