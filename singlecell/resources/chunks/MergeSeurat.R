@@ -5,10 +5,10 @@ mergeBatch <- function(dat) {
     for (datasetId in names(dat)) {
         message(paste0('Loading: ', datasetId))
         if (doDiet) {
-            toMerge[[datasetId]] <- Seurat::DietSeurat(readRDS(dat[[datasetId]]))
+            toMerge[[datasetId]] <- Seurat::DietSeurat(readSeuratRDS(dat[[datasetId]]))
             gc()
         } else {
-            toMerge[[datasetId]] <- readRDS(dat[[datasetId]])
+            toMerge[[datasetId]] <- readSeuratRDS(dat[[datasetId]])
         }
     }
 
@@ -30,7 +30,7 @@ mergeBatch <- function(dat) {
 if (length(seuratObjects) == 1) {
     print('There is only one seurat object, no need to merge')
     datasetId <- names(seuratObjects)[[1]]
-    saveData(seuratObjects[[datasetId]], datasetId)
+    saveData(readSeuratRDS(seuratObjects[[datasetId]]), datasetId)
 } else {
     batchSize <- 20
     numBatches <- ceiling(length(seuratObjects) / batchSize)

@@ -8,7 +8,7 @@ Rdiscvr::SetLabKeyDefaults(baseUrl = serverBaseUrl, defaultFolder = defaultLabKe
 
 for (datasetId in names(seuratObjects)) {
     printName(datasetId)
-    seuratObj <- readRDS(seuratObjects[[datasetId]])
+    seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
     seuratObj <- Rdiscvr::DownloadAndAppendTcrClonotypes(seuratObj, allowMissing = allowMissing)
 

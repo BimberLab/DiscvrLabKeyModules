@@ -9,6 +9,7 @@
     </columns>
     <filters>
         <filter column="sequenceJobWithoutData" operator="eq" value="true"/>
+        <filter column="JobParent" operator="isblank" value=""/>
     </filters>
     <sorts>
         <sort column="Created" descending="true"/>

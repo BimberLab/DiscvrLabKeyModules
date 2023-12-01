@@ -804,6 +804,7 @@ public class CellHashingServiceImpl extends CellHashingService
         return new TableSelector(SingleCellSchema.getInstance().getSchema().getTable(SingleCellSchema.TABLE_SORTS)).getObject(rowId, Sort.class);
     }
 
+    @Override
     public File getMetricsFile(File callFile)
     {
         return new File(callFile.getPath().replaceAll(CALL_EXTENSION, ".metrics.txt"));
@@ -951,7 +952,8 @@ public class CellHashingServiceImpl extends CellHashingService
             }}, 0.2),
             ToolParameterDescriptor.create("skipNormalizationQc", "Skip Normalization QC", null, "checkbox", null, true),
             ToolParameterDescriptor.create("doTSNE", "Do tSNE", "If true, tSNE will be performed as part of QC", "checkbox", null, true),
-            ToolParameterDescriptor.create("retainRawCountFile", "Retain Raw Counts File", null, "checkbox", null, false)
+            ToolParameterDescriptor.create("retainRawCountFile", "Retain Raw Counts File", null, "checkbox", null, false),
+            ToolParameterDescriptor.create("failIfUnexpectedHtosFound", "Fail If Unexpected HTOs Found", "If checked and if there are any HTOs (testing all known HTOs) with counts above the HTOs expected in this experiment, then an error will be thrown", "checkbox", null, false)
         ));
 
         final List<String> allMethods = Arrays.stream(CALLING_METHOD.values()).filter(x -> allowMethodsNeedingGex || !x.isRequiresH5()).map(Enum::name).toList();

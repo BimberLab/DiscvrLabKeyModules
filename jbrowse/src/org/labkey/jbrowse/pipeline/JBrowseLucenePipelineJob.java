@@ -1,6 +1,7 @@
 package org.labkey.jbrowse.pipeline;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.data.Container;
@@ -22,10 +23,12 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.api.view.ViewContext;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.jbrowse.JBrowseManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.List;
 
 /**
@@ -162,9 +165,13 @@ public class JBrowseLucenePipelineJob extends PipelineJob
         args.add("-O");
         args.add(indexDir.getPath());
 
-        args.add("--validation-stringency");
-        args.add("LENIENT");
+        if (allowLenientLuceneProcessing)
+        {
+            args.add("--validation-stringency");
+            args.add("LENIENT");
+        }
 
+        infoFieldsForFullTextSearch = infoFieldsForFullTextSearch.stream().sorted().toList();
         for (String field : infoFieldsForFullTextSearch)
         {
             args.add("-IF");
@@ -190,10 +197,59 @@ public class JBrowseLucenePipelineJob extends PipelineJob
         }
 
         runner.execute(args);
+
+        if (!SystemUtils.IS_OS_WINDOWS)
+        {
+            try
+            {
+                log.debug("Updating file permissions");
+                recursivelyChangeDirectoryPermissions(indexDir);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
+        File fieldFile = getFieldListFile(indexDir);
+        try (PrintWriter writer = PrintWriters.getPrintWriter(fieldFile))
+        {
+            infoFieldsForFullTextSearch.forEach(writer::println);
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
     }
 
     public static File getExpectedLocationOfLuceneIndexStats(File indexDir)
     {
         return new File(indexDir.getPath() + ".stats.txt");
+    }
+
+    private static void recursivelyChangeDirectoryPermissions(File f) throws IOException
+    {
+        if (f.isDirectory())
+        {
+            Runtime.getRuntime().exec(new String[]{"chmod", "775", f.getPath()});
+
+            File[] children = f.listFiles();
+            if (children != null)
+            {
+                for (File child : children)
+                {
+                    recursivelyChangeDirectoryPermissions(child);
+                }
+            }
+        }
+        else
+        {
+            Runtime.getRuntime().exec(new String[]{"chmod", "664", f.getPath()});
+        }
+    }
+
+    public static File getFieldListFile(File indexDir)
+    {
+        return new File(indexDir, "fieldList.txt");
     }
 }

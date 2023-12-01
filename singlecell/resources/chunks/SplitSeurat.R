@@ -1,6 +1,6 @@
 for (datasetId in names(seuratObjects)) {
     printName(datasetId)
-    seuratObj <- readRDS(seuratObjects[[datasetId]])
+    seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
     newList <- CellMembrane::SplitSeurat(seuratObj, splitField = splitField, minCellsToKeep = minCellsToKeep, excludedClasses = excludedClasses, alwaysRetainOtherClass = alwaysRetainOtherClass)
     for (name in names(newList)) {

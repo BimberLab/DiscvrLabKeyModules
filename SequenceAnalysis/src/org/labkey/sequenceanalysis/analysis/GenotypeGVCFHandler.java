@@ -636,11 +636,14 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
             }
 
             // NOTE: added to side-step https://github.com/broadinstitute/gatk/issues/7938
-            toolParams.add("-AX");
-            toolParams.add("InbreedingCoeff");
+            if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.skipExcessHetAndInbreeding"))
+            {
+                toolParams.add("-AX");
+                toolParams.add("InbreedingCoeff");
 
-            toolParams.add("-AX");
-            toolParams.add("ExcessHet");
+                toolParams.add("-AX");
+                toolParams.add("ExcessHet");
+            }
 
             if (!ctx.getParams().isNull("variantCalling.GenotypeGVCFs.maxGenotypeCount"))
             {

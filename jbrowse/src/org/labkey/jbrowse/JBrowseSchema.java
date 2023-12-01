@@ -26,6 +26,7 @@ public class JBrowseSchema
     private static final JBrowseSchema _instance = new JBrowseSchema();
     public static final String NAME = "jbrowse";
 
+    public static final String SEQUENCE_ANALYSIS = "sequenceanalysis";
     public static final String TABLE_DATABASES = "databases";
     public static final String TABLE_DATABASE_MEMBERS = "database_members";
     public static final String TABLE_JSONFILES = "jsonfiles";

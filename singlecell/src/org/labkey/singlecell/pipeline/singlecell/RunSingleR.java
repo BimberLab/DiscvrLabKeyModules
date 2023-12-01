@@ -25,7 +25,16 @@ public class RunSingleR extends AbstractCellMembraneStep
                     }}, false, "showHeatmap", true),
                     SeuratToolParameter.create("nThreads", "# Threads", "If provided, this value will be passed to BiocParallel::MulticoreParam().", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, null)
+                    }}, null),
+                    SeuratToolParameter.create("singleRSpecies", "Tests To Use", "If human, hpca, blueprint, dice, monaco, and immgen will be used. If mouse, MouseRNAseqData will be used.", "ldk-simplecombo", new JSONObject()
+                    {{
+                        put("multiSelect", false);
+                        put("allowBlank", false);
+                        put("storeValues", "human;mouse");
+                        put("initialValues", "human");
+                        put("delimiter", ";");
+                        put("joinReturnValue", true);
+                    }}, "human", null, false, false)
             ), null, null);
         }
 

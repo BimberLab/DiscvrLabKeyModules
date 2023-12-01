@@ -1,6 +1,6 @@
 for (datasetId in names(seuratObjects)) {
     printName(datasetId)
-    seuratObj <- readRDS(seuratObjects[[datasetId]])
+    seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
     for (id in unique(seuratObj$DatasetId)) {
         if (!(id %in% names(featureData))) {

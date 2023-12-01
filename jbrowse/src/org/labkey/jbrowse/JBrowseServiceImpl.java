@@ -1,24 +1,43 @@
 package org.labkey.jbrowse;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpRun;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.jbrowse.DemographicsSource;
 import org.labkey.api.jbrowse.GroupsProvider;
 import org.labkey.api.jbrowse.JBrowseFieldCustomizer;
 import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
 import org.labkey.api.jbrowse.JBrowseService;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.security.User;
+import org.labkey.api.sequenceanalysis.SequenceOutputFile;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.logging.LogHelper;
 import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
+import org.labkey.jbrowse.pipeline.IndexVariantsStep;
+import org.labkey.jbrowse.pipeline.JBrowseLucenePipelineJob;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by bimber on 11/3/2016.
@@ -42,9 +62,11 @@ public class JBrowseServiceImpl extends JBrowseService
     private final List<GroupsProvider> _providers = new ArrayList<>();
     private final List<JBrowseFieldCustomizer> _customizers = new ArrayList<>();
 
+    private final List<LuceneIndexDetector> _detectors = new ArrayList<>();
+
     private JBrowseServiceImpl()
     {
-
+        this.registerLuceneIndexDetector(new DefaultLuceneIndexDetector());
     }
 
     public static JBrowseServiceImpl get()
@@ -60,7 +82,7 @@ public class JBrowseServiceImpl extends JBrowseService
         {
             try
             {
-                ret.prepareResource(log, false, true);
+                ret.prepareResource(u, log, false, true);
             }
             catch (PipelineJobException e)
             {
@@ -108,6 +130,12 @@ public class JBrowseServiceImpl extends JBrowseService
         _customizers.add(customizer);
     }
 
+    @Override
+    public void prepareLuceneIndex(File vcf, File indexDir, Logger log, List<String> infoFieldsForFullTextSearch, boolean allowLenientLuceneProcessing) throws PipelineJobException
+    {
+        JBrowseLucenePipelineJob.prepareLuceneIndex(vcf, indexDir, log, infoFieldsForFullTextSearch, allowLenientLuceneProcessing);
+    }
+
     public Map<String, Map<String, Object>> resolveSubjects(List<String> subjects, User u, Container c)
     {
         Map<String, Map<String, Object>> ret = new HashMap<>();
@@ -140,9 +168,8 @@ public class JBrowseServiceImpl extends JBrowseService
 
     public void customizeField(User u, Container c, JBrowseFieldDescriptor field) {
         // NOTE: providers will be registered on module startup, which will be in dependency order.
-        // Process them here in reverse dependency order, so we prioritize end modules
+        // Process them here in this order, so end modules can override earlier ones:
         List<JBrowseFieldCustomizer> customizers = new ArrayList<>(_customizers);
-        Collections.reverse(customizers);
         for (JBrowseFieldCustomizer fc : customizers) {
             if (fc.isAvailable(c, u)) {
                 fc.customizeField(field, c, u);
@@ -256,5 +283,143 @@ public class JBrowseServiceImpl extends JBrowseService
         }
 
         return ret;
+    }
+
+    @Override
+    public SequenceOutputFile findMatchingLuceneIndex(SequenceOutputFile vcfFile, List<String> infoFieldsToIndex, User u, @Nullable Logger log) throws PipelineJobException
+    {
+        // NOTE: These are registered in module dependency order, so process in reverse:
+        List<LuceneIndexDetector> detectors = new ArrayList<>(_detectors);
+        Collections.reverse(detectors);
+        for (LuceneIndexDetector li : detectors)
+        {
+            if (li.isAvailable(vcfFile.getContainerObj()))
+            {
+                SequenceOutputFile so = li.findMatchingLuceneIndex(vcfFile, infoFieldsToIndex, u, log);
+                if (so != null)
+                {
+                    return so;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public void registerLuceneIndexDetector(LuceneIndexDetector detector)
+    {
+        _detectors.add(detector);
+    }
+
+    public static final class DefaultLuceneIndexDetector implements LuceneIndexDetector
+    {
+        @Override
+        public SequenceOutputFile findMatchingLuceneIndex(SequenceOutputFile vcfFile, List<String> infoFieldsToIndex, User u, @Nullable Logger log) throws PipelineJobException
+        {
+            if (vcfFile.getContainerObj() == null)
+            {
+                return null;
+            }
+
+            // This forces the index and VCF outputs to live in the same workbook:
+            TableInfo ti = QueryService.get().getUserSchema(u, vcfFile.getContainerObj(), JBrowseSchema.SEQUENCE_ANALYSIS).getTable("outputfiles");
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("category"), IndexVariantsStep.CATEGORY);
+            AtomicReference<SequenceOutputFile> idxDir = new AtomicReference<>();
+            new TableSelector(ti, PageFlowUtil.set("rowid"), filter, null).forEachResults(rs -> {
+                SequenceOutputFile so = SequenceOutputFile.getForId(rs.getInt(FieldKey.fromString("rowid")));
+                if (so.getFile() == null || !so.getFile().exists())
+                {
+                    log.error("Sequence output lacks a file: " + so.getRowid());
+                    return;
+                }
+
+                if (so.getRunId() == null)
+                {
+                    return;
+                }
+
+                ExpRun run = ExperimentService.get().getExpRun(so.getRunId());
+                if (run == null)
+                {
+                    return;
+                }
+
+                Map<? extends ExpData, String> inputMap = run.getDataInputs();
+                if (inputMap == null)
+                {
+                    return;
+                }
+
+                for (ExpData d : inputMap.keySet())
+                {
+                    if (!"Input VCF".equals(inputMap.get(d)))
+                    {
+                        continue;
+                    }
+
+                    if (d.getFile() == null || !d.getFile().exists())
+                    {
+                        continue;
+                    }
+
+                    if (vcfFile.getFile().getAbsoluteFile().equals(d.getFile().getAbsoluteFile()))
+                    {
+                        File fieldsFile = new File(d.getFile().getParentFile(), "fieldList.txt");
+                        if (!fieldsFile.exists())
+                        {
+                            continue;
+                        }
+
+                        List<String> fields = new ArrayList<>();
+                        try (BufferedReader reader = Readers.getReader(fieldsFile))
+                        {
+                            String line;
+                            while ((line = reader.readLine()) != null)
+                            {
+                                line = StringUtils.trimToNull(line);
+                                if (line != null)
+                                {
+                                    fields.add(line);
+                                }
+                            }
+                        }
+                        catch (IOException e)
+                        {
+                            if (log != null)
+                            {
+                                log.error("Unable to read fieldList.txt for: " + d.getFile().getPath(), e);
+                                continue;
+                            }
+                        }
+
+                        if (!infoFieldsToIndex.equals(fields))
+                        {
+                            if (log != null)
+                            {
+                                log.info("Partial index match found, but fields to index do not match: " + d.getFile().getPath());
+                            }
+                            continue;
+                        }
+
+                        if (log != null)
+                        {
+                            log.debug("Identified pre-existing lucene index: " + so.getFile().getPath());
+                        }
+
+                        idxDir.set(so);
+                        break;
+                    }
+                }
+            });
+
+            return idxDir.get();
+        }
+
+        @Override
+        public boolean isAvailable(Container c)
+        {
+            return c.getActiveModules().contains(ModuleLoader.getInstance().getModule(JBrowseModule.class));
+        }
     }
 }

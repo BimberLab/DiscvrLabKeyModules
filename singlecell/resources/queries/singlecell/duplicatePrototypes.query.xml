@@ -8,10 +8,10 @@
                         <columnTitle>Readset Id</columnTitle>
                     </column>
                     <column columnName="minRowId">
-                        <columnTitle>Row Id</columnTitle>
+                        <columnTitle>First Row Id</columnTitle>
                     </column>
                     <column columnName="minAnalysisId">
-                        <columnTitle>Analysis Id</columnTitle>
+                        <columnTitle>First Analysis Id</columnTitle>
                     </column>
                     <column columnName="totalPrototypes">
                         <columnTitle>Total Prototypes</columnTitle>

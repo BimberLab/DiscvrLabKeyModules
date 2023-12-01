@@ -282,7 +282,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             seuratThreads = getProvider().getParameterByName(SEURAT_THREADS).extractValue(ctx.getJob(), getProvider(), getStepIdx(), Integer.class, null);
         }
 
-        executeR(ctx, getDockerContainerName(), outputPrefix, lines, seuratThreads);
+        executeR(ctx, getDockerContainerName(), outputPrefix, lines, seuratThreads, getDockerHomeDir());
 
         handlePossibleFailure(ctx, outputPrefix);
     }
@@ -294,7 +294,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         }}, null);
     }
 
-    public static void executeR(SequenceOutputHandler.JobContext ctx, String dockerContainerName, String outputPrefix, List<String> lines, @Nullable Integer seuratThreads) throws PipelineJobException
+    public static void executeR(SequenceOutputHandler.JobContext ctx, String dockerContainerName, String outputPrefix, List<String> lines, @Nullable Integer seuratThreads, @Nullable String dockerHomeDir) throws PipelineJobException
     {
         File localRScript = new File(ctx.getOutputDir(), FileUtil.makeLegalName(outputPrefix + ".R").replaceAll(" ", "_"));
         try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
@@ -349,6 +349,10 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-e TMPDIR=/tmp \\");
+            if (dockerHomeDir != null)
+            {
+                writer.println("\t-e HOME=" + dockerHomeDir + " \\");
+            }
             writer.println("\t-w /work \\");
             //NOTE: this seems to disrupt packages installed into home
             //writer.println("\t-e HOME=/homeDir \\");
@@ -369,6 +373,11 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
         localRScript.delete();
         localBashScript.delete();
+    }
+
+    public String getDockerHomeDir()
+    {
+        return null;
     }
 
     protected void addParameterVariables(SeuratToolParameter pd, List<String> body)

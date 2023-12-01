@@ -286,7 +286,8 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                 {
                     try
                     {
-                        j.prepareResource(log, false, true);
+                        User u = LDKService.get().getBackgroundAdminUser();
+                        j.prepareResource(u, log, false, true);
                     }
                     catch (Exception e)
                     {

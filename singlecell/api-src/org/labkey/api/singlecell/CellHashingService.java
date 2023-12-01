@@ -64,6 +64,8 @@ abstract public class CellHashingService
 
     abstract public void processMetrics(SequenceOutputFile so, PipelineJob job, boolean updateDescription) throws PipelineJobException;
 
+    abstract public File getMetricsFile(File callFile);
+
     /**
      * Using the sample metadata, return whether cell hashing is used.
      * NOTE: if readset ID is null, this will be interpreted as whether any readset in the input data uses hashing
@@ -92,6 +94,7 @@ abstract public class CellHashingService
         public boolean createOutputFiles = true;
         public @Nullable String outputCategory;
         public boolean retainRawCountFile = false;
+        public boolean failIfUnexpectedHtosFound = true;
 
         public Readset htoReadset;
         public Readset parentReadset;
@@ -124,6 +127,7 @@ abstract public class CellHashingService
             ret.callerDisagreementThreshold = step.getProvider().getParameterByName("callerDisagreementThreshold").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Double.class, null);
             ret.doTSNE = step.getProvider().getParameterByName("doTSNE").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, null);
             ret.retainRawCountFile = step.getProvider().getParameterByName("retainRawCountFile").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, true);
+            ret.failIfUnexpectedHtosFound = step.getProvider().getParameterByName("failIfUnexpectedHtosFound").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, true);
             ret.htoReadset = htoReadset;
             ret.parentReadset = parentReadset;
             ret.htoBarcodesFile = new File(ctx.getSourceDirectory(), type.getAllBarcodeFileName());
@@ -165,6 +169,7 @@ abstract public class CellHashingService
             ret.callerDisagreementThreshold = params.get("callerDisagreementThreshold") == null ? null : params.getDouble("callerDisagreementThreshold");
             ret.doTSNE = params.get("doTSNE") == null || params.getBoolean("doTSNE");
             ret.retainRawCountFile = params.optBoolean("retainRawCountFile", true);
+            ret.failIfUnexpectedHtosFound = params.optBoolean("failIfUnexpectedHtosFound", true);
             ret.htoReadset = htoReadset;
             ret.parentReadset = parentReadset;
             ret.htoBarcodesFile = new File(webserverDir, type.getAllBarcodeFileName());
@@ -280,6 +285,7 @@ abstract public class CellHashingService
             {
                 return Collections.unmodifiableSet(allowableHtoBarcodes);
             }
+
             if (htoBarcodesFile == null)
             {
                 throw new IllegalArgumentException("Barcode file was null");

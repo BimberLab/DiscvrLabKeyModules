@@ -27,6 +27,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
+import org.labkey.api.jbrowse.JBrowseService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
@@ -51,12 +52,14 @@ import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.jbrowse.JBrowseManager;
 import org.labkey.jbrowse.JBrowseSchema;
+import org.labkey.jbrowse.pipeline.IndexVariantsStep;
 import org.labkey.jbrowse.pipeline.JBrowseLucenePipelineJob;
 import org.labkey.sequenceanalysis.run.util.TabixRunner;
 
 import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -297,7 +300,7 @@ public class JsonFile
         }
         else if (TRACK_TYPES.gff.getFileType().isType(targetFile.getFile()))
         {
-            ret = getGxfTrack(log, targetFile, rg);
+            ret = getGxfTrack(u, log, targetFile, rg);
         }
         else if (TRACK_TYPES.gtf.getFileType().isType(targetFile.getFile()))
         {
@@ -308,7 +311,7 @@ public class JsonFile
         }
         else if (TRACK_TYPES.bed.getFileType().isType(targetFile.getFile()))
         {
-            ret = getBedTrack(log, targetFile, rg);
+            ret = getBedTrack(u, log, targetFile, rg);
         }
         else if (TRACK_TYPES.bw.getFileType().isType(targetFile.getFile()))
         {
@@ -643,12 +646,12 @@ public class JsonFile
         return ret;
     }
 
-    private JSONObject getBedTrack(Logger log, ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
+    private JSONObject getBedTrack(User u, Logger log, ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
     {
         String adapterType = "BedTabixAdapter";
         String prefix = "bed";
 
-        return getTabixTrack(log, targetFile, rg, adapterType, prefix);
+        return getTabixTrack(u, log, targetFile, rg, adapterType, prefix);
     }
 
     private JSONObject getBigWigTrack(Logger log, ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
@@ -682,12 +685,12 @@ public class JsonFile
         return ret;
     }
 
-    private JSONObject getGxfTrack(Logger log, ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
+    private JSONObject getGxfTrack(User u, Logger log, ExpData targetFile, ReferenceGenome rg) throws PipelineJobException
     {
         String adapterType = TRACK_TYPES.gff.getFileType().isType(targetFile.getFile()) ? "Gff3TabixAdapter" : "GtfTabixAdapter";
         String prefix = TRACK_TYPES.gff.getFileType().isType(targetFile.getFile()) ? "gff" : "gtf";
 
-        return getTabixTrack(log, targetFile, rg, adapterType, prefix);
+        return getTabixTrack(u, log, targetFile, rg, adapterType, prefix);
     }
 
     public String getTrackType()
@@ -729,7 +732,7 @@ public class JsonFile
         }
     }
 
-    private JSONObject getTabixTrack(Logger log, ExpData targetFile, ReferenceGenome rg, String adapterType, String prefix) throws PipelineJobException
+    private JSONObject getTabixTrack(User u, Logger log, ExpData targetFile, ReferenceGenome rg, String adapterType, String prefix) throws PipelineJobException
     {
         JSONObject ret = new JSONObject();
         ret.put("type", getTrackType());
@@ -743,7 +746,7 @@ public class JsonFile
         }});
 
         // if not gzipped, we need to process it:
-        File gzipped = prepareResource(log, true, false);
+        File gzipped = prepareResource(u, log, true, false);
         final String url;
         if (!getExpData().getFile().equals(gzipped))
         {
@@ -809,7 +812,7 @@ public class JsonFile
         return !isGzipped() && (TRACK_TYPES.gff.getFileType().isType(fn) || TRACK_TYPES.gtf.getFileType().isType(fn) || TRACK_TYPES.bed.getFileType().isType(fn));
     }
 
-    public File prepareResource(Logger log, boolean throwIfNotPrepared, boolean forceReprocess) throws PipelineJobException
+    public File prepareResource(User u, Logger log, boolean throwIfNotPrepared, boolean forceReprocess) throws PipelineJobException
     {
         ExpData expData = getExpData();
         if (expData == null)
@@ -939,6 +942,18 @@ public class JsonFile
 
         if (shouldHaveFreeTextSearch())
         {
+            // Try to find a matching existing index. Note: restrict to the same workbook as parent file, if present:
+            File existingLuceneDir = null;
+            if (getOutputFile() != null)
+            {
+                SequenceOutputFile so = SequenceOutputFile.getForId(getOutputFile());
+                SequenceOutputFile existingLuceneOutput = JBrowseService.get().findMatchingLuceneIndex(so, getInfoFieldsToIndex(), u, log);
+                if (existingLuceneOutput != null)
+                {
+                    existingLuceneDir = existingLuceneOutput.getFile().getParentFile();
+                }
+            }
+
             File luceneDir = getExpectedLocationOfLuceneIndex(throwIfNotPrepared);
             long sizeInGb = targetFile.length() / (1024 * 1024 * 1024);
             log.debug("preparing lucene index, VCF size: " + sizeInGb);
@@ -946,6 +961,18 @@ public class JsonFile
             if (!forceReprocess && doesLuceneIndexExist())
             {
                 log.debug("Existing lucene index found, will not re-create: " + luceneDir.getPath());
+            }
+            else if (existingLuceneDir != null && existingLuceneDir.exists())
+            {
+                log.debug("Creating symlink to existing index: " + existingLuceneDir.getPath());
+                try
+                {
+                    Files.createSymbolicLink(existingLuceneDir.toPath(), existingLuceneDir.toPath());
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
             }
             else if (sizeInGb > 50)
             {
