@@ -4,14 +4,14 @@ Ext4.define('SequenceAnalysis.field.SequenceOutputFileSelectorField', {
 
     genomeId: -1,
     performGenomeFilter: true,
+    valueField: 'dataid',
 
     initComponent: function(){
         Ext4.apply(this, {
             forceSelection: true,
             displayField: 'name',
-            valueField: 'dataid',
             listConfig: {
-                innerTpl: ['{name} ({[values["rowid"]]})']
+                innerTpl: ['{name} ({[values["' + this.valueField + '"]]})']
             },
             store: {
                 type: 'labkey-store',
@@ -21,7 +21,7 @@ Ext4.define('SequenceAnalysis.field.SequenceOutputFileSelectorField', {
                 autoLoad: true,
                 filterArray: this.getFilterArray(),
                 sort: 'name',
-                columns: 'library_id,name,dataid,category'
+                columns: 'rowid,library_id,name,dataid,category'
             }
         });
 

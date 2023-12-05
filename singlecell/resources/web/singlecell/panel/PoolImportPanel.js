@@ -54,7 +54,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         transform: 'stim'
     },{
         name: 'assaytype',
-        labels: ['Assay Type', 'Assay Type', 'Assay'],
+        labels: ['Assay Type', 'Assay Type', 'Assay', 'treatment'],
         allowRowSpan: false,
         allowBlank: false,
         transform: 'assaytype'

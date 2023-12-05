@@ -8,7 +8,7 @@ Rdiscvr::SetLabKeyDefaults(baseUrl = serverBaseUrl, defaultFolder = defaultLabKe
 
 for (datasetId in names(seuratObjects)) {
   printName(datasetId)
-  seuratObj <- readRDS(seuratObjects[[datasetId]])
+  seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
   for (genomeId in names(nimbleGenomes)) {
     seuratObj <- Rdiscvr::DownloadAndAppendNimble(seuratObject = seuratObj, allowableGenomes = genomeId, targetAssayName = nimbleGenomes[[genomeId]], enforceUniqueFeatureNames = TRUE, dropAmbiguousFeatures = !retainAmbiguousFeatures)

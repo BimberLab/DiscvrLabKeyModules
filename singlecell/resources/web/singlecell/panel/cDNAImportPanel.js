@@ -222,6 +222,7 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
         Ext4.Msg.wait('Loading workbooks');
         LABKEY.Query.selectRows({
             containerPath: Laboratory.Utils.getQueryContainerPath(),
+            method: 'POST',
             schemaName: 'core',
             queryName: 'workbooks',
             columns: 'Name,EntityId',
@@ -273,6 +274,7 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
         Ext4.Msg.wait('Looking for matching cDNA');
         LABKEY.Query.selectRows({
             containerPath: Laboratory.Utils.getQueryContainerPath(),
+            method: 'POST',
             schemaName: 'singlecell',
             queryName: 'cdna_libraries',
             columns: 'rowid,plateid,readsetId,tcrReadsetId,hashingReadsetId,citeseqReadsetId',
