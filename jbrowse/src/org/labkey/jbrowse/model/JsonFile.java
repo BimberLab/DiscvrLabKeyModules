@@ -980,7 +980,7 @@ public class JsonFile
                 log.debug("Creating symlink to existing index: " + existingLuceneDir.getPath());
                 try
                 {
-                    Files.createSymbolicLink(existingLuceneDir.toPath(), luceneDir.toPath());
+                    Files.createSymbolicLink(luceneDir.toPath(), existingLuceneDir.toPath());
                 }
                 catch (IOException e)
                 {
