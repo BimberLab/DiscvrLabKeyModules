@@ -964,10 +964,23 @@ public class JsonFile
             }
             else if (existingLuceneDir != null && existingLuceneDir.exists())
             {
+                if (doesLuceneIndexExist())
+                {
+                    log.info("Deleting existing lucene index dir: " + luceneDir.getPath());
+                    try
+                    {
+                        FileUtils.deleteDirectory(luceneDir);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+
                 log.debug("Creating symlink to existing index: " + existingLuceneDir.getPath());
                 try
                 {
-                    Files.createSymbolicLink(existingLuceneDir.toPath(), existingLuceneDir.toPath());
+                    Files.createSymbolicLink(existingLuceneDir.toPath(), luceneDir.toPath());
                 }
                 catch (IOException e)
                 {
