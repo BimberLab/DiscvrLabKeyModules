@@ -964,7 +964,8 @@ public class JsonFile
             }
             else if (existingLuceneDir != null && existingLuceneDir.exists())
             {
-                if (doesLuceneIndexExist())
+                // Note: this could exist, but be an empty folder:
+                if (luceneDir.exists())
                 {
                     log.info("Deleting existing lucene index dir: " + luceneDir.getPath());
                     try
@@ -978,8 +979,16 @@ public class JsonFile
                 }
 
                 log.debug("Creating symlink to existing index: " + existingLuceneDir.getPath());
+                log.debug("Symlink target: " + luceneDir.getPath());
+
                 try
                 {
+                    if (!luceneDir.getParentFile().exists())
+                    {
+                        log.debug("Creating parent directories: " + luceneDir.getParentFile().getPath());
+                        FileUtil.mkdirs(luceneDir.getParentFile());
+                    }
+
                     Files.createSymbolicLink(luceneDir.toPath(), existingLuceneDir.toPath());
                 }
                 catch (IOException e)
