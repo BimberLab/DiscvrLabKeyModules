@@ -105,7 +105,7 @@ public class JBrowseLuceneSearch
             //special case for urls containing +; this isn't necessary for strings sent from the client-side, but URLs
             //sent via unit tests autodecode, and strings containing + rather than the URL-encoded symbol are unsafe
             //to pass through URLDecoded.decode
-            if(input.contains("+")) {
+            if (input.contains("+")) {
                 return input;
             }
 
@@ -202,7 +202,7 @@ public class JBrowseLuceneSearch
                 {
                     query = queryParser.parse(queryString);
                 }
-                else if(numericQueryParserFields.contains(fieldName))
+                else if (numericQueryParserFields.contains(fieldName))
                 {
                     try
                     {
@@ -212,7 +212,8 @@ public class JBrowseLuceneSearch
                     {
                         e.printStackTrace();
                     }
-                } else
+                }
+                else
                 {
                     throw new IllegalArgumentException("No such field(s), or malformed query.");
                 }
