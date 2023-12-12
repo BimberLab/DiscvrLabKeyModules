@@ -1,10 +1,9 @@
 package org.labkey.singlecell.run;
 
+import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.sequenceanalysis.SequenceOutputFile;
-import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
@@ -17,8 +16,8 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.PageFlowUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -72,6 +71,20 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
     {
         AlignmentOutputImpl output = new AlignmentOutputImpl();
         File localBam = runCellRanger(output, rs, inputFastqs1, inputFastqs2, outputDirectory, referenceGenome, basename, readGroupId, platformUnit);
+
+        File crDir = new File(localBam.getPath().replace(".nimble.cellranger.bam", ""));
+        if (crDir.exists())
+        {
+            getPipelineCtx().getLogger().debug("Deleting CR output dir: " + crDir.getPath());
+            try
+            {
+                FileUtils.deleteDirectory(crDir);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException();
+            }
+        }
 
         // Now run nimble itself:
         NimbleHelper helper = new NimbleHelper(getPipelineCtx(), getProvider(), getStepIdx());

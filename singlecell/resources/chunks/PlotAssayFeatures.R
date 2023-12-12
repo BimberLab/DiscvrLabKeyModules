@@ -1,6 +1,6 @@
 for (datasetId in names(seuratObjects)) {
     printName(datasetId)
-    seuratObj <- readRDS(seuratObjects[[datasetId]])
+    seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
     for (assayName in assayNames) {
         print(paste0('Processing assay: ', assayName))

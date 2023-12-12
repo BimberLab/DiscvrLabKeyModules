@@ -2,7 +2,7 @@ metricData <- data.frame(dataId = integer(), readsetId = integer(), metricname =
 
 for (datasetId in names(seuratObjects)) {
   printName(datasetId)
-  seuratObj <- readRDS(seuratObjects[[datasetId]])
+  seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
   metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'TotalCells', metricvalue = ncol(seuratObj)))
 
   if (length(unique(seuratObj$DatasetId)) > 1) {

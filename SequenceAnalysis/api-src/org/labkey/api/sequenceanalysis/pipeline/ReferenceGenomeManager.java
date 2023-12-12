@@ -105,7 +105,7 @@ public class ReferenceGenomeManager
         File localCacheDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
         if (isUpToDate(genome))
         {
-            log.debug("Genome up-to-date, will not repeat rsync");
+            log.debug("Genome up-to-date, will not repeat rsync: " + genome.getGenomeId());
             genome.setWorkingFasta(new File(new File(localCacheDir, genome.getGenomeId().toString()), genome.getSourceFastaFile().getName()));
 
             return;

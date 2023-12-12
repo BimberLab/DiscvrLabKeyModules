@@ -135,7 +135,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
         getJob().getLogger().info("total files to reprocess: " + jsonFiles.size());
         for (JsonFile f : jsonFiles)
         {
-            f.prepareResource(getJob().getLogger(), false, forceReprocess);
+            f.prepareResource(getJob().getUser(), getJob().getLogger(), false, forceReprocess);
         }
     }
 
@@ -152,7 +152,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
         getJob().getLogger().info("total files to reprocess: " + jsonFiles.size());
         for (JsonFile f : jsonFiles)
         {
-            f.prepareResource(getJob().getLogger(), false, true);
+            f.prepareResource(getJob().getUser(), getJob().getLogger(), false, true);
         }
     }
 
@@ -257,7 +257,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                     trackRecord = Table.insert(getJob().getUser(), databaseMembers, trackRecord);
                     databaseMemberRecordsCreated.add((Integer)trackRecord.get("rowid"));
 
-                    json.prepareResource(getJob().getLogger(), false, false);
+                    json.prepareResource(getJob().getUser(), getJob().getLogger(), false, false);
                 }
             }
             else
@@ -308,7 +308,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                     trackRecord = Table.insert(getJob().getUser(), databaseMembers, trackRecord);
                     databaseMemberRecordsCreated.add((Integer) trackRecord.get("rowid"));
 
-                    json.prepareResource(getJob().getLogger(), false, false);
+                    json.prepareResource(getJob().getUser(), getJob().getLogger(), false, false);
                 }
             }
 

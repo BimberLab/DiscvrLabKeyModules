@@ -1,7 +1,7 @@
 totalPassed <- 0
 for (datasetId in names(seuratObjects)) {
   printName(datasetId)
-  seuratObj <- readRDS(seuratObjects[[datasetId]])
+  seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
   cellsToKeep <- colnames(seuratObj)
   if (!all(is.null(cellbarcodesToDrop))) {

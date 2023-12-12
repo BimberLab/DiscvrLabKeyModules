@@ -8,7 +8,7 @@ Rdiscvr::SetLabKeyDefaults(baseUrl = serverBaseUrl, defaultFolder = defaultLabKe
 
 for (datasetId in names(seuratObjects)) {
     printName(datasetId)
-    seuratObj <- readRDS(seuratObjects[[datasetId]])
+    seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
     message('Processing entire dataset')
     seuratObj <- Rdiscvr::RunCoNGA(seuratObj, organism = organism, assayName = assayName, congaMetadataPrefix = paste0(congaMetadataPrefix, '.'), runCongaOutputFilePrefix = 'conga_output', pngConversionTool = pngConversionTool)
