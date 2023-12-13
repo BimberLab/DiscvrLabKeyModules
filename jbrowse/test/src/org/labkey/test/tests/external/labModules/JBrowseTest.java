@@ -107,7 +107,6 @@ public class JBrowseTest extends BaseWebDriverTest
         testVariantTableComparators();
 
         testOutputFileProcessing();
-
         testFullTextSearch();
     }
 
@@ -1525,24 +1524,17 @@ public class JBrowseTest extends BaseWebDriverTest
 
         openTrackMenuItem("Variant Search", true);
 
-        // Now test UI:
-        waitForElement(Locator.tagWithText("span", "0.029"));
-
+        // VariableSamples in set !TestGroup!
         waitAndClick(Locator.tagWithText("button", "Search"));
         waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
-        waitForElement(Locator.tagWithText("li", "Ref Allele")).click();
-
+        waitForElement(Locator.tagWithText("li", "Samples With Variant")).click();
         waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
-        waitForElement(Locator.tagWithText("li", "equals")).click();
-
-        waitForElement(Locator.tagWithClass("input", "MuiInputBase-inputSizeSmall")).sendKeys("C");
-
+        waitForElement(Locator.tagWithText("li", "in set")).click();
+        waitForElement(Locator.tagWithId("div", "value-select-0")).click();
+        waitForElement(Locator.tagWithText("li", "!TestGroup!")).click();
         waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
-
-        // indicates row is filtered:
-        waitForElementToDisappear(Locator.tagWithText("span", "2"));
-
-        clearFilterDialog("ref equals C");
+        waitForElementToDisappear(Locator.tagWithText("span", "173"));
+        clearFilterDialog("variableSamples in set !TestGroup!");
 
         // VariableSamples variable in m000001
         waitAndClick(Locator.tagWithText("button", "Search"));
@@ -1554,8 +1546,19 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys(Keys.ENTER);
         waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
         waitForElement(Locator.tagWithText("span", "0.553"));
-
         clearFilterDialog("variableSamples variable in m00001");
+
+        // VariableSamples not variable in m05710
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Samples With Variant")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "not variable in")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("m05710");
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys(Keys.ENTER);
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElementToDisappear(Locator.tagWithText("span", "3.277E-4"));
+        clearFilterDialog("variableSamples not variable in m05710");
 
         // VariableSamples li usage + variable in all of
         waitAndClick(Locator.tagWithText("button", "Search"));
@@ -1569,21 +1572,49 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("div", "m00004")).click();
         waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
         waitForElement(Locator.tagWithText("span", "0.3"));
-
         clearFilterDialog("variableSamples variable in all of m00005,m00004");
 
-        // VariableSamples not variable in m05710
+        // VariableSamples variable in any of m00004,m00007
         waitAndClick(Locator.tagWithText("button", "Search"));
         waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
         waitForElement(Locator.tagWithText("li", "Samples With Variant")).click();
         waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
-        waitForElement(Locator.tagWithText("li", "not variable in")).click();
-        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("m05710");
-        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys(Keys.ENTER);
+        waitForElement(Locator.tagWithText("li", "variable in any of")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("m000");
+        waitForElement(Locator.tagWithText("div", "m00004")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("m000");
+        waitForElement(Locator.tagWithText("div", "m00007")).click();
         waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
-        waitForElementToDisappear(Locator.tagWithText("span", "3.277E-4"));
+        waitForElement(Locator.tagWithText("span", "2"));
+        clearFilterDialog("variableSamples variable in any of m00004,m00007");
 
-        clearFilterDialog("variableSamples not variable in m05710");
+        // VariableSamples not variable in any of m00005,m00004
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Samples With Variant")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "not variable in any of")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("m000");
+        waitForElement(Locator.tagWithText("div", "m00005")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("m000");
+        waitForElement(Locator.tagWithText("div", "m00004")).click();
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElementToDisappear(Locator.tagWithText("span", "2"));
+        clearFilterDialog("variableSamples not variable in any of m00005,m00004");
+
+        // VariableSamples not variable in one of m03660,m00001
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Samples With Variant")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "not variable in one of")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("m036");
+        waitForElement(Locator.tagWithText("div", "m03660")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("m000");
+        waitForElement(Locator.tagWithText("div", "m00001")).click();
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElementToDisappear(Locator.tagWithText("span", "609"));
+        clearFilterDialog("variableSamples not variable in one of m03660,m00001");
 
         // samples with variant isEmpty
         waitAndClick(Locator.tagWithText("button", "Search"));
@@ -1593,7 +1624,177 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("li", "is empty")).click();
         waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
         waitForElementToDisappear(Locator.tagWithText("span", "2"));
-
         clearFilterDialog("variableSamples is empty");
+
+        // Start = 2
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Start")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "=")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("2");
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElementToDisappear(Locator.tagWithText("span", "4"));
+        clearFilterDialog("start = 2");
+
+        // Start != 2
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Start")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "!=")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("2");
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElementToDisappear(Locator.tagWithText("span", "2"));
+        clearFilterDialog("start != 2");
+
+        // Start < 173
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Start")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "<")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("173");
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElementToDisappear(Locator.tagWithText("span", "173"));
+        clearFilterDialog("start < 173");
+
+        // Start > 502
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Start")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", ">")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("502");
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElementToDisappear(Locator.tagWithText("span", "502"));
+        clearFilterDialog("start > 502");
+
+        // Start <= 440
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Start")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "<=")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("440");
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElementToDisappear(Locator.tagWithText("span", "502"));
+        clearFilterDialog("start <= 440");
+
+        // Start >= 609
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Start")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", ">=")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("609");
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElementToDisappear(Locator.tagWithText("span", "2"));
+        clearFilterDialog("start >= 609");
+
+        // Ref Allele equals GAAAA
+        waitForElement(Locator.tagWithText("span", "0.029"));
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Ref Allele")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "equals")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("GAAAA");
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElement(Locator.tagWithText("span", "4506"));
+        clearFilterDialog("ref equals GAAAA");
+
+        // Impact equals HIGH
+        waitForElement(Locator.tagWithText("span", "0.029"));
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Impact on Protein Coding")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "equals")).click();
+        waitForElement(Locator.tagWithId("div", "value-select-0")).click();
+        waitForElement(Locator.tagWithText("li", "HIGH")).click();
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElementToDisappear(Locator.tagWithText("span", "4"));
+        clearFilterDialog("IMPACT equals HIGH");
+
+        // Ref Allele does not equal A
+        waitForElement(Locator.tagWithText("span", "0.029"));
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Ref Allele")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "does not equal")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("A");
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElement(Locator.tagWithText("span", "858"));
+        clearFilterDialog("ref does not equal A");
+
+        // Alt Allele contains TT
+        waitForElement(Locator.tagWithText("span", "0.029"));
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Alt Allele")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "contains")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("TT");
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElement(Locator.tagWithText("span", "22559"));
+        clearFilterDialog("alt contains TT");
+
+        // Alt Allele does not contain T
+        waitForElement(Locator.tagWithText("span", "0.029"));
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Alt Allele")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "does not contain")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("T");
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElementToDisappear(Locator.tagWithText("span", "2"));
+        clearFilterDialog("alt does not contain T");
+
+        // Ref Allele starts with GA
+        waitForElement(Locator.tagWithText("span", "0.029"));
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Ref Allele")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "starts with")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("GA");
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElement(Locator.tagWithText("span", "14716"));
+        clearFilterDialog("ref starts with GA");
+
+        // Ref Allele ends with AAA
+        waitForElement(Locator.tagWithText("span", "0.029"));
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Ref Allele")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "ends with")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("AAA");
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElement(Locator.tagWithText("span", "4506"));
+        clearFilterDialog("ref ends with AAA");
+
+        // Alt Allele is empty
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Alt Allele")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "is empty")).click();
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElement(Locator.tagWithText("span", "18235"));
+        clearFilterDialog("alt is empty");
+
+        // IMPACT is not empty
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Impact on Protein Coding")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "is not empty")).click();
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElement(Locator.tagWithText("span", "914"));
+        clearFilterDialog("IMPACT is not empty");
     }
 }
