@@ -60,6 +60,7 @@ public class JBrowseLuceneSearch
     private final JBrowseSession _session;
     private final JsonFile _jsonFile;
     private final User _user;
+    private final String[] specialStartPatterns = {"*:* -", "+", "-"};
 
     private JBrowseLuceneSearch(final JBrowseSession session, final JsonFile jsonFile, User u)
     {
@@ -116,9 +117,6 @@ public class JBrowseLuceneSearch
     }
 
     public String extractFieldName(String queryString) {
-        // Handle all query cases where the searchString doesn't begin with the fieldname
-        String[] specialStartPatterns = {"*:* -", "+", "-"};
-
         // Check if the query starts with any of the start patterns
         for (String pattern : specialStartPatterns) {
             if (queryString.startsWith(pattern)) {
@@ -129,7 +127,7 @@ public class JBrowseLuceneSearch
 
         // Split the remaining string by ':' and return the first part (field name)
         String[] parts = queryString.split(":", 2);
-        return parts.length > 0 ? parts[0].trim() : "";
+        return parts.length > 0 ? parts[0].trim() : null;
     }
 
     public JSONObject doSearch(User u, String searchString, final int pageSize, final int offset) throws IOException, ParseException
