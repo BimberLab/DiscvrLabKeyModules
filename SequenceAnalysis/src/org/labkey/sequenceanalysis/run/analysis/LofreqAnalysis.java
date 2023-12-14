@@ -94,7 +94,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 {
     public static final String CATEGORY = "Lowfreq VCF";
 
-    public LofreqAnalysis(PipelineStepProvider provider, PipelineContext ctx)
+    public LofreqAnalysis(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new LofreqWrapper(ctx.getLogger()));
     }
@@ -108,7 +108,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                     {{
                         put("extensions", Arrays.asList("gtf", "gff", "gbk"));
                         put("width", 400);
-                        put("allowBlank", false);
+                        put("allowBlank", true);
                     }}, null),
                     ToolParameterDescriptor.create("minCoverage", "Min Coverage For Consensus", "If provided, a consensus will only be called over regions with at least this depth", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
@@ -212,7 +212,6 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         File outputVcfRaw = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.vcf.gz");
         File outputVcfFiltered = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.filtered.vcf.gz");
-        File outputVcfSnpEff = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.snpeff.vcf.gz");
 
         //LoFreq call
         getWrapper().execute(inputBam, outputVcfRaw, referenceGenome.getWorkingFastaFile(), SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger()));
@@ -221,6 +220,9 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         getWrapper().executeFilter(outputVcfRaw, outputVcfFiltered);
         output.addIntermediateFile(outputVcfRaw);
         output.addIntermediateFile(new File(outputVcfRaw.getPath() + ".tbi"));
+
+        output.addIntermediateFile(outputVcfFiltered);
+        output.addIntermediateFile(new File(outputVcfFiltered.getPath() + ".tbi"));
 
         //Add depth for downstream use:
         File coverageOut = new File(outputDir, SequenceAnalysisService.get().getUnzippedBaseName(outputVcfRaw.getName()) + ".coverage");
@@ -438,23 +440,34 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         }
 
         //SnpEff:
+        File activeVCF = outputVcfFiltered;
         Integer geneFileId = getProvider().getParameterByName(SNPEffStep.GENE_PARAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
-        File snpEffBaseDir = SNPEffStep.checkOrCreateIndex(getPipelineCtx().getSequenceSupport(), getPipelineCtx().getLogger(), referenceGenome, geneFileId);
-
-        SnpEffWrapper snpEffWrapper = new SnpEffWrapper(getPipelineCtx().getLogger());
-        snpEffWrapper.runSnpEff(referenceGenome.getGenomeId(), geneFileId, snpEffBaseDir, outputVcfFiltered, outputVcfSnpEff, null);
-
-        try
+        if (geneFileId != null)
         {
-            SequenceAnalysisService.get().ensureVcfIndex(outputVcfSnpEff, getPipelineCtx().getLogger());
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
+            File outputVcfSnpEff = new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.snpeff.vcf.gz");
 
-        output.addIntermediateFile(outputVcfFiltered);
-        output.addIntermediateFile(new File(outputVcfFiltered.getPath() + ".tbi"));
+            File snpEffBaseDir = SNPEffStep.checkOrCreateIndex(getPipelineCtx().getSequenceSupport(), getPipelineCtx().getLogger(), referenceGenome, geneFileId);
+            SnpEffWrapper snpEffWrapper = new SnpEffWrapper(getPipelineCtx().getLogger());
+            snpEffWrapper.runSnpEff(referenceGenome.getGenomeId(), geneFileId, snpEffBaseDir, outputVcfFiltered, outputVcfSnpEff, null);
+
+            try
+            {
+                SequenceAnalysisService.get().ensureVcfIndex(outputVcfSnpEff, getPipelineCtx().getLogger());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            output.addIntermediateFile(outputVcfSnpEff);
+            output.addIntermediateFile(new File(outputVcfSnpEff.getPath() + ".tbi"));
+
+            activeVCF = outputVcfSnpEff;
+        }
+        else
+        {
+            getPipelineCtx().getLogger().info("No GTF provided, skipping SnpEff");
+        }
 
         double minFractionForConsensus = getProvider().getParameterByName("minFractionForConsensus").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
 
@@ -508,7 +521,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(referenceGenome.getSequenceDictionary().toPath());
         VariantContextWriterBuilder writerBuilderConsensus = new VariantContextWriterBuilder().setOutputFile(loFreqConsensusVcf).setReferenceDictionary(dict);
         VariantContextWriterBuilder writerBuilderAll = new VariantContextWriterBuilder().setOutputFile(loFreqAllVcf).setReferenceDictionary(dict);
-        try (VCFFileReader reader = new VCFFileReader(outputVcfSnpEff);CloseableIterator<VariantContext> it = reader.iterator();VariantContextWriter writerConsensus = writerBuilderConsensus.build();VariantContextWriter writerAll = writerBuilderAll.build())
+        try (VCFFileReader reader = new VCFFileReader(activeVCF);CloseableIterator<VariantContext> it = reader.iterator();VariantContextWriter writerConsensus = writerBuilderConsensus.build();VariantContextWriter writerAll = writerBuilderAll.build())
         {
             VCFHeader header = reader.getFileHeader();
 
@@ -706,8 +719,6 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             getPipelineCtx().getLogger().warn("Consensus ambiguities from bcftools and lofreq did not match: " + bcfToolsConsensusNs + " / " + lofreqConsensusNs);
         }
 
-        output.addIntermediateFile(outputVcfSnpEff);
-        output.addIntermediateFile(new File(outputVcfSnpEff.getPath() + ".tbi"));
         output.addSequenceOutput(coverageOut, "Depth of Coverage: " + rs.getName(), "Depth of Coverage", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
         output.addSequenceOutput(consensusFastaLoFreq, "Consensus: " + rs.getName(), "Viral Consensus Sequence", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
 
