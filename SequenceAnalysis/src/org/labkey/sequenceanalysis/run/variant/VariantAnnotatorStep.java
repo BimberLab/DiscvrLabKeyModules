@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnnotatorWrapper> implements VariantProcessingStep
 {
-    public VariantAnnotatorStep(PipelineStepProvider provider, PipelineContext ctx)
+    public VariantAnnotatorStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new VariantAnnotatorWrapper(ctx.getLogger()));
     }
