@@ -307,15 +307,18 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     boolean hasMetrics = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), PageFlowUtil.set("RowId"), filter, null).exists();
                     if (!hasMetrics)
                     {
+                        job.getLogger().debug("No existing metrics found for: " + rd.getFileId1());
                         List<Integer> toAdd = new ArrayList<>(rd.getFileId1());
                         if (rd.getFileId2() != null)
                         {
                             toAdd.add(rd.getFileId2());
                         }
 
+                        job.getLogger().debug("adding metrics for " + toAdd.size() + " total fastq files");
                         for (int dataId : toAdd)
                         {
                             //then delete/add:
+                            job.getLogger().debug("adding metrics for: " + dataId);
                             ReadsetCreationTask.addQualityMetricsForReadset(rs, dataId, job, true);
                         }
                     }
@@ -332,15 +335,22 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                 }
             }
 
-            Container target = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
-            TableInfo ti = QueryService.get().getUserSchema(job.getUser(), target, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
-            try
+            if (!rows.isEmpty())
             {
-                ti.getUpdateService().updateRows(job.getUser(), target, rows, rows, null, null);
+                Container target = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
+                TableInfo ti = QueryService.get().getUserSchema(job.getUser(), target, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
+                try
+                {
+                    ti.getUpdateService().updateRows(job.getUser(), target, rows, rows, null, null);
+                }
+                catch (InvalidKeyException | BatchValidationException | QueryUpdateServiceException | SQLException e)
+                {
+                    throw new PipelineJobException(e);
+                }
             }
-            catch (InvalidKeyException | BatchValidationException | QueryUpdateServiceException | SQLException e)
+            else
             {
-                throw new PipelineJobException(e);
+                job.getLogger().debug("There were no readdata rows to update");
             }
         }
 

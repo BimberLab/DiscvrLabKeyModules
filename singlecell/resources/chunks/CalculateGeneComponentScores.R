@@ -2,7 +2,9 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
-    seuratObj <- RIRA::ScoreUsingSavedComponent(seuratObj, componentOrName = savedComponent, fieldName = savedComponent)
+    for (sc in savedComponent) {
+        seuratObj <- RIRA::ScoreUsingSavedComponent(seuratObj, componentOrName = sc, fieldName = sc)
+    }
 
     saveData(seuratObj, datasetId)
 

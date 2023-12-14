@@ -172,7 +172,8 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                 {
                     if (d != null && d.getFile() != null && d.getFile().exists())
                     {
-                        log.error("ReadData marked as archived, but file exists: " + rd.getRowid() + ", " + rd.getFileId1() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
+                        // NOTE: ultimately remove this:
+                        log.info("ReadData marked as archived, but file exists: " + rd.getRowid() + ", " + rd.getFileId1() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
                     }
                 }
             }

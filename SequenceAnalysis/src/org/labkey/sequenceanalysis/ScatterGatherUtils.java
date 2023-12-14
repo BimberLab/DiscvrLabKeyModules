@@ -54,6 +54,17 @@ public class ScatterGatherUtils
                     try
                     {
                         FileUtils.copyFile(inputFile, localCopy);
+                        if (inputFile.getPath().toLowerCase().endsWith("vcf.gz"))
+                        {
+                            File inputFileIdx = new File(inputFile.getPath() + ".tbi");
+                            File localCopyIdx = new File(ScatterGatherUtils.getLocalCopyDir(ctx, true), inputFile.getName() + ".tbi");
+                            if (!inputFileIdx.exists())
+                            {
+                                throw new PipelineJobException("Unable to find file: " + inputFileIdx.getPath());
+                            }
+
+                            FileUtils.copyFile(inputFileIdx, localCopyIdx);
+                        }
                         FileUtils.touch(doneFile);
                     }
                     catch (IOException e)
