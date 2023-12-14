@@ -861,7 +861,7 @@ public class JBrowseController extends SpringActionController
                 if (form.isIncludeDefaultFields())
                 {
                     JBrowseFieldUtils.DEFAULT_FIELDS.forEach((key, val) -> ret.put(key, val.toJSON()));
-                    ret.put(JBrowseFieldUtils.VARIABLE_SAMPLES, JBrowseFieldUtils.getVariableSamplesField(null).toJSON());
+                    JBrowseFieldUtils.getGenotypeDependentFields(null).forEach((key, val) -> ret.put(key, val.toJSON()));
                 }
 
                 for (String key : form.getInfoKeys())
