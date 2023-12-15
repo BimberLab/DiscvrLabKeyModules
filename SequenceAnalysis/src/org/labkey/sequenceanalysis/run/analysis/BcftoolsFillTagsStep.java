@@ -4,6 +4,7 @@ import htsjdk.samtools.util.Interval;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.BcftoolsRunner;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
@@ -18,6 +19,7 @@ import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
 import javax.annotation.Nullable;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -101,12 +103,19 @@ public class BcftoolsFillTagsStep extends AbstractCommandPipelineStep<BcftoolsRu
         options.add("-t");
         options.add(StringUtils.join(annotations, ","));
 
-        options.add("--write-index");
-
         getWrapper().execute(options);
         if (!outputVcf.exists())
         {
             throw new PipelineJobException("output not found: " + outputVcf);
+        }
+
+        try
+        {
+            SequenceAnalysisService.get().ensureVcfIndex(outputVcf, getWrapper().getLogger());
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
         }
 
         output.setVcf(outputVcf);
