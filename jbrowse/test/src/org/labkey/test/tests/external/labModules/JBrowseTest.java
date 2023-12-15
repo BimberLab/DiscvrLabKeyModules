@@ -1506,8 +1506,9 @@ public class JBrowseTest extends BaseWebDriverTest
     }
 
     private void clearFilterDialog(String filter_text) {
-        waitForElement(Locator.tagWithText("button", filter_text)).click();
-        waitForElement(Locator.tagWithText("button", "Remove Filter")).click();
+        waitForTableLoadingToDisappear();
+        waitAndClick(Locator.tagWithText("button", filter_text));
+        waitAndClick(Locator.tagWithText("button", "Remove Filter"));
         waitAndClick(Locator.tagWithText("button", "Search").index(1));
         waitForElement(Locator.tagWithText("span", "2"));
     }
