@@ -103,7 +103,16 @@ public class BcftoolsFillTagsStep extends AbstractCommandPipelineStep<BcftoolsRu
         options.add("-t");
         options.add(StringUtils.join(annotations, ","));
 
-        getWrapper().execute(options);
+        BcftoolsRunner wrapper = getWrapper();
+
+        String bcfPluginDir = StringUtils.trimToNull(System.getenv("BCFTOOLS_PLUGINS"));
+        if (bcfPluginDir != null)
+        {
+            getPipelineCtx().getLogger().debug("Setting BCFTOOLS_PLUGINS environment variable: " + bcfPluginDir);
+            wrapper.addToEnvironment("BCFTOOLS_PLUGINS", bcfPluginDir);
+        }
+
+        wrapper.execute(options);
         if (!outputVcf.exists())
         {
             throw new PipelineJobException("output not found: " + outputVcf);
