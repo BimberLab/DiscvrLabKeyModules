@@ -15,7 +15,6 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
-import org.labkey.sequenceanalysis.run.variant.VariantAnnotatorStep;
 
 import javax.annotation.Nullable;
 import java.io.File;
@@ -31,24 +30,24 @@ public class BcftoolsFillTagsStep extends AbstractCommandPipelineStep<BcftoolsRu
         super(provider, ctx, new BcftoolsRunner(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<VariantAnnotatorStep> implements VariantProcessingStep.RequiresPedigree,  VariantProcessingStep.SupportsScatterGather
+    public static class Provider extends AbstractVariantProcessingStepProvider<BcftoolsFillTagsStep> implements VariantProcessingStep.RequiresPedigree,  VariantProcessingStep.SupportsScatterGather
     {
         public Provider()
         {
             super("BcftoolsFillTagsStep", "Bcftools Fill-tags", "bcftools", "Annotate variants using bcftools fill-tags", Arrays.asList(
                     ToolParameterDescriptor.create("hwe", "HWE", "If selected, HWE will be annotated", "checkbox", new JSONObject(){{
-                        put("checked", false);
-                    }}, null),
+                        put("checked", true);
+                    }}, true),
                     ToolParameterDescriptor.create("exchet", "Excess Het", "If selected, ExcHet will be annotated.", "checkbox", new JSONObject(){{
                         put("checked", true);
-                    }}, null)
+                    }}, true)
             ), null, "");
         }
 
         @Override
-        public VariantAnnotatorStep create(PipelineContext ctx)
+        public BcftoolsFillTagsStep create(PipelineContext ctx)
         {
-            return new VariantAnnotatorStep(this, ctx);
+            return new BcftoolsFillTagsStep(this, ctx);
         }
     }
 
