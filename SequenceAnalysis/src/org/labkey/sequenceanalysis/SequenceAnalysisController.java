@@ -310,7 +310,7 @@ public class SequenceAnalysisController extends SpringActionController
 
             if (files.size() == 0)
             {
-                return new HtmlView("Error: either no files provided or the files did not exist on the server");
+                return HtmlView.of("Error: either no files provided or the files did not exist on the server");
             }
 
             FastqcRunner runner = new FastqcRunner(null);
@@ -325,7 +325,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
             catch (FileNotFoundException e)
             {
-                return new HtmlView("Error: " + e.getMessage());
+                return HtmlView.of("Error: " + e.getMessage());
             }
         }
 
@@ -507,7 +507,7 @@ public class SequenceAnalysisController extends SpringActionController
         {
             setTitle("Find Orphan Sequence Files");
 
-            HtmlView view = new HtmlView("This will start a pipeline job that will inspect all files in this folder to identify potential orphan or otherwise unnecessary files.  Do you want to continue?");
+            HtmlView view = HtmlView.of("This will start a pipeline job that will inspect all files in this folder to identify potential orphan or otherwise unnecessary files.  Do you want to continue?");
             return view;
         }
 
@@ -545,7 +545,7 @@ public class SequenceAnalysisController extends SpringActionController
                 throw new UnauthorizedException("This can only be used from the root container");
             }
 
-            return new HtmlView("This will calculate the sequence length field for any reference NT sequences lacking it.  Do you want to continue?");
+            return HtmlView.of("This will calculate the sequence length field for any reference NT sequences lacking it.  Do you want to continue?");
         }
 
         @Override

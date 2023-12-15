@@ -88,7 +88,7 @@ public class ClusterController extends SpringActionController
         @Override
         public ModelAndView getConfirmView(Object form, BindException errors) throws Exception
         {
-            return new HtmlView("This will run a very simple test pipeline job against all configured cluster engines.  This is designed to help make sure your site's configuration is functional.  Do you want to continue?<br><br>");
+            return HtmlView.of("This will run a very simple test pipeline job against all configured cluster engines.  This is designed to help make sure your site's configuration is functional.  Do you want to continue?<br><br>");
         }
 
         @Override
