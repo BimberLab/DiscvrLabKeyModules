@@ -1506,7 +1506,7 @@ public class JBrowseTest extends BaseWebDriverTest
     }
 
     private void clearFilterDialog(String filter_text) {
-        waitForTableLoadingToDisappear();
+        waitForElementToDisappear(Locator.tagWithClass("div", "MuiBackdrop-root").notHidden());
         waitAndClick(Locator.tagWithText("button", filter_text));
         waitAndClick(Locator.tagWithText("button", "Remove Filter"));
         waitAndClick(Locator.tagWithText("button", "Search").index(1));
