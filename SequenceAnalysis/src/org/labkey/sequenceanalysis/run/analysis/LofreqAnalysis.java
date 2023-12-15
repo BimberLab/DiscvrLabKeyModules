@@ -123,7 +123,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                     }}, false),
                     ToolParameterDescriptor.create("minFractionForTable", "Min Fraction for Table", "If the option to generate a table output is used, only variants with frequency of this threshold will be included", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
-                        put("maxValue", 0);
+                        put("maxValue", 1);
                         put("decimalPrecision", 3);
                     }}, 0.01),
                     ToolParameterDescriptor.createExpDataParam("primerBedFile", "Primer Sites (BED File)", "This is a BED file specifying the primer binding sites, which will be used to flag variants.  Strandedness is ignored.", "ldk-expdatafield", new JSONObject()
@@ -539,7 +539,7 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(referenceGenome.getSequenceDictionary().toPath());
         VariantContextWriterBuilder writerBuilderConsensus = new VariantContextWriterBuilder().setOutputFile(loFreqConsensusVcf).setReferenceDictionary(dict);
         VariantContextWriterBuilder writerBuilderAll = new VariantContextWriterBuilder().setOutputFile(loFreqAllVcf).setReferenceDictionary(dict);
-        try (VCFFileReader reader = new VCFFileReader(activeVCF);CloseableIterator<VariantContext> it = reader.iterator();VariantContextWriter writerConsensus = writerBuilderConsensus.build();VariantContextWriter writerAll = writerBuilderAll.build();CSVWriter variantTableWriter = generateTable ? new CSVWriter(PrintWriters.getPrintWriter(tableFile), '\t') : null)
+        try (VCFFileReader reader = new VCFFileReader(activeVCF);CloseableIterator<VariantContext> it = reader.iterator();VariantContextWriter writerConsensus = writerBuilderConsensus.build();VariantContextWriter writerAll = writerBuilderAll.build();CSVWriter variantTableWriter = generateTable ? new CSVWriter(PrintWriters.getPrintWriter(tableFile), '\t', CSVWriter.NO_QUOTE_CHARACTER) : null)
         {
             VCFHeader header = reader.getFileHeader();
 
