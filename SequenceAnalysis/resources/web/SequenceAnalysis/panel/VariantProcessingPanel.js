@@ -269,7 +269,7 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 				description: 'A BED or similar file with intervals to skip',
 				defaultValue: null
 			},{
-				fieldXtype: 'ldk-expdatafield',
+				fieldXtype: 'checkbox',
 				name: 'skipExcessHetAndInbreeding',
 				label: 'Skip Excess Het And Inbreeding',
 				description: 'If checked, the ExcessHet and InbreedingCoeff annotations will be skipped, which can be important when using force-output-intervals',
