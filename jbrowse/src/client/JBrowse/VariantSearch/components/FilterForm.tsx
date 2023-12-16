@@ -275,7 +275,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                             ))}
                                         </Select>
                                     </FormControlMinWidth>
-                                ) : fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length > 10 ? (
+                                ) : fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length > 1 ? (
                                     <FormControlMinWidth sx={ highlightedInputs[index]?.value ? highlightedSx : null } >
                                         <AsyncSelect
                                             id={`value-select-${index}`}
