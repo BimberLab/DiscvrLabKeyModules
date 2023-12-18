@@ -1595,5 +1595,20 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElementToDisappear(Locator.tagWithText("span", "2"));
 
         clearFilterDialog("variableSamples is empty");
+
+        // IMPACT HIGH+MODERATE
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Impact on Protein Coding")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "equals")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("HI");
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys(Keys.ENTER);
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("MO");
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys(Keys.ENTER);
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElement(Locator.tagWithText("span", "0.029"));
+
+        clearFilterDialog("IMPACT equals HIGH,MODERATE");
     }
 }
