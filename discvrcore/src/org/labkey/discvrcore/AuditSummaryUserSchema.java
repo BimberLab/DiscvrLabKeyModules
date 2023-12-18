@@ -189,7 +189,7 @@ public class AuditSummaryUserSchema extends SimpleUserSchema
         {
             if (createIfNeeded && ContainerManager.getForPath(PROJECT_NAME) == null)
             {
-                Container c = ContainerManager.createContainer(ContainerManager.getRoot(), PROJECT_NAME);
+                Container c = ContainerManager.createContainer(ContainerManager.getRoot(), PROJECT_NAME, TestContext.get().getUser());
                 c.setActiveModules(PageFlowUtil.set(ModuleLoader.getInstance().getModule("study"), ModuleLoader.getInstance().getModule(DiscvrCoreModule.NAME)));
             }
 

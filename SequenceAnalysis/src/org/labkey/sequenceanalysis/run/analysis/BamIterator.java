@@ -263,7 +263,7 @@ public class BamIterator
             Container project = ContainerManager.getForPath(PROJECT_NAME);
             if (project == null)
             {
-                project = ContainerManager.createContainer(ContainerManager.getRoot(), PROJECT_NAME);
+                project = ContainerManager.createContainer(ContainerManager.getRoot(), PROJECT_NAME, TestContext.get().getUser());
                 Set<Module> modules = new HashSet<>();
                 modules.addAll(project.getActiveModules());
                 modules.add(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.NAME));

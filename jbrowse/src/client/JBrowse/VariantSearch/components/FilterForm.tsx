@@ -265,6 +265,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                         <InputLabel id="value-select-label">Value</InputLabel>
                                         <Select
                                             labelId="value-select-label"
+                                            id={`value-select-${index}`}
                                             value={filter.value}
                                             onChange={(event) =>
                                                 handleFilterChange(index, "value", event.target.value)
@@ -305,6 +306,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                         <InputLabel id="value-select-label">Value</InputLabel>
                                         <Select
                                             labelId="value-select-label"
+                                            id={`value-select-${index}`}
                                             value={filter.value}
                                             disabled={filter.operator === "is empty" || filter.operator === "is not empty"}
                                             onChange={(event) =>
@@ -321,6 +323,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                 ) : (
                                     <TextFieldMinWidth
                                         label="Value"
+                                        id={`value-select-${index}`}
                                         sx={ highlightedInputs[index]?.value ? highlightedSx : null }
                                         value={filter.value}
                                         disabled={filter.operator === "is empty" || filter.operator === "is not empty"}

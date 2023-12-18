@@ -368,7 +368,7 @@ public class FastqcRunner
             throw new RuntimeException("Not found: " + jbzip2.getPath());
         }
 
-        File htsjdkJar = new File(libDir, "htsjdk-3.0.1.jar");
+        File htsjdkJar = new File(libDir, "htsjdk-4.0.0.jar");
         if (!htsjdkJar.exists())
         {
             throw new RuntimeException("Not found: " + htsjdkJar.getPath());

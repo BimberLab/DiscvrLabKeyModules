@@ -9,11 +9,13 @@ import org.labkey.gradle.util.ExternalDependency
 import java.util.regex.Matcher
 
 repositories {
-   mavenCentral()
-   // Added for jhdf5 from FASTQC / sequence analysis module
-   maven {
-      url "https://maven.scijava.org/content/groups/public/"
-   }
+    mavenCentral()
+    maven {
+        url "https://maven.scijava.org/content/groups/public/"
+        content {
+            includeGroup "cisd" //jhdf5
+        }
+    }
 }
 
 configurations.all {
@@ -124,7 +126,7 @@ dependencies {
     BuildUtils.addExternalDependency(
             project,
             new ExternalDependency(
-                    "com.github.broadinstitute:picard:3.0.0",
+                    "com.github.broadinstitute:picard:3.1.0",
                     "Picard Tools Lib",
                     "PicardTools",
                     "https://github.com/broadinstitute/picard",

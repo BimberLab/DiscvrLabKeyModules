@@ -25,6 +25,6 @@ public class ReplaceJobStoreButton extends SimpleButtonConfigFactory
     @Override
     public boolean isAvailable(TableInfo ti)
     {
-        return ti.getUserSchema().getUser().isInSiteAdminGroup() && (super.isAvailable(ti) || ContainerManager.getRoot().equals(ti.getUserSchema().getContainer()));
+        return ti.getUserSchema().getUser().hasSiteAdminPermission() && (super.isAvailable(ti) || ContainerManager.getRoot().equals(ti.getUserSchema().getContainer()));
     }
 }

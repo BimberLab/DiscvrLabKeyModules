@@ -60,6 +60,7 @@ public class JBrowseLuceneSearch
     private final JBrowseSession _session;
     private final JsonFile _jsonFile;
     private final User _user;
+    private final String[] specialStartPatterns = {"*:* -", "+", "-"};
 
     private JBrowseLuceneSearch(final JBrowseSession session, final JsonFile jsonFile, User u)
     {
@@ -105,7 +106,7 @@ public class JBrowseLuceneSearch
             //special case for urls containing +; this isn't necessary for strings sent from the client-side, but URLs
             //sent via unit tests autodecode, and strings containing + rather than the URL-encoded symbol are unsafe
             //to pass through URLDecoded.decode
-            if(input.contains("+")) {
+            if (input.contains("+")) {
                 return input;
             }
 
@@ -115,6 +116,19 @@ public class JBrowseLuceneSearch
         }
     }
 
+    public String extractFieldName(String queryString) {
+        // Check if the query starts with any of the start patterns
+        for (String pattern : specialStartPatterns) {
+            if (queryString.startsWith(pattern)) {
+                queryString = queryString.substring(pattern.length()).trim();
+                break;
+            }
+        }
+
+        // Split the remaining string by ':' and return the first part (field name)
+        String[] parts = queryString.split(":", 2);
+        return parts.length > 0 ? parts[0].trim() : null;
+    }
 
     public JSONObject doSearch(User u, String searchString, final int pageSize, final int offset) throws IOException, ParseException
     {
@@ -180,18 +194,7 @@ public class JBrowseLuceneSearch
                 String queryString = tokenizer.nextToken();
                 Query query = null;
 
-                // Type is defined by the first field in the lucene query
-                // "First" field is defined by getting the first consecutive string of ASCII characters or underscores terminated by a colon
-                // we might just want to return the field(s) in the form instead
-                Pattern pattern = Pattern.compile("[\\p{ASCII}&&[^\\s:*+-]][\\p{ASCII}&&[^:\\p{Punct}*]]*:");
-
-                Matcher matcher = pattern.matcher(queryString);
-
-                String fieldName = null;
-                if (matcher.find())
-                {
-                    fieldName = matcher.group().substring(0, matcher.group().length() - 1);
-                }
+                String fieldName = extractFieldName(queryString);
 
                 if (VARIABLE_SAMPLES.equals(fieldName))
                 {
@@ -202,7 +205,7 @@ public class JBrowseLuceneSearch
                 {
                     query = queryParser.parse(queryString);
                 }
-                else if(numericQueryParserFields.contains(fieldName))
+                else if (numericQueryParserFields.contains(fieldName))
                 {
                     try
                     {
@@ -212,7 +215,8 @@ public class JBrowseLuceneSearch
                     {
                         e.printStackTrace();
                     }
-                } else
+                }
+                else
                 {
                     throw new IllegalArgumentException("No such field(s), or malformed query.");
                 }
@@ -293,7 +297,7 @@ public class JBrowseLuceneSearch
             List<String> ret = new ArrayList<>();
             if (indexedFields.contains("AF"))
             {
-                ret.add("Rare Variants|AF,>,0.05");
+                ret.add("Rare Variants|AF,<,0.05");
             }
 
             return ret;

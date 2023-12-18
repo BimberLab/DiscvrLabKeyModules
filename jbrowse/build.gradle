@@ -2,9 +2,12 @@ import org.labkey.gradle.util.BuildUtils;
 
 repositories {
 	mavenCentral()
-	// Added for jhdf5 from FASTQC / sequence analysis module
 	maven {
 		url "https://maven.scijava.org/content/repositories/public/"
+		content {
+			// Transitive dependency from SequenceAnalysis
+			includeGroup "cisd" //jhdf5
+		}
 	}
 }
 

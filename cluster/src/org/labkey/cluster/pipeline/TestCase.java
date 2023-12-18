@@ -52,7 +52,7 @@ public class TestCase extends Assert
         Container project = ContainerManager.getForPath(PROJECT_NAME);
         if (project == null)
         {
-            project = ContainerManager.createContainer(ContainerManager.getRoot(), PROJECT_NAME);
+            project = ContainerManager.createContainer(ContainerManager.getRoot(), PROJECT_NAME, TestContext.get().getUser());
             Set<Module> modules = new HashSet<>(project.getActiveModules());
             modules.add(ModuleLoader.getInstance().getModule(ClusterModule.class));
             project.setActiveModules(modules);
@@ -104,16 +104,16 @@ public class TestCase extends Assert
         for (RemoteExecutionEngine<?> engine : PipelineJobService.get().getRemoteExecutionEngines())
         {
             _log.info("testing engine: " + engine.getType());
-            if (engine instanceof AbstractClusterExecutionEngine)
+            if (engine instanceof AbstractClusterExecutionEngine<?> acee)
             {
-                runTestJob(c, TestContext.get().getUser(), (AbstractClusterExecutionEngine<?>) engine);
+                runTestJob(c, TestContext.get().getUser(), acee);
             }
         }
     }
 
     public static class TestRunner implements ClusterService.ClusterRemoteTask
     {
-        public long _sleep = 0;
+        public long _sleep = 0l;
 
         public TestRunner(long sleep)
         {

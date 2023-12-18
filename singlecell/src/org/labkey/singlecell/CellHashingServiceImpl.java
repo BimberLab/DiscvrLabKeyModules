@@ -953,7 +953,9 @@ public class CellHashingServiceImpl extends CellHashingService
             ToolParameterDescriptor.create("skipNormalizationQc", "Skip Normalization QC", null, "checkbox", null, true),
             ToolParameterDescriptor.create("doTSNE", "Do tSNE", "If true, tSNE will be performed as part of QC", "checkbox", null, true),
             ToolParameterDescriptor.create("retainRawCountFile", "Retain Raw Counts File", null, "checkbox", null, false),
-            ToolParameterDescriptor.create("failIfUnexpectedHtosFound", "Fail If Unexpected HTOs Found", "If checked and if there are any HTOs (testing all known HTOs) with counts above the HTOs expected in this experiment, then an error will be thrown", "checkbox", null, false)
+            ToolParameterDescriptor.create("failIfUnexpectedHtosFound", "Fail If Unexpected HTOs Found", "If checked and if there are any HTOs (testing all known HTOs) with counts above the HTOs expected in this experiment, then an error will be thrown", "checkbox", new JSONObject(){{
+                put("checked", true);
+            }}, true)
         ));
 
         final List<String> allMethods = Arrays.stream(CALLING_METHOD.values()).filter(x -> allowMethodsNeedingGex || !x.isRequiresH5()).map(Enum::name).toList();

@@ -345,7 +345,7 @@ public class JBrowseServiceImpl extends JBrowseService
                     return;
                 }
 
-                Map<ExpData, String> inputMap = run.getDataInputs();
+                Map<? extends ExpData, String> inputMap = run.getDataInputs();
                 if (inputMap == null)
                 {
                     return;
