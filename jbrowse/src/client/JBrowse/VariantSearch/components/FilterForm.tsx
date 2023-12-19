@@ -288,6 +288,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                             menuShouldBlockScroll={true}
                                             styles={{menuPortal: base => ({...base, zIndex: 9999})}}
                                             isMulti={fieldTypeInfo.find(obj => obj.name === filter.field)?.isMultiValued}
+                                            defaultOptions={fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length < 20}
                                             loadOptions={(inputValue, callback) => {
                                                 const fieldInfo = fieldTypeInfo.find(obj => obj.name === filter.field);
 
