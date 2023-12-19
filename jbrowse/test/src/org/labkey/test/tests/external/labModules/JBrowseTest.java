@@ -1713,8 +1713,8 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("li", "Impact on Protein Coding")).click();
         waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
         waitForElement(Locator.tagWithText("li", "equals")).click();
-        waitForElement(Locator.tagWithId("div", "value-select-0")).click();
-        waitForElement(Locator.tagWithText("li", "HIGH")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("HI");
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys(Keys.ENTER);
         waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
         waitForElementToDisappear(Locator.tagWithText("span", "4"));
         clearFilterDialog("IMPACT equals HIGH");
@@ -1798,5 +1798,20 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
         waitForElement(Locator.tagWithText("span", "914"));
         clearFilterDialog("IMPACT is not empty");
+
+        // IMPACT HIGH+MODERATE
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
+        waitForElement(Locator.tagWithText("li", "Impact on Protein Coding")).click();
+        waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
+        waitForElement(Locator.tagWithText("li", "equals")).click();
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("HI");
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys(Keys.ENTER);
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("MO");
+        waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys(Keys.ENTER);
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+        waitForElement(Locator.tagWithText("span", "0.029"));
+
+        clearFilterDialog("IMPACT equals HIGH,MODERATE");
     }
 }
