@@ -451,6 +451,13 @@ public class NimbleHelper
         alignArgs.add("--input");
         alignArgs.add("/work/" + localBam.getName());
 
+        Integer maxRam = SequencePipelineService.get().getMaxRam();
+        if (maxRam != null)
+        {
+            alignArgs.add("-m");
+            alignArgs.add(maxRam + "000"); // in MB
+        }
+
         boolean dockerRan = runUsingDocker(alignArgs, output, "align.all");
         for (NimbleGenome genome : genomes)
         {
