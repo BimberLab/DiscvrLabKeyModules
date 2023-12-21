@@ -78,6 +78,7 @@ import org.labkey.sequenceanalysis.run.alignment.Pbmm2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.StarWrapper;
 import org.labkey.sequenceanalysis.run.alignment.VulcanWrapper;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
+import org.labkey.sequenceanalysis.run.analysis.BcftoolsFillTagsStep;
 import org.labkey.sequenceanalysis.run.analysis.ExportOverlappingReadsAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.GenrichStep;
 import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
@@ -312,6 +313,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new KingInferenceStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new MendelianViolationReportStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SummarizeGenotypeQualityStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new BcftoolsFillTagsStep.Provider());
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
