@@ -20,7 +20,6 @@ import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
-import htsjdk.variant.vcf.VCFHeaderLineType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -861,7 +860,7 @@ public class JBrowseController extends SpringActionController
                 if (form.isIncludeDefaultFields())
                 {
                     JBrowseFieldUtils.DEFAULT_FIELDS.forEach((key, val) -> ret.put(key, val.toJSON()));
-                    ret.put(JBrowseFieldUtils.VARIABLE_SAMPLES, JBrowseFieldUtils.getVariableSamplesField(null).toJSON());
+                    JBrowseFieldUtils.getGenotypeDependentFields(null).forEach((key, val) -> ret.put(key, val.toJSON()));
                 }
 
                 for (String key : form.getInfoKeys())

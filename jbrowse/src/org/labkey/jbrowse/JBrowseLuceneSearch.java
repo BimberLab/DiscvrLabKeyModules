@@ -297,7 +297,7 @@ public class JBrowseLuceneSearch
             List<String> ret = new ArrayList<>();
             if (indexedFields.contains("AF"))
             {
-                ret.add("Rare Variants|AF,>,0.05");
+                ret.add("Rare Variants|AF,<,0.05");
             }
 
             return ret;

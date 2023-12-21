@@ -110,9 +110,22 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                         put("width", 400);
                         put("allowBlank", true);
                     }}, null),
+                    ToolParameterDescriptor.create("generateConsensus", "Generate Consensus", "If selected, a FASTA with the simple majority consensus will be generated.", "checkbox", new JSONObject()
+                    {{
+
+                    }}, false),
                     ToolParameterDescriptor.create("minCoverage", "Min Coverage For Consensus", "If provided, a consensus will only be called over regions with at least this depth", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 25),
+                    ToolParameterDescriptor.create("generateTable", "Generate Variant Table", "If selected, a TSV listing variants above the given threshold will be generated.", "checkbox", new JSONObject()
+                    {{
+
+                    }}, false),
+                    ToolParameterDescriptor.create("minFractionForTable", "Min Fraction for Table", "If the option to generate a table output is used, only variants with frequency of this threshold will be included", "ldk-numberfield", new JSONObject(){{
+                        put("minValue", 0);
+                        put("maxValue", 1);
+                        put("decimalPrecision", 3);
+                    }}, 0.01),
                     ToolParameterDescriptor.createExpDataParam("primerBedFile", "Primer Sites (BED File)", "This is a BED file specifying the primer binding sites, which will be used to flag variants.  Strandedness is ignored.", "ldk-expdatafield", new JSONObject()
                     {{
                         put("allowBlank", true);
@@ -470,6 +483,10 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         }
 
         double minFractionForConsensus = getProvider().getParameterByName("minFractionForConsensus").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
+        boolean generateConsensus = getProvider().getParameterByName("generateConsensus").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+
+        boolean generateTable = getProvider().getParameterByName("generateTable").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        double minFractionForTable = getProvider().getParameterByName("minFractionForTable").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 0.0);
 
         Integer primerDataId = getProvider().getParameterByName("primerBedFile").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
         List<Interval> primerIntervals = new ArrayList<>();
@@ -517,11 +534,12 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
 
         File loFreqConsensusVcf = getConsensusVcf(outputDir, inputBam);
         File loFreqAllVcf = getAllVcf(outputDir, inputBam);
+        File tableFile = getTableFile(outputDir, inputBam);
         Double strandBiasRecoveryAF = getProvider().getParameterByName("strandBiasRecoveryAF").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class, 1.0);
         SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(referenceGenome.getSequenceDictionary().toPath());
         VariantContextWriterBuilder writerBuilderConsensus = new VariantContextWriterBuilder().setOutputFile(loFreqConsensusVcf).setReferenceDictionary(dict);
         VariantContextWriterBuilder writerBuilderAll = new VariantContextWriterBuilder().setOutputFile(loFreqAllVcf).setReferenceDictionary(dict);
-        try (VCFFileReader reader = new VCFFileReader(activeVCF);CloseableIterator<VariantContext> it = reader.iterator();VariantContextWriter writerConsensus = writerBuilderConsensus.build();VariantContextWriter writerAll = writerBuilderAll.build())
+        try (VCFFileReader reader = new VCFFileReader(activeVCF);CloseableIterator<VariantContext> it = reader.iterator();VariantContextWriter writerConsensus = writerBuilderConsensus.build();VariantContextWriter writerAll = writerBuilderAll.build();CSVWriter variantTableWriter = generateTable ? new CSVWriter(PrintWriters.getPrintWriter(tableFile), '\t', CSVWriter.NO_QUOTE_CHARACTER) : null)
         {
             VCFHeader header = reader.getFileHeader();
 
@@ -531,6 +549,11 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             header.setSequenceDictionary(dict);
             writerConsensus.writeHeader(header);
             writerAll.writeHeader(header);
+
+            if (generateTable)
+            {
+                variantTableWriter.writeNext(new String[]{"Contig", "Start", "End", "Reference", "Alt", "Frequency", "AlleleDepth", "TotalDepth"});
+            }
 
             SortingCollection<VariantContext> allVariants = getVariantSorter(header);
             SortingCollection<VariantContext> consensusVariants = getVariantSorter(header);
@@ -568,6 +591,16 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
                     {
                         writerAll.add(vcb.make());
                         continue;
+                    }
+                }
+
+                if (generateTable)
+                {
+                    if (vc.hasAttribute("AF") && vc.getAttributeAsDouble("AF", 0.0) > minFractionForTable)
+                    {
+                        List<Integer> depths = vc.getAttributeAsIntList("DP4", 0);
+                        int alleleDepth = depths.get(2) + depths.get(3);
+                        variantTableWriter.writeNext(new String[]{vc.getContig(), String.valueOf(vc.getStart()), String.valueOf(vc.getEnd()), vc.getReference().getBaseString(), vc.getAlternateAllele(0).getBaseString(), String.valueOf(vc.getAttributeAsDouble("AF", 0.0)), String.valueOf(alleleDepth), String.valueOf(vc.getAttributeAsInt("DP", 0))});
                     }
                 }
 
@@ -672,6 +705,10 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
             }
             consensusVariants.cleanup();
         }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
 
         NumberFormat fmt = NumberFormat.getPercentInstance();
         fmt.setMaximumFractionDigits(2);
@@ -720,11 +757,23 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
         }
 
         output.addSequenceOutput(coverageOut, "Depth of Coverage: " + rs.getName(), "Depth of Coverage", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
-        output.addSequenceOutput(consensusFastaLoFreq, "Consensus: " + rs.getName(), "Viral Consensus Sequence", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
+        if (generateConsensus)
+        {
+            output.addSequenceOutput(consensusFastaLoFreq, "Consensus: " + rs.getName(), "Viral Consensus Sequence", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
+        }
 
         boolean runPangolinAndNextClade = getProvider().getParameterByName("runPangolin").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
 
         output.addSequenceOutput(loFreqAllVcf, "LoFreq: " + rs.getName(), CATEGORY, rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
+
+        if (generateTable)
+        {
+            if (!tableFile.exists())
+            {
+
+            }
+            output.addSequenceOutput(tableFile, "LoFreq: " + rs.getName(), "LoFreq Variant Table", rs.getReadsetId(), null, referenceGenome.getGenomeId(), description);
+        }
 
         Map<String, String> pangolinData = null;
         if (runPangolinAndNextClade)
@@ -779,6 +828,11 @@ public class LofreqAnalysis extends AbstractCommandPipelineStep<LofreqAnalysis.L
     private File getAllVcf(File outputDir, File inputBam)
     {
         return new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.all.vcf.gz");
+    }
+
+    private File getTableFile(File outputDir, File inputBam)
+    {
+        return new File(outputDir, FileUtil.getBaseName(inputBam) + ".lofreq.txt");
     }
 
     private Set<String> runBcftools(File inputBam, ReferenceGenome referenceGenome, File mask, int minCoverage) throws PipelineJobException

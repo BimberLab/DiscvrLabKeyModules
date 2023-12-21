@@ -276,7 +276,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                             ))}
                                         </Select>
                                     </FormControlMinWidth>
-                                ) : fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length > 10 ? (
+                                ) : fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length > 1 ? (
                                     <FormControlMinWidth sx={ highlightedInputs[index]?.value ? highlightedSx : null } >
                                         <AsyncSelect
                                             id={`value-select-${index}`}
@@ -288,6 +288,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                             menuShouldBlockScroll={true}
                                             styles={{menuPortal: base => ({...base, zIndex: 9999})}}
                                             isMulti={fieldTypeInfo.find(obj => obj.name === filter.field)?.isMultiValued}
+                                            defaultOptions={fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length < 20}
                                             loadOptions={(inputValue, callback) => {
                                                 const fieldInfo = fieldTypeInfo.find(obj => obj.name === filter.field);
 
