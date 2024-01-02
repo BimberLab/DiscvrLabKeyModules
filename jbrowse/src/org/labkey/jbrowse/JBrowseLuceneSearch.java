@@ -218,7 +218,7 @@ public class JBrowseLuceneSearch
                 }
                 else
                 {
-                    throw new IllegalArgumentException("No such field(s), or malformed query.");
+                    throw new IllegalArgumentException("No such field(s), or malformed query: " + queryString + ", field: " + fieldName);
                 }
 
                 booleanQueryBuilder.add(query, BooleanClause.Occur.MUST);
