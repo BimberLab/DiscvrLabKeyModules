@@ -36,21 +36,20 @@ import { BaseFeatureDataAdapter } from '@jbrowse/core/data_adapters/BaseAdapter'
 import { lastValueFrom } from 'rxjs';
 
 const VariantTableWidget = observer(props => {
-    const { assembly, trackId, parsedLocString, sessionId, session, pluginManager } = props
-    const { assemblyNames, assemblyManager } = session
-    const { view } = session
+    const { assembly, trackId, parsedLocString, sessionId, session, pluginManager } = props;
+    const { assemblyNames = [], assemblyManager } = session ?? {};
+    const { view } = session ?? {};
 
-    // The code expects a proper GUID, yet the trackId is a string containing the GUID + filename
-    const trackGUID = truncateToValidGUID(props.trackId)
-
-    // NOTE: since the trackId is GUID+filename, allow exact string matching, or a match on the GUID portion alone.
-    // Upstream code might only have access to the GUID and translating to the trackId isnt always easy
-    const track = view.tracks.find(
-        t => t.configuration.trackId === trackId || truncateToValidGUID(t.configuration.trackId).toUpperCase() === trackGUID.toUpperCase()
-    )
-
-    if (!track) {
-        return (<p>Unknown track: {trackId}</p>)
+    var track = undefined;
+    var trackGUID = undefined;
+    if(view && trackId) {
+        // The code expects a proper GUID, yet the trackId is a string containing the GUID + filename
+        // NOTE: since the trackId is GUID+filename, allow exact string matching, or a match on the GUID portion alone.
+        // Upstream code might only have access to the GUID and translating to the trackId isnt always easy
+        trackGUID = truncateToValidGUID(props.trackId)
+        track = view.tracks.find(
+            t => t.configuration.trackId === trackId || truncateToValidGUID(t.configuration.trackId).toUpperCase() === trackGUID.toUpperCase()
+        )
     }
 
     function handleSearch(data) {
@@ -150,7 +149,6 @@ const VariantTableWidget = observer(props => {
                     <span className='table-cell-truncate'>{displayValue}</span>
                 </Typography>
                 {renderPopover &&
-                        // TODO
                         <Popover
                                 id="mouse-over-popover"
                                 open={open}
@@ -236,7 +234,7 @@ const VariantTableWidget = observer(props => {
     const [activeWidgetList, setActiveWidgetList] = useState<string[]>([])
 
     // False until initial data load or an error:
-    const [dataLoaded, setDataLoaded] = useState(!parsedLocString)
+    const [dataLoaded, setDataLoaded] = useState(false)
 
     const urlParams = new URLSearchParams(window.location.search);
     const page = parseInt(urlParams.get('page') || '0');
@@ -278,20 +276,15 @@ const VariantTableWidget = observer(props => {
                 })
         }
 
-        fetch()
+        if(sessionId && trackGUID) {
+            fetch()
+        }
+
         return () => {
           window.removeEventListener('popstate', handlePopState);
         };
 
-    }, [pluginManager, parsedLocString, session.visibleWidget])
-
-    if (!view) {
-        return
-    }
-
-    if (!track) {
-        return(<p>Unable to find track: {trackId}</p>)
-    }
+    }, [pluginManager, parsedLocString, session?.visibleWidget, sessionId, trackGUID])
 
     if (error) {
         throw new Error(error)
@@ -435,7 +428,7 @@ const VariantTableWidget = observer(props => {
             <LoadingIndicator isOpen={!dataLoaded}/>
 
             {
-                [...session.activeWidgets].map((elem) => {
+                [...(session?.activeWidgets ?? [])].map((elem) => {
                     const widget = elem[1]
                     const widgetType = pluginManager.getWidgetType(widget.type)
                     const { ReactComponent } = widgetType

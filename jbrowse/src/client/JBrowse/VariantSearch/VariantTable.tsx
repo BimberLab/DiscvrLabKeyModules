@@ -45,7 +45,7 @@ function VariantTable() {
 
     const [session, setSession] = useState(null)
     const [state, setState] = useState(null)
-    const [theme, setTheme] = useState(null)
+    const [theme, setTheme] = useState(createTheme())
     const [view, setView] = useState(null)
     const [parsedLocString, setParsedLocString] = useState(null)
     const [assemblyNames, setAssemblyNames] = useState(null)
@@ -86,24 +86,11 @@ function VariantTable() {
         fetchSession(queryParam, sessionId, nativePlugins, refTheme, setState, true, [trackId], undefined, successCallback, trackId)
     }, []);
 
-    // Error handle and then render the component
-    if (view === null || theme == null) {
-        return (<LoadingIndicator isOpen={true}/>)
-    }
-    else if (view === "invalid" || state == "invalid") {
-        return (<p>Error fetching config. See console for more details</p>)
-    }
-
-    if (!assemblyNames.length) {
-        return (<p>No configured assemblies</p>)
-    }
-
     return (
         <ThemeProvider theme={theme}>
         <div style={{height: "80vh", display:"block"}}>
             <ErrorBoundary>
-                <VariantTableWidget assemblyName={assemblyNames[0]} assembly={assembly} trackId={trackId} locString={locString}
-                                    parsedLocString={parsedLocString} sessionId={sessionId} session={session} pluginManager={pluginManager}/>
+                <VariantTableWidget assembly={assembly} trackId={trackId} parsedLocString={parsedLocString} sessionId={sessionId} session={session} pluginManager={pluginManager}/>
             </ErrorBoundary>
         </div>
         </ThemeProvider>
