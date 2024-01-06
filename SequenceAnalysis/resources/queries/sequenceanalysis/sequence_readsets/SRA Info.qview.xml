@@ -17,6 +17,8 @@
        <column name="workbook" />
        <column name="sraRuns" />
        <column name="isArchived" />
+       <column name="totalFiles" />
+       <column name="readdataWithoutSra" />
        <column name="files" />
    </columns>
    <sorts>

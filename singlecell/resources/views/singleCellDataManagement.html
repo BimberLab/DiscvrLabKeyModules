@@ -68,6 +68,37 @@
                                     'query.isArchived~eq': 0
                                 }
                         )
+                    },{
+                        name: 'CITE-seq/Hashing Readsets Possibly Needing Archival',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
+                                    schemaName: 'sequenceanalysis',
+                                    queryName: 'sequence_readsets',
+                                    viewName: 'SRA Info',
+                                    'query.totalForwardReads~isnonblank': null,
+                                    'query.application~containsoneof': 'Cell Hashing;CITE-Seq',
+                                    'query.totalOutputs~gt': 0,
+                                    'query.isArchived~eq': 0,
+                                    'query.readdataWithoutSra~eq': 0,
+                                    'query.sort': 'name'
+                                }
+                        )
+                    },{
+                        name: 'TCR Readsets Possibly Needing Archival',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
+                                    schemaName: 'sequenceanalysis',
+                                    queryName: 'sequence_readsets',
+                                    viewName: 'SRA Info',
+                                    'query.totalForwardReads~isnonblank': null,
+                                    'query.isArchived~eq': 0,
+                                    'query.readdataWithoutSra~eq': 0,
+                                    'query.totalAlignments~gt': 0,
+                                    'query.application~contains': 'single',
+                                    'query.status~isblank': null,
+                                    'query.librarytype~doesnotcontain': 'BCR',
+                                    'query.librarytype~contains': 'VDJ',
+                                    'query.sort': 'name'
+                                }
+                        )
                     }, {
                         name: 'Analyses Using Old Readsets',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
