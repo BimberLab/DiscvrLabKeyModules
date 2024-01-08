@@ -7,6 +7,7 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
@@ -31,13 +32,12 @@ public class AppendNimble extends AbstractRDiscvrStep
                     {{
                         put("allowBlank", false);
                     }}, null),
-                    ToolParameterDescriptor.create("retainAmbiguousFeatures", "Retain Ambiguous Features", "If checked, features hitting more than one reference will be retained", "checkbox", new JSONObject()
+                    SeuratToolParameter.create("retainAmbiguousFeatures", "Retain Ambiguous Features", "If checked, features hitting more than one reference will be retained", "checkbox", new JSONObject()
                     {{
                         put("check", false);
-                    }}, false)
+                    }}, false, null, true)
             ), Arrays.asList("sequenceanalysis/field/GenomeField.js", "/singlecell/panel/NimbleAppendPanel.js"), null);
         }
-
 
         @Override
         public AppendNimble create(PipelineContext ctx)
