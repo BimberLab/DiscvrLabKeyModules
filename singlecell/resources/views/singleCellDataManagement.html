@@ -73,7 +73,7 @@
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
                                     schemaName: 'sequenceanalysis',
                                     queryName: 'sequence_readsets',
-                                    viewName: 'SRA Info',
+                                    'query.viewName': 'SRA Info',
                                     'query.totalForwardReads~isnonblank': null,
                                     'query.application~containsoneof': 'Cell Hashing;CITE-Seq',
                                     'query.totalOutputs~gt': 0,
@@ -87,11 +87,11 @@
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
                                     schemaName: 'sequenceanalysis',
                                     queryName: 'sequence_readsets',
-                                    viewName: 'SRA Info',
+                                    'query.viewName': 'SRA Info',
                                     'query.totalForwardReads~isnonblank': null,
                                     'query.isArchived~eq': 0,
                                     'query.readdataWithoutSra~eq': 0,
-                                    'query.readset/outputFileTypes~contains': '10x VLoupe',
+                                    'query.outputFileTypes~contains': '10x VLoupe',
                                     'query.application~contains': 'single',
                                     'query.status~isblank': null,
                                     'query.librarytype~doesnotcontain': 'BCR',
