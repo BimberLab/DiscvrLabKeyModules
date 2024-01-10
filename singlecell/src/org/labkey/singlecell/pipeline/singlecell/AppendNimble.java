@@ -35,7 +35,11 @@ public class AppendNimble extends AbstractRDiscvrStep
                     SeuratToolParameter.create("retainAmbiguousFeatures", "Retain Ambiguous Features", "If checked, features hitting more than one reference will be retained", "checkbox", new JSONObject()
                     {{
                         put("check", false);
-                    }}, false, null, true)
+                    }}, false, null, true),
+                    SeuratToolParameter.create("maxLibrarySizeRatio", "Max Library Size Ratio", "This normalization relies on the assumption that the library size of the assay being normalized in negligible relative to the assayForLibrarySize. To verify this holds true, the method will error if librarySize(assayToNormalize)/librarySize(assayForLibrarySize) exceeds this value", "ldk-numberfield", new JSONObject()
+                    {{
+                        put("decimalPrecision", 4);
+                    }}, 0.1, null, true)
             ), Arrays.asList("sequenceanalysis/field/GenomeField.js", "/singlecell/panel/NimbleAppendPanel.js"), null);
         }
 
