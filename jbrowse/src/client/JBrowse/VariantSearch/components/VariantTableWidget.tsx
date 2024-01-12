@@ -226,8 +226,6 @@ const VariantTableWidget = observer(props => {
     const [fieldTypeInfo, setFieldTypeInfo] = useState<FieldModel[]>([]);
     const [allowedGroupNames, setAllowedGroupNames] = useState<string[]>([]);
     const [promotedFilters, setPromotedFilters] = useState<Map<string, Filter[]>>(null);
-    const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({});
-
     const [adapter, setAdapter] = useState<BaseFeatureDataAdapter>(null)
 
     // Active widget ID list to force rerender when a JBrowseUIButton is clicked
@@ -240,6 +238,10 @@ const VariantTableWidget = observer(props => {
     const page = parseInt(urlParams.get('page') || '0');
     const pageSize = parseInt(urlParams.get('pageSize') || '50');
     const [pageSizeModel, setPageSizeModel] = React.useState<GridPaginationModel>({ page, pageSize });
+
+    const colVisURLComponent = urlParams.get("colVisModel") || "{}"
+    const colVisModel = JSON.parse(decodeURIComponent(colVisURLComponent))
+    const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>(colVisModel);
 
     // API call to retrieve the requested features.
     useEffect(() => {
@@ -261,9 +263,11 @@ const VariantTableWidget = observer(props => {
 
                     setColumns(columns)
 
-                    const columnVisibilityModel = {}
-                    fields.filter((x) => !x.isHidden).forEach((x) => columnVisibilityModel[x.name] = !!x.isInDefaultColumns)
-                    setColumnVisibilityModel(columnVisibilityModel)
+                    if(JSON.stringify(columnVisibilityModel) === '{}') {
+                        const columnVisibilityModel = {}
+                        fields.filter((x) => !x.isHidden).forEach((x) => columnVisibilityModel[x.name] = !!x.isInDefaultColumns)
+                        setColumnVisibilityModel(columnVisibilityModel)
+                    }
 
                     setFieldTypeInfo(fields)
                     setAllowedGroupNames(groups)
@@ -395,6 +399,10 @@ const VariantTableWidget = observer(props => {
             }}
             onColumnVisibilityModelChange={(model) => {
                 setColumnVisibilityModel(model)
+
+                const currentUrl = new URL(window.location.href)
+                currentUrl.searchParams.set("colVisModel", encodeURIComponent(JSON.stringify(model)))
+                window.history.pushState(null, "", currentUrl.toString());
             }}
         />
     )
