@@ -23,8 +23,8 @@ public class AppendTcr extends AbstractRDiscvrStep
             super("AppendTcr", "Append TCR Data", "RDiscvr", "This uses Rdiscvr::DownloadAndAppendTcrClonotypes to append TCR data.", List.of(
                     SeuratToolParameter.create("allowMissing", "Allow Missing Data", "If checked, an error will be thrown if any sample lacks TCR data", "checkbox", new JSONObject()
                     {{
-                        put("checked", true);
-                    }}, true)
+                        put("checked", false);
+                    }}, false)
             ), null, null);
         }
 

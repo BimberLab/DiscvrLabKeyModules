@@ -71,7 +71,7 @@ for (datasetId in names(seuratObjects)) {
   if ('Saturation.RNA' %in% names(seuratObj@meta.data)) {
     meanSaturation.RNA <- mean(seuratObj$Saturation.RNA)
     if (!is.null(minSaturation) && meanSaturation.RNA < minSaturation) {
-      addErrorMessage(paste0('Mean RNA saturation was: ', meanSaturation.RNA, ' for dataset: ', datasetId, ', below threshold of: ', minSaturation))
+      addErrorMessage(paste0('Mean RNA saturation was: ', meanSaturation.RNA, ' for dataset: ', datasetId, ', below threshold of: ', minSaturation, ', total cells: ', ncol(seuratObj)))
     }
 
     metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'MeanSaturation.RNA', metricvalue = meanSaturation.RNA))
