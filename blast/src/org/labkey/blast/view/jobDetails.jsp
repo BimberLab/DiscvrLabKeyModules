@@ -197,8 +197,8 @@
 
 </script>
 
-<div id=<%=q(h(renderTarget))%>></div>
-<div id=<%=q(h(renderTarget + "_results"))%>>
+<div id="<%=h(renderTarget)%>"></div>
+<div id="<%=h(renderTarget + "_results")%>">
     <%
         if (job.isHasRun())
         {
