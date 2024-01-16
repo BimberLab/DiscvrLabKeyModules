@@ -264,9 +264,17 @@ const VariantTableWidget = observer(props => {
                     setColumns(columns)
 
                     if(JSON.stringify(columnVisibilityModel) === '{}') {
-                        const columnVisibilityModel = {}
-                        fields.filter((x) => !x.isHidden).forEach((x) => columnVisibilityModel[x.name] = !!x.isInDefaultColumns)
-                        setColumnVisibilityModel(columnVisibilityModel)
+                        const defaultModel = {};
+                        fields.filter((x) => !x.isHidden).forEach((x) => {
+                            defaultModel[x.name] = !!x.isInDefaultColumns;
+                        });
+                        setColumnVisibilityModel(defaultModel);
+                    } else {
+                        const updatedModel = fields.reduce((acc, field) => {
+                            acc[field.name] = columnVisibilityModel[field.name] === true;
+                            return acc;
+                        }, {});
+                        setColumnVisibilityModel(updatedModel);
                     }
 
                     setFieldTypeInfo(fields)
@@ -400,8 +408,15 @@ const VariantTableWidget = observer(props => {
             onColumnVisibilityModelChange={(model) => {
                 setColumnVisibilityModel(model)
 
-                const currentUrl = new URL(window.location.href)
-                currentUrl.searchParams.set("colVisModel", encodeURIComponent(JSON.stringify(model)))
+                const trueValuesModel = Object.keys(model).reduce((acc, key) => {
+                    if (model[key] === true) {
+                        acc[key] = true;
+                    }
+                    return acc;
+                }, {});
+
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set("colVisModel", encodeURIComponent(JSON.stringify(trueValuesModel)));
                 window.history.pushState(null, "", currentUrl.toString());
             }}
         />
