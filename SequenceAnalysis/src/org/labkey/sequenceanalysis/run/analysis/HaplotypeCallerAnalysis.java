@@ -28,7 +28,7 @@ import java.util.List;
  */
 public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<HaplotypeCallerWrapper> implements AnalysisStep
 {
-    public HaplotypeCallerAnalysis(PipelineStepProvider provider, PipelineContext ctx)
+    public HaplotypeCallerAnalysis(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new HaplotypeCallerWrapper(ctx.getLogger()));
     }
@@ -51,7 +51,7 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
     {
         return Arrays.asList(
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--dont-use-soft-clipped-bases"), "dontUseSoftClippedBases", "Don't Use Soft Clipped Bases", "If specified, we will not analyze soft clipped bases in the reads", "checkbox", null, false),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("max-alternate-alleles"), "maxAlternateAlleles", "Max Alternate Alleles", "Passed to --max-alternate-alleles", "ldk-integerfield", new JSONObject(){{
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--max-alternate-alleles"), "maxAlternateAlleles", "Max Alternate Alleles", "Passed to --max-alternate-alleles", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
                 }}, 6)
         );

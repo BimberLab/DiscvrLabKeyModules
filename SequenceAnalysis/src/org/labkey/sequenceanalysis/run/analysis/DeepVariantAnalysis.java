@@ -1,0 +1,258 @@
+package org.labkey.sequenceanalysis.run.analysis;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
+import org.json.JSONObject;
+import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisOutputImpl;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.api.util.FileUtil;
+import org.labkey.api.writer.PrintWriters;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * User: bimber
+ * Date: 7/3/2014
+ * Time: 11:29 AM
+ */
+public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariantAnalysis.DeepVariantWrapper> implements AnalysisStep
+{
+    public DeepVariantAnalysis(PipelineStepProvider<?> provider, PipelineContext ctx)
+    {
+        super(provider, ctx, new DeepVariantAnalysis.DeepVariantWrapper(ctx.getLogger()));
+    }
+
+    public static class Provider extends AbstractAnalysisStepProvider<DeepVariantAnalysis>
+    {
+        public Provider()
+        {
+            super("DeepVariantAnalysis", "DeepVariant", "DeepVariant", "This will run DeepVariant on the selected data to generate a gVCF.", getToolDescriptors(), null, null);
+        }
+
+        @Override
+        public DeepVariantAnalysis create(PipelineContext ctx)
+        {
+            return new DeepVariantAnalysis(this, ctx);
+        }
+    }
+
+    public static List<ToolParameterDescriptor> getToolDescriptors()
+    {
+        return Arrays.asList(
+                ToolParameterDescriptor.create("modelType", "Model Type", "", "ldk-simplecombo", new JSONObject(){{
+                    put("storeValues", "AUTO;WGS;WES;PACBIO;ONT_R104;HYBRID_PACBIO_ILLUMINA");
+                    put("multiSelect", false);
+                    put("allowBlank", false);
+                }}, "AUTO"),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--haploid_contigs"), "haploidContigs", "Haploid Contigs", "", "textfield", new JSONObject(){{
+
+                }}, "X,Y")
+        );
+    }
+
+    @Override
+    public void init(SequenceAnalysisJobSupport support) throws PipelineJobException
+    {
+        // TODO: handle auto-detection
+        String modelType = getProvider().getParameterByName("modelType").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
+        if (modelType == null)
+        {
+            throw new PipelineJobException("Missing model type");
+        }
+
+        if ("AUTO".equals(modelType))
+        {
+            getPipelineCtx().getLogger().info("Inferring model type by readset type:");
+            if (support.getCachedReadsets().size() != 1)
+            {
+                throw new PipelineJobException("Expected a single cached readset, found: " + support.getCachedReadsets().size());
+            }
+
+            Readset rs = support.getCachedReadsets().get(0);
+            if ("ILLUMINA".equals(rs.getPlatform()))
+            {
+                switch (rs.getApplication())
+                {
+                    case "Whole Genome: Deep Coverage":
+                        modelType = "WGS";
+                        break;
+                    case "Whole Genome: Light Coverage":
+                        modelType = "WGS";
+                        break;
+                    case "Whole Exome":
+                        modelType = "WXS";
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Unknown application: " + rs.getApplication());
+                }
+            }
+            else if ("PACBIO".equals(rs.getPlatform()))
+            {
+                modelType = "PACBIO";
+            }
+
+            if ("AUTO".equals(modelType))
+            {
+                throw new PipelineJobException("Unable to infer modelType for: " + rs.getName());
+            }
+
+            support.cacheObject("modelType", modelType);
+        }
+    }
+
+    @Override
+    public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
+    {
+        AnalysisOutputImpl output = new AnalysisOutputImpl();
+        output.addInput(inputBam, "Input BAM File");
+
+        File outputFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".g.vcf.gz");
+        File idxFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".g.vcf.gz.idx");
+
+        String inferredModelType = getPipelineCtx().getSequenceSupport().getCachedObject("modelType", String.class);
+        String modelType = inferredModelType == null ? getProvider().getParameterByName("modelType").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class) : inferredModelType;
+        if (modelType == null)
+        {
+            throw new PipelineJobException("Missing model type");
+        }
+
+        getWrapper().setOutputDir(outputDir);
+        getWrapper().setWorkingDir(outputDir);
+        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, output, modelType, getClientCommandArgs());
+
+        output.addOutput(outputFile, "gVCF File");
+        output.addSequenceOutput(outputFile, outputFile.getName(), "DeepVariant gVCF File", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+        if (idxFile.exists())
+        {
+            output.addOutput(idxFile, "VCF Index");
+        }
+
+        return output;
+    }
+
+    @Override
+    public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
+    {
+        return null;
+    }
+
+    public static class DeepVariantWrapper extends AbstractCommandWrapper
+    {
+        public DeepVariantWrapper(Logger logger)
+        {
+            super(logger);
+        }
+
+        private File ensureLocalCopy(File input, File workingDirectory, PipelineOutputTracker output) throws PipelineJobException
+        {
+            try
+            {
+                if (workingDirectory.equals(input.getParentFile()))
+                {
+                    return input;
+                }
+
+                File local = new File(workingDirectory, input.getName());
+                if (!local.exists())
+                {
+                    getLogger().debug("Copying file locally: " + input.getPath());
+                    FileUtils.copyFile(input, local);
+                }
+
+                output.addIntermediateFile(local);
+
+                return local;
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
+        public void execute(File inputBam, File refFasta, File outputGvcf, PipelineOutputTracker tracker, String modelType, List<String> extraArgs) throws PipelineJobException
+        {
+            File workDir = outputGvcf.getParentFile();
+
+            File inputBamLocal = ensureLocalCopy(inputBam, workDir, tracker);
+            ensureLocalCopy(new File(inputBam.getPath() + ".bai"), workDir, tracker);
+
+            File refFastaLocal = ensureLocalCopy(refFasta, workDir, tracker);
+            ensureLocalCopy(new File(refFastaLocal.getPath() + ".fai"), workDir, tracker);
+            ensureLocalCopy(new File(FileUtil.getBaseName(refFasta.getPath()) + ".dict"), workDir, tracker);
+
+            File localBashScript = new File(workDir, "docker.sh");
+            File dockerBashScript = new File(workDir, "dockerRun.sh");
+            tracker.addIntermediateFile(localBashScript);
+            tracker.addIntermediateFile(dockerBashScript);
+
+            String binVersion = "";
+            List<String> bashArgs = new ArrayList<>(Arrays.asList("/opt/deepvariant/bin/run_deepvariant"));
+            bashArgs.add("--ref=/work/" + refFastaLocal.getName());
+            bashArgs.add("--reads=/work/" + inputBamLocal.getName());
+            bashArgs.add("--output_gvcf=/work/" + outputGvcf.getName());
+            Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
+            if (maxThreads != null)
+            {
+                bashArgs.add("--num_shards=" + maxThreads);
+            }
+
+            if (extraArgs != null)
+            {
+                bashArgs.addAll(extraArgs);
+            }
+
+            try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript); PrintWriter dockerWriter = PrintWriters.getPrintWriter(dockerBashScript))
+            {
+                writer.println("#!/bin/bash");
+                writer.println("set -x");
+                writer.println("WD=`pwd`");
+                writer.println("HOME=`echo ~/`");
+                writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
+                writer.println("sudo $DOCKER pull google/deepvariant:" + binVersion);
+                writer.println("sudo $DOCKER run --rm=true \\");
+                writer.println("\t-v \"${WD}:/work\" \\");
+                writer.println("\t-v \"${HOME}:/homeDir\" \\");
+                writer.println("\t-u $UID \\");
+                writer.println("\t-e TMPDIR=/work/tmpDir \\");
+                writer.println("\t-e USERID=$UID \\");
+                writer.println("\t-w /work \\");
+                writer.println("\tgoogle/deepvariant:" + binVersion + " \\");
+                writer.println("\t/work/" + dockerBashScript.getName());
+                writer.println("EXIT_CODE=$?");
+                writer.println("echo 'Docker run exit code: '$EXIT_CODE");
+                writer.println("exit $EXIT_CODE");
+
+                dockerWriter.println("#!/bin/bash");
+                dockerWriter.println("set -x");
+                dockerWriter.println(StringUtils.join(bashArgs, " "));
+                dockerWriter.println("EXIT_CODE=$?");
+                dockerWriter.println("echo 'Exit code: '$?");
+                dockerWriter.println("exit $EXIT_CODE");
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+    }
+}
