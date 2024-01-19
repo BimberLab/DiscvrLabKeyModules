@@ -22,6 +22,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -205,7 +206,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             File workDir = outputGvcf.getParentFile();
 
             File inputBamLocal = ensureLocalCopy(inputBam, workDir, tracker);
-            ensureLocalCopy(new File(inputBam.getPath() + ".bai"), workDir, tracker);
+            ensureLocalCopy(SequenceUtil.getExpectedIndex(inputBam), workDir, tracker);
 
             File refFastaLocal = ensureLocalCopy(refFasta, workDir, tracker);
             ensureLocalCopy(new File(refFastaLocal.getPath() + ".fai"), workDir, tracker);
