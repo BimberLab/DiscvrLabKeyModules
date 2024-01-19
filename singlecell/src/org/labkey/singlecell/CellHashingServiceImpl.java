@@ -356,7 +356,7 @@ public class CellHashingServiceImpl extends CellHashingService
                     }
                 }
 
-                support.cacheReadset(citeseqReadsetId, job.getUser());
+                support.cacheReadset(citeseqReadsetId, job.getUser(), true);
             });
 
             citeToRemove.forEach(readsetToCiteSeqMap::remove);
