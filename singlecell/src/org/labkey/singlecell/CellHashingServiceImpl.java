@@ -294,7 +294,7 @@ public class CellHashingServiceImpl extends CellHashingService
                         }
                     }
 
-                    support.cacheReadset(hashingReadsetId, job.getUser());
+                    support.cacheReadset(hashingReadsetId, job.getUser(), true);
 
                 });
 
