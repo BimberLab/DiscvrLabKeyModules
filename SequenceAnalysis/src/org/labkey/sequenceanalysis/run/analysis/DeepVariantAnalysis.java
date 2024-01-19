@@ -66,14 +66,16 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
                 }}, "AUTO"),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--haploid_contigs"), "haploidContigs", "Haploid Contigs", "", "textfield", new JSONObject(){{
 
-                }}, "X,Y")
+                }}, "X,Y"),
+                ToolParameterDescriptor.create("binVersion", "DeepVariant Version", "The version of DeepVariant to run, which is passed to their docker container", "textfield", new JSONObject(){{
+                    put("allowBlank", false);
+                }}, "1.6.0")
         );
     }
 
     @Override
     public void init(SequenceAnalysisJobSupport support) throws PipelineJobException
     {
-        // TODO: handle auto-detection
         String modelType = getProvider().getParameterByName("modelType").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
         if (modelType == null)
         {
@@ -136,12 +138,21 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             throw new PipelineJobException("Missing model type");
         }
 
+        List<String> args = new ArrayList<>(getClientCommandArgs());
+        args.add("--model_type=" + modelType);
+
+        String binVersion = getProvider().getParameterByName("binVersion").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
+        if (binVersion == null)
+        {
+            throw new PipelineJobException("Missing binVersion");
+        }
+
         getWrapper().setOutputDir(outputDir);
         getWrapper().setWorkingDir(outputDir);
-        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, output, modelType, getClientCommandArgs());
+        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, output, binVersion, args);
 
         output.addOutput(outputFile, "gVCF File");
-        output.addSequenceOutput(outputFile, outputFile.getName(), "DeepVariant gVCF File", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+        output.addSequenceOutput(outputFile, outputFile.getName(), "DeepVariant gVCF File", rs.getReadsetId(), null, referenceGenome.getGenomeId(), "DeepVariant Version: " + binVersion);
         if (idxFile.exists())
         {
             output.addOutput(idxFile, "VCF Index");
@@ -189,7 +200,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             }
         }
 
-        public void execute(File inputBam, File refFasta, File outputGvcf, PipelineOutputTracker tracker, String modelType, List<String> extraArgs) throws PipelineJobException
+        public void execute(File inputBam, File refFasta, File outputGvcf, PipelineOutputTracker tracker, String binVersion, List<String> extraArgs) throws PipelineJobException
         {
             File workDir = outputGvcf.getParentFile();
 
@@ -205,7 +216,6 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             tracker.addIntermediateFile(localBashScript);
             tracker.addIntermediateFile(dockerBashScript);
 
-            String binVersion = "";
             List<String> bashArgs = new ArrayList<>(Arrays.asList("/opt/deepvariant/bin/run_deepvariant"));
             bashArgs.add("--ref=/work/" + refFastaLocal.getName());
             bashArgs.add("--reads=/work/" + inputBamLocal.getName());
