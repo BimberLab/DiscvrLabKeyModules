@@ -7,6 +7,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -708,6 +709,12 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     }
 
     @Override
+    public boolean performCleanupAfterEachStep()
+    {
+        return "true".equals(_job.getParameters().get("performCleanupAfterEachStep"));
+    }
+
+    @Override
     public boolean isCopyInputsLocally()
     {
         return "true".equals(_job.getParameters().get("copyInputsLocally"));
@@ -726,19 +733,26 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     @Override
     public void deleteIntermediateFiles() throws PipelineJobException
     {
+        deleteIntermediateFiles(Collections.emptySet());
+    }
+
+    public void deleteIntermediateFiles(@NotNull Collection<File> filesToRetain) throws PipelineJobException
+    {
         _job.getLogger().info("Cleaning up intermediate files");
 
-        Set<File> inputs = new HashSet<>();
-        inputs.addAll(getSupport().getInputFiles());
-
         Set<String> inputPaths = getInputPaths();
-
         if (isDeleteIntermediateFiles())
         {
             _job.getLogger().debug("Intermediate files will be removed, total: " + _intermediateFiles.size());
 
             for (File f : _intermediateFiles)
             {
+                if (filesToRetain.contains(f))
+                {
+                    _job.getLogger().debug("\tFile marked for deletion, but was part of filesToRetain and will not be deleted: " + f.getPath());
+                    continue;
+                }
+
                 _job.getLogger().debug("\tDeleting intermediate file: " + f.getPath());
 
                 if (inputPaths.contains(f.getPath()))

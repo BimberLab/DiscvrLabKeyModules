@@ -96,6 +96,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -347,9 +348,25 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             toAlign.put(d, pair);
         }
 
+        if (getHelper().getFileManager().performCleanupAfterEachStep())
+        {
+            List<File> toRetain = toAlign.values().stream().map(x -> Arrays.asList(x.first, x.second)).flatMap(List::stream).filter(Objects::nonNull).toList();
+            getTaskFileManagerImpl().deleteIntermediateFiles(toRetain);
+        }
+
         _resumer.setFastqPreprocessingDone(toAlign, preprocessingActions, copiedInputs);
 
         return toAlign;
+    }
+
+    private TaskFileManagerImpl getTaskFileManagerImpl() throws PipelineJobException
+    {
+        if (!(getHelper().getFileManager() instanceof TaskFileManagerImpl tfm))
+        {
+            throw new PipelineJobException("Expected fileManager to be a TaskFileManagerImpl");
+        }
+
+        return tfm;
     }
 
     private SequenceAlignmentJob getPipelineJob()
@@ -667,6 +684,12 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             List<RecordedAction> alignActions = new ArrayList<>();
             bam = doAlignment(referenceGenome, rs, files, alignActions);
 
+            if (getHelper().getFileManager().performCleanupAfterEachStep())
+            {
+                List<File> toRetain = Arrays.asList(bam, SequenceUtil.getExpectedIndex(bam));
+                getTaskFileManagerImpl().deleteIntermediateFiles(toRetain);
+            }
+
             _resumer.setInitialAlignmentDone(bam, alignActions);
         }
 
@@ -742,6 +765,12 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     action.setEndTime(end);
                     getJob().getLogger().info(stepCtx.getProvider().getLabel() + " Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
                     postProcessActions.add(action);
+
+                    if (getHelper().getFileManager().performCleanupAfterEachStep())
+                    {
+                        List<File> toRetain = Arrays.asList(bam, SequenceUtil.getExpectedIndex(bam));
+                        getTaskFileManagerImpl().deleteIntermediateFiles(toRetain);
+                    }
                 }
             }
 
@@ -789,6 +818,12 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 {
                     getJob().getLogger().debug("BAM is already coordinate sorted, no need to sort");
                 }
+            }
+
+            if (getHelper().getFileManager().performCleanupAfterEachStep())
+            {
+                List<File> toRetain = Arrays.asList(bam, SequenceUtil.getExpectedIndex(bam));
+                getTaskFileManagerImpl().deleteIntermediateFiles(toRetain);
             }
 
             _resumer.setBamSortDone(bam, sortAction);
@@ -841,6 +876,12 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             renameAction.setEndTime(end);
             getJob().getLogger().info("Rename Bam Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
 
+            if (getHelper().getFileManager().performCleanupAfterEachStep())
+            {
+                List<File> toRetain = Arrays.asList(renamedBam, SequenceUtil.getExpectedIndex(renamedBam));
+                getTaskFileManagerImpl().deleteIntermediateFiles(toRetain);
+            }
+
             _resumer.setBamRenameDone(renamedBam, List.of(renameAction));
         }
 
@@ -887,6 +928,12 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 Date end = new Date();
                 indexAction.setEndTime(end);
                 getJob().getLogger().info("IndexBam Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+
+                if (getHelper().getFileManager().performCleanupAfterEachStep())
+                {
+                    List<File> toRetain = Arrays.asList(renamedBam, SequenceUtil.getExpectedIndex(renamedBam));
+                    getTaskFileManagerImpl().deleteIntermediateFiles(toRetain);
+                }
 
                 _resumer.setIndexBamDone(true, indexAction);
             }
@@ -1045,8 +1092,15 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     }
 
                     analysisActions.add(action);
-                    _resumer.setBamAnalysisComplete(analysisActions);
+
+                    if (getHelper().getFileManager().performCleanupAfterEachStep())
+                    {
+                        List<File> toRetain = Arrays.asList(renamedBam, SequenceUtil.getExpectedIndex(renamedBam));
+                        getTaskFileManagerImpl().deleteIntermediateFiles(toRetain);
+                    }
                 }
+
+                _resumer.setBamAnalysisComplete(analysisActions);
             }
         }
 
