@@ -3298,6 +3298,15 @@ public class SequenceAnalysisController extends SpringActionController
 
             toolArr.put(intermediateFiles);
 
+            JSONObject performCleanupAfterEachStep = new JSONObject();
+            performCleanupAfterEachStep.put("name", "performCleanupAfterEachStep");
+            performCleanupAfterEachStep.put("defaultValue", true);
+            performCleanupAfterEachStep.put("label", "Perform Cleanup After Each Step");
+            performCleanupAfterEachStep.put("description", "Is selected, intermediate files from this job will be deleted after each step, instead of once at the end of the job. This can reduce the working directory size. Note: this will only apply if deleteIntermediateFiles is selected, and this is not supported across every possible pipeline type.");
+            performCleanupAfterEachStep.put("fieldXtype", "checkbox");
+
+            toolArr.put(performCleanupAfterEachStep);
+
             ret.put("toolParameters", toolArr);
 
             ret.put("description", handler.getDescription());
