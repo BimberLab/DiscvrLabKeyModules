@@ -212,7 +212,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             ensureLocalCopy(SequenceUtil.getExpectedIndex(inputBam), workDir, tracker);
 
             File refFastaLocal = ensureLocalCopy(refFasta, workDir, tracker);
-            ensureLocalCopy(new File(refFastaLocal.getPath() + ".fai"), workDir, tracker);
+            ensureLocalCopy(new File(refFasta.getPath() + ".fai"), workDir, tracker);
             ensureLocalCopy(new File(FileUtil.getBaseName(refFasta.getPath()) + ".dict"), workDir, tracker);
 
             File localBashScript = new File(workDir, "docker.sh");
