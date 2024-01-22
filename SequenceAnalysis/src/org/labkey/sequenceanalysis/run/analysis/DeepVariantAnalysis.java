@@ -204,6 +204,9 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
         public void execute(File inputBam, File refFasta, File outputGvcf, PipelineOutputTracker tracker, String binVersion, List<String> extraArgs) throws PipelineJobException
         {
             File workDir = outputGvcf.getParentFile();
+            File outputVcf = new File(outputGvcf.getPath().replaceAll(".g.vcf", ".vcf"));
+            tracker.addIntermediateFile(outputVcf);
+            tracker.addIntermediateFile(new File(outputVcf.getPath() + ".tbi"));
 
             File inputBamLocal = ensureLocalCopy(inputBam, workDir, tracker);
             ensureLocalCopy(SequenceUtil.getExpectedIndex(inputBam), workDir, tracker);
@@ -221,6 +224,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             bashArgs.add("--ref=/work/" + refFastaLocal.getName());
             bashArgs.add("--reads=/work/" + inputBamLocal.getName());
             bashArgs.add("--output_gvcf=/work/" + outputGvcf.getName());
+            bashArgs.add("--output_vcf=/work/" + outputVcf.getName());
             Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
             if (maxThreads != null)
             {
