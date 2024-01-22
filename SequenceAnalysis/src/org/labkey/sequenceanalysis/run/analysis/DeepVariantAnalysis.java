@@ -248,7 +248,6 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
                 writer.println("\t-v \"${WD}:/work\" \\");
                 writer.println("\t-v \"${HOME}:/homeDir\" \\");
                 writer.println("\t-u $UID \\");
-                writer.println("\t-e TMPDIR=/work/tmpDir \\");
                 writer.println("\t-e USERID=$UID \\");
                 writer.println("\t--entrypoint /bin/bash \\");
                 writer.println("\t-w /work \\");
