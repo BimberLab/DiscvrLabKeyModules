@@ -246,6 +246,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
                 writer.println("\t-u $UID \\");
                 writer.println("\t-e TMPDIR=/work/tmpDir \\");
                 writer.println("\t-e USERID=$UID \\");
+                writer.println("\t--entrypoint /bin/bash \\");
                 writer.println("\t-w /work \\");
                 writer.println("\tgoogle/deepvariant:" + binVersion + " \\");
                 writer.println("\t/work/" + dockerBashScript.getName());
