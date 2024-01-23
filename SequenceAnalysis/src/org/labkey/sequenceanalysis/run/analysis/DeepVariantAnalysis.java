@@ -247,6 +247,10 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
                 writer.println("sudo $DOCKER run --rm=true \\");
                 writer.println("\t-v \"${WD}:/work\" \\");
                 writer.println("\t-v \"${HOME}:/homeDir\" \\");
+                if (!StringUtils.isEmpty(System.getenv("TMPDIR")))
+                {
+                    writer.println("\t-v \"${TMPDIR}:/tmp\" \\");
+                }
                 writer.println("\t-u $UID \\");
                 writer.println("\t-e USERID=$UID \\");
                 writer.println("\t--entrypoint /bin/bash \\");
