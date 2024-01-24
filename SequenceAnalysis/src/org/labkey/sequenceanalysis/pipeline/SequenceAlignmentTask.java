@@ -1113,7 +1113,14 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             final File cramFile = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".cram");
             final File cramFileIdx = new File(cramFile.getPath() + ".crai");
             Integer threads = SequenceTaskHelper.getMaxThreads(getJob());
-            new SamtoolsCramConverter(getJob().getLogger()).convert(renamedBam, cramFile, referenceGenome.getWorkingFastaFileGzipped(), true, threads);
+            if (cramFileIdx.exists())
+            {
+                new SamtoolsCramConverter(getJob().getLogger()).convert(renamedBam, cramFile, referenceGenome.getWorkingFastaFileGzipped(), true, threads);
+            }
+            else
+            {
+                getJob().getLogger().debug("CRAM index already exists, skipping conversion");
+            }
 
             final File finalBam = renamedBam;
             final File finalBamIdx = new File(renamedBam.getPath() + ".bai");
