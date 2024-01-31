@@ -608,6 +608,12 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             checked: true
         },{
             xtype: 'checkbox',
+            fieldLabel: '# Cells Indicates Totla Per Lane',
+            helpPopup: '',
+            itemId: 'cellsReportedAsTotalPerLane',
+            checked: true
+        },{
+            xtype: 'checkbox',
             fieldLabel: 'Use MS (Dual Index)',
             itemId: 'useDualMsIndex',
             checked: true
@@ -822,6 +828,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
 
                     data[col.name] = cell;
 
+                    // This indicates that the first row from the plateId has a value for cells, but this does not.
                     if (!cell && col.name === 'cells' && lastValueByCol[colIdx]) {
                         doSplitCellsByPool = true;
                     }
@@ -832,7 +839,8 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         }, this);
 
         //split cells across rows
-        if (doSplitCellsByPool) {
+        var cellsReportedAsTotalPerLane = this.down('#cellsReportedAsTotalPerLane').getValue();
+        if (cellsReportedAsTotalPerLane || doSplitCellsByPool) {
             var cellCountMap = {};
             Ext4.Array.forEach(ret, function(data) {
                 if (data.plateId) {
@@ -844,8 +852,18 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             Ext4.Array.forEach(Ext4.Object.getKeys(cellCountMap), function(plateId) {
                 var arr = cellCountMap[plateId];
                 var size = arr.length;
+
+                // Two allowable patterns:
+                // 1) the first row has a value and rest are blank. Take this as the lane total
+                // 2) all rows have the same value, so take the first as the lane total
                 arr = Ext4.Array.remove(arr, null);
                 arr = Ext4.Array.remove(arr, '');
+
+                // Only attempt to collapse if this was selected:
+                if (cellsReportedAsTotalPerLane) {
+                    arr = Ext4.unique(arr);
+                }
+
                 if (arr.length === 1) {
                     cellCountMap[plateId] = arr[0] / size;
                 }
