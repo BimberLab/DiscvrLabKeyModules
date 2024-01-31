@@ -42,12 +42,12 @@ Ext4.define('SingleCell.panel.TenxSettingsPanel', {
                 fieldLabel: 'Require Assay Type',
                 labelWidth: 300,
                 itemId: 'requireAssayType',
-                checked: !!JSON.parse(configDefaults.requireAssayType)
+                checked: !!JSON.parse(configDefaults.requireAssayType ?? false)
             },{
                 xtype: 'checkbox',
                 fieldLabel: 'Combine Hashing and Cite-Seq',
                 labelWidth: 300, itemId: 'combineHashingCite',
-                checked: !!JSON.parse(configDefaults.combineHashingCite)
+                checked: !!JSON.parse(configDefaults.combineHashingCite ?? false)
             }];
 
             this.add(items);
