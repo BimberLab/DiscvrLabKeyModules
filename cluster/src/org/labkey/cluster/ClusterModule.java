@@ -45,7 +45,6 @@ import org.labkey.cluster.query.ReplaceJobStoreButton;
 import org.labkey.cluster.query.ViewClusterSubmissionsButton;
 import org.labkey.cluster.query.ViewJavaLogButton;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;

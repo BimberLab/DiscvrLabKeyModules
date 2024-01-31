@@ -95,7 +95,7 @@ public class BgzipRunner extends AbstractCommandWrapper
         return params;
     }
 
-    public File getExe()
+    public static File getExe()
     {
         return SequencePipelineService.get().getExeForPackage("BGZIPPATH", "bgzip");
     }

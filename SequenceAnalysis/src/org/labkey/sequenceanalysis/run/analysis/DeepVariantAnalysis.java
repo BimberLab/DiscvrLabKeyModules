@@ -83,15 +83,20 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             throw new PipelineJobException("Missing model type");
         }
 
+        inferModelType(modelType, getPipelineCtx());
+    }
+
+    public static void inferModelType(String modelType, PipelineContext ctx) throws PipelineJobException
+    {
         if ("AUTO".equals(modelType))
         {
-            getPipelineCtx().getLogger().info("Inferring model type by readset type:");
-            if (support.getCachedReadsets().size() != 1)
+            ctx.getLogger().info("Inferring model type by readset type:");
+            if (ctx.getSequenceSupport().getCachedReadsets().size() != 1)
             {
-                throw new PipelineJobException("Expected a single cached readset, found: " + support.getCachedReadsets().size());
+                throw new PipelineJobException("Expected a single cached readset, found: " + ctx.getSequenceSupport().getCachedReadsets().size());
             }
 
-            Readset rs = support.getCachedReadsets().get(0);
+            Readset rs = ctx.getSequenceSupport().getCachedReadsets().get(0);
             if ("ILLUMINA".equals(rs.getPlatform()))
             {
                 switch (rs.getApplication())
@@ -119,7 +124,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
                 throw new PipelineJobException("Unable to infer modelType for: " + rs.getName());
             }
 
-            support.cacheObject("modelType", modelType);
+            ctx.getSequenceSupport().cacheObject("modelType", modelType);
         }
     }
 
@@ -284,6 +289,12 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             if (!outputGvcf.exists())
             {
                 throw new PipelineJobException("File not found: " + outputGvcf.getPath());
+            }
+
+            File idxFile = new File(outputGvcf.getPath() + ".tbi");
+            if (!idxFile.exists())
+            {
+                throw new PipelineJobException("Missing index: " + idxFile.getPath());
             }
         }
     }

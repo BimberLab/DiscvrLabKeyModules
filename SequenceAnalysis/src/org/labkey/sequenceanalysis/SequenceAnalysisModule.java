@@ -45,6 +45,8 @@ import org.labkey.sequenceanalysis.analysis.BamCleanupHandler;
 import org.labkey.sequenceanalysis.analysis.BamHaplotypeHandler;
 import org.labkey.sequenceanalysis.analysis.CombineStarGeneCountsHandler;
 import org.labkey.sequenceanalysis.analysis.CombineSubreadGeneCountsHandler;
+import org.labkey.sequenceanalysis.analysis.DeepVariantHandler;
+import org.labkey.sequenceanalysis.analysis.GLNexusHandler;
 import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.analysis.HaplotypeCallerHandler;
 import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
@@ -330,6 +332,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new NextCladeHandler());
         SequenceAnalysisService.get().registerFileHandler(new ConvertToCramHandler());
         SequenceAnalysisService.get().registerFileHandler(new PbsvJointCallingHandler());
+        SequenceAnalysisService.get().registerFileHandler(new DeepVariantHandler());
+        SequenceAnalysisService.get().registerFileHandler(new GLNexusHandler());
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
         SequenceAnalysisService.get().registerReadsetHandler(new RestoreSraDataHandler());
@@ -382,8 +386,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         LDKService.get().registerQueryButton(new DownloadSraButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
         LDKService.get().registerQueryButton(new ArchiveReadsetsButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
 
-        LDKService.get().registerQueryButton(new ChangeReadsetStatusForAnalysesButton(), "sequenceanalysis", "sequence_analyses");
-        LDKService.get().registerQueryButton(new ChangeReadsetStatusButton(), "sequenceanalysis", "sequence_readsets");
+        LDKService.get().registerQueryButton(new ChangeReadsetStatusForAnalysesButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES);
+        LDKService.get().registerQueryButton(new ChangeReadsetStatusButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
 
         ExperimentService.get().registerExperimentRunTypeSource(new ExperimentRunTypeSource()
         {
