@@ -96,7 +96,32 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
                 scope: this,
                 href: LABKEY.ActionURL.getContextPath() + '/singlecell/exampleData/ImportReadsetTemplate.xlsx'
             }]
-        }, {
+        },{
+            xtype: 'ldk-linkbutton',
+            hidden: !LABKEY.Security.currentUser.isAdmin,
+            style: 'margin-top: 10px;',
+            text: 'Set Page Defaults',
+            itemId: 'copyPrevious',
+            linkCls: 'labkey-text-link',
+            scope: this,
+            handler: function (btn) {
+                Ext4.create('Ext.window.Window', {
+                    title: 'Set Page Defaults',
+                    items: [{
+                        xtype: 'singlecell-tenxsettingspanel',
+                        border: false,
+                        hidePageLoadWarning: false,
+                        hideButtons: true
+                    }],
+                    buttons: SingleCell.panel.TenxSettingsPanel.getButtons().concat([{
+                        text: 'Cancel',
+                        handler: function (btn) {
+                            btn.up('window').close();
+                        }
+                    }])
+                }).show();
+            }
+        },{
             xtype: 'textfield',
             style: 'margin-top: 20px;',
             fieldLabel: 'Expt Number',
