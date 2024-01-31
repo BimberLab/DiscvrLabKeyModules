@@ -94,6 +94,18 @@ public class SingleCellTableCustomizer extends AbstractTableCustomizer
         }
 
         LDKService.get().applyNaturalSort(ti, "plateId");
+
+        String uniqueHTOs = "uniqueHtos";
+        if (ti.getColumn(uniqueHTOs) == null)
+        {
+            SQLFragment sql = new SQLFragment("(SELECT count(DISTINCT s.hto) as expr FROM " + SingleCellSchema.NAME + "." + SingleCellSchema.TABLE_SORTS + " s WHERE s.rowid IN (SELECT DISTINCT sortId FROM " + SingleCellSchema.NAME + "." + SingleCellSchema.TABLE_CDNAS + " c WHERE c.plateid = " + ExprColumn.STR_TABLE_ALIAS + ".plateid AND c.container = " + ExprColumn.STR_TABLE_ALIAS + ".container))");
+            ExprColumn newCol = new ExprColumn(ti, uniqueHTOs, sql, JdbcType.INTEGER, ti.getColumn("plateId"), ti.getColumn("container"));
+            newCol.setLabel("Distinct HTOs In Lane");
+            DetailsURL details = DetailsURL.fromString("/query/executeQuery.view?schemaName=singlecell&query.queryName=cdna_libraries&query.plateId~eq=${plateId}", ti.getUserSchema().getContainer());
+            newCol.setURL(details);
+
+            ti.addColumn(newCol);
+        }
     }
 
     private void customizeSorts(AbstractTableInfo ti)

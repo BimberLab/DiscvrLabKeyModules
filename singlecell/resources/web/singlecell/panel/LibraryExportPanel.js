@@ -634,7 +634,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                 ',readsetId,readsetId/name,readsetId/application,readsetId/librarytype,readsetId/barcode5,readsetId/barcode5/sequence,readsetId/barcode3,readsetId/barcode3/sequence,readsetId/totalFiles,readsetId/concentration' +
                 ',tcrReadsetId,tcrReadsetId/name,tcrReadsetId/application,tcrReadsetId/librarytype,tcrReadsetId/barcode5,tcrReadsetId/barcode5/sequence,tcrReadsetId/barcode3,tcrReadsetId/barcode3/sequence,tcrReadsetId/totalFiles,tcrReadsetId/concentration' +
                 ',hashingReadsetId,hashingReadsetId/name,hashingReadsetId/application,hashingReadsetId/librarytype,hashingReadsetId/barcode5,hashingReadsetId/barcode5/sequence,hashingReadsetId/barcode3,hashingReadsetId/barcode3/sequence,hashingReadsetId/totalFiles,hashingReadsetId/concentration' +
-                ',citeseqReadsetId,citeseqReadsetId/name,citeseqReadsetId/application,citeseqReadsetId/librarytype,citeseqReadsetId/barcode5,citeseqReadsetId/barcode5/sequence,citeseqReadsetId/barcode3,citeseqReadsetId/barcode3/sequence,citeseqReadsetId/totalFiles,citeseqReadsetId/concentration',
+                ',citeseqReadsetId,citeseqReadsetId/name,citeseqReadsetId/application,citeseqReadsetId/librarytype,citeseqReadsetId/barcode5,citeseqReadsetId/barcode5/sequence,citeseqReadsetId/barcode3,citeseqReadsetId/barcode3/sequence,citeseqReadsetId/totalFiles,citeseqReadsetId/concentration,uniqueHtos',
             scope: this,
             filterArray: [LABKEY.Filter.create('plateId', plateIds.join(';'), LABKEY.Filter.Types.IN)],
             failure: LDK.Utils.getErrorCallback(),
@@ -661,6 +661,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                 if (expectedPairs) {
                     sortedRows = [];
                     var missingRows = [];
+                    var errorMsgs = [];
                     Ext4.Array.forEach(expectedPairs, function(p){
                         var found = false;
                         Ext4.Array.forEach(results.rows, function(row){
@@ -679,6 +680,11 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                         if (row['hashingReadsetId'] && row['hashingReadsetId/application'] && row['hashingReadsetId/application'] === 'Cell Hashing') {
                                             sortedRows.push(Ext4.apply({targetApplication: '10x HTO', laneAssignment: (p.length > 2 ? p[2] : null), plateAlias: (p.length > 3 ? p[3] : null)}, row));
                                             found = true;
+
+                                            if (row.uniqueHtos <=1) {
+                                                errorMsgs.push(row['hashingReadsetId/name'] + ': only ' + row.uniqueHtos + ' present')
+                                            }
+
                                             return false;
                                         }
                                     }
@@ -711,6 +717,11 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                     if (missingRows.length){
                         Ext4.Msg.alert('Error', 'The following plates were not found:<br>' + missingRows.join('<br>'));
+                        return;
+                    }
+
+                    if (errorMsgs.length){
+                        Ext4.Msg.alert('Error', 'The following lanes had HTO libraries, without multiple HTOs:<br>' + errorMsgs.join('<br>'));
                         return;
                     }
                 }
