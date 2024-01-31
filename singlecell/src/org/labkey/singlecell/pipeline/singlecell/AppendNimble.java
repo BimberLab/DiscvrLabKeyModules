@@ -36,6 +36,10 @@ public class AppendNimble extends AbstractRDiscvrStep
                     {{
                         put("check", false);
                     }}, false, null, true),
+                    SeuratToolParameter.create("ensureSamplesShareAllGenomes", "Ensure Samples Share All Genomes", "If checked, the job will fail unless nimble data is found for each requested genome for all samples", "checkbox", new JSONObject()
+                    {{
+                        put("check", true);
+                    }}, true, null, true),
                     SeuratToolParameter.create("maxLibrarySizeRatio", "Max Library Size Ratio", "This normalization relies on the assumption that the library size of the assay being normalized in negligible relative to the assayForLibrarySize. To verify this holds true, the method will error if librarySize(assayToNormalize)/librarySize(assayForLibrarySize) exceeds this value", "ldk-numberfield", new JSONObject()
                     {{
                         put("decimalPrecision", 4);
