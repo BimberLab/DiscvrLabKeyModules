@@ -212,7 +212,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
             for (File f : inputGvcfs)
             {
                 gvcfsLocal.add(ensureLocalCopy(f, workDir, tracker));
-                ensureLocalCopy(SequenceUtil.getExpectedIndex(f), workDir, tracker);
+                ensureLocalCopy(new File(f.getPath() + ".tbi"), workDir, tracker);
             }
 
             File localBashScript = new File(workDir, "docker.sh");
