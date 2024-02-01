@@ -48,6 +48,15 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 ToolParameterDescriptor.create("binVersion", "GLNexus Version", "The version of GLNexus to run, which is passed to their docker container", "textfield", new JSONObject(){{
                     put("allowBlank", false);
                 }}, "v1.2.7"),
+                ToolParameterDescriptor.create("configType", "Config Type", "This is passed to the --config argument of GLNexus.", "ldk-simplecombo", new JSONObject()
+                {{
+                    put("multiSelect", false);
+                    put("allowBlank", false);
+                    put("storeValues", "gatk;DeepVariant;DeepVariantWGS;DeepVariantWES");
+                    put("initialValues", "DeepVariant");
+                    put("delimiter", ";");
+                    put("joinReturnValue", true);
+                }}, null),
                 ToolParameterDescriptor.create("fileBaseName", "Filename", "This is the basename that will be used for the output gzipped VCF", "textfield", new JSONObject(){{
                     put("allowBlank", false);
                 }}, "CombinedGenotypes")
@@ -144,9 +153,15 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 throw new PipelineJobException("Missing binVersion");
             }
 
+            String configType = ctx.getParams().optString("configType", "DeepVariant");
+            if (configType == null)
+            {
+                throw new PipelineJobException("Missing configType");
+            }
+
             File outputVcf = new File(ctx.getOutputDir(), basename + ".vcf.gz");
 
-            new GLNexusWrapper(ctx.getLogger()).execute(inputVcfs, outputVcf, ctx.getFileManager(), binVersion);
+            new GLNexusWrapper(ctx.getLogger()).execute(inputVcfs, outputVcf, ctx.getFileManager(), binVersion, configType);
 
             ctx.getLogger().debug("adding sequence output: " + outputVcf.getPath());
             SequenceOutputFile so1 = new SequenceOutputFile();
@@ -202,7 +217,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
             }
         }
 
-        public void execute(List<File> inputGvcfs, File outputVcf, PipelineOutputTracker tracker, String binVersion) throws PipelineJobException
+        public void execute(List<File> inputGvcfs, File outputVcf, PipelineOutputTracker tracker, String binVersion, String configType) throws PipelineJobException
         {
             File workDir = outputVcf.getParentFile();
             tracker.addIntermediateFile(outputVcf);
@@ -242,12 +257,15 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                     writer.println("\t--memory='" + maxRam + "g' \\");
                 }
                 writer.println("\tquay.io/mlin/glnexus:" + binVersion + " \\");
+                writer.println("\tglnexus_cli \\");
+                writer.println("\t--config " + configType + " \\");
 
-                writer.println("\t--config DeepVariant" + " \\");
+                writer.println("\t--trim-uncalled-alleles \\");
 
-                gvcfsLocal.forEach(f -> {
-                    writer.println("\t-i gvcf=/work/" + f.getName() + " \\");
-                });
+                if (maxRam != null)
+                {
+                    writer.println("\t--mem-gbytes " + maxRam + "\\");
+                }
 
                 Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
                 if (maxThreads != null)
@@ -255,9 +273,21 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                     writer.println("\t--threads " + maxThreads + " \\");
                 }
 
+                gvcfsLocal.forEach(f -> {
+                    writer.println("\t/work/" + f.getName() + " \\");
+                });
+
                 File bcftools = BcftoolsRunner.getBcfToolsPath();
                 File bgzip = BgzipRunner.getExe();
                 writer.println("\t| " + bcftools.getPath() + " view | " + bgzip.getPath() + " -c > " + outputVcf.getPath());
+
+                // Command will fail if this exists:
+                File dbDir = new File (outputVcf.getParentFile(), "GLnexus.DB");
+
+                if (dbDir.exists())
+                {
+                    FileUtils.deleteDirectory(dbDir);
+                }
             }
             catch (IOException e)
             {
