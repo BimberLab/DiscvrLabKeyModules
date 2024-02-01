@@ -235,8 +235,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 }
                 writer.println("\t-u $UID \\");
                 writer.println("\t-e USERID=$UID \\");
-                writer.println("\t--entrypoint /bin/bash \\");
-                writer.println("\t-w /work \\");
+
                 Integer maxRam = SequencePipelineService.get().getMaxRam();
                 if (maxRam != null)
                 {
@@ -244,11 +243,10 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 }
                 writer.println("\tquay.io/mlin/glnexus:" + binVersion + " \\");
 
-                writer.println("\tglnexus_cli" + " \\");
                 writer.println("\t--config DeepVariant" + " \\");
 
                 gvcfsLocal.forEach(f -> {
-                    writer.println("\t-i gvcf=/work/" + f.getPath() + " \\");
+                    writer.println("\t-i gvcf=/work/" + f.getName() + " \\");
                 });
 
                 Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
