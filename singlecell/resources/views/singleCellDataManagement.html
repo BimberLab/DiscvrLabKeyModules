@@ -29,10 +29,10 @@
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.totalAlignments~eq': 0, 'query.totalForwardReads~isnonblank': null, 'query.application~contains': 'single', 'query.status~isblank': null, 'query.isArchived~eq': 0, 'query.librarytype~doesnotcontain': 'BCR', 'query.librarytype~contains': 'VDJ', 'query.sort': 'name'})
                     },{
                         name: 'Hashing Libraries Needing Feature Counts',
-                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.application~eq': 'Cell Hashing', 'query.totalForwardReads~isnonblank': null, 'query.readset/outputFileTypes~doesnotcontain': 'Cell Hashing Counts', 'query.status~isblank': null, 'query.sort': 'name'})
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.application~eq': 'Cell Hashing', 'query.totalForwardReads~isnonblank': null, 'query.outputFileTypes~doesnotcontain': 'Cell Hashing Counts', 'query.status~isblank': null, 'query.sort': 'name'})
                     },{
                         name: 'Cite-seq Libraries Needing Feature Counts',
-                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.application~eq': 'CITE-Seq', 'query.totalForwardReads~isnonblank': null, 'query.readset/outputFileTypes~doesnotcontain': 'CITE-seq Counts', 'query.status~isblank': null, 'query.sort': 'name'})
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.application~eq': 'CITE-Seq', 'query.totalForwardReads~isnonblank': null, 'query.outputFileTypes~doesnotcontain': 'CITE-seq Counts', 'query.status~isblank': null, 'query.sort': 'name'})
                     },{
                         name: 'VLoupe Files Needing TCR Import',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'outputfiles', 'query.readset/status~isblank': null, 'query.readset/numTcrResults~eq': 0, 'query.category~eq': '10x VLoupe', 'query.sort': 'readset/name'})
