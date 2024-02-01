@@ -266,7 +266,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 throw new PipelineJobException(e);
             }
 
-            execute(Arrays.asList(localBashScript.getPath()));
+            execute(Arrays.asList("/bin/bash", localBashScript.getPath()));
 
             if (!outputVcf.exists())
             {

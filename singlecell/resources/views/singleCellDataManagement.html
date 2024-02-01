@@ -43,6 +43,9 @@
                         name: 'Readsets Assigned to Run Lacking Data',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.viewName': 'Assigned to Run Lacking Data'})
                     },{
+                        name: 'cDNA Libraries with Hashing and Single HTO/Lane',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'singlecell', queryName: 'cdna_libraries', 'query.uniqueHtos~in': '0;1', 'query.hashingReadsetId/name~isnonblank': null, 'query.hashingReadsetId/totalFiles~eq': 0})
+                    },{
                         name: 'Analyses In Novogene-Related Workbook',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_analyses', 'query.container/title~containsoneof': 'Novogene;shipment'})
                     }]
