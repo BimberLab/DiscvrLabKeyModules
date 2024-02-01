@@ -20,7 +20,7 @@ repositories {
 
 configurations.all {
     resolutionStrategy {
-        force "com.sun.activation:jakarta.activation:${activationVersion}"
+        force "jakarta.activation:jakarta.activation-api:${activationVersion}"
         // NOTE: this should be kept in sync with mcc module:
         force "jakarta.xml.bind:jakarta.xml.bind-api:${jaxbVersion}"
     }

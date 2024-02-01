@@ -3,7 +3,7 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
 
-    <!--NOTE: if you plan to use ActiveMQ for status updates, you will need to configure this in labkey.xml-->
+    <!--NOTE: if you plan to use ActiveMQ for status updates, you will need to configure this in application.properties-->
 
     <bean id="pipelineJobService" class="org.labkey.pipeline.api.PipelineServiceImpl">
         <!--You will list all remote execution engines.  You will most likely only have one engine to register, but this example contains multiples to show different configurations-->
