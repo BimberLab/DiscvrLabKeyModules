@@ -283,7 +283,6 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
 
                 // Command will fail if this exists:
                 File dbDir = new File (outputVcf.getParentFile(), "GLnexus.DB");
-
                 if (dbDir.exists())
                 {
                     FileUtils.deleteDirectory(dbDir);
@@ -294,6 +293,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 throw new PipelineJobException(e);
             }
 
+            setWorkingDir(workDir);
             execute(Arrays.asList("/bin/bash", localBashScript.getPath()));
 
             if (!outputVcf.exists())

@@ -284,6 +284,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
                 throw new PipelineJobException(e);
             }
 
+            setWorkingDir(workDir);
             execute(Arrays.asList("/bin/bash", localBashScript.getPath()));
 
             if (!outputGvcf.exists())
