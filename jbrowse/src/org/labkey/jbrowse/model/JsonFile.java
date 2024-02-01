@@ -12,6 +12,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -56,7 +57,6 @@ import org.labkey.jbrowse.pipeline.IndexVariantsStep;
 import org.labkey.jbrowse.pipeline.JBrowseLucenePipelineJob;
 import org.labkey.sequenceanalysis.run.util.TabixRunner;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
