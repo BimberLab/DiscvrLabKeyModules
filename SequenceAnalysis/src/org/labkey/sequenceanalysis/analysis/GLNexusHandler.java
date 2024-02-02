@@ -285,6 +285,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 File dbDir = new File (outputVcf.getParentFile(), "GLnexus.DB");
                 if (dbDir.exists())
                 {
+                    getLogger().debug("Deleting pre-existing GLnexus.DB dir");
                     FileUtils.deleteDirectory(dbDir);
                 }
             }
