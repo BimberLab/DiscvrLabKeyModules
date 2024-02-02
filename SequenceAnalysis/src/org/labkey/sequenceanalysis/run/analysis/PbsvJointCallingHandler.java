@@ -151,14 +151,17 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
             List<File> outputs = new ArrayList<>();
             if (getVariantPipelineJob(ctx.getJob()) != null && getVariantPipelineJob(ctx.getJob()).isScatterJob())
             {
-                for (Interval i : getVariantPipelineJob(ctx.getJob()).getIntervalsForTask())
+                int idx = 0;
+                List<Interval> intervals = getVariantPipelineJob(ctx.getJob()).getIntervalsForTask();
+                for (Interval i : intervals)
                 {
+                    idx++;
                     if (i.getStart() != 1)
                     {
                         throw new PipelineJobException("Expected all intervals to start on the first base: " + i);
                     }
 
-                    File o = runPbsvCall(ctx, filesToProcess, genome, outputBaseName + (getVariantPipelineJob(ctx.getJob()).getIntervalsForTask().size() == 1 ? "" : "." + i.getContig()), i.getContig(), jobCompleted);
+                    File o = runPbsvCall(ctx, filesToProcess, genome, outputBaseName + (getVariantPipelineJob(ctx.getJob()).getIntervalsForTask().size() == 1 ? "" : "." + i.getContig()), i.getContig(), (" (" + idx + " of " + intervals.size() + ")"), jobCompleted);
                     if (o != null)
                     {
                         outputs.add(o);
@@ -167,7 +170,7 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
             }
             else
             {
-                outputs.add(runPbsvCall(ctx, filesToProcess, genome, outputBaseName, null, jobCompleted));
+                outputs.add(runPbsvCall(ctx, filesToProcess, genome, outputBaseName, null, null, jobCompleted));
             }
 
             try
@@ -228,11 +231,11 @@ public class PbsvJointCallingHandler extends AbstractParameterizedOutputHandler<
             }
         }
 
-        private File runPbsvCall(JobContext ctx, List<File> inputs, ReferenceGenome genome, String outputBaseName, @Nullable String contig, boolean jobCompleted) throws PipelineJobException
+        private File runPbsvCall(JobContext ctx, List<File> inputs, ReferenceGenome genome, String outputBaseName, @Nullable String contig, @Nullable String statusSuffix, boolean jobCompleted) throws PipelineJobException
         {
             if (contig != null)
             {
-                ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Processing: " + contig);
+                ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Processing: " + contig + (statusSuffix == null ? "" : statusSuffix));
             }
 
             if (inputs.isEmpty())

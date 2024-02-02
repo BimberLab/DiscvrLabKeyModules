@@ -483,6 +483,12 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             action.setEndTime(end);
             ctx.getJob().getLogger().info(stepCtx.getProvider().getLabel() + " Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
 
+            if (ctx.getFileManager().performCleanupAfterEachStep())
+            {
+                List<File> toRetain = Arrays.asList(currentVCF, new File(currentVCF.getPath() + ".tbi"));
+                getTaskFileManagerImpl(ctx).deleteIntermediateFiles(toRetain);
+            }
+
             resumer.setStepComplete(stepIdx, input.getPath(), action, currentVCF);
         }
 
@@ -885,5 +891,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 ssg.performAdditionalMergeTasks(ctx, job, manager, genome, orderedScatterOutputs, orderedJobDirs);
             }
         }
+    }
+
+    private static TaskFileManagerImpl getTaskFileManagerImpl(JobContext ctx) throws PipelineJobException
+    {
+        if (!(ctx.getFileManager() instanceof TaskFileManagerImpl tfm))
+        {
+            throw new PipelineJobException("Expected fileManager to be a TaskFileManagerImpl");
+        }
+
+        return tfm;
     }
 }

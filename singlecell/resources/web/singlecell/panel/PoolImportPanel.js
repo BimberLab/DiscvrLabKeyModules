@@ -56,6 +56,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         name: 'assaytype',
         labels: ['Assay Type', 'Assay Type', 'Assay', 'treatment'],
         allowRowSpan: false,
+        alwaysShow: true,
         allowBlank: false,
         transform: 'assaytype'
     },{
@@ -159,11 +160,16 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         },
 
         assaytype: function(val, panel) {
+            var requireAssayType = panel.down('#requireAssayType').getValue();
             if (val && (val === '--' || val === '-')) {
-                val = 'N/A';
+                val = null;
             }
 
-            return val || 'N/A';
+            if (!requireAssayType && !val) {
+                return 'N/A';
+            }
+
+            return val;
         },
 
         subject: function(val, panel) {
@@ -387,6 +393,28 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         });
 
         this.callParent(arguments);
+
+        Ext4.Msg.wait('Loading...');
+        LABKEY.Ajax.request({
+            method: 'POST',
+            url: LABKEY.ActionURL.buildURL('singlecell', 'getTenXImportDefaults'),
+            scope: this,
+            success: function(response){
+                LDK.Utils.decodeHttpResponseJson(response);
+                if (response.responseJSON){
+                    this.configDefaults = response.responseJSON;
+                    for (var name in this.configDefaults){
+                        var item = this.down('#' + name);
+                        if (item){
+                            item.setValue(this.configDefaults[name]);
+                        }
+                    }
+
+                    Ext4.Msg.hide();
+                }
+            },
+            failure: LDK.Utils.getErrorCallback()
+        });
     },
 
     getPanelItems: function(){
@@ -466,6 +494,31 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             linkCls: 'labkey-text-link',
             href: LABKEY.ActionURL.buildURL('query', 'executeQuery', Laboratory.Utils.getQueryContainerPath(), {schemaName: 'singlecell', 'query.queryName': 'stim_types'}),
             style: 'margin-top: 10px;'
+        }, {
+            xtype: 'ldk-linkbutton',
+            width: null,
+            hidden: !LABKEY.Security.currentUser.isAdmin,
+            text: 'Set Page Defaults',
+            itemId: 'copyPrevious',
+            linkCls: 'labkey-text-link',
+            scope: this,
+            handler: function (btn) {
+                Ext4.create('Ext.window.Window', {
+                    title: 'Set Page Defaults',
+                    items: [{
+                        xtype: 'singlecell-tenxsettingspanel',
+                        border: false,
+                        hidePageLoadWarning: false,
+                        hideButtons: true
+                    }],
+                    buttons: SingleCell.panel.TenxSettingsPanel.getButtons().concat([{
+                        text: 'Cancel',
+                        handler: function (btn) {
+                            btn.up('window').close();
+                        }
+                    }])
+                }).show();
+            }
         },{
             xtype: 'textfield',
             style: 'margin-top: 20px;',
@@ -508,6 +561,11 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             checked: false
         },{
             xtype: 'checkbox',
+            fieldLabel: 'Require Assay Type',
+            itemId: 'requireAssayType',
+            checked: true
+        },{
+            xtype: 'checkbox',
             fieldLabel: 'Combine Hashing and Cite-Seq Libraries',
             itemId: 'combineHashingCite',
             checked: false,
@@ -547,6 +605,12 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             xtype: 'checkbox',
             fieldLabel: 'Use 10x V2/HT (Dual Index)',
             itemId: 'useDualIndex',
+            checked: true
+        },{
+            xtype: 'checkbox',
+            fieldLabel: '# Cells Indicates Totla Per Lane',
+            helpPopup: '',
+            itemId: 'cellsReportedAsTotalPerLane',
             checked: true
         },{
             xtype: 'checkbox',
@@ -764,6 +828,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
 
                     data[col.name] = cell;
 
+                    // This indicates that the first row from the plateId has a value for cells, but this does not.
                     if (!cell && col.name === 'cells' && lastValueByCol[colIdx]) {
                         doSplitCellsByPool = true;
                     }
@@ -774,7 +839,8 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         }, this);
 
         //split cells across rows
-        if (doSplitCellsByPool) {
+        var cellsReportedAsTotalPerLane = this.down('#cellsReportedAsTotalPerLane').getValue();
+        if (cellsReportedAsTotalPerLane || doSplitCellsByPool) {
             var cellCountMap = {};
             Ext4.Array.forEach(ret, function(data) {
                 if (data.plateId) {
@@ -786,8 +852,18 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             Ext4.Array.forEach(Ext4.Object.getKeys(cellCountMap), function(plateId) {
                 var arr = cellCountMap[plateId];
                 var size = arr.length;
+
+                // Two allowable patterns:
+                // 1) the first row has a value and rest are blank. Take this as the lane total
+                // 2) all rows have the same value, so take the first as the lane total
                 arr = Ext4.Array.remove(arr, null);
                 arr = Ext4.Array.remove(arr, '');
+
+                // Only attempt to collapse if this was selected:
+                if (cellsReportedAsTotalPerLane) {
+                    arr = Ext4.unique(arr);
+                }
+
                 if (arr.length === 1) {
                     cellCountMap[plateId] = arr[0] / size;
                 }
@@ -1049,6 +1125,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         var data = [];
         var missingValues = false;
         var requireHTO = this.down('#requireHTO').getValue() || (this.down('#requireHashTag') && this.down('#requireHashTag').getValue());
+        var requireAssayType = this.down('#requireAssayType').getValue()
         Ext4.Array.forEach(parsedRows, function(row, rowIdx){
             var toAdd = [rowIdx + 1];
             Ext4.Array.forEach(colIdxs, function(colIdx){
@@ -1057,6 +1134,10 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
 
                 var allowBlank = colDef.allowBlank;
                 if (requireHTO && colDef.name === 'hto') {
+                    allowBlank = false;
+                }
+
+                if (requireAssayType && colDef.name == 'assaytype') {
                     allowBlank = false;
                 }
 

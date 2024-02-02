@@ -57,7 +57,7 @@ public class SequenceOutputHandlerRemoteTask extends WorkDirectoryTask<SequenceO
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
-            for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers(SequenceOutputHandler.TYPE.OutputFile))
+            for (SequenceOutputHandler<?> handler : SequenceAnalysisServiceImpl.get().getFileHandlers(SequenceOutputHandler.TYPE.OutputFile))
             {
                 allowableNames.add(handler.getName());
 

@@ -2,6 +2,7 @@
     <dependencies>
         <dependency path="laboratory.context" />
         <dependency path="extWidgets/ExcelUploadPanel.js"/>
+        <dependency path="singlecell/panel/TenxSettingsPanel.js"/>
         <dependency path="singlecell/panel/PoolImportPanel.js"/>
 
         <dependency path="internal/jQuery"/>
