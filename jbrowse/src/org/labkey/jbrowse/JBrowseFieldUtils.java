@@ -75,12 +75,10 @@ public class JBrowseFieldUtils
     public static Map<String, JBrowseFieldDescriptor> getGenotypeDependentFields(@Nullable JsonFile jsonFile) {
         Map<String, JBrowseFieldDescriptor> ret = new HashMap<>();
         ret.put(VARIABLE_SAMPLES, new JBrowseFieldDescriptor(VARIABLE_SAMPLES, "All samples with this variant", true, true, VCFHeaderLineType.Character, 7).multiValued(true).label("Samples With Variant"));
-
-        // TODO: restore these once existing indexes are regenerated:
-        // ret.put(N_HET, new JBrowseFieldDescriptor(N_HET, "The number of samples with this allele that are heterozygous", false, true, VCFHeaderLineType.Integer, 9).label("# Heterozygotes"));
-        // ret.put(N_HOMVAR, new JBrowseFieldDescriptor(N_HOMVAR, "The number of samples with this allele that are homozygous", false, true, VCFHeaderLineType.Integer, 9).label("# Homozygous Variant"));
-        // ret.put(N_CALLED, new JBrowseFieldDescriptor(N_CALLED, "The number of samples with called genotypes at this position", false, true, VCFHeaderLineType.Integer, 9).label("# Genotypes Called"));
-        // ret.put(FRACTION_HET, new JBrowseFieldDescriptor(FRACTION_HET, "The fraction of samples with this allele that are heterozygous", false, true, VCFHeaderLineType.Float, 9).label("Fraction Heterozygotes"));
+        ret.put(N_HET, new JBrowseFieldDescriptor(N_HET, "The number of samples with this allele that are heterozygous", false, true, VCFHeaderLineType.Integer, 9).label("# Heterozygotes"));
+        ret.put(N_HOMVAR, new JBrowseFieldDescriptor(N_HOMVAR, "The number of samples with this allele that are homozygous", false, true, VCFHeaderLineType.Integer, 9).label("# Homozygous Variant"));
+        ret.put(N_CALLED, new JBrowseFieldDescriptor(N_CALLED, "The number of samples with called genotypes at this position", false, true, VCFHeaderLineType.Integer, 9).label("# Genotypes Called"));
+        ret.put(FRACTION_HET, new JBrowseFieldDescriptor(FRACTION_HET, "The fraction of samples with this allele that are heterozygous", false, true, VCFHeaderLineType.Float, 9).label("Fraction Heterozygotes"));
 
         if (jsonFile != null) {
             File vcf = jsonFile.getTrackFile();
@@ -99,6 +97,12 @@ public class JBrowseFieldUtils
                     }
                     else
                     {
+                        ret.put(VARIABLE_SAMPLES, new JBrowseFieldDescriptor(VARIABLE_SAMPLES, "All samples with this variant", true, true, VCFHeaderLineType.Character, 7).multiValued(true).label("Samples With Variant"));
+                        ret.put(N_HET, new JBrowseFieldDescriptor(N_HET, "The number of samples with this allele that are heterozygous", false, true, VCFHeaderLineType.Integer, 9).label("# Heterozygotes"));
+                        ret.put(N_HOMVAR, new JBrowseFieldDescriptor(N_HOMVAR, "The number of samples with this allele that are homozygous", false, true, VCFHeaderLineType.Integer, 9).label("# Homozygous Variant"));
+                        ret.put(N_CALLED, new JBrowseFieldDescriptor(N_CALLED, "The number of samples with called genotypes at this position", false, true, VCFHeaderLineType.Integer, 9).label("# Genotypes Called"));
+                        ret.put(FRACTION_HET, new JBrowseFieldDescriptor(FRACTION_HET, "The fraction of samples with this allele that are heterozygous", false, true, VCFHeaderLineType.Float, 9).label("Fraction Heterozygotes"));
+
                         ret.get(VARIABLE_SAMPLES).allowableValues(header.getSampleNamesInOrder());
                     }
                 }

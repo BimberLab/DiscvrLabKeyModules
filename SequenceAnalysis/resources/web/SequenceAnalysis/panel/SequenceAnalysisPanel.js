@@ -310,6 +310,14 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 checked: true,
                 xtype: 'checkbox'
             },{
+                fieldLabel: 'Perform Cleanup After Each Step',
+                helpPopup: 'Is selected, intermediate files from this job will be deleted after each step, instead of once at the end of the job. This can reduce the working directory size. Note: this will only apply if deleteIntermediateFiles is selected, and this is not supported across every possible pipeline type.',
+                name: 'performCleanupAfterEachStep',
+                inputValue: true,
+                uncheckedValue: false,
+                checked: true,
+                xtype: 'checkbox'
+            },{
                 fieldLabel: 'Copy Inputs To Working Directory?',
                 helpPopup: 'Check to copy the input files to the working directory.  Depending on your environment, this may or may not help performance.',
                 name: 'copyInputsLocally',

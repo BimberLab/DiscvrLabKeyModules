@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
+import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.action.ExportAction;
@@ -35,6 +36,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.ContainerType;
 import org.labkey.api.data.DbScope;
+import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -47,6 +49,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.User;
+import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
@@ -494,4 +497,64 @@ public class SingleCellController extends SpringActionController
         }
     }
 
+    public final static String CONFIG_PROPERTY_DOMAIN_IMPORT = "org.labkey.singlecell.importsettings";
+
+    @RequiresPermission(ReadPermission.class)
+    public static class GetTenXImportDefaultsAction extends ReadOnlyApiAction<Object>
+    {
+        @Override
+        public ApiResponse execute(Object form, BindException errors) throws Exception
+        {
+            Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
+            Map<String, Object> resultProperties = new HashMap<>(PropertyManager.getProperties(target, CONFIG_PROPERTY_DOMAIN_IMPORT));
+
+            return new ApiSimpleResponse(resultProperties);
+        }
+    }
+
+    @RequiresPermission(AdminPermission.class)
+    public static class SetTenXImportDefaultsAction extends MutatingApiAction<SetSequenceImportDefaultsForm>
+    {
+        public static final String REQUIRE_ASSAY_TYPE = "requireAssayType";
+        public static final String COMBINE_HASHING_CITE = "combineHashingCite";
+
+        @Override
+        public ApiResponse execute(SetSequenceImportDefaultsForm form, BindException errors) throws Exception
+        {
+            Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
+            PropertyManager.PropertyMap configMap = PropertyManager.getWritableProperties(target, CONFIG_PROPERTY_DOMAIN_IMPORT, true);
+            configMap.put(REQUIRE_ASSAY_TYPE, Boolean.valueOf(form.isRequireAssayType()).toString());
+            configMap.put(COMBINE_HASHING_CITE, Boolean.valueOf(form.isCombineHashingCite()).toString());
+
+            configMap.save();
+
+            return new ApiSimpleResponse("success", true);
+        }
+    }
+
+    public static class SetSequenceImportDefaultsForm
+    {
+        private boolean _requireAssayType = false;
+        private boolean _combineHashingCite = false;
+
+        public boolean isRequireAssayType()
+        {
+            return _requireAssayType;
+        }
+
+        public void setRequireAssayType(boolean requireAssayType)
+        {
+            _requireAssayType = requireAssayType;
+        }
+
+        public boolean isCombineHashingCite()
+        {
+            return _combineHashingCite;
+        }
+
+        public void setCombineHashingCite(boolean combineHashingCite)
+        {
+            _combineHashingCite = combineHashingCite;
+        }
+    }
 }

@@ -250,7 +250,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                                     throw new PipelineJobException("Readset is blank for loupe file: " + loupeId);
                                 }
 
-                                ctx.getSequenceSupport().cacheReadset(so.getReadset(), ctx.getJob().getUser());
+                                ctx.getSequenceSupport().cacheReadset(so.getReadset(), ctx.getJob().getUser(), true);
                             }
                         }
                         else

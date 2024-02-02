@@ -1813,5 +1813,83 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("span", "0.029"));
 
         clearFilterDialog("IMPACT equals HIGH,MODERATE");
+
+        testLuceneColumnSerialization(sessionId);
+    }
+
+    private void testLuceneColumnSerializationFirstRow() {
+        WebElement locator = TOP_ROW.findElement(getDriver());
+
+        for (WebElement elem : locator.findElements(By.xpath("./child::*"))) {
+            String value = elem.getText();
+            if (StringUtils.trimToNull(value) == null)
+            {
+                value = "";
+            }
+
+            if (StringUtils.isEmpty(elem.getText())) {
+                return;
+            }
+
+            switch(elem.getAttribute("aria-colindex"))
+            {
+                case "1":
+                    Assert.assertEquals(value, "1");
+                    break;
+                case "2":
+                    Assert.assertEquals(value, "2");
+                    break;
+                case "3":
+                    Assert.assertEquals(value, "A");
+                    break;
+                case "4":
+                    Assert.assertEquals(value, "T");
+                    break;
+                case "6":
+                    Assert.assertEquals(value, "0.029");
+                    break;
+                case "7":
+                    Assert.assertEquals(value, "7.292");
+                    break;
+                case "8":
+                    Assert.assertEquals(value, "HIGH");
+                    break;
+            }
+        }
+    }
+
+    private void testLuceneColumnSerialization(String sessionId) {
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=" + sessionId);
+        waitAndClick(Locator.tagContainingText("button", "Show all regions in assembly").withClass("MuiButtonBase-root"));
+        waitAndClick(Locator.tagWithText("p", "No tracks active."));
+        waitAndClick(Locator.tagWithText("button", "Open track selector"));
+
+        Locator l = Locator.tagWithText("span", "TestVCF").withClass("MuiFormControlLabel-label");
+        waitAndClick(l);
+        getDriver().findElement(Locator.tag("body")).sendKeys(Keys.ESCAPE); //close modal
+
+        openTrackMenuItem("Variant Search", true);
+        waitAndClick(Locator.tagWithAttribute("button", "aria-label", "Select columns"));
+
+        Locator caddScoreToggle = Locator.tagWithAttribute("input", "name", "CADD_PH");
+        waitForElement(caddScoreToggle);
+        WebElement parentOfCaddScoreToggle = caddScoreToggle.findElement(getDriver()).findElement(By.xpath("./.."));
+        parentOfCaddScoreToggle.click();
+
+        String colVisModelString = "%257B%2522contig%2522%253Atrue%252C%2522start%2522%253Atrue%252C%2522ref%2522%253Atrue%252C%2522alt%2522%253Atrue%252C%2522variableSamples%2522%253Atrue%252C%2522AF%2522%253Atrue%252C%2522CADD_PH%2522%253Atrue%252C%2522IMPACT%2522%253Atrue%257D";
+        Assert.assertEquals(getUrlParam("colVisModel"), colVisModelString);
+
+        getDriver().navigate().refresh();
+
+        waitForElement(TOP_ROW);
+        Assert.assertEquals(getUrlParam("colVisModel"), colVisModelString);
+        testLuceneColumnSerializationFirstRow();
+
+        waitAndClick(Locator.tagWithText("button", "Search"));
+        waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
+
+        waitForElement(TOP_ROW);
+        Assert.assertEquals(getUrlParam("colVisModel"), colVisModelString);
+        testLuceneColumnSerializationFirstRow();
     }
 }

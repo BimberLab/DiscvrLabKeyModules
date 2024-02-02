@@ -56,6 +56,8 @@ public interface TaskFileManager extends PipelineOutputTracker
 
     boolean isDeleteIntermediateFiles();
 
+    public boolean performCleanupAfterEachStep();
+
     boolean isCopyInputsLocally();
 
     void addPicardMetricsFiles(List<PipelineStepOutput.PicardMetricsOutput> files) throws PipelineJobException;

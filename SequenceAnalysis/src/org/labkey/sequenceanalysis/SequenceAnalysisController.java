@@ -77,6 +77,7 @@ import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
 import org.labkey.api.laboratory.NavItem;
+import org.labkey.api.laboratory.security.LaboratoryAdminPermission;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleHtmlView;
 import org.labkey.api.module.ModuleLoader;
@@ -3297,6 +3298,15 @@ public class SequenceAnalysisController extends SpringActionController
 
             toolArr.put(intermediateFiles);
 
+            JSONObject performCleanupAfterEachStep = new JSONObject();
+            performCleanupAfterEachStep.put("name", "performCleanupAfterEachStep");
+            performCleanupAfterEachStep.put("defaultValue", true);
+            performCleanupAfterEachStep.put("label", "Perform Cleanup After Each Step");
+            performCleanupAfterEachStep.put("description", "Is selected, intermediate files from this job will be deleted after each step, instead of once at the end of the job. This can reduce the working directory size. Note: this will only apply if deleteIntermediateFiles is selected, and this is not supported across every possible pipeline type.");
+            performCleanupAfterEachStep.put("fieldXtype", "checkbox");
+
+            toolArr.put(performCleanupAfterEachStep);
+
             ret.put("toolParameters", toolArr);
 
             ret.put("description", handler.getDescription());
@@ -5126,6 +5136,159 @@ public class SequenceAnalysisController extends SpringActionController
         public void setDataFileUrl(String dataFileUrl)
         {
             _dataFileUrl = dataFileUrl;
+        }
+    }
+
+    @RequiresPermission(UpdatePermission.class)
+    public static class ArchiveReadsetsAction extends MutatingApiAction<ArchiveReadsetsForm>
+    {
+        @Override
+        public ApiResponse execute(ArchiveReadsetsForm form, BindException errors) throws Exception
+        {
+            if (form.getReadsetIds() == null || form.getReadsetIds().length == 0)
+            {
+                errors.reject(ERROR_MSG, "No readset Ids provided");
+                return null;
+            }
+
+            TableInfo readData = QueryService.get().getUserSchema(getUser(), getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
+            for (int readsetId : form.getReadsetIds())
+            {
+                Readset rs = SequenceAnalysisService.get().getReadset(readsetId, getUser());
+                Container c = ContainerManager.getForId(rs.getContainer());
+                if (!getContainer().equals(c))
+                {
+                    Container toTest = c.isWorkbook() ? c.getParent() : c;
+                    if (!getContainer().equals(toTest))
+                    {
+                        errors.reject(ERROR_MSG, "Readset is not from this container: " + readsetId);
+                        return null;
+                    }
+                }
+
+                if (!c.hasPermission(getUser(), LaboratoryAdminPermission.class))
+                {
+                    errors.reject(ERROR_MSG, "Insufficient permissions to archive readsets in the folder: " + c.getPath());
+                    return null;
+                }
+
+                Set<File> toDelete = new HashSet<>();
+                List<Map<String, Object>> toUpdate = new ArrayList<>();
+                for (ReadData rd : rs.getReadData())
+                {
+                    if (rd.getSra_accession() == null)
+                    {
+                        errors.reject(ERROR_MSG, "Cannot mark a readdata as archived that does not have an SRA accession: " + readsetId + " / " + rd.getRowid());
+                        return null;
+                    }
+
+                    toUpdate.add(new CaseInsensitiveHashMap<>(Map.of("rowid", rd.getRowid(), "archived", true, "container", rd.getContainer())));
+
+                    // File 1:
+                    ExpData d1 = ExperimentService.get().getExpData(rd.getFileId1());
+                    if (d1 != null)
+                    {
+                        File file1 = d1.getFile();
+                        if (file1 != null && file1.exists())
+                        {
+                            toDelete.add(file1);
+                        }
+
+                        // find matching readdata:
+                        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("fileid1/dataFileUrl"), d1.getDataFileUrl()).addCondition(FieldKey.fromString("rowid"), rd.getRowid(), CompareType.NEQ);
+                        TableSelector ts = new TableSelector(readData, PageFlowUtil.set("rowid", "container"), filter, null);
+                        if (ts.exists())
+                        {
+                            ts.forEachResults(r -> {
+                                toUpdate.add(new CaseInsensitiveHashMap<>(Map.of("rowid", r.getInt(FieldKey.fromString("rowid")), "archived", true, "container", r.getString(FieldKey.fromString("container")))));
+                            });
+                        }
+                    }
+
+                    if (rd.getFileId2() != null)
+                    {
+                        ExpData d2 = ExperimentService.get().getExpData(rd.getFileId2());
+                        if (d2 != null)
+                        {
+                            File file2 = d2.getFile();
+                            if (file2 != null)
+                            {
+                                if (file2.exists())
+                                {
+                                    toDelete.add(file2);
+                                }
+
+                                // find matching readdata:
+                                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("fileid2/dataFileUrl"), d2.getDataFileUrl()).addCondition(FieldKey.fromString("rowid"), rd.getRowid(), CompareType.NEQ);
+                                TableSelector ts = new TableSelector(readData, PageFlowUtil.set("rowid", "container"), filter, null);
+                                if (ts.exists())
+                                {
+                                    ts.forEachResults(r -> {
+                                        toUpdate.add(new CaseInsensitiveHashMap<>(Map.of("rowid", r.getInt(FieldKey.fromString("rowid")), "archived", true, "container", r.getString(FieldKey.fromString("container")))));
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!toUpdate.isEmpty())
+                {
+                    List<Map<String, Object>> keys = new ArrayList<>();
+                    toUpdate.forEach(row -> {
+
+                        keys.add(new CaseInsensitiveHashMap<>(Map.of("rowid", row.get("rowid"))));
+                    });
+
+                    try
+                    {
+                        readData.getUpdateService().updateRows(getUser(), getContainer(), toUpdate, keys, null, null);
+                    }
+                    catch (Exception e)
+                    {
+                        _log.error(e);
+                        errors.reject(ERROR_MSG, "Error archiving readset: " + readsetId + ", " + e.getMessage());
+                        return null;
+                    }
+                }
+
+                if (!toDelete.isEmpty())
+                {
+                    for (File f : toDelete)
+                    {
+                        _log.info("Deleting archived file: " + f.getPath());
+                        f.delete();
+                    }
+                }
+            }
+
+            return new ApiSimpleResponse("Success", true);
+        }
+    }
+
+    public static class ArchiveReadsetsForm
+    {
+        private int[] _readsetIds;
+        private boolean _doNotRequireSra;
+
+        public int[] getReadsetIds()
+        {
+            return _readsetIds;
+        }
+
+        public void setReadsetIds(int... readsetIds)
+        {
+            _readsetIds = readsetIds;
+        }
+
+        public boolean isDoNotRequireSra()
+        {
+            return _doNotRequireSra;
+        }
+
+        public void setDoNotRequireSra(boolean doNotRequireSra)
+        {
+            _doNotRequireSra = doNotRequireSra;
         }
     }
 }

@@ -11,13 +11,14 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.run.util.MergeVcfsAndGenotypesWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,7 +26,7 @@ import java.util.Set;
 /**
  * Created by bimber on 4/4/2017.
  */
-public class MergeVcfsAndGenotypesHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
+public class MergeVcfsAndGenotypesHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> implements SequenceOutputHandler.HasActionNames
 {
     public MergeVcfsAndGenotypesHandler()
     {
@@ -58,7 +59,14 @@ public class MergeVcfsAndGenotypesHandler extends AbstractParameterizedOutputHan
         return new Processor();
     }
 
-    public static class Processor implements SequenceOutputProcessor
+    @Override
+    public Collection<String> getAllowableActionNames()
+    {
+        // NOTE: Combine Variants only exists for legacy purposes:
+        return PageFlowUtil.set(getName(), "Combine Variants");
+    }
+
+    public class Processor implements SequenceOutputProcessor
     {
         @Override
         public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
@@ -71,7 +79,7 @@ public class MergeVcfsAndGenotypesHandler extends AbstractParameterizedOutputHan
         {
             File outputVcf = new File(ctx.getOutputDir(), ctx.getParams().getString("basename") + ".combined.vcf.gz");
 
-            RecordedAction action = new RecordedAction("Combine Variants");
+            RecordedAction action = new RecordedAction(getName());
 
             Set<Integer> genomeIds = new HashSet<>();
             inputFiles.forEach(x -> genomeIds.add(x.getLibrary_id()));

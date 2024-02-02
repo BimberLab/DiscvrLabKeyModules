@@ -45,6 +45,8 @@ import org.labkey.sequenceanalysis.analysis.BamCleanupHandler;
 import org.labkey.sequenceanalysis.analysis.BamHaplotypeHandler;
 import org.labkey.sequenceanalysis.analysis.CombineStarGeneCountsHandler;
 import org.labkey.sequenceanalysis.analysis.CombineSubreadGeneCountsHandler;
+import org.labkey.sequenceanalysis.analysis.DeepVariantHandler;
+import org.labkey.sequenceanalysis.analysis.GLNexusHandler;
 import org.labkey.sequenceanalysis.analysis.GenotypeGVCFHandler;
 import org.labkey.sequenceanalysis.analysis.HaplotypeCallerHandler;
 import org.labkey.sequenceanalysis.analysis.LiftoverHandler;
@@ -58,6 +60,7 @@ import org.labkey.sequenceanalysis.analysis.RnaSeqcHandler;
 import org.labkey.sequenceanalysis.analysis.SbtGeneCountHandler;
 import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
 import org.labkey.sequenceanalysis.button.AddSraRunButton;
+import org.labkey.sequenceanalysis.button.ArchiveReadsetsButton;
 import org.labkey.sequenceanalysis.button.ChangeReadsetStatusButton;
 import org.labkey.sequenceanalysis.button.ChangeReadsetStatusForAnalysesButton;
 import org.labkey.sequenceanalysis.button.DownloadSraButton;
@@ -77,25 +80,7 @@ import org.labkey.sequenceanalysis.run.alignment.MosaikWrapper;
 import org.labkey.sequenceanalysis.run.alignment.Pbmm2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.StarWrapper;
 import org.labkey.sequenceanalysis.run.alignment.VulcanWrapper;
-import org.labkey.sequenceanalysis.run.analysis.BamIterator;
-import org.labkey.sequenceanalysis.run.analysis.BcftoolsFillTagsStep;
-import org.labkey.sequenceanalysis.run.analysis.ExportOverlappingReadsAnalysis;
-import org.labkey.sequenceanalysis.run.analysis.GenrichStep;
-import org.labkey.sequenceanalysis.run.analysis.HaplotypeCallerAnalysis;
-import org.labkey.sequenceanalysis.run.analysis.ImmunoGenotypingAnalysis;
-import org.labkey.sequenceanalysis.run.analysis.LofreqAnalysis;
-import org.labkey.sequenceanalysis.run.analysis.MergeLoFreqVcfHandler;
-import org.labkey.sequenceanalysis.run.analysis.NextCladeHandler;
-import org.labkey.sequenceanalysis.run.analysis.PARalyzerAnalysis;
-import org.labkey.sequenceanalysis.run.analysis.PangolinHandler;
-import org.labkey.sequenceanalysis.run.analysis.PbsvAnalysis;
-import org.labkey.sequenceanalysis.run.analysis.PbsvJointCallingHandler;
-import org.labkey.sequenceanalysis.run.analysis.PindelAnalysis;
-import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
-import org.labkey.sequenceanalysis.run.analysis.SnpCountAnalysis;
-import org.labkey.sequenceanalysis.run.analysis.SubreadAnalysis;
-import org.labkey.sequenceanalysis.run.analysis.UnmappedReadExportHandler;
-import org.labkey.sequenceanalysis.run.analysis.ViralAnalysis;
+import org.labkey.sequenceanalysis.run.analysis.*;
 import org.labkey.sequenceanalysis.run.assembly.TrinityRunner;
 import org.labkey.sequenceanalysis.run.bampostprocessing.AddOrReplaceReadGroupsStep;
 import org.labkey.sequenceanalysis.run.bampostprocessing.BaseQualityScoreRecalibrator;
@@ -280,6 +265,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new ImmunoGenotypingAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new ViralAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new HaplotypeCallerAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new DeepVariantAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new SnpCountAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new ExportOverlappingReadsAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new SubreadAnalysis.Provider());
@@ -346,6 +332,8 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new NextCladeHandler());
         SequenceAnalysisService.get().registerFileHandler(new ConvertToCramHandler());
         SequenceAnalysisService.get().registerFileHandler(new PbsvJointCallingHandler());
+        SequenceAnalysisService.get().registerFileHandler(new DeepVariantHandler());
+        SequenceAnalysisService.get().registerFileHandler(new GLNexusHandler());
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
         SequenceAnalysisService.get().registerReadsetHandler(new RestoreSraDataHandler());
@@ -396,9 +384,10 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         LDKService.get().registerQueryButton(new AddSraRunButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
         LDKService.get().registerQueryButton(new RunMultiQCButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
         LDKService.get().registerQueryButton(new DownloadSraButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
+        LDKService.get().registerQueryButton(new ArchiveReadsetsButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
 
-        LDKService.get().registerQueryButton(new ChangeReadsetStatusForAnalysesButton(), "sequenceanalysis", "sequence_analyses");
-        LDKService.get().registerQueryButton(new ChangeReadsetStatusButton(), "sequenceanalysis", "sequence_readsets");
+        LDKService.get().registerQueryButton(new ChangeReadsetStatusForAnalysesButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES);
+        LDKService.get().registerQueryButton(new ChangeReadsetStatusButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS);
 
         ExperimentService.get().registerExperimentRunTypeSource(new ExperimentRunTypeSource()
         {

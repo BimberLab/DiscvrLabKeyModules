@@ -100,6 +100,7 @@ public class BcftoolsFillTagsStep extends AbstractCommandPipelineStep<BcftoolsRu
             throw new PipelineJobException("No annotations were selected");
         }
 
+        options.add("--");
         options.add("-t");
         options.add(StringUtils.join(annotations, ","));
 

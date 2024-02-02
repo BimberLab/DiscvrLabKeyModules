@@ -95,6 +95,14 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                 checked: true,
                 xtype: 'checkbox'
             },{
+                fieldLabel: 'Perform Cleanup After Each Step',
+                helpPopup: 'Is selected, intermediate files from this job will be deleted after each step, instead of once at the end of the job. This can reduce the working directory size. Note: this will only apply if deleteIntermediateFiles is selected, and this is not supported across every possible pipeline type.',
+                name: 'performCleanupAfterEachStep',
+                inputValue: true,
+                uncheckedValue: false,
+                checked: true,
+                xtype: 'checkbox'
+            },{
                 fieldLabel: 'Treatment of Input Files',
                 xtype: 'combo',
                 helpPopup: 'This determines how the input files are handled.  By default, files are moved to a standardized location and the originals deleted to save space.  However, you can choose to copy the BAMs to the new location, but leave the originals alone.  This is not usually recommended for space reasons.',
