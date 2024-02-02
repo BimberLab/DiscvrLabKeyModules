@@ -284,6 +284,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
 
                 // Command will fail if this exists:
                 File dbDir = new File (outputVcf.getParentFile(), "GLnexus.DB");
+                tracker.addIntermediateFile(dbDir);
                 if (dbDir.exists())
                 {
                     getLogger().debug("Deleting pre-existing GLnexus.DB dir");
