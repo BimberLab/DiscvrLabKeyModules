@@ -244,6 +244,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 writer.println("sudo $DOCKER run --rm=true \\");
                 writer.println("\t-v \"${WD}:/work\" \\");
                 writer.println("\t-v \"${HOME}:/homeDir\" \\");
+                writer.println("\t -w /work \\");
                 if (!StringUtils.isEmpty(System.getenv("TMPDIR")))
                 {
                     writer.println("\t-v \"${TMPDIR}:/tmp\" \\");
