@@ -17,9 +17,10 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.TopFieldDocs;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.jetbrains.annotations.Nullable;
@@ -57,6 +58,8 @@ import static org.labkey.jbrowse.JBrowseFieldUtils.getTrack;
 
 public class JBrowseLuceneSearch
 {
+    private static final String ALL_DOCS = "all";
+
     private final JBrowseSession _session;
     private final JsonFile _jsonFile;
     private final User _user;
@@ -130,7 +133,7 @@ public class JBrowseLuceneSearch
         return parts.length > 0 ? parts[0].trim() : null;
     }
 
-    public JSONObject doSearch(User u, String searchString, final int pageSize, final int offset) throws IOException, ParseException
+    public JSONObject doSearch(User u, String searchString, final int pageSize, final int offset, final int lastDoc, final int lastScore) throws IOException, ParseException
     {
         searchString = tryUrlDecode(searchString);
         File indexPath = _jsonFile.getExpectedLocationOfLuceneIndex(true);
@@ -182,14 +185,14 @@ public class JBrowseLuceneSearch
 
             BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
 
-            if (searchString.equals("all")) {
+            if (searchString.equals(ALL_DOCS)) {
                 booleanQueryBuilder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
             }
 
             // Split input into tokens, 1 token per query separated by &
             StringTokenizer tokenizer = new StringTokenizer(searchString, "&");
 
-            while (tokenizer.hasMoreTokens() && !searchString.equals("all"))
+            while (tokenizer.hasMoreTokens() && !searchString.equals(ALL_DOCS))
             {
                 String queryString = tokenizer.nextToken();
                 Query query = null;
@@ -226,18 +229,38 @@ public class JBrowseLuceneSearch
 
             BooleanQuery query = booleanQueryBuilder.build();
 
+            // TODO: if the index is generated with a sort on genomicPosition, maybe we just use Sort.INDEXORDER?
+            // Sort sort = Sort.INDEXORDER;
+            Sort sort = new Sort(new SortField("genomicPosition", SortField.Type.INT, false));
+
             // Get chunks of size {pageSize}. Default to 1 chunk -- add to the offset to get more.
             // We then iterate over the range of documents we want based on the offset. This does grow in memory
             // linearly with the number of documents, but my understanding is that these are just score,id pairs
-            // rather than full documents, so mem usage *should* still be pretty low.
-            //TopDocs topDocs = indexSearcher.search(query, pageSize * (offset + 1));
+            // Get chunks of size {pageSize}. Default to 1 chunk -- add to the offset to get more.
+            // We then iterate over the range of documents we want based on the offset. This does grow in memory
+            // linearly with the number of documents, but my understanding is that these are just score,id pairs
 
-            // Define sort field
-            SortField sortField = new SortField("pos", SortField.Type.INT, false);
-            Sort sort = new Sort(sortField);
+            // TODO: rather than a simple offset, the client should be able to provide the max(genomicPosition).
+            //  We could add this as a lucene filter (i.e., get the first pageSize docs above that value),
+            //  which might really reduce what we need to scan though.
+            //  Note that filter is different than query string (https://javaranch.com/journal/2009/02/filtering-a-lucene-search.html)
+            //  A second idea is to use searchAfter(). If we knew the max(genomicPosition) of the last query, we could directly add it to that method
+            TopDocs topDocs;
+            //if (searchString.equals(ALL_DOCS))
+            //{
+            //    // TODO: since this is loaded on each page, consider special casing it to grad the first 100 records as fast as possible.
+            //    //  this will return the index size
+            //    indexSearcher.getIndexReader().numDocs()
+            //}
 
-            // Perform the search with sorting
-            TopFieldDocs topDocs = indexSearcher.search(query, pageSize * (offset + 1), sort);
+            if (lastDoc > -1)
+            {
+                topDocs = indexSearcher.searchAfter(new ScoreDoc(lastDoc, lastScore), query, pageSize, sort);
+            }
+            else
+            {
+                topDocs = indexSearcher.search(query, pageSize * (offset + 1), sort);
+            }
 
             JSONObject results = new JSONObject();
 
@@ -247,7 +270,8 @@ public class JBrowseLuceneSearch
             for (int i = pageSize * offset; i < Math.min(pageSize * (offset + 1), topDocs.scoreDocs.length); i++)
             {
                 JSONObject elem = new JSONObject();
-                Document doc = indexSearcher.doc(topDocs.scoreDocs[i].doc);
+                ScoreDoc sd = topDocs.scoreDocs[i];
+                Document doc = indexSearcher.doc(sd.doc);
 
                 for (IndexableField field : doc.getFields()) {
                     String fieldName = field.name();
@@ -266,6 +290,8 @@ public class JBrowseLuceneSearch
 
             results.put("data", data);
             results.put("totalHits", topDocs.totalHits.value);
+            results.put("lastDoc", topDocs.scoreDocs[topDocs.scoreDocs.length - 1].doc);
+            results.put("lastScore", topDocs.scoreDocs[topDocs.scoreDocs.length - 1].score);
 
             //TODO: we should probably stream this
             return results;
