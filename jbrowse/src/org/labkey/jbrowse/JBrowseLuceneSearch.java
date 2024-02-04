@@ -20,6 +20,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.SortedNumericSortField;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
@@ -231,7 +232,7 @@ public class JBrowseLuceneSearch
 
             // TODO: if the index is generated with a sort on genomicPosition, maybe we just use Sort.INDEXORDER?
             // Sort sort = Sort.INDEXORDER;
-            Sort sort = new Sort(new SortField("genomicPosition", SortField.Type.INT, false));
+            Sort sort = new Sort(new SortedNumericSortField("genomicPosition", SortField.Type.INT, false));
 
             // Get chunks of size {pageSize}. Default to 1 chunk -- add to the offset to get more.
             // We then iterate over the range of documents we want based on the offset. This does grow in memory
