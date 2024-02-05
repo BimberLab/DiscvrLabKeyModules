@@ -1,12 +1,16 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
 import org.json.JSONObject;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
+import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 
 public class SummarizeTCellActivation extends AbstractRDiscvrStep
 {
@@ -46,6 +50,30 @@ public class SummarizeTCellActivation extends AbstractRDiscvrStep
         {
             return new SummarizeTCellActivation(ctx, this);
         }
+    }
+
+    @Override
+    public Output execute(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
+    {
+        Output output = super.execute(ctx, inputObjects, outputPrefix);
+        File[] outputs = ctx.getOutputDir().listFiles(f -> !f.isDirectory() && f.getName().endsWith(".activation.txt"));
+        if (outputs == null || outputs.length == 0)
+        {
+            throw new PipelineJobException("No outputs found for SummarizeTCellActivation");
+        }
+
+        for (File fn : outputs)
+        {
+            output.addSequenceOutput(fn, "TCell Activation: " + inputObjects.get(0).getDatasetName(), "TCell Activation", inputObjects.get(0).getReadsetId(), null, ctx.getSequenceSupport().getCachedGenomes().iterator().next().getGenomeId(), null);
+        }
+
+        return output;
+    }
+
+    @Override
+    public boolean createsSeuratObjects()
+    {
+        return false;
     }
 
     @Override
