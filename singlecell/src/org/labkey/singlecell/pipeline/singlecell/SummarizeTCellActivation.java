@@ -29,7 +29,7 @@ public class SummarizeTCellActivation extends AbstractRDiscvrStep
                         put("height", 200);
                         put("delimiter", ",");
                         put("stripCharsRe", "/['\"]/g");
-                    }}, "SampleDate,Stim,Population,AssayType").delimiter(","),
+                    }}, "Stim,Population,SampleDate,AssayType").delimiter(","),
                     SeuratToolParameter.create("threshold", "Threshold", "Cells with a score greater than or equal to this are considered activated", "ldk-numberfield", new JSONObject(){{
                         put("allowBlank", false);
                         put("minValue", 0);
