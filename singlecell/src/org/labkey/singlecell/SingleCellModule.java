@@ -221,6 +221,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new RunLDA.Provider());
         SequencePipelineService.get().registerPipelineStep(new FilterDisallowedClasses.Provider());
         SequencePipelineService.get().registerPipelineStep(new SummarizeTCellActivation.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunScMetabolism.Provider());
 
         SequenceAnalysisService.get().registerReadsetListener(new SingleCellReadsetListener());
     }
