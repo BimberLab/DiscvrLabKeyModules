@@ -47,7 +47,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Run GLNexus", "This will run GLNexus on the selected gVCFs.", null, Arrays.asList(
                 ToolParameterDescriptor.create("binVersion", "GLNexus Version", "The version of GLNexus to run, which is passed to their docker container", "textfield", new JSONObject(){{
                     put("allowBlank", false);
-                }}, "v1.2.7"),
+                }}, "v1.4.3"),
                 ToolParameterDescriptor.create("configType", "Config Type", "This is passed to the --config argument of GLNexus.", "ldk-simplecombo", new JSONObject()
                 {{
                     put("multiSelect", false);
