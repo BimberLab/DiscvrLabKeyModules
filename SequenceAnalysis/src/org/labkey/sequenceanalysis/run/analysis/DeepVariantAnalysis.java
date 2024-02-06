@@ -226,7 +226,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             tracker.addIntermediateFile(dockerBashScript);
 
             List<String> bashArgs = new ArrayList<>(Arrays.asList("/opt/deepvariant/bin/run_deepvariant"));
-            bashArgs.add("--normalize-reads");
+            bashArgs.add("--normalize_reads=true");
             bashArgs.add("--ref=/work/" + refFastaLocal.getName());
             bashArgs.add("--reads=/work/" + inputBamLocal.getName());
             bashArgs.add("--output_gvcf=/work/" + outputGvcf.getName());
