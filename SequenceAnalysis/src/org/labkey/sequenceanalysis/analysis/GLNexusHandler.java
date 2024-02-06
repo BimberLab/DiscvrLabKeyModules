@@ -240,7 +240,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 writer.println("WD=`pwd`");
                 writer.println("HOME=`echo ~/`");
                 writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-                writer.println("sudo $DOCKER pull quay.io/mlin/glnexus:" + binVersion);
+                writer.println("sudo $DOCKER pull ghcr.io/dnanexus-rnd/glnexus:" + binVersion);
                 writer.println("sudo $DOCKER run --rm=true \\");
                 writer.println("\t-v \"${WD}:/work\" \\");
                 writer.println("\t-v \"${HOME}:/homeDir\" \\");
@@ -257,7 +257,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 {
                     writer.println("\t--memory='" + maxRam + "g' \\");
                 }
-                writer.println("\tquay.io/mlin/glnexus:" + binVersion + " \\");
+                writer.println("\tghcr.io/dnanexus-rnd/glnexus:" + binVersion + " \\");
                 writer.println("\tglnexus_cli \\");
                 writer.println("\t--config " + configType + " \\");
 
