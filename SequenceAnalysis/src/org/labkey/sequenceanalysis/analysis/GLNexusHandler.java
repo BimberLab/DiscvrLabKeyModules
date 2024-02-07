@@ -12,6 +12,7 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.BcftoolsRunner;
@@ -352,10 +353,13 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 throw new PipelineJobException("File not found: " + outputVcf.getPath());
             }
 
-            File idxFile = new File(outputVcf.getPath() + ".tbi");
-            if (!idxFile.exists())
+            try
             {
-                throw new PipelineJobException("Missing index: " + idxFile.getPath());
+                SequenceAnalysisService.get().ensureVcfIndex(outputVcf, getLogger(), true);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
             }
         }
     }
