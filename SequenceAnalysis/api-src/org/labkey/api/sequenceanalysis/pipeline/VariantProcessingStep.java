@@ -45,10 +45,22 @@ public interface VariantProcessingStep extends PipelineStep
 
     enum ScatterGatherMethod
     {
-        none(),
-        contig(),
-        chunked(),
-        fixedJobs()
+        none(false),
+        contig(false),
+        chunked(true),
+        fixedJobs(false);
+
+        private final boolean _mayRequireSort;
+
+        ScatterGatherMethod(boolean mayRequireSort)
+        {
+            _mayRequireSort = mayRequireSort;
+        }
+
+        public boolean mayRequireSort()
+        {
+            return _mayRequireSort;
+        }
     }
 
     interface Output extends PipelineStepOutput
