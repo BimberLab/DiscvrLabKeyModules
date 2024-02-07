@@ -28,7 +28,7 @@ public class RunScMetabolism extends AbstractCellMembraneStep
                         put("initialValues", "KEGG;REACTOME");
                         put("delimiter", ";");
                         put("joinReturnValue", true);
-                    }}, "KEGG;REACTOME").delimiter(";")
+                    }}, "KEGG;REACTOME", null, true, true).delimiter(";")
             ), null, null);
         }
 
