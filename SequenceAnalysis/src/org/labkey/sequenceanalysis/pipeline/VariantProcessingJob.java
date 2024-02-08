@@ -124,6 +124,11 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
             return false;
         }
 
+        if (getParameterJson().optBoolean("scatterGather.forceVcfSort", false))
+        {
+            return true;
+        }
+
         return !doAllowSplitContigs();
     }
 
