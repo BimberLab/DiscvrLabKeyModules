@@ -6,6 +6,8 @@ for (datasetId in names(seuratObjects)) {
         seuratObj <- CellMembrane::RunScMetabolism(seuratObj, metabolismType = metabolismType)
     }
 
+    saveData(seuratObj, datasetId)
+
     # Cleanup
     rm(seuratObj)
     gc()
