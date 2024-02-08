@@ -60,6 +60,8 @@ const VariantTableWidget = observer(props => {
             return obj
         }))
         setTotalHits(data.totalHits)
+        setLastDoc(data.lastDoc)
+        setLastScore(data.lastScore)
         setDataLoaded(true)
     }
 
@@ -67,8 +69,8 @@ const VariantTableWidget = observer(props => {
         session.hideWidget(widget)
     }
 
-    function handleQuery(passedFilters, pushToHistory, pageQueryModel = pageSizeModel) {
-        const { page = pageSizeModel.page, pageSize = pageSizeModel.pageSize } = pageQueryModel;
+    function handleQuery(passedFilters, pushToHistory, paginate, pageQueryModel = pageSizeModel) {
+        const { pageSize = pageSizeModel.pageSize } = pageQueryModel;
 
         const encodedSearchString = createEncodedFilterString(passedFilters, false);
         const currentUrl = new URL(window.location.href);
@@ -82,7 +84,7 @@ const VariantTableWidget = observer(props => {
 
         setFilters(passedFilters);
         setDataLoaded(false)
-        fetchLuceneQuery(passedFilters, sessionId, trackGUID, page, pageSize, (json)=>{handleSearch(json)}, (error) => {setDataLoaded(true); setError(error)});
+        fetchLuceneQuery(passedFilters, sessionId, trackGUID, pageSize, paginate ? lastDoc : -1, paginate ? lastScore : -1, (json)=>{handleSearch(json)}, (error) => {setDataLoaded(true); setError(error)});
     }
 
     const TableCellWithPopover = (props: { value: any }) => {
@@ -223,6 +225,8 @@ const VariantTableWidget = observer(props => {
     const [filterModalOpen, setFilterModalOpen] = useState(false);
     const [filters, setFilters] = useState([]);
     const [totalHits, setTotalHits] = useState(0);
+    const [lastDoc, setLastDoc] = useState(-1);
+    const [lastScore, setLastScore] = useState(-1);
     const [fieldTypeInfo, setFieldTypeInfo] = useState<FieldModel[]>([]);
     const [allowedGroupNames, setAllowedGroupNames] = useState<string[]>([]);
     const [promotedFilters, setPromotedFilters] = useState<Map<string, Filter[]>>(null);
@@ -281,7 +285,7 @@ const VariantTableWidget = observer(props => {
                     setAllowedGroupNames(groups)
                     setPromotedFilters(promotedFilters)
 
-                    handleQuery(searchStringToInitialFilters(fields.map((x) => x.name)), false)
+                    handleQuery(searchStringToInitialFilters(fields.map((x) => x.name)), false, false)
                 },
                 (error) => {
                     setError(error)
@@ -403,7 +407,7 @@ const VariantTableWidget = observer(props => {
             paginationMode="server"
             onPaginationModelChange = {(newModel) => {
                 setPageSizeModel(newModel)
-                handleQuery(filters, true, newModel)
+                handleQuery(filters, true, true, newModel)
             }}
             onColumnVisibilityModelChange={(model) => {
                 setColumnVisibilityModel(model)
@@ -440,7 +444,7 @@ const VariantTableWidget = observer(props => {
                 fieldTypeInfo: fieldTypeInfo,
                 allowedGroupNames: allowedGroupNames,
                 promotedFilters: promotedFilters,
-                handleQuery: (filters) => handleQuery(filters, true)
+                handleQuery: (filters) => handleQuery(filters, true, false)
             }}
         />
     );

@@ -910,7 +910,7 @@ public class JBrowseController extends SpringActionController
 
             try
             {
-                return new ApiSimpleResponse(searcher.doSearch(getUser(), PageFlowUtil.decode(form.getSearchString()), form.getPageSize(), form.getOffset(), form.getLastDoc(), form.getLastScore()));
+                return new ApiSimpleResponse(searcher.doSearch(getUser(), PageFlowUtil.decode(form.getSearchString()), form.getPageSize(), form.getLastDoc(), form.getLastScore()));
             }
             catch (Exception e)
             {
@@ -945,8 +945,6 @@ public class JBrowseController extends SpringActionController
 
         private int _pageSize = 100;
 
-        private int _offset = 0;
-
         private int _lastDoc = -1;
 
         private int _lastScore = -1;
@@ -979,16 +977,6 @@ public class JBrowseController extends SpringActionController
         public void setPageSize(int pageSize)
         {
             _pageSize = pageSize;
-        }
-
-        public int getOffset()
-        {
-            return _offset;
-        }
-
-        public void setOffset(int offset)
-        {
-            _offset = offset;
         }
 
         public String getTrackId()

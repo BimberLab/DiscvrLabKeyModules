@@ -414,11 +414,7 @@ function generateLuceneString(field, operator, value) {
   return luceneQueryString;
 }
 
-export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pageSize, successCallback, failureCallback) {
-    if (!offset) {
-        offset = 0
-    }
-
+export async function fetchLuceneQuery(filters, sessionId, trackGUID, pageSize, lastDoc, lastScore, successCallback, failureCallback) {
     if (!sessionId) {
         failureCallback("There was an error: " + "Lucene query: no session ID")
         return
@@ -444,7 +440,14 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pa
         failure: function(res) {
             failureCallback("There was an error: " + res.status + "\n Status Body: " + res.responseText + "\n Session ID:" + sessionId)
         },
-        params: {"searchString": createEncodedFilterString(filters, true), "sessionId": sessionId, "trackId": trackGUID, "offset": offset, "pageSize": pageSize},
+        params: {
+            "searchString": createEncodedFilterString(filters, true),
+            "sessionId": sessionId,
+            "trackId": trackGUID,
+            "pageSize": pageSize,
+            "lastDoc": lastDoc || -1,
+            "lastScore": lastScore || -1
+        },
     });
 }
 
