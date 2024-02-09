@@ -119,14 +119,15 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
 
     public boolean scatterMethodRequiresSort()
     {
+        if (getParameterJson().optBoolean("scatterGather.forceVcfSort", false))
+        {
+            getLogger().debug("forceVcfSort was set");
+            return true;
+        }
+
         if (_scatterGatherMethod == null || !_scatterGatherMethod.mayRequireSort())
         {
             return false;
-        }
-
-        if (getParameterJson().optBoolean("scatterGather.forceVcfSort", false))
-        {
-            return true;
         }
 
         return !doAllowSplitContigs();
