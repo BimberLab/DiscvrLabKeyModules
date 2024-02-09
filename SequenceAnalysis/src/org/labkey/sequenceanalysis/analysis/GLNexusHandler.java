@@ -190,6 +190,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 else
                 {
                     ctx.getLogger().debug("Running GLNexus for contig: " + r.getSequenceName());
+                    ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Processing: " + r.getSequenceName());
                     new GLNexusWrapper(ctx.getLogger()).execute(inputVcfs, contigVcf, ctx.getFileManager(), binVersion, configType, r);
                     vcfs.add(contigVcf);
                     try
