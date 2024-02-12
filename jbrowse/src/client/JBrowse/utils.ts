@@ -414,7 +414,7 @@ function generateLuceneString(field, operator, value) {
   return luceneQueryString;
 }
 
-export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pageSize, successCallback, failureCallback) {
+export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pageSize, sortField, sortReverseString, successCallback, failureCallback) {
     if (!offset) {
         offset = 0
     }
@@ -434,6 +434,13 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pa
         return
     }
 
+    let sortReverse;
+    if(sortReverseString == "desc") {
+        sortReverse = false
+    } else {
+        sortReverse = true
+    }
+
     return Ajax.request({
         url: ActionURL.buildURL('jbrowse', 'luceneQuery.api'),
         method: 'GET',
@@ -444,7 +451,15 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pa
         failure: function(res) {
             failureCallback("There was an error: " + res.status + "\n Status Body: " + res.responseText + "\n Session ID:" + sessionId)
         },
-        params: {"searchString": createEncodedFilterString(filters, true), "sessionId": sessionId, "trackId": trackGUID, "offset": offset, "pageSize": pageSize},
+        params: {
+            "searchString": createEncodedFilterString(filters, true),
+            "sessionId": sessionId,
+            "trackId": trackGUID,
+            "offset": offset,
+            "pageSize": pageSize,
+            "sortField": sortField,
+            "sortReverse:": sortReverse 
+        },
     });
 }
 

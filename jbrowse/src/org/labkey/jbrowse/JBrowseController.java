@@ -910,7 +910,7 @@ public class JBrowseController extends SpringActionController
 
             try
             {
-                return new ApiSimpleResponse(searcher.doSearch(getUser(), PageFlowUtil.decode(form.getSearchString()), form.getPageSize(), form.getOffset()));
+                return new ApiSimpleResponse(searcher.doSearch(getUser(), PageFlowUtil.decode(form.getSearchString()), form.getPageSize(), form.getOffset(), form.getSortField(), form.getSortReverse()));
             }
             catch (Exception e)
             {
@@ -946,6 +946,10 @@ public class JBrowseController extends SpringActionController
         private int _pageSize = 100;
 
         private int _offset = 0;
+
+        private String _sortField = "genomicPosition";
+
+        private boolean _sortReverse = false;
 
         public String getSearchString()
         {
@@ -986,6 +990,14 @@ public class JBrowseController extends SpringActionController
         {
             _offset = offset;
         }
+
+        public String getSortField() { return _sortField; }
+
+        public void setSortField(String sortField) { _sortField = sortField; }
+
+        public boolean getSortReverse() { return _sortReverse; }
+
+        public void setSortReverse(boolean sortReverse) { _sortReverse = sortReverse; }
 
         public String getTrackId()
         {
