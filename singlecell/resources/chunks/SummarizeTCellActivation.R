@@ -11,9 +11,7 @@ for (datasetId in names(seuratObjects)) {
     seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
     outFile <- paste0(outputPrefix, '.', makeLegalFileName(datasetId), '.activation.txt')
-    seuratObj <- Rdiscvr::SummarizeTNK_Activation(seuratObj, outFile = outFile, xFacetField = xFacetField, groupingFields = groupingFields, activationFieldName = activationFieldName, threshold = threshold)
-
-    saveData(seuratObj, datasetId)
+    Rdiscvr::SummarizeTNK_Activation(seuratObj, outFile = outFile, xFacetField = xFacetField, groupingFields = groupingFields, activationFieldName = activationFieldName, threshold = threshold)
 
     # Cleanup
     rm(seuratObj)
