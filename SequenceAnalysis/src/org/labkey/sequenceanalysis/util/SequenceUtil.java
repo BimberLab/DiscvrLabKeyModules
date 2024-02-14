@@ -425,17 +425,22 @@ public class SequenceUtil
         //then sort/append the records
         CommandWrapper wrapper = SequencePipelineService.get().getCommandWrapper(log);
         String cat = isCompressed ? "zcat" : "cat";
-        wrapper.execute(Arrays.asList("/bin/sh", "-c", cat + " '" + input.getPath() + "' | grep -v '^#' | sort -V -k1,1" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n")), ProcessBuilder.Redirect.appendTo(sorted));
-
-        if (isCompressed)
-        {
-            sorted = bgzip(sorted, log);
-        }
+        wrapper.execute(Arrays.asList("/bin/sh", "-c", cat + " '" + input.getPath() + "' | grep -v '^#' | sort -V -k1,1" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n" + (isCompressed ? " | bgzip -c " : ""))), ProcessBuilder.Redirect.appendTo(sorted));
 
         //replace the non-sorted output
         input.delete();
         FileUtils.moveFile(sorted, input);
         sorted.delete();
+
+        for (String extension : Arrays.asList(".tbi", ".idx"))
+        {
+            File idx = new File(input.getPath() + extension);
+            if (idx.exists())
+            {
+                log.debug("Deleting index: " + idx.getPath());
+                idx.delete();
+            }
+        }
     }
 
     public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel, boolean sortAfterMerge) throws PipelineJobException
@@ -479,11 +484,31 @@ public class SequenceUtil
         List<String> bashCommands = new ArrayList<>();
         bashCommands.add("cat " + headerFile.getPath());
 
+        Integer threads = multiThreaded ? SequencePipelineService.get().getMaxThreads(log) : null;
+        if (threads != null)
+        {
+            threads = Math.max(1, threads - 1);
+        }
+
+        StringBuilder cmd = new StringBuilder();
+        String cat = files.get(0).getName().toLowerCase().endsWith(".gz") ? "zcat" : "cat";
+        cmd.append(cat).append(" ");
         for (File vcf : files)
         {
-            String cat = vcf.getName().toLowerCase().endsWith(".gz") ? "zcat" : "cat";
-            bashCommands.add(cat + " '" + vcf.getPath() + "' | grep -v '^#';");
+            if (files.get(0).getName().toLowerCase().endsWith(".gz") != vcf.getName().toLowerCase().endsWith(".gz"))
+            {
+                throw new IllegalStateException("The input VCFs contain a mixture of gzipped and non-gzipped files!");
+            }
+
+            cmd.append(" '" + vcf.getPath() + "'");
         }
+        cmd.append(" | grep -v '^#'");
+        if (sortAfterMerge)
+        {
+            cmd.append( " | sort -V -k1,1 -k2,2n");
+        }
+        cmd.append(";");
+        bashCommands.add(cmd.toString());
 
         try
         {
@@ -496,25 +521,13 @@ public class SequenceUtil
                 writer.write("{\n");
                 bashCommands.forEach(x -> writer.write(x + '\n'));
 
-                Integer threads = multiThreaded ? SequencePipelineService.get().getMaxThreads(log) : null;
-                if (threads != null)
-                {
-                    threads = Math.max(1, threads - 1);
-                }
-
                 writer.write("} | bgzip -f" + (compressionLevel == null ? "" : " --compress-level 9") + (threads == null ? "" : " --threads " + threads) + " > '" + outputGzip.getPath() + "'\n");
             }
 
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
             wrapper.execute(Arrays.asList("/bin/bash", bashTmp.getPath()));
 
-            if (sortAfterMerge)
-            {
-                log.debug("sorting VCF");
-                sortROD(outputGzip, log, 2);
-            }
-
-            SequenceAnalysisService.get().ensureVcfIndex(outputGzip, log);
+            SequenceAnalysisService.get().ensureVcfIndex(outputGzip, log, true);
 
             bashTmp.delete();
 
