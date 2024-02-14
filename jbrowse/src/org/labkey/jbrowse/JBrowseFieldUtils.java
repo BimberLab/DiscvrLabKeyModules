@@ -101,7 +101,7 @@ public class JBrowseFieldUtils
     }
 
     public static Map<String, JBrowseFieldDescriptor> getGenotypeDependentFields(@Nullable JsonFile jsonFile) {
-        String key = "genotypeFields." + jsonFile.getObjectId();
+        String key = "genotypeFields." + (jsonFile == null ? "default" : jsonFile.getObjectId());
         if (_cache.get(key) == null)
         {
             Map<String, JBrowseFieldDescriptor> ret = new HashMap<>();
