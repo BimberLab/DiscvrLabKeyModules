@@ -2,7 +2,6 @@ package org.labkey.sequenceanalysis;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.SystemUtils;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.junit.AfterClass;
@@ -10,9 +9,9 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.reader.Readers;
@@ -25,7 +24,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.List;
 
 import static org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService.SEQUENCE_TOOLS_PARAM;
@@ -202,35 +200,7 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
 
     protected void executeJobRemote(File workDir, @Nullable File jobJson) throws IOException
     {
-        List<String> args = new ArrayList<>();
-        args.add(System.getProperty("java.home") + "/bin/java" + (SystemUtils.IS_OS_WINDOWS ? ".exe" : ""));
-
-        File labkeyBootstrap = new File(System.getProperty("catalina.home"), "lib/labkeyBootstrap.jar");
-        if (!labkeyBootstrap.exists())
-        {
-            throw new IOException("Unable to find labkeyBootstrap.jar, expected: " + labkeyBootstrap.getPath());
-        }
-
-        args.add("-cp");
-        args.add(labkeyBootstrap.getPath());
-        args.add("org.labkey.bootstrap.ClusterBootstrap");
-
-        File webappDir = new File(ModuleLoader.getServletContext().getRealPath(""));
-        if (!webappDir.exists())
-        {
-            throw new IOException("Unable to find webappdir, expected: " + webappDir.getPath());
-        }
-
-        for (String sysProp : new String[]{"labkey.externalModulesDir", "labkey.modulesDir", "cpas.modulesDir"})
-        {
-            String sysPropValue = StringUtils.trimToNull(System.getProperty(sysProp));
-            if (sysPropValue != null)
-            {
-                args.add("-D" + sysProp +"=" + sysPropValue);
-            }
-        }
-
-        args.add("-webappdir=" + webappDir.getPath());
+        List<String> args = PipelineService.get().getClusterStartupArguments();
 
         File configDir = setupConfigDir(workDir);
         args.add("-configdir=" + configDir.getPath());

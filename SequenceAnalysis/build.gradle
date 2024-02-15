@@ -1,6 +1,7 @@
 import org.labkey.gradle.plugin.TeamCity
 import org.labkey.gradle.plugin.extension.ServerDeployExtension
 import org.labkey.gradle.plugin.extension.TeamCityExtension
+import org.labkey.gradle.task.DoThenSetup
 import org.labkey.gradle.util.BuildUtils
 import org.labkey.gradle.util.GroupNames
 import org.labkey.gradle.util.PropertiesUtils
@@ -174,6 +175,7 @@ dependencies {
 if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null && project.hasProperty("teamcity"))
 {
     project.evaluationDependsOn(BuildUtils.getTestProjectPath(project.gradle))
+    def configDir = "${ServerDeployExtension.getServerDeployDirectory(project)}/config"
     def testProject = project.findProject(BuildUtils.getTestProjectPath(project.gradle))
     def createPipelineConfigTask = project.tasks.register("createPipelineConfig", Copy) {
         Copy task ->
@@ -193,10 +195,25 @@ if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null &
                 return newLine
 
             })
-            task.destinationDir = new File("${ServerDeployExtension.getServerDeployDirectory(project)}/config")
+            task.destinationDir = new File(configDir)
+
+            if (BuildUtils.useEmbeddedTomcat(project)) {
+                task.doFirst {
+                    new File(new File(BuildUtils.getEmbeddedConfigPath(project)), "application.properties") << "\n${configDir}"
+                }
+
+                rootProject.allprojects {
+                    task.mustRunAfter tasks.withType(DoThenSetup)
+                }
+            }
     }
     testProject.tasks.named("startTomcat").configure {
         dependsOn(createPipelineConfigTask)
+        if (BuildUtils.useEmbeddedTomcat(project)) {
+            it.doFirst {
+                new File(new File(BuildUtils.getEmbeddedConfigPath(project)), "application.properties") << "\ncontext.pipelineConfig=${configDir}"
+            }
+        }
     }
 }
 
