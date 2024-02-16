@@ -110,6 +110,11 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         writeSupportToDisk();
     }
 
+    protected boolean shouldAllowArchivedReadsets()
+    {
+        return false;
+    }
+
     public SequenceJob(String providerName, Container c, User u, @Nullable String jobName, PipeRoot pipeRoot, JSONObject params, TaskId taskPipelineId, String folderPrefix) throws IOException
     {
         super(providerName, new ViewBackgroundInfo(c, u, null), pipeRoot);

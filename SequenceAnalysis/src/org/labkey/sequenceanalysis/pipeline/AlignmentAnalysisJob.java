@@ -113,6 +113,12 @@ public class AlignmentAnalysisJob extends SequenceJob
         return ret;
     }
 
+    @Override
+    protected boolean shouldAllowArchivedReadsets()
+    {
+        return false;
+    }
+
     public static String NAME = "AlignmentAnalysisPipeline";
 
     public static void register() throws CloneNotSupportedException
