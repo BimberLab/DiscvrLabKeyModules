@@ -54,7 +54,7 @@ public class AlignmentAnalysisJob extends SequenceJob
         _readsetId = model.getReadset();
 
         getLogger().debug("caching analysis for use on remote server: " + model.getRowId());
-        getSequenceSupport().cacheAnalysis(model, this);
+        getSequenceSupport().cacheAnalysis(model, this, true);
         writeSupportToDisk();
     }
 
