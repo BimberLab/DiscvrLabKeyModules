@@ -426,7 +426,7 @@ public class SequenceUtil
         CommandWrapper wrapper = SequencePipelineService.get().getCommandWrapper(log);
         String cat = isCompressed ? "zcat" : "cat";
         File tempSorted = new File(input.getParent(), "sorted.tmp");
-        wrapper.execute(Arrays.asList("/bin/sh", "-c", "{ cat " + tempHeader.getPath() + "; " + cat + " '" + input.getPath() + "' | grep -v '^#' | sort -V -k1,1" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n" + (isCompressed ? " } | bgzip -c " : ""))), ProcessBuilder.Redirect.to(tempSorted));
+        wrapper.execute(Arrays.asList("/bin/sh", "-c", "{ cat '" + tempHeader.getPath() + "'; " + cat + " '" + input.getPath() + "' | grep -v '^#' | sort -V -k1,1" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n") + "; } " + (isCompressed ? " | bgzip -c " : "")), ProcessBuilder.Redirect.to(tempSorted));
 
         //replace the non-sorted output
         input.delete();
