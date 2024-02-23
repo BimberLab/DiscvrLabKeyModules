@@ -22,6 +22,7 @@ import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.NumericUtils;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
@@ -50,6 +51,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.labkey.jbrowse.JBrowseFieldUtils.VARIABLE_SAMPLES;
 import static org.labkey.jbrowse.JBrowseFieldUtils.getSession;
@@ -163,7 +165,7 @@ public class JBrowseLuceneSearch
                 {
                     case Flag, String, Character -> stringQueryParserFields.add(field);
                     case Float -> {
-                        numericQueryParserFields.put(field, SortField.Type.FLOAT);
+                        numericQueryParserFields.put(field, SortField.Type.DOUBLE);
                         pointsConfigMap.put(field, doublePointsConfig);
                     }
                     case Integer -> {
@@ -231,8 +233,8 @@ public class JBrowseLuceneSearch
             // By default, sort in INDEXORDER, which is by genomicPosition
             Sort sort = Sort.INDEXORDER;
 
-            // If the sort field is not genomicPosition and/or we need to sort in reverse, we construct a new sort
-            if (!sortField.equals(GENOMIC_POSITION) || sortReverse) {
+            // If the sort field is not genomicPosition, use the provided sorting data
+            if (!sortField.equals(GENOMIC_POSITION)) {
                 SortField.Type fieldType;
 
                 if (stringQueryParserFields.contains(sortField)) {
@@ -267,10 +269,8 @@ public class JBrowseLuceneSearch
                     String fieldName = field.name();
                     String[] fieldValues = doc.getValues(fieldName);
                     if (fieldValues.length > 1) {
-                        // If there is more than one value, put the array of values into the JSON object.
                         elem.put(fieldName, fieldValues);
                     } else {
-                        // If there is only one value, just put this single value into the JSON object.
                         elem.put(fieldName, fieldValues[0]);
                     }
                 }
