@@ -404,7 +404,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             ExprColumn newCol = new ExprColumn(ret, "jobIds", sql, JdbcType.VARCHAR, sourceTable.getColumn("rowid"));
             newCol.setLabel("Job(s)");
 
-            newCol.setDisplayColumnFactory(new PipelineDisplayColumnFactory("/pipeline-status/details.view?rowId="));
+            newCol.setDisplayColumnFactory(new PipelineDisplayColumnFactory("/pipeline-status-details.view?rowId="));
             ret.addColumn(newCol);
         }
 
