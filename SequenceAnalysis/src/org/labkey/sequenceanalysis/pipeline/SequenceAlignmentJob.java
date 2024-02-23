@@ -132,7 +132,7 @@ public class SequenceAlignmentJob extends SequenceJob
     public static void register() throws CloneNotSupportedException
     {
         FileAnalysisTaskPipelineSettings settings = new FileAnalysisTaskPipelineSettings(NAME);
-        settings.setAnalyzeURL("/sequenceAnalysis/sequenceAnalysis.view?");
+        settings.setAnalyzeURL("/sequenceAnalysis-sequenceAnalysis.view");
         settings.setDescription("Initiate analyses such as alignment or SNP calling on sequence data.");
         settings.setProtocolName("Sequence Analysis");
         settings.setProtocolFactoryName("sequenceAnalysis");

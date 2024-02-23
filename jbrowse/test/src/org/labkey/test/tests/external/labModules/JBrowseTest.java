@@ -40,14 +40,11 @@ import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.PasswordUtil;
 import org.labkey.test.util.PortalHelper;
-import org.labkey.test.util.ext4cmp.Ext4CmpRef;
 import org.labkey.test.util.ext4cmp.Ext4ComboRef;
 import org.labkey.test.util.ext4cmp.Ext4FieldRef;
-import org.labkey.test.util.ext4cmp.Ext4GridRef;
 import org.labkey.test.util.external.labModules.LabModuleHelper;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
-import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.Color;
@@ -56,8 +53,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 /**
  * Created by bimber on 1/20/2015.
@@ -400,7 +395,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
     private void testNoSession()
     {
-        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?");
+        beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view");
         waitForElement(Locator.tagWithText("p", "Error - no session provided."));
     }
 
@@ -1228,12 +1223,12 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClickAndWait(Ext4Helper.Locators.ext4ButtonEnabled("OK"));
         waitForPipelineJobsToComplete(existingPipelineJobs + 1, "Recreating Resources", false);
 
-        beginAt("/project/" + getProjectName() + "/begin.view");
+        beginAt("/" + getProjectName() + "/project-begin.view");
         _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
         waitAndClickAndWait(Locator.tagWithText("a", "View In JBrowse"));
         waitForElement(Locator.tagWithText("div", "TestGenome1"));
 
-        beginAt("/project/" + getProjectName() + "/begin.view");
+        beginAt("/" + getProjectName() + "/project-begin.view");
         _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
         dr = DataRegionTable.DataRegion(getDriver()).find();
         dr.clickRowDetails(0);
@@ -1265,7 +1260,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Assert.assertNotNull("Missing session ID on URL", sessionId);
 
         // Now ensure default tracks appear:
-        beginAt("/project/" + getProjectName() + "/begin.view");
+        beginAt("/" + getProjectName() + "/project-begin.view");
         _helper.clickNavPanelItemAndWait("JBrowse Sessions:", 1);
         waitAndClickAndWait(Locator.tagWithText("a", "View In JBrowse"));
         waitForElement(Locator.tagWithText("div", "TestGenome1"));
