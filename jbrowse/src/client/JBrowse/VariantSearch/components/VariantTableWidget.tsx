@@ -71,7 +71,7 @@ const VariantTableWidget = observer(props => {
 
     function handleQuery(passedFilters, pushToHistory, pageQueryModel = pageSizeModel, sortQueryModel = sortModel) {
         const { page = pageSizeModel.page, pageSize = pageSizeModel.pageSize } = pageQueryModel;
-        const { field = sortModel[0].field, sort = sortModel[0].sort } = sortQueryModel[0];
+        const { field = "genomicPosition", sort = false } = sortQueryModel[0] ?? {};
 
         const encodedSearchString = createEncodedFilterString(passedFilters, false);
         const currentUrl = new URL(window.location.href);

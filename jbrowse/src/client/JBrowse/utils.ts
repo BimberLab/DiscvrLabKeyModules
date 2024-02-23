@@ -435,10 +435,10 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pa
     }
 
     let sortReverse;
-    if(sortReverseString == "desc") {
-        sortReverse = false
-    } else {
+    if(sortReverseString == "asc") {
         sortReverse = true
+    } else {
+        sortReverse = false
     }
 
     return Ajax.request({
@@ -457,8 +457,8 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pa
             "trackId": trackGUID,
             "offset": offset,
             "pageSize": pageSize,
-            "sortField": sortField,
-            "sortReverse:": sortReverse 
+            "sortField": sortField ?? "genomicPosition",
+            "sortReverse": sortReverse 
         },
     });
 }
