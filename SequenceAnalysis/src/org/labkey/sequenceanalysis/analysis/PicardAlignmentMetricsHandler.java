@@ -26,6 +26,7 @@ import org.labkey.sequenceanalysis.run.util.CollectInsertSizeMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWithNonZeroCoverageWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.MarkDuplicatesWrapper;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ import java.util.Map;
  */
 public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    private final FileType _bamFileType = new FileType("bam", false);
+    private final FileType _bamOrCramFileType = SequenceUtil.FILETYPE.bamOrCram.getFileType();
 
     public PicardAlignmentMetricsHandler()
     {
@@ -68,7 +69,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
     @Override
     public boolean canProcess(SequenceOutputFile o)
     {
-        return o.getFile() != null && _bamFileType.isType(o.getFile());
+        return o.getFile() != null && _bamOrCramFileType.isType(o.getFile());
     }
 
     @Override
