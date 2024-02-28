@@ -36,6 +36,7 @@ import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceDataProvider;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SamtoolsCramConverter;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
@@ -45,6 +46,7 @@ import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
+import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 import org.labkey.sequenceanalysis.run.util.GxfSorter;
 import org.labkey.sequenceanalysis.run.util.IndexFeatureFileWrapper;
@@ -292,6 +294,40 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         {
             throw new IOException(e);
         }
+    }
+
+    @Override
+    public File getExpectedBamOrCramIndex(File bamOrCram)
+    {
+        return SequenceUtil.getExpectedIndex(bamOrCram);
+    }
+
+    @Override
+    public File ensureBamOrCramIdx(File bamOrCram, Logger log, boolean forceRecreate) throws PipelineJobException
+    {
+        File idx = SequenceUtil.getExpectedIndex(bamOrCram);
+        if (idx.exists())
+        {
+            if (forceRecreate)
+            {
+                idx.delete();
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        if (SequenceUtil.FILETYPE.bam.getFileType().isType(bamOrCram))
+        {
+            idx = new BuildBamIndexWrapper(log).executeCommand(bamOrCram);
+        }
+        else if (SequenceUtil.FILETYPE.cram.getFileType().isType(bamOrCram))
+        {
+            idx = new SamtoolsCramConverter(log).doIndex(bamOrCram, null);
+        }
+
+        return idx;
     }
 
     @Override

@@ -76,6 +76,10 @@ abstract public class SequenceAnalysisService
 
     abstract public File ensureVcfIndex(File vcf, Logger log, boolean forceRecreate) throws IOException;
 
+    abstract public File ensureBamOrCramIdx(File bamOrCram, Logger log, boolean forceRecreate) throws PipelineJobException;
+
+    abstract public File getExpectedBamOrCramIndex(File bamOrCram);
+
     abstract public File bgzipFile(File input, Logger log) throws PipelineJobException;
 
     abstract public void ensureFastaIndex(File fasta, Logger log) throws PipelineJobException;

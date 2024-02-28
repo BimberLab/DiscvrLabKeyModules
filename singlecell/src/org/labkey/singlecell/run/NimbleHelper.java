@@ -399,7 +399,7 @@ public class NimbleHelper
         Map<NimbleGenome, File> resultMap = new HashMap<>();
 
         File localBam = ensureLocalCopy(bam, output);
-        ensureLocalCopy(new File(bam.getPath() + ".bai"), output);
+        ensureLocalCopy(SequenceAnalysisService.get().getExpectedBamOrCramIndex(bam), output);
 
         List<File> localRefJsons = refJsons.stream().map(refJson -> {
             try

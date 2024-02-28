@@ -41,6 +41,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.run.util.CollectInsertSizeMetricsWrapper;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 import picard.analysis.InsertSizeMetrics;
 
 import java.io.BufferedReader;
@@ -196,7 +197,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         File bamToUse = removeDuplicates ? new File(outDir, FileUtil.getBaseName(inputBam) + ".rmdup.bam") : inputBam;
         if (removeDuplicates)
         {
-            File bamIdx = new File(bamToUse.getPath() + ".bai");
+            File bamIdx = SequenceUtil.getExpectedIndex(bamToUse);
             if (!bamIdx.exists())
             {
                 SamtoolsRunner runner = new SamtoolsRunner(ctx.getLogger());

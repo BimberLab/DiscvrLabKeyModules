@@ -6,6 +6,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.api.util.FileUtil;
 
@@ -70,7 +71,7 @@ public class AddOrReplaceReadGroupsWrapper extends PicardWrapper
                 FileUtils.moveFile(outputBam, inputFile);
 
                 //note: if there is a pre-existing index, we need to delete this since it is out of date
-                File idx = new File(inputFile.getPath() + ".bai");
+                File idx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(inputFile);
                 if (idx.exists())
                 {
                     getLogger().debug("deleting/recreating BAM index");

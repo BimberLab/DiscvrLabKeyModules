@@ -40,7 +40,6 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.run.util.BgzipRunner;
-import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 
 import java.io.BufferedReader;
 import java.io.File;

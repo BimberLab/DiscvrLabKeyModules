@@ -3,9 +3,9 @@ package org.labkey.sequenceanalysis.run.util;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SamtoolsRunner;
 import org.labkey.api.util.FileUtil;
 
@@ -55,7 +55,7 @@ public class CallMdWrapper extends SamtoolsRunner
                 FileUtils.moveFile(output, inputBam);
 
                 //note: if there is a pre-existing index, we need to delete this since it is out of date
-                File idx = new File(inputBam.getPath() + ".bai");
+                File idx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(inputBam);
                 if (idx.exists())
                 {
                     getLogger().debug("deleting/recreating BAM index");
