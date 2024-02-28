@@ -65,6 +65,7 @@ import org.labkey.sequenceanalysis.SequenceIntegrationTests;
 import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.run.util.NTSnp;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -105,7 +106,7 @@ public class BamIterator
         _ref = refFasta;
         _logger = logger;
 
-        _bai = new File(_bam.getPath() + ".bai");
+        _bai = SequenceUtil.getExpectedIndex(_bam);
         if(!_bai.exists())
             throw new FileNotFoundException("Missing index for BAM, expected: " + _bai.getPath());
 

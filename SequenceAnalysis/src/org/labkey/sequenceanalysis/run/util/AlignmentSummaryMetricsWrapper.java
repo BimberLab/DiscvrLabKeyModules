@@ -3,9 +3,9 @@ package org.labkey.sequenceanalysis.run.util;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
@@ -27,11 +27,7 @@ public class AlignmentSummaryMetricsWrapper extends PicardWrapper
     {
         getLogger().info("Running AlignmentSummaryMetrics: " + inputFile.getPath());
         setStringency(ValidationStringency.SILENT);
-        File idx = new File(inputFile.getPath() + ".bai");
-        if (!idx.exists())
-        {
-            new BuildBamIndexWrapper(getLogger()).executeCommand(inputFile);
-        }
+        SequenceAnalysisService.get().ensureBamOrCramIdx(inputFile, getLogger(), false);
 
         try
         {

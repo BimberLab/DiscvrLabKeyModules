@@ -26,6 +26,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -89,7 +90,7 @@ public class SnpCountAnalysis extends AbstractPipelineStep implements AnalysisSt
             throw new PipelineJobException("Must provide a list of intervals to query");
         }
 
-        File indexFile = new File(inputBam.getPath() + ".bai");
+        File indexFile = SequenceUtil.getExpectedIndex(inputBam);
         if (!indexFile.exists())
         {
             getPipelineCtx().getLogger().error("BAM index does not exist, expected: " + indexFile.getPath());

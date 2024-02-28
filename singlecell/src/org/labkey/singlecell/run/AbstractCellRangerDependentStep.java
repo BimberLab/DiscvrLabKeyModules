@@ -5,6 +5,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStepProvider;
@@ -33,7 +34,7 @@ public class AbstractCellRangerDependentStep extends CellRangerGexCountStep
         getPipelineCtx().getJob().setStatus(PipelineJob.TaskStatus.running, "Running Cellranger GEX");
 
         File localBam = new File(outputDirectory, basename + ".cellranger.bam");
-        File localBamIdx = new File(localBam.getPath() + ".bai");
+        File localBamIdx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(localBam);
 
 
         String idParam = StringUtils.trimToNull(getProvider().getParameterByName("id").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
@@ -76,7 +77,7 @@ public class AbstractCellRangerDependentStep extends CellRangerGexCountStep
                 {
                     localBamIdx.delete();
                 }
-                FileUtils.moveFile(new File(crBam.getPath() + ".bai"), localBamIdx);
+                FileUtils.moveFile(SequenceAnalysisService.get().getExpectedBamOrCramIndex(crBam), localBamIdx);
             }
             catch (IOException e)
             {

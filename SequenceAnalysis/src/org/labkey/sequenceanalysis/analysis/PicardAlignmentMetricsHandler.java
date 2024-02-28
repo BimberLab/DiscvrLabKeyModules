@@ -269,7 +269,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                     File metricsFile = wrapper.getMetricsFile(o.getFile());
                     File tempBam = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".markDuplicates.bam");
                     ctx.getFileManager().addIntermediateFile(tempBam);
-                    ctx.getFileManager().addIntermediateFile(new File(tempBam.getPath() + ".bai"));
+                    ctx.getFileManager().addIntermediateFile(SequenceUtil.getExpectedIndex(tempBam));
 
                     if (tempBam.exists())
                     {

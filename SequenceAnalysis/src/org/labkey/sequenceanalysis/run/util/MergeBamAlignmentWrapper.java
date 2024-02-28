@@ -10,6 +10,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SortSamWrapper;
 import org.labkey.api.sequenceanalysis.run.CreateSequenceDictionaryWrapper;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
@@ -174,7 +175,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             //getLogger().info("\ttotal alignments in unmapped reads BAM: ");
             //SequenceUtil.logAlignmentCount(unmappedReadsBam, getLogger());
             finalUnmappedReadsBam.delete();
-            File bai = new File(finalUnmappedReadsBam.getPath() + ".bai");
+            File bai = SequenceAnalysisService.get().getExpectedBamOrCramIndex(finalUnmappedReadsBam);
             if (bai.exists())
             {
                 bai.delete();

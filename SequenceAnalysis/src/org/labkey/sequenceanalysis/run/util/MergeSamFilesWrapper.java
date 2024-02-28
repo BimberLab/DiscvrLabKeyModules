@@ -6,6 +6,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 
@@ -61,7 +62,7 @@ public class MergeSamFilesWrapper extends PicardWrapper
             getLogger().debug("\tDeleting input BAM files");
             for (File f : files)
             {
-                File idx = new File(f.getPath() + ".bai");
+                File idx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(f);
 
                 f.delete();
                 if (f.exists())
@@ -97,7 +98,7 @@ public class MergeSamFilesWrapper extends PicardWrapper
 
         //create index.  if there is a pre-existing index, we need to delete this since it is out of date
         getLogger().debug("recreating BAM index");
-        File idx = new File(output.getPath() + ".bai");
+        File idx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(output);
         if (idx.exists())
         {
             idx.delete();
