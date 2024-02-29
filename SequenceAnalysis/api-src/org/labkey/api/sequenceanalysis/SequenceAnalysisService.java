@@ -19,6 +19,7 @@ package org.labkey.api.sequenceanalysis;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
+import org.labkey.api.laboratory.DemographicsProvider;
 import org.labkey.api.laboratory.NavItem;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -88,7 +89,7 @@ abstract public class SequenceAnalysisService
 
     abstract public Integer getExpRunIdForJob(PipelineJob job, boolean throwUnlessFound) throws PipelineJobException;
 
-    abstract public List<PedigreeRecord> generatePedigree(Collection<String> sampleNames, Container c, User u);
+    abstract public List<PedigreeRecord> generatePedigree(Collection<String> sampleNames, Container c, User u, DemographicsProvider d);
 
     abstract public String getVCFLineCount(File vcf, Logger log, boolean passOnly) throws PipelineJobException;
 

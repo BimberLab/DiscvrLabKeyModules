@@ -10,7 +10,6 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
-import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
@@ -35,7 +34,7 @@ public class SplitVcfBySamplesStep extends AbstractCommandPipelineStep<SplitVcfB
         super(provider, ctx, new Wrapper(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<SelectSamplesStep> implements SupportsScatterGather
+    public static class Provider extends AbstractVariantProcessingStepProvider<SplitVcfBySamplesStep> implements SupportsScatterGather
     {
         public Provider()
         {
@@ -47,7 +46,7 @@ public class SplitVcfBySamplesStep extends AbstractCommandPipelineStep<SplitVcfB
         }
 
         @Override
-        public PipelineStep create(PipelineContext context)
+        public SplitVcfBySamplesStep create(PipelineContext context)
         {
             return new SplitVcfBySamplesStep(this, context);
         }

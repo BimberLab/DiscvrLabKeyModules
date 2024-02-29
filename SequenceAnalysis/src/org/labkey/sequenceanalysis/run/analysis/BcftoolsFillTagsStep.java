@@ -7,6 +7,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.BcftoolsRunner;
+import org.labkey.api.sequenceanalysis.pipeline.PedigreeToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -15,6 +16,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
 import javax.annotation.Nullable;
@@ -42,8 +44,9 @@ public class BcftoolsFillTagsStep extends AbstractCommandPipelineStep<BcftoolsRu
                     }}, true),
                     ToolParameterDescriptor.create("exchet", "Excess Het", "If selected, ExcHet will be annotated.", "checkbox", new JSONObject(){{
                         put("checked", true);
-                    }}, true)
-            ), null, "");
+                    }}, true),
+                    new PedigreeToolParameterDescriptor()
+            ), PageFlowUtil.set(PedigreeToolParameterDescriptor.getClientDependencyPath()), null);
         }
 
         @Override

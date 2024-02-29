@@ -94,5 +94,5 @@ public interface PipelineStepProvider<StepType extends PipelineStep>
      * Allows a given step to combine itself w/ a neighboring step to save compute time.  Should return a new provider, which will
      * replace both original provider.  Return null for no changes.
      */
-    PipelineStepProvider<StepType> combineSteps(int existingStepIdx, PipelineStepCtx toCombine);
+    PipelineStepProvider<StepType> combineSteps(int existingStepIdx, PipelineStepCtx<StepType> toCombine);
 }
