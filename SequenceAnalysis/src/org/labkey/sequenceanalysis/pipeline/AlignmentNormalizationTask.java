@@ -268,7 +268,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING INSERT SIZE METRICS");
                 File metricsFile2 = new File(finalDestination.getParentFile(), FileUtil.getBaseName(finalDestination) + ".insertsize.metrics");
                 File metricsHistogram = new File(finalDestination.getParentFile(), FileUtil.getBaseName(finalDestination) + ".insertsize.metrics.pdf");
-                if (new CollectInsertSizeMetricsWrapper(getJob().getLogger()).executeCommand(finalDestination, metricsFile2, metricsHistogram) != null)
+                if (new CollectInsertSizeMetricsWrapper(getJob().getLogger()).executeCommand(finalDestination, metricsFile2, metricsHistogram, referenceGenome.getWorkingFastaFile()) != null)
                 {
                     getTaskHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
                     getTaskHelper().getFileManager().addOutput(metricsAction, "Insert Size  Metrics Histogram", metricsHistogram);

@@ -1014,7 +1014,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                         File metricsFile2 = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".insertsize.metrics");
                         File metricsHistogram = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".insertsize.metrics.pdf");
                         CollectInsertSizeMetricsWrapper collectInsertSizeMetricsWrapper = new CollectInsertSizeMetricsWrapper(getJob().getLogger());
-                        if (collectInsertSizeMetricsWrapper.executeCommand(renamedBam, metricsFile2, metricsHistogram) != null)
+                        if (collectInsertSizeMetricsWrapper.executeCommand(renamedBam, metricsFile2, metricsHistogram, referenceGenome.getWorkingFastaFile()) != null)
                         {
                             getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
                             getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics Histogram", metricsHistogram);

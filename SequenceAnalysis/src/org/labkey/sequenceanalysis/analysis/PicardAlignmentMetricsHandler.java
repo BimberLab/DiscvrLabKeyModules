@@ -258,7 +258,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                     File metricsFile = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics");
                     File metricsHistogram = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics.pdf");
                     CollectInsertSizeMetricsWrapper wrapper = new CollectInsertSizeMetricsWrapper(job.getLogger());
-                    wrapper.executeCommand(o.getFile(), metricsFile, metricsHistogram);
+                    wrapper.executeCommand(o.getFile(), metricsFile, metricsHistogram, ctx.getSequenceSupport().getCachedGenome(o.getLibrary_id()).getWorkingFastaFile());
                 }
 
                 if (runMarkDuplicates)

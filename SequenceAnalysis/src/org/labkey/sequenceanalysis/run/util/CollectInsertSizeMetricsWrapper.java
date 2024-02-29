@@ -20,7 +20,7 @@ public class CollectInsertSizeMetricsWrapper extends PicardWrapper
         super(logger);
     }
 
-    public File executeCommand(File inputFile, File outputFile, File histogramFile) throws PipelineJobException
+    public File executeCommand(File inputFile, File outputFile, File histogramFile, File fasta) throws PipelineJobException
     {
         getLogger().info("Running CollectInsertSizeMetrics: " + inputFile.getPath());
         File idx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(inputFile);
@@ -38,6 +38,9 @@ public class CollectInsertSizeMetricsWrapper extends PicardWrapper
 
         params.add("--OUTPUT");
         params.add(outputFile.getPath());
+
+        params.add("-R");
+        params.add(fasta.getPath());
 
         params.add("-H");
         params.add(histogramFile.getPath());
