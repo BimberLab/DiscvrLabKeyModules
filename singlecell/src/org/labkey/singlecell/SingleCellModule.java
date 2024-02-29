@@ -172,6 +172,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new ClrNormalizeByGroup.Provider());
         SequenceAnalysisService.get().registerFileHandler(new CellRangerVLoupeRepairHandler());
         SequencePipelineService.get().registerPipelineStep(new PrepareRawCounts.Provider());
+        SequenceAnalysisService.get().registerFileHandler(new VireoHandler());
 
         SequencePipelineService.get().registerPipelineStep(new RemoveCellCycle.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunCellHashing.Provider());
