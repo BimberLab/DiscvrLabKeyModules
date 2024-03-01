@@ -129,11 +129,6 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     public static Class<?> findSuperClassParameterType(Object instance, int parameterIndex)
     {
         Class<?> clazz = instance.getClass();
-        if (clazz == null)
-        {
-            throw new IllegalStateException("Class was null for instance: " + instance);
-        }
-
         while (clazz != null && clazz != clazz.getSuperclass())
         {
             if (clazz.getGenericSuperclass() instanceof ParameterizedType pt)
@@ -144,7 +139,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
             clazz = clazz.getSuperclass();
         }
 
-        return null;
+        throw new IllegalStateException("Unable to find ClassParameterType for: " + instance + ", with class: " + instance.getClass().getName());
     }
 
     @Override
