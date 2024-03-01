@@ -119,8 +119,14 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         return ret;
     }
 
+    @Override
+    public Class<?> findSuperClassParameterType(Object instance)
+    {
+        return findSuperClassParameterType(instance, 0);
+    }
+
     // Based on: https://www.javacodegeeks.com/2013/12/advanced-java-generics-retreiving-generic-type-arguments.html
-    private static Class<?> findSuperClassParameterType(Object instance, int parameterIndex) {
+    public static Class<?> findSuperClassParameterType(Object instance, int parameterIndex) {
         Class<?> clazz = instance.getClass();
         while (clazz != clazz.getSuperclass()) {
             if (clazz.getGenericSuperclass() instanceof ParameterizedType pt)

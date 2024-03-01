@@ -146,4 +146,6 @@ abstract public class SequencePipelineService
     abstract public TaskFileManager getTaskFileManager();
 
     abstract public Set<JobResourceSettings> getResourceSettings();
+
+    abstract public Class<?> findSuperClassParameterType(Object instance);
 }
