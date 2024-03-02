@@ -6,6 +6,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.junit.Assert;
+import org.junit.Test;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
@@ -112,7 +114,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
 
             if (stepType.isAssignableFrom(clazz))
             {
-                ret.add((PipelineStepProvider<StepType>)provider);
+                ret.add((PipelineStepProvider<StepType>) provider);
             }
         }
 
@@ -220,7 +222,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         Map<String, String> params;
         if (job instanceof HasJobParams)
         {
-            params = ((HasJobParams)job).getJobParams();
+            params = ((HasJobParams) job).getJobParams();
         }
         else
         {
@@ -437,7 +439,8 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     @Override
     public CommandWrapper getCommandWrapper(Logger log)
     {
-        return new AbstractCommandWrapper(log){
+        return new AbstractCommandWrapper(log)
+        {
 
         };
     }
@@ -619,4 +622,15 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         return new TaskFileManagerImpl();
     }
 
+    public static class TestCase extends Assert
+    {
+        @Test
+        public void testGenerics()
+        {
+            for (PipelineStepProvider<?> p : _instance._providers)
+            {
+                Assert.assertNotNull("Unable to find stepClass for: " + p.getName(), p.getStepClass());
+            }
+        }
+    }
 }

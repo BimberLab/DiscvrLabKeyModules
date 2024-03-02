@@ -140,7 +140,7 @@ abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep
     @Override
     public Class<StepType> getStepClass()
     {
-        return (Class<StepType>) SequencePipelineService.get().findSuperClassParameterType(getClass());
+        return (Class<StepType>) SequencePipelineService.get().findSuperClassParameterType(this);
     }
 
     @Override
