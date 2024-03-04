@@ -10,6 +10,10 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
+    if (!'HasCDR3Data' %in% names(seuratObj@meta.data)){
+        seuratObj <- seuratObj <- Rdiscvr::DownloadAndAppendTcrClonotypes(seuratObj, allowMissing = FALSE)
+    }
+
     outFile <- paste0(outputPrefix, '.', makeLegalFileName(datasetId), '.activation.txt')
     Rdiscvr::SummarizeTNK_Activation(seuratObj, outFile = outFile, xFacetField = xFacetField, groupingFields = groupingFields, activationFieldName = activationFieldName, threshold = threshold)
 
