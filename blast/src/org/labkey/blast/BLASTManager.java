@@ -44,6 +44,9 @@ import org.labkey.blast.pipeline.BlastPipelineJob;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
 
@@ -106,13 +109,13 @@ public class BLASTManager
     public File getDatabaseDir(Container c, boolean createIfDoesntExist)
     {
         FileContentService fileService = FileContentService.get();
-        File fileRoot = fileService == null ? null : fileService.getFileRoot(c, FileContentService.ContentType.files);
-        if (fileRoot == null || !fileRoot.exists())
+        Path fileRoot = fileService == null ? null : fileService.getFileRootPath(c, FileContentService.ContentType.files);
+        if (fileRoot == null || fileRoot.getFileSystem() != FileSystems.getDefault())
         {
             return null;
         }
 
-        File ret = new File(fileRoot, ".blastDB");
+        File ret = new File(fileRoot.toFile(), ".blastDB");
         if (createIfDoesntExist && !ret.exists())
         {
             ret.mkdirs();
