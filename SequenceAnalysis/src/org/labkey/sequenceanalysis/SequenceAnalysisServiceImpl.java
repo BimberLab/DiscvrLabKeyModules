@@ -425,8 +425,13 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
             boolean o2ParentOfO1 = o2.getSubjectName().equals(o1.getFather()) || o2.getSubjectName().equals(o1.getMother());
 
             if (o1ParentOfO2 && o2ParentOfO1)
-                throw new IllegalArgumentException("Pedigree records are both parents of one another: " + o1.getSubjectName() + "/" + o2.getSubjectName());
-            else if (o1ParentOfO2)
+            {
+                String msg = "Pedigree records are both parents of one another: " + o1.getSubjectName() + "/" + o2.getSubjectName();
+                _log.error(msg);
+                throw new IllegalArgumentException(msg);
+            }
+
+            if (o1ParentOfO2)
                 return -1;
             else if (o2ParentOfO1)
                 return 1;
