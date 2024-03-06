@@ -102,7 +102,7 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
 
         private File getBamFile(File loupe)
         {
-            File[] files = loupe.getParentFile().getParentFile().listFiles(f -> f.getName().endsWith(".bam"));
+            File[] files = loupe.getParentFile().listFiles(f -> f.getName().endsWith(".bam"));
             if (files == null || files.length == 0)
             {
                 throw new IllegalArgumentException("Unable to find BAM file for Loupe file");
