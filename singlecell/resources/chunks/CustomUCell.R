@@ -13,6 +13,10 @@ for (datasetId in names(seuratObjects)) {
   }
 
   seuratObj <- UCell::AddModuleScore_UCell(seuratObj, features = toCalculate, storeRanks = storeRanks, assay = assayName)
+  for (n in names(toCalculate)) {
+    print(Seurat::FeaturePlot(seuratObj, features = paste0(n, '_UCell'), min.cutoff = 'q02', max.cuttoff = 'q98'))
+  }
+
   saveData(seuratObj, datasetId)
 
   # Cleanup
