@@ -169,7 +169,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                 if (m != null)
                 {
                     job.getLogger().warn("processing analysis: " + m.getRowId());
-                    File outputDir = ((SequenceOutputHandlerJob)job).getAnalysisDirectory();
+                    File outputDir = ((SequenceOutputHandlerJob)job).getWebserverDir(false);
                     List<File> metricsFiles = new ArrayList<>();
 
                     File mf = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".summary.metrics");
