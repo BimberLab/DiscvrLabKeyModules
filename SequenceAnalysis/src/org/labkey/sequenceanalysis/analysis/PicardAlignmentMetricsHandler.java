@@ -8,7 +8,6 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.pipeline.RecordedAction;
@@ -17,6 +16,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
@@ -24,7 +24,6 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.util.UnexpectedException;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
@@ -189,7 +188,15 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                     }
                     else if (collectInsertSize)
                     {
-                        throw new PipelineJobException("Missing file: " + mf2.getPath());
+                        // This output is only created for paired data:
+                        if (o.getReadset() != null)
+                        {
+                            Readset rs = SequenceAnalysisService.get().getReadset(o.getReadset(), job.getUser());
+                            if (rs.getReadData().stream().filter(rd -> rd.getFileId2() != null).count() > 0)
+                            {
+                                throw new PipelineJobException("Missing file: " + mf2.getPath());
+                            }
+                        }
                     }
 
                     File mf3 = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".wgs.metrics");
