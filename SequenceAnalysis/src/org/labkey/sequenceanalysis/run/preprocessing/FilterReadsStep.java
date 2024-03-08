@@ -81,7 +81,7 @@ public class FilterReadsStep extends AbstractPipelineStep implements Preprocessi
         SequencePipelineService.get().ensureBamIndex(alignmentOutput.getBAM(), getPipelineCtx().getLogger(), true);
         
         output.addIntermediateFile(alignmentOutput.getBAM());
-        output.addIntermediateFile(new File(alignmentOutput.getBAM().getPath() + ".bai"));
+        output.addIntermediateFile(SequenceUtil.getExpectedIndex(alignmentOutput.getBAM()));
 
         File unmappedReadsF = new File(alignmentOutput.getBAM().getParentFile(), FileUtil.getBaseName(alignmentOutput.getBAM()) + "_unmapped_F.fastq");
         File unmappedReadsR = new File(alignmentOutput.getBAM().getParentFile(), FileUtil.getBaseName(alignmentOutput.getBAM()) + "_unmapped_R.fastq");

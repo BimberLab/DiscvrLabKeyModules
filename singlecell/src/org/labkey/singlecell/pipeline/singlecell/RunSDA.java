@@ -80,7 +80,8 @@ public class RunSDA extends AbstractCellMembraneStep
                         put("height", 150);
                         put("delimiter", ",");
                         put("stripCharsRe", "/['\"]/g");
-                    }}, null, null, true).delimiter(",")
+                    }}, null, null, true).delimiter(","),
+                    SeuratToolParameter.create("sdaDebug", "SDA Debug Output", "If checked, the SDA tools debug output is set to true", "checkbox", null, false, null, false)
                 ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 

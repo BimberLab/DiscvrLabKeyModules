@@ -1,31 +1,41 @@
 package org.labkey.sequenceanalysis.analysis;
 
 import org.json.JSONObject;
+import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.pipeline.PicardMetricsUtil;
+import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
 import org.labkey.sequenceanalysis.run.util.AlignmentSummaryMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectInsertSizeMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWithNonZeroCoverageWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.MarkDuplicatesWrapper;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -39,7 +49,7 @@ import java.util.Map;
  */
 public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    private final FileType _bamFileType = new FileType("bam", false);
+    private final FileType _bamOrCramFileType = SequenceUtil.FILETYPE.bamOrCram.getFileType();
 
     public PicardAlignmentMetricsHandler()
     {
@@ -68,7 +78,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
     @Override
     public boolean canProcess(SequenceOutputFile o)
     {
-        return o.getFile() != null && _bamFileType.isType(o.getFile());
+        return o.getFile() != null && _bamOrCramFileType.isType(o.getFile());
     }
 
     @Override
@@ -80,7 +90,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
     @Override
     public boolean doRunLocal()
     {
-        return true;
+        return false;
     }
 
     @Override
@@ -112,12 +122,40 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
         @Override
         public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            for (SequenceOutputFile o : inputFiles)
+
+        }
+
+        @Override
+        public void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated, SequenceAnalysisJobSupport support) throws PipelineJobException
+        {
+            if (!(job instanceof SequenceOutputHandlerJob shj))
             {
-                if (o.getAnalysis_id() == null)
+                throw new IllegalStateException("Expected job to be a SequenceOutputHandlerJob");
+            }
+
+            boolean collectSummary = shj.getParameterJson().optBoolean("collectSummary", false);
+            boolean collectInsertSize = shj.getParameterJson().optBoolean("collectInsertSize", false);
+            boolean collectWgs = shj.getParameterJson().optBoolean("collectWgs", false);
+            boolean collectWgsNonZero = shj.getParameterJson().optBoolean("collectWgsNonZero", false);
+            boolean runMarkDuplicates = shj.getParameterJson().optBoolean("markDuplicates", false);
+
+            for (SequenceOutputFile o : inputs)
+            {
+                Integer analysisId = o.getAnalysis_id();
+                if (analysisId == null)
                 {
-                    job.getLogger().warn("no analysis Id for file: " + o.getName());
-                    continue;
+                    job.getLogger().warn("no analysis Id for file, attempting to find this job: " + o.getName());
+                    PipelineStatusFile sf = PipelineService.get().getStatusFile(job.getJobGUID());
+
+                    TableSelector ts = new TableSelector(QueryService.get().getUserSchema(job.getUser(), job.getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_ANALYSES), PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("runid/JobId"), sf.getRowId()), null);
+                    if (ts.exists())
+                    {
+                        analysisId = ts.getObject(Integer.class);
+                    }
+                    else
+                    {
+                        throw new IllegalStateException("Unable to find analysis for the input for this job");
+                    }
                 }
 
                 if (o.getLibrary_id() == null)
@@ -126,48 +164,69 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                     continue;
                 }
 
-                AnalysisModel m = AnalysisModelImpl.getFromDb(o.getAnalysis_id(), job.getUser());
+                AnalysisModel m = AnalysisModelImpl.getFromDb(analysisId, job.getUser());
                 if (m != null)
                 {
                     job.getLogger().warn("processing analysis: " + m.getRowId());
+                    File outputDir = ((SequenceOutputHandlerJob)job).getWebserverDir(false);
                     List<File> metricsFiles = new ArrayList<>();
-
-                    RecordedAction action = new RecordedAction(getName());
-                    action.addInput(o.getFile(), "Input BAM");
 
                     File mf = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".summary.metrics");
                     if (mf.exists())
                     {
-                        action.addOutput(mf, "Alignment Summary Metrics", false);
                         metricsFiles.add(mf);
+                    }
+                    else if (collectSummary)
+                    {
+                        throw new PipelineJobException("Missing file: " + mf.getPath());
                     }
 
                     File mf2 = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics");
                     if (mf2.exists())
                     {
-                        action.addOutput(mf2, "InsertSize Metrics", false);
                         metricsFiles.add(mf2);
+                    }
+                    else if (collectInsertSize)
+                    {
+                        // This output is only created for paired data:
+                        if (o.getReadset() != null)
+                        {
+                            Readset rs = SequenceAnalysisService.get().getReadset(o.getReadset(), job.getUser());
+                            if (rs.getReadData().stream().filter(rd -> rd.getFileId2() != null).count() > 0)
+                            {
+                                throw new PipelineJobException("Missing file: " + mf2.getPath());
+                            }
+                        }
                     }
 
                     File mf3 = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".wgs.metrics");
                     if (mf3.exists())
                     {
-                        action.addOutput(mf3, "WGS Metrics", false);
                         metricsFiles.add(mf3);
+                    }
+                    else if (collectWgs)
+                    {
+                        throw new PipelineJobException("Missing file: " + mf3.getPath());
                     }
 
                     File mf4 = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".wgsNonZero.metrics");
                     if (mf4.exists())
                     {
-                        action.addOutput(mf4, "WGS Metrics Over Non-Zero Coverage", false);
                         metricsFiles.add(mf4);
                     }
+                    else if (collectWgsNonZero)
+                    {
+                        throw new PipelineJobException("Missing file: " + mf4.getPath());
+                    }
 
-                    File mf5 = new MarkDuplicatesWrapper(job.getLogger()).getMetricsFile(m.getAlignmentFileObject());
+                    File mf5 = new MarkDuplicatesWrapper(job.getLogger()).getMetricsFile(o.getFile());
                     if (mf5.exists())
                     {
-                        action.addOutput(mf5, "Duplication Metrics", false);
                         metricsFiles.add(mf5);
+                    }
+                    else if (runMarkDuplicates)
+                    {
+                        throw new PipelineJobException("Missing file: " + mf5.getPath());
                     }
 
                     TableInfo ti = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
@@ -186,8 +245,6 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                             Table.insert(job.getUser(), ti, row);
                         }
                     }
-
-                    actions.add(action);
                 }
                 else
                 {
@@ -257,7 +314,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                     File metricsFile = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics");
                     File metricsHistogram = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics.pdf");
                     CollectInsertSizeMetricsWrapper wrapper = new CollectInsertSizeMetricsWrapper(job.getLogger());
-                    wrapper.executeCommand(o.getFile(), metricsFile, metricsHistogram);
+                    wrapper.executeCommand(o.getFile(), metricsFile, metricsHistogram, ctx.getSequenceSupport().getCachedGenome(o.getLibrary_id()).getWorkingFastaFile());
                 }
 
                 if (runMarkDuplicates)
@@ -268,7 +325,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                     File metricsFile = wrapper.getMetricsFile(o.getFile());
                     File tempBam = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".markDuplicates.bam");
                     ctx.getFileManager().addIntermediateFile(tempBam);
-                    ctx.getFileManager().addIntermediateFile(new File(tempBam.getPath() + ".bai"));
+                    ctx.getFileManager().addIntermediateFile(SequenceUtil.getExpectedIndex(tempBam));
 
                     if (tempBam.exists())
                     {

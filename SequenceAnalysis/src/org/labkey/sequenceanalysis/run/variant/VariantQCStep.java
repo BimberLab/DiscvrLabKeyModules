@@ -2,10 +2,12 @@ package org.labkey.sequenceanalysis.run.variant;
 
 import htsjdk.samtools.util.Interval;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.PedigreeToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -13,9 +15,9 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,8 +46,9 @@ public class VariantQCStep extends AbstractPipelineStep implements VariantProces
                     }}, true),
                     ToolParameterDescriptor.create("doCopyLocal", "Copy Input To Working Directory", "If selected, the input VCF will always be copied to the working directory, if it is not already present.", "checkbox", new JSONObject(){{
                         put("checked", false);
-                    }}, false)
-            ), null, "https://bimberlab.github.io/DISCVRSeq/");
+                    }}, false),
+                    new PedigreeToolParameterDescriptor()
+            ), PageFlowUtil.set(PedigreeToolParameterDescriptor.getClientDependencyPath()), "https://bimberlab.github.io/DISCVRSeq/");
         }
 
         @Override
@@ -95,7 +98,8 @@ public class VariantQCStep extends AbstractPipelineStep implements VariantProces
 
         List<String> options = new ArrayList<>();
 
-        File pedFile = ProcessVariantsHandler.getPedigreeFile(getPipelineCtx().getSourceDirectory(true));
+        String demographicsProviderName = getProvider().getParameterByName(PedigreeToolParameterDescriptor.NAME).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx());
+        File pedFile = ProcessVariantsHandler.getPedigreeFile(getPipelineCtx().getSourceDirectory(true), demographicsProviderName);
         if (pedFile.exists())
         {
             options.add("-ped");

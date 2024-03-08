@@ -222,7 +222,7 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
                     throw new PipelineJobException("Missing one of more VCFs: " + missing.stream().map(File::getPath).collect(Collectors.joining(",")));
                 }
 
-                boolean sortAfterMerge = handler instanceof VariantProcessingStep.SupportsScatterGather && ((VariantProcessingStep.SupportsScatterGather) handler).doSortAfterMerge();
+                boolean sortAfterMerge = getPipelineJob().scatterMethodRequiresSort() || handler instanceof VariantProcessingStep.SupportsScatterGather && ((VariantProcessingStep.SupportsScatterGather) handler).doSortAfterMerge();
                 combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, genome, getJob().getLogger(), true, null, sortAfterMerge);
             }
             manager.addOutput(action, "Merged VCF", combined);

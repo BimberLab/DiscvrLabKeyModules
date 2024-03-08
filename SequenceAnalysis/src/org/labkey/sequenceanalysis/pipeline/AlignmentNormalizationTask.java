@@ -9,6 +9,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractSequenceTaskFactory;
 import org.labkey.api.sequenceanalysis.pipeline.BamProcessingStep;
@@ -222,11 +223,11 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                         {
                             getJob().getLogger().debug("moving original BAM: " + originalFile.getPath());
                             FileUtils.moveFile(originalFile, finalDestination);
-                            File idxOrig = new File(originalFile.getPath() + ".bai");
+                            File idxOrig = SequenceAnalysisService.get().getExpectedBamOrCramIndex(originalFile);
                             if (idxOrig.exists())
                             {
                                 getJob().getLogger().debug("moving BAM index: " + idxOrig.getPath());
-                                FileUtils.moveFile(idxOrig, new File(finalDestination.getPath() + ".bai"));
+                                FileUtils.moveFile(idxOrig, SequenceAnalysisService.get().getExpectedBamOrCramIndex(finalDestination));
                             }
                         }
                     }
@@ -242,7 +243,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
 
                 //then index
                 getJob().setStatus(PipelineJob.TaskStatus.running, "INDEXING BAM");
-                File finalIndexFile = new File(finalDestination.getPath() + ".bai");
+                File finalIndexFile = SequenceAnalysisService.get().getExpectedBamOrCramIndex(finalDestination);
                 if (!finalIndexFile.exists())
                 {
                     new BuildBamIndexWrapper(getJob().getLogger()).executeCommand(finalDestination);
@@ -267,7 +268,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING INSERT SIZE METRICS");
                 File metricsFile2 = new File(finalDestination.getParentFile(), FileUtil.getBaseName(finalDestination) + ".insertsize.metrics");
                 File metricsHistogram = new File(finalDestination.getParentFile(), FileUtil.getBaseName(finalDestination) + ".insertsize.metrics.pdf");
-                if (new CollectInsertSizeMetricsWrapper(getJob().getLogger()).executeCommand(finalDestination, metricsFile2, metricsHistogram) != null)
+                if (new CollectInsertSizeMetricsWrapper(getJob().getLogger()).executeCommand(finalDestination, metricsFile2, metricsHistogram, referenceGenome.getWorkingFastaFile()) != null)
                 {
                     getTaskHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
                     getTaskHelper().getFileManager().addOutput(metricsAction, "Insert Size  Metrics Histogram", metricsHistogram);
@@ -295,7 +296,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                     getJob().getLogger().info("deleting original BAM: " + originalFile.getPath());
                     originalFile.delete();
 
-                    File indexFile = new File(originalFile.getPath() + ".bai");
+                    File indexFile = SequenceAnalysisService.get().getExpectedBamOrCramIndex(originalFile);
                     if (indexFile.exists())
                     {
                         getJob().getLogger().info("BAM index exists, deleting");

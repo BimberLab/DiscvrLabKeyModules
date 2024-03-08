@@ -27,6 +27,8 @@ public class JBrowseFieldDescriptor {
 
     private Integer _flex = null;
 
+    private boolean _isLocked = false;
+
     public JBrowseFieldDescriptor(String luceneFieldName, @Nullable String description, boolean isInDefaultColumns, boolean isIndexed, VCFHeaderLineType type, Integer orderKey) {
         _fieldName = luceneFieldName;
         _label = luceneFieldName;
@@ -37,22 +39,47 @@ public class JBrowseFieldDescriptor {
         _orderKey = orderKey;
     }
 
+    @Override
+    public JBrowseFieldDescriptor clone()
+    {
+        JBrowseFieldDescriptor ret = new JBrowseFieldDescriptor(_fieldName, _description, _isInDefaultColumns, _isIndexed, _type, _orderKey);
+        ret._url = _url;
+        ret._label = _label;
+        ret._category = _category;
+        ret._flex = _flex;
+        ret._allowableValues = _allowableValues;
+        ret._colWidth = _colWidth;
+        ret._formatString = _formatString;
+        ret._isHidden = _isHidden;
+        ret._isMultiValued = _isMultiValued;
+
+        return ret;
+    }
+
     public JBrowseFieldDescriptor hidden(boolean isHidden) {
+        throwIfLocked();
+
         _isHidden = isHidden;
         return this;
     }
 
     public JBrowseFieldDescriptor colWidth(String colWidth) {
+        throwIfLocked();
+
         _colWidth = colWidth;
         return this;
     }
 
     public JBrowseFieldDescriptor formatString(String formatString) {
+        throwIfLocked();
+
         _formatString = formatString;
         return this;
     }
 
     public JBrowseFieldDescriptor allowableValues(List<String> allowableValues) {
+        throwIfLocked();
+
         _allowableValues = allowableValues == null ? null : Collections.unmodifiableList(allowableValues);
 
         // Only change the value if we are certain there are multiple values:
@@ -65,13 +92,25 @@ public class JBrowseFieldDescriptor {
     }
 
     public JBrowseFieldDescriptor multiValued(boolean isMultiValued) {
+        throwIfLocked();
+
         _isMultiValued = isMultiValued;
         return this;
     }
 
     public JBrowseFieldDescriptor label(String label) {
+        throwIfLocked();
+
         _label = label;
         return this;
+    }
+
+    private void throwIfLocked()
+    {
+        if (_isLocked)
+        {
+            throw new IllegalStateException("This JBrowseFieldDescriptor is locked!");
+        }
     }
 
     public String getFieldName() {
@@ -111,67 +150,102 @@ public class JBrowseFieldDescriptor {
     }
 
     public void setLabel(String label) {
+        throwIfLocked();
+
         _label = label;
     }
 
     public void setInDefaultColumns(boolean inDefaultColumns)
     {
+        throwIfLocked();
+
         _isInDefaultColumns = inDefaultColumns;
     }
 
     public void setCategory(String category)
     {
+        throwIfLocked();
+
         _category = category;
     }
 
     public void setUrl(String url)
     {
+        throwIfLocked();
+
         _url = url;
     }
 
     public void setMultiValued(boolean multiValued) {
+        throwIfLocked();
+
         _isMultiValued = multiValued;
     }
 
     public void setHidden(boolean hidden) {
+        throwIfLocked();
+
         _isHidden = hidden;
     }
 
     public void setIndexed(boolean indexed) {
+        throwIfLocked();
+
         _isIndexed = indexed;
     }
 
     public void setColWidth(String colWidth) {
+        throwIfLocked();
+
         _colWidth = colWidth;
     }
 
     public void setOrderKey(Integer orderKey) {
+        throwIfLocked();
+
         _orderKey = orderKey;
     }
 
     public void setAllowableValues(List<String> allowableValues)
     {
+        throwIfLocked();
+
         _allowableValues = allowableValues;
     }
 
     public void setFormatString(String formatString)
     {
+        throwIfLocked();
+
         _formatString = formatString;
     }
 
     public void setDescription(String description)
     {
+        throwIfLocked();
+
         _description = description;
     }
 
     public void setFlex(Integer flex)
     {
+        throwIfLocked();
+
         _flex = flex;
     }
 
     public JBrowseFieldDescriptor inDefaultColumns(boolean isInDefaultColumns)
     {
+        throwIfLocked();
+
         _isInDefaultColumns = isInDefaultColumns;
+        return this;
+    }
+
+    public JBrowseFieldDescriptor lock()
+    {
+        _isLocked = true;
+
         return this;
     }
 

@@ -10,12 +10,11 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
-import org.labkey.api.sequenceanalysis.pipeline.SamtoolsRunner;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.run.analysis.LofreqAnalysis;
-import picard.sam.SortSam;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,7 +54,7 @@ public class LofreqIndelQualStep extends AbstractCommandPipelineStep<LofreqAnaly
             outputBam.delete();
         }
 
-        File bamIdx = new File(outputBam.getPath() + ".bai");
+        File bamIdx = SequenceUtil.getExpectedIndex(outputBam);
         if (bamIdx.exists())
         {
             bamIdx.delete();

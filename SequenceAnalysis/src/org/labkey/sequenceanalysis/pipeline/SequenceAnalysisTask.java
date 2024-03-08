@@ -36,6 +36,7 @@ import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -333,7 +334,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
                 {
                     getJob().getLogger().info("BAM will be discarded: " + bam.getName());
                     bam.delete();
-                    File idx = new File(bam.getPath() + ".bai");
+                    File idx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(bam);
                     if (idx.exists())
                     {
                         idx.delete();

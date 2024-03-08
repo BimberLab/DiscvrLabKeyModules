@@ -65,6 +65,12 @@ public class DeepVariantHandler extends AbstractParameterizedOutputHandler<Seque
         return true;
     }
 
+    @Override
+    public boolean requiresSingleGenome()
+    {
+        return false;
+    }
+
     public class Processor implements SequenceOutputProcessor
     {
         @Override

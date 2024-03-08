@@ -12,12 +12,12 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.laboratory.DemographicsProvider;
 import org.labkey.api.laboratory.NavItem;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
@@ -36,6 +36,7 @@ import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceDataProvider;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SamtoolsCramConverter;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.PageFlowUtil;
@@ -45,6 +46,7 @@ import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
+import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 import org.labkey.sequenceanalysis.run.util.GxfSorter;
 import org.labkey.sequenceanalysis.run.util.IndexFeatureFileWrapper;
@@ -55,8 +57,6 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -295,6 +295,40 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
+    public File getExpectedBamOrCramIndex(File bamOrCram)
+    {
+        return SequenceUtil.getExpectedIndex(bamOrCram);
+    }
+
+    @Override
+    public File ensureBamOrCramIdx(File bamOrCram, Logger log, boolean forceRecreate) throws PipelineJobException
+    {
+        File idx = SequenceUtil.getExpectedIndex(bamOrCram);
+        if (idx.exists())
+        {
+            if (forceRecreate)
+            {
+                idx.delete();
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        if (SequenceUtil.FILETYPE.bam.getFileType().isType(bamOrCram))
+        {
+            idx = new BuildBamIndexWrapper(log).executeCommand(bamOrCram);
+        }
+        else if (SequenceUtil.FILETYPE.cram.getFileType().isType(bamOrCram))
+        {
+            idx = new SamtoolsCramConverter(log).doIndex(bamOrCram, null);
+        }
+
+        return idx;
+    }
+
+    @Override
     public File bgzipFile(File input, Logger log) throws PipelineJobException
     {
         return SequenceUtil.bgzip(input, log);
@@ -325,25 +359,20 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
-    public List<PedigreeRecord> generatePedigree(Collection<String> sampleNames, Container c, User u)
+    public List<PedigreeRecord> generatePedigree(Collection<String> sampleNames, Container c, User u, DemographicsProvider d)
     {
         final List<PedigreeRecord> pedigreeRecords = new ArrayList<>();
 
-        TableInfo subjectTable = QueryService.get().getUserSchema(u, (c.isWorkbook() ? c.getParent() : c), "laboratory").getTable("subjects");
-        TableSelector ts = new TableSelector(subjectTable, PageFlowUtil.set("subjectname", "mother", "father", "gender"), new SimpleFilter(FieldKey.fromString("subjectname"), sampleNames, CompareType.IN), null);
-        ts.forEach(new Selector.ForEachBlock<ResultSet>()
-        {
-            @Override
-            public void exec(ResultSet rs) throws SQLException
-            {
-                PedigreeRecord pedigree = new PedigreeRecord();
-                pedigree.setSubjectName(rs.getString("subjectname"));
-                pedigree.setFather(rs.getString("father"));
-                pedigree.setMother(rs.getString("mother"));
-                pedigree.setGender(rs.getString("gender"));
-                if (!StringUtils.isEmpty(pedigree.getSubjectName()))
-                    pedigreeRecords.add(pedigree);
-            }
+        TableInfo subjectTable = QueryService.get().getUserSchema(u, (c.isWorkbook() ? c.getParent() : c), d.getSchema()).getTable(d.getQuery());
+        TableSelector ts = new TableSelector(subjectTable, PageFlowUtil.set(d.getSubjectField(), d.getMotherField(), d.getFatherField(), "gender"), new SimpleFilter(FieldKey.fromString(d.getSubjectField()), sampleNames, CompareType.IN), null);
+        ts.forEach(rs -> {
+            PedigreeRecord pedigree = new PedigreeRecord();
+            pedigree.setSubjectName(rs.getString(d.getSubjectField()));
+            pedigree.setFather(rs.getString(d.getFatherField()));
+            pedigree.setMother(rs.getString(d.getMotherField()));
+            pedigree.setGender(rs.getString(d.getSexField()));
+            if (!StringUtils.isEmpty(pedigree.getSubjectName()))
+                pedigreeRecords.add(pedigree);
         });
 
         //insert record for any missing parents:
@@ -396,8 +425,13 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
             boolean o2ParentOfO1 = o2.getSubjectName().equals(o1.getFather()) || o2.getSubjectName().equals(o1.getMother());
 
             if (o1ParentOfO2 && o2ParentOfO1)
-                throw new IllegalArgumentException("Pedigree records are both parents of one another: " + o1.getSubjectName() + "/" + o2.getSubjectName());
-            else if (o1ParentOfO2)
+            {
+                String msg = "Pedigree records are both parents of one another: " + o1.getSubjectName() + "/" + o2.getSubjectName();
+                _log.error(msg);
+                throw new IllegalArgumentException(msg);
+            }
+
+            if (o1ParentOfO2)
                 return -1;
             else if (o2ParentOfO1)
                 return 1;

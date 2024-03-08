@@ -42,6 +42,7 @@ import org.labkey.api.pipeline.WorkDirFactory;
 import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -713,7 +714,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 getJob().getLogger().info("***Starting BAM Post processing");
                 getJob().setStatus(PipelineJob.TaskStatus.running, "BAM POST-PROCESSING");
                 getHelper().getFileManager().addIntermediateFile(bam);
-                File idx = new File(bam.getPath() + ".bai");
+                File idx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(bam);
                 if (idx.exists())
                 {
                     getHelper().getFileManager().addIntermediateFile(idx);
@@ -723,7 +724,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 {
                     getJob().getLogger().info("performing step: " + stepCtx.getProvider().getLabel());
                     getJob().setStatus(PipelineJob.TaskStatus.running, "RUNNING: " + stepCtx.getProvider().getLabel().toUpperCase());
-                    getJob().getLogger().debug("BAM index exists: " + (new File(bam.getPath() + ".bai")).exists());
+                    getJob().getLogger().debug("BAM index exists: " + (SequenceAnalysisService.get().getExpectedBamOrCramIndex(bam)).exists());
 
                     RecordedAction action = new RecordedAction(stepCtx.getProvider().getLabel());
                     Date start = new Date();
@@ -741,7 +742,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                         if (!bam.equals(output.getBAM()))
                         {
                             getHelper().getFileManager().addIntermediateFile(bam);
-                            getHelper().getFileManager().addIntermediateFile(new File(bam.getPath() + ".bai"));
+                            getHelper().getFileManager().addIntermediateFile(SequenceAnalysisService.get().getExpectedBamOrCramIndex(bam));
                         }
 
                         bam = output.getBAM();
@@ -759,7 +760,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                         getJob().getLogger().info("no BAM created by step, using output from previous step");
                     }
 
-                    getJob().getLogger().debug("index exists: " + (new File(bam.getPath() + ".bai")).exists());
+                    getJob().getLogger().debug("index exists: " + (SequenceAnalysisService.get().getExpectedBamOrCramIndex(bam)).exists());
 
                     Date end = new Date();
                     action.setEndTime(end);
@@ -854,8 +855,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 }
                 FileUtils.moveFile(bam, renamedBam);
 
-                File bamIdxOrig = new File(bam.getPath() + ".bai");
-                File finalBamIdx = new File(renamedBam.getPath() + ".bai");
+                File bamIdxOrig = SequenceAnalysisService.get().getExpectedBamOrCramIndex(bam);
+                File finalBamIdx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(renamedBam);
                 if (finalBamIdx.exists())
                 {
                     getJob().getLogger().warn("unexpected file, deleting: " + finalBamIdx.getPath());
@@ -900,7 +901,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 Date start = new Date();
                 indexAction.setStartTime(start);
                 getHelper().getFileManager().addInput(indexAction, "Input BAM", bam);
-                File originalIndex = new File(bam.getPath() + ".bai");
+                File originalIndex = SequenceAnalysisService.get().getExpectedBamOrCramIndex(bam);
                 if (originalIndex.exists())
                 {
                     getJob().getLogger().debug("deleting existing BAM index: " + originalIndex.getName());
@@ -910,7 +911,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 renamedBam = new File(bam.getParentFile(), basename + ".bam");
                 getHelper().getFileManager().addInput(indexAction, FINAL_BAM_ROLE, renamedBam);
 
-                File bai = new File(renamedBam.getPath() + ".bai");
+                File bai = SequenceAnalysisService.get().getExpectedBamOrCramIndex(renamedBam);
                 if (bai.exists())
                 {
                     getJob().getLogger().debug("deleting existing BAM index: " + bai.getName());
@@ -950,7 +951,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             RecordedAction metricsAction = null;
             boolean supportsMetrics = alignmentStep.supportsMetrics();
             SAMFileHeader.SortOrder so = SequencePipelineService.get().getBamSortOrder(renamedBam);
-            File index = new File(renamedBam.getPath() + ".bai");
+            File index = SequenceAnalysisService.get().getExpectedBamOrCramIndex(renamedBam);
             if (!supportsMetrics)
             {
                 getPipelineJob().getLogger().debug("this aligner does not support collection of alignment metrics");
@@ -1013,7 +1014,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                         File metricsFile2 = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".insertsize.metrics");
                         File metricsHistogram = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".insertsize.metrics.pdf");
                         CollectInsertSizeMetricsWrapper collectInsertSizeMetricsWrapper = new CollectInsertSizeMetricsWrapper(getJob().getLogger());
-                        if (collectInsertSizeMetricsWrapper.executeCommand(renamedBam, metricsFile2, metricsHistogram) != null)
+                        if (collectInsertSizeMetricsWrapper.executeCommand(renamedBam, metricsFile2, metricsHistogram, referenceGenome.getWorkingFastaFile()) != null)
                         {
                             getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics File", metricsFile2);
                             getHelper().getFileManager().addOutput(metricsAction, "Insert Size Metrics Histogram", metricsHistogram);
@@ -1123,14 +1124,14 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             }
 
             final File finalBam = renamedBam;
-            final File finalBamIdx = new File(renamedBam.getPath() + ".bai");
+            final File finalBamIdx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(renamedBam);
             _resumer.getRecordedActions().forEach(r -> {
                 r.updateForMovedFile(finalBam, cramFile);
                 r.updateForMovedFile(finalBamIdx, cramFileIdx);
             });
 
             getHelper().getFileManager().addIntermediateFile(renamedBam);
-            getHelper().getFileManager().addIntermediateFile(new File(renamedBam.getPath() + ".bai"));
+            getHelper().getFileManager().addIntermediateFile(SequenceAnalysisService.get().getExpectedBamOrCramIndex(renamedBam));
         }
     }
 
@@ -1279,7 +1280,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 bams.add(o);
                 getHelper().getFileManager().addInput(mergeAction, "Input BAM", o);
                 getHelper().getFileManager().addIntermediateFile(o);
-                getHelper().getFileManager().addIntermediateFile(new File(o.getPath() + ".bai"));
+                getHelper().getFileManager().addIntermediateFile(SequenceAnalysisService.get().getExpectedBamOrCramIndex(o));
             }
 
             bam = new File(alignOutputs.get(0).getParent(), FileUtil.getBaseName(alignOutputs.get(0).getName()) + ".merged.bam");
@@ -1394,7 +1395,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             {
                 getJob().setStatus(PipelineJob.TaskStatus.running, "MERGING UNALIGNED READS INTO BAM" + msgSuffix);
                 getJob().getLogger().info("merging unaligned reads into BAM");
-                File idx = new File(alignmentOutput.getBAM().getPath() + ".bai");
+                File idx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(alignmentOutput.getBAM());
                 if (idx.exists())
                 {
                     getJob().getLogger().debug("deleting index: " + idx.getPath());

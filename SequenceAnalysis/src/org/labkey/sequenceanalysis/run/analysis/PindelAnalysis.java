@@ -41,6 +41,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.run.util.CollectInsertSizeMetricsWrapper;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 import picard.analysis.InsertSizeMetrics;
 
 import java.io.BufferedReader;
@@ -155,7 +156,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         return null;
     }
 
-    private static String inferInsertSize(PipelineContext ctx, File bam, int minInsertSize) throws PipelineJobException
+    private static String inferInsertSize(PipelineContext ctx, File bam, File fasta, int minInsertSize) throws PipelineJobException
     {
         File expectedPicard = new File(bam.getParentFile(), FileUtil.getBaseName(bam.getName()) + ".insertsize.metrics");
         if (!expectedPicard.exists())
@@ -163,7 +164,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
             ctx.getLogger().debug("Unable to find insert metrics file, creating: " + expectedPicard.getPath());
             CollectInsertSizeMetricsWrapper wrapper = new CollectInsertSizeMetricsWrapper(ctx.getLogger());
             File histFile = new File(expectedPicard.getPath() + ".hist");
-            wrapper.executeCommand(bam, expectedPicard, histFile);
+            wrapper.executeCommand(bam, expectedPicard, histFile, fasta);
             histFile.delete();
 
             if (!expectedPicard.exists())
@@ -196,7 +197,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         File bamToUse = removeDuplicates ? new File(outDir, FileUtil.getBaseName(inputBam) + ".rmdup.bam") : inputBam;
         if (removeDuplicates)
         {
-            File bamIdx = new File(bamToUse.getPath() + ".bai");
+            File bamIdx = SequenceUtil.getExpectedIndex(bamToUse);
             if (!bamIdx.exists())
             {
                 SamtoolsRunner runner = new SamtoolsRunner(ctx.getLogger());
@@ -215,7 +216,7 @@ public class PindelAnalysis extends AbstractPipelineStep implements AnalysisStep
         File pindelParams = new File(outDir, "pindelCfg.txt");
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(pindelParams), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
-            String insertSize = inferInsertSize(ctx, inputBam, minInsertSize);
+            String insertSize = inferInsertSize(ctx, inputBam, fasta, minInsertSize);
             writer.writeNext(new String[]{bamToUse.getPath(), insertSize, FileUtil.makeLegalName(rs.getName())});
         }
         catch (IOException e)

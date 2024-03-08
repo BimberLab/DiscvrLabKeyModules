@@ -21,6 +21,7 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.reader.Readers;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractResumer;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
@@ -784,7 +785,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
 
                     if (SequenceUtil.FILETYPE.bam.getFileType().isType(f))
                     {
-                        File idx = new File(f.getPath() + ".bai");
+                        File idx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(f);
                         if (idx.exists())
                         {
                             _job.getLogger().debug("Also deleting index: " + idx.getPath());
@@ -911,6 +912,13 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                 //then sort out which files were specified as named outputs later
                 for (File input : _wd.getDir().listFiles())
                 {
+                    if (input.getName().matches("^core.[0-9]+$") || input.getName().endsWith(".hprof"))
+                    {
+                        _job.getLogger().debug("Deleting core/hprof file: " + input.getPath());
+                        input.delete();
+                        continue;
+                    }
+
                     copyFile(input, actions, resumer);
                 }
             }

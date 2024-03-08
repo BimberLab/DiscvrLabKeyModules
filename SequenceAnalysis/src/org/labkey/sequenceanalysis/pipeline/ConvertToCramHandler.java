@@ -12,6 +12,7 @@ import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QueryUpdateServiceException;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -133,7 +134,7 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
                     ctx.getLogger().info("Deleting original BAM: " + so.getFile().getPath());
                     if (so.getFile().exists())
                     {
-                        new File(so.getFile().getPath() + ".bai").delete();
+                        SequenceAnalysisService.get().getExpectedBamOrCramIndex(so.getFile()).delete();
                         so.getFile().delete();
                     }
                     else

@@ -90,6 +90,12 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
         }
     }
 
+    @Override
+    protected boolean shouldAllowArchivedReadsets()
+    {
+        return true;
+    }
+
     protected List<SequenceOutputFile> readOutputFilesFromFile() throws PipelineJobException, IOException
     {
         File xml = getSerializedOutputFilesFile();

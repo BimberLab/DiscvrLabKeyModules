@@ -187,6 +187,22 @@ public class ToolParameterDescriptor
         return this.extractValue(job, provider, stepIdx, clazz, null);
     }
 
+    public boolean hasValueInJson(PipelineJob job, PipelineStepProvider<?> provider, int stepIdx)
+    {
+        String key = getJsonParamName(provider, stepIdx);
+        JSONObject jobParams;
+        if (job instanceof HasJobParams)
+        {
+            jobParams = ((HasJobParams)job).getParameterJson();
+        }
+        else
+        {
+            jobParams = new JSONObject(job.getParameters());
+        }
+
+        return jobParams.has(key);
+    }
+
     public <ParamType> ParamType extractValue(PipelineJob job, PipelineStepProvider<?> provider, int stepIdx, Class<ParamType> clazz, @Nullable ParamType defaultValue)
     {
         String key = getJsonParamName(provider, stepIdx);
