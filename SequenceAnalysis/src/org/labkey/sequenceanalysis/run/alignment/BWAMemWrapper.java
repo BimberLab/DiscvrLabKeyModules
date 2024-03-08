@@ -62,7 +62,7 @@ public class BWAMemWrapper extends BWAWrapper
             rg.add("PL:" + (rs.getPlatform() == null ? "ILLUMINA" : rs.getPlatform()));
             rg.add("PU:" + (platformUnit == null ? rs.getReadsetId().toString() : platformUnit));
             rg.add("SM:" + rs.getName().replaceAll(" ", "_"));
-            extraArgs.add(StringUtils.join(rg, "\\t"));
+            extraArgs.add("'" + StringUtils.join(rg, "\\t") + "'");
 
             getWrapper().performMemAlignment(getPipelineCtx().getJob(), output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename, extraArgs);
         }
@@ -105,15 +105,17 @@ public class BWAMemWrapper extends BWAWrapper
         bwaArgs.add("-v");
         bwaArgs.add("1");
         if (additionalArgs != null)
+        {
             bwaArgs.addAll(additionalArgs);
+        }
         appendThreads(job, bwaArgs);
 
-        bwaArgs.add(new File(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
-        bwaArgs.add(inputFastq1.getPath());
+        bwaArgs.add("'" + new File(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath() + "'");
+        bwaArgs.add("'" + inputFastq1.getPath() + "'");
 
         if (inputFastq2 != null)
         {
-            bwaArgs.add(inputFastq2.getPath());
+            bwaArgs.add("'" + inputFastq2.getPath() + "'");
         }
 
         //run BWA and pipe directly to samtools to make BAM
@@ -121,7 +123,7 @@ public class BWAMemWrapper extends BWAWrapper
         output.addCommandExecuted(StringUtils.join(bwaArgs, " "));
 
         SamtoolsRunner sr = new SamtoolsRunner(getLogger());
-        List<String> samtoolsArgs = Arrays.asList(sr.getSamtoolsPath().getPath(), "view", "-b", "-h", "-S", "-T", referenceGenome.getWorkingFastaFile().getPath(), "-o", bam.getPath(), "-");
+        List<String> samtoolsArgs = Arrays.asList(sr.getSamtoolsPath().getPath(), "view", "-b", "-h", "-S", "-T", "'" + referenceGenome.getWorkingFastaFile().getPath() + "'", "-o", "'" + bam.getPath() + "'", "-");
         output.addCommandExecuted(StringUtils.join(samtoolsArgs, " "));
 
         List<String> bashArgs = new ArrayList<>();
