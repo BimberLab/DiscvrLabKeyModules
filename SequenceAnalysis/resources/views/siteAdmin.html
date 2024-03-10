@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%=scriptNonce%>">
     Ext4.onReady(function(){
         if (LABKEY.Security.currentContainer.path != '/' && LABKEY.Security.currentContainer.path != '/Shared'){
             Ext4.Msg.alert('Error', 'This page can only be viewed from the site root', function(){

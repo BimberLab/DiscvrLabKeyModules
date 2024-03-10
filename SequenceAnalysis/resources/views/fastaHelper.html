@@ -1,4 +1,4 @@
-<script type="text/javascript">
+<script type="text/javascript" nonce="<%=scriptNonce%>">
 
 function whitelist(){
     var names = document.getElementById('whitelistNames').value;
@@ -34,10 +34,12 @@ function whitelist(){
     document.getElementById('whitelistTarget').value = toKeep.join('\n');
 }
 
-
+LABKEY.Utils.onReady(function(){
+    document.getElementById('whitelistButton')['onclick'] = whitelist;
+});
 </script>
 
-This page contains an several basic utilities to process FASTA files.  See the instructions above each item for more information.
+This page contains several basic utilities to process FASTA files.  See the instructions above each item for more information.
 
 <p/>
 <h3>1) Subset FASTA Based on List</h3>
@@ -49,7 +51,7 @@ To use, simply cut/paste the FASTA contents into the box on the left.  Paste a l
     <tr>
         <td>FASTA Contents:<span></span><br><textarea rows="10" cols="30" id="whitelistFasta"></textarea></td>
         <td>Allowable Names:<span></span><br><textarea rows="10" cols="30" id="whitelistNames"></textarea></td>
-        <td><button id="whitelistButton" onclick=whitelist()>--></button></td>
+        <td><button id="whitelistButton">--></button></td>
         <td>Matching Entries:<span></span><br><textarea rows="10" cols="30" id="whitelistTarget"></textarea></td>
     </tr>
 </table>
