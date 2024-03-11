@@ -23,22 +23,22 @@
                     header: 'Data and Processing',
                     items: [{
                         name: '10x GEX Libraries Needing Alignment',
-                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.totalAlignments~eq': 0, 'query.totalForwardReads~isnonblank': null, 'query.application~contains': 'single', 'query.status~isblank': null, 'query.isArchived~eq': 0, 'query.librarytype~contains': 'GEX', 'query.librarytype~doesnotcontain': 'Multiome', 'query.sort': 'name'})
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.totalAlignments~eq': 0, 'query.totalForwardReads~isnonblank': null, 'query.application~contains': 'single', 'query.status~isblank': null, 'query.isArchived~eq': 0, 'query.librarytype~contains': 'GEX', 'query.librarytype~doesnotcontain': 'Multiome', 'query.sort': 'name', 'query.maxRows': 250})
                     },{
                         name: '10x VDJ Libraries Needing Alignment',
-                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.totalAlignments~eq': 0, 'query.totalForwardReads~isnonblank': null, 'query.application~contains': 'single', 'query.status~isblank': null, 'query.isArchived~eq': 0, 'query.librarytype~doesnotcontain': 'BCR', 'query.librarytype~contains': 'VDJ', 'query.sort': 'name'})
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.totalAlignments~eq': 0, 'query.totalForwardReads~isnonblank': null, 'query.application~contains': 'single', 'query.status~isblank': null, 'query.isArchived~eq': 0, 'query.librarytype~doesnotcontain': 'BCR', 'query.librarytype~contains': 'VDJ', 'query.sort': 'name', 'query.maxRows': 250})
                     },{
                         name: 'Hashing Libraries Needing Feature Counts',
-                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.application~eq': 'Cell Hashing', 'query.totalForwardReads~isnonblank': null, 'query.outputFileTypes~doesnotcontain': 'Cell Hashing Counts', 'query.status~isblank': null, 'query.sort': 'name'})
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.application~eq': 'Cell Hashing', 'query.totalForwardReads~isnonblank': null, 'query.outputFileTypes~doesnotcontain': 'Cell Hashing Counts', 'query.status~isblank': null, 'query.sort': 'name', 'query.maxRows': 250})
                     },{
                         name: 'Cite-seq Libraries Needing Feature Counts',
-                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.application~eq': 'CITE-Seq', 'query.totalForwardReads~isnonblank': null, 'query.outputFileTypes~doesnotcontain': 'CITE-seq Counts', 'query.status~isblank': null, 'query.sort': 'name'})
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.application~contains': 'CITE-Seq', 'query.totalForwardReads~isnonblank': null, 'query.outputFileTypes~doesnotcontain': 'CITE-seq Counts', 'query.status~isblank': null, 'query.sort': 'name', 'query.maxRows': 250})
                     },{
                         name: 'VLoupe Files Needing TCR Import',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'outputfiles', 'query.readset/status~isblank': null, 'query.readset/numTcrResults~eq': 0, 'query.category~eq': '10x VLoupe', 'query.sort': 'readset/name'})
                     },{
                         name: 'Loupe Files Missing Prototype',
-                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'outputfiles', 'query.category~eq': '10x Loupe File', 'query.readset/status~isblank': null, 'query.readset/cDNA/rowid~isnonblank': null, 'query.readset/outputFileTypes~doesnotcontain': 'Prototype', 'query.sort': 'readset/name'})
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'outputfiles', 'query.category~eq': '10x Loupe File', 'query.readset/status~isblank': null, 'query.readset/cDNA/rowid~isnonblank': null, 'query.readset/outputFileTypes~doesnotcontain': 'Prototype', 'query.sort': 'readset/name', 'query.maxRows': 250})
                     },{
                         name: 'Readsets Assigned to Run Lacking Data',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', 'query.viewName': 'Assigned to Run Lacking Data'})

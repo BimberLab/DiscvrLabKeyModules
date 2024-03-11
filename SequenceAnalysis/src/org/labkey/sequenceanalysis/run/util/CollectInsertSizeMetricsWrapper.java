@@ -2,9 +2,9 @@ package org.labkey.sequenceanalysis.run.util;
 
 import htsjdk.samtools.ValidationStringency;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 
 import java.io.File;
@@ -20,10 +20,10 @@ public class CollectInsertSizeMetricsWrapper extends PicardWrapper
         super(logger);
     }
 
-    public File executeCommand(File inputFile, File outputFile, File histogramFile) throws PipelineJobException
+    public File executeCommand(File inputFile, File outputFile, File histogramFile, File fasta) throws PipelineJobException
     {
         getLogger().info("Running CollectInsertSizeMetrics: " + inputFile.getPath());
-        File idx = new File(inputFile.getPath() + ".bai");
+        File idx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(inputFile);
         if (!idx.exists())
         {
             new BuildBamIndexWrapper(getLogger()).executeCommand(inputFile);
@@ -38,6 +38,9 @@ public class CollectInsertSizeMetricsWrapper extends PicardWrapper
 
         params.add("--OUTPUT");
         params.add(outputFile.getPath());
+
+        params.add("-R");
+        params.add(fasta.getPath());
 
         params.add("-H");
         params.add(histogramFile.getPath());

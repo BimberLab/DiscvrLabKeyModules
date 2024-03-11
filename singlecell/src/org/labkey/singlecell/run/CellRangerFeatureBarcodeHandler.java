@@ -22,6 +22,7 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.reader.Readers;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
@@ -288,7 +289,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                 throw new PipelineJobException("Unable to find file: " + bam.getPath());
             }
             bam.delete();
-            new File(bam.getPath() + ".bai").delete();
+            SequenceAnalysisService.get().getExpectedBamOrCramIndex(bam).delete();
 
             wrapper.deleteSymlinks(wrapper.getLocalFastqDir(ctx.getOutputDir()));
 

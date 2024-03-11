@@ -608,10 +608,10 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             checked: true
         },{
             xtype: 'checkbox',
-            fieldLabel: '# Cells Indicates Totla Per Lane',
-            helpPopup: '',
+            fieldLabel: '# Cells Indicates Total Per Lane',
+            helpPopup: 'If checked, the page will assume the value reported for cells represent the lane as a whole, and it will automatically be divided by the sample number',
             itemId: 'cellsReportedAsTotalPerLane',
-            checked: true
+            checked: false
         },{
             xtype: 'checkbox',
             fieldLabel: 'Use MS (Dual Index)',
@@ -839,7 +839,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         }, this);
 
         //split cells across rows
-        var cellsReportedAsTotalPerLane = this.down('#cellsReportedAsTotalPerLane').getValue();
+        var cellsReportedAsTotalPerLane = this.down('#cellsReportedAsTotalPerLane') && this.down('#cellsReportedAsTotalPerLane').getValue();
         if (cellsReportedAsTotalPerLane || doSplitCellsByPool) {
             var cellCountMap = {};
             Ext4.Array.forEach(ret, function(data) {
@@ -1125,7 +1125,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         var data = [];
         var missingValues = false;
         var requireHTO = this.down('#requireHTO').getValue() || (this.down('#requireHashTag') && this.down('#requireHashTag').getValue());
-        var requireAssayType = this.down('#requireAssayType').getValue()
+        var requireAssayType = this.down('#requireAssayType') && this.down('#requireAssayType').getValue()
         Ext4.Array.forEach(parsedRows, function(row, rowIdx){
             var toAdd = [rowIdx + 1];
             Ext4.Array.forEach(colIdxs, function(colIdx){

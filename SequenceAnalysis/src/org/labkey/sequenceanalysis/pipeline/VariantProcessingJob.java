@@ -117,6 +117,22 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
         sg.validateScatter(getScatterGatherMethod(), this);
     }
 
+    public boolean scatterMethodRequiresSort()
+    {
+        if (getParameterJson().optBoolean("scatterGather.forceVcfSort", false))
+        {
+            getLogger().debug("forceVcfSort was set");
+            return true;
+        }
+
+        if (_scatterGatherMethod == null || !_scatterGatherMethod.mayRequireSort())
+        {
+            return false;
+        }
+
+        return !doAllowSplitContigs();
+    }
+
     private LinkedHashMap<String, List<Interval>> establishIntervals()
     {
         LinkedHashMap<String, List<Interval>> ret;
@@ -137,7 +153,7 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
             getLogger().info("Creating jobs with target bp size: " + basesPerJob + " mbp.  allow splitting configs: " + allowSplitChromosomes + ", max contigs per job: " + maxContigsPerJob);
 
             basesPerJob = basesPerJob * 1000000;
-            ret = ScatterGatherUtils.divideGenome(dict, basesPerJob, allowSplitChromosomes, maxContigsPerJob);
+            ret = ScatterGatherUtils.divideGenome(dict, basesPerJob, allowSplitChromosomes, maxContigsPerJob, scatterMethodRequiresSort());
 
         }
         else if (_scatterGatherMethod == VariantProcessingStep.ScatterGatherMethod.fixedJobs)
@@ -146,7 +162,7 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
             int numJobs = getParameterJson().getInt("scatterGather.totalJobs");
             int jobSize = (int)Math.ceil(totalSize / (double)numJobs);
             getLogger().info("Creating " + numJobs + " jobs with approximate size: " + jobSize + " bp.");
-            ret = ScatterGatherUtils.divideGenome(dict, jobSize, true, -1);
+            ret = ScatterGatherUtils.divideGenome(dict, jobSize, true, -1, false);
         }
         else
         {

@@ -17,8 +17,11 @@ package org.labkey.api.sequenceanalysis.pipeline;
 
 import htsjdk.samtools.util.Interval;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.laboratory.DemographicsProvider;
+import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 
 import java.io.File;
@@ -45,10 +48,22 @@ public interface VariantProcessingStep extends PipelineStep
 
     enum ScatterGatherMethod
     {
-        none(),
-        contig(),
-        chunked(),
-        fixedJobs()
+        none(false),
+        contig(false),
+        chunked(true),
+        fixedJobs(false);
+
+        private final boolean _mayRequireSort;
+
+        ScatterGatherMethod(boolean mayRequireSort)
+        {
+            _mayRequireSort = mayRequireSort;
+        }
+
+        public boolean mayRequireSort()
+        {
+            return _mayRequireSort;
+        }
     }
 
     interface Output extends PipelineStepOutput
@@ -58,7 +73,20 @@ public interface VariantProcessingStep extends PipelineStep
 
     interface RequiresPedigree
     {
+        default String getDemographicsProviderName(PipelineStepProvider<?> provider, PipelineJob job, int stepIdx)
+        {
+            return provider.getParameterByName(PedigreeToolParameterDescriptor.NAME).extractValue(job, provider, stepIdx, String.class);
+        }
 
+        default DemographicsProvider getDemographicsProvider(PipelineStepProvider<?> provider, PipelineJob job, int stepIdx)
+        {
+            if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
+            {
+                throw new IllegalStateException("getDemographicsProvider() can only be run from the webserver");
+            }
+
+            return LaboratoryService.get().getDemographicsProviderByName(job.getContainer(), job.getUser(), getDemographicsProviderName(provider, job, stepIdx));
+        }
     }
 
     interface SupportsScatterGather

@@ -6,6 +6,7 @@ import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.PedigreeToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -13,6 +14,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 
 import java.io.File;
@@ -40,8 +42,9 @@ public class MendelianViolationReportStep extends AbstractPipelineStep implement
                     ToolParameterDescriptor.create("violationReportThreshold", "Violation Report Threshold ", "Only subject with at least this many MVs will be reported.", "ldk-integerfield", null, 500),
                     ToolParameterDescriptor.create("excludeFiltered", "Exclude Filtered", "If selected, filtered sites will be ignored.", "checkbox", new JSONObject(){{
                         put("checked", false);
-                    }}, null)
-                ), null, "");
+                    }}, null),
+                    new PedigreeToolParameterDescriptor()
+                ), PageFlowUtil.set(PedigreeToolParameterDescriptor.getClientDependencyPath()), "");
         }
 
         @Override
@@ -69,7 +72,8 @@ public class MendelianViolationReportStep extends AbstractPipelineStep implement
             options.add(String.valueOf(violationReportThreshold));
         }
 
-        File pedFile = ProcessVariantsHandler.getPedigreeFile(getPipelineCtx().getSourceDirectory(true));
+        String demographicsProviderName = getProvider().getParameterByName(PedigreeToolParameterDescriptor.NAME).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx());
+        File pedFile = ProcessVariantsHandler.getPedigreeFile(getPipelineCtx().getSourceDirectory(true), demographicsProviderName);
         if (!pedFile.exists())
         {
             throw new PipelineJobException("Unable to find pedigree file: " + pedFile.getPath());

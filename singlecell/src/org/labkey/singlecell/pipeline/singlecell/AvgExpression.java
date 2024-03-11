@@ -32,6 +32,9 @@ public class AvgExpression extends AbstractRDiscvrStep
                     SeuratToolParameter.create("addMetadata", "Query Metadata?", "If checked, Rdiscvr::QueryAndApplyMetadataUsingCDNA will be run after aggregation. This requires a cDNA_ID column to exist.", "checkbox", new JSONObject(){{
                         put("checked", true);
                     }}, true),
+                    SeuratToolParameter.create("nCountRnaStratification", "Perform nCountRna Stratification?", "A boolean determining whether or not automatic outlier detection of clusters with abnormal nCount_RNA should be detected", "checkbox", new JSONObject(){{
+                        put("checked", false);
+                    }}, false),
                     SeuratToolParameter.create("assayName", "Assay Name", "The assay to use", "textfield", new JSONObject(){{
 
                     }}, "RNA"),

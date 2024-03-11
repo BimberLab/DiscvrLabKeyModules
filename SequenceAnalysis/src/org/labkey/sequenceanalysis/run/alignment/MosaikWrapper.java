@@ -367,13 +367,13 @@ public class MosaikWrapper extends AbstractCommandWrapper
                 getLogger().info("total records in merged BAM: " + mergedRecords);
 
                 bam.delete();
-                File idx = new File(bam.getPath() + ".bai");
+                File idx = SequenceUtil.getExpectedIndex(bam);
                 if (idx.exists())
                 {
                     idx.delete();
                 }
                 multipleHitsBam.delete();
-                idx = new File(multipleHitsBam.getPath() + ".bai");
+                idx = SequenceUtil.getExpectedIndex(multipleHitsBam);
                 if (idx.exists())
                 {
                     idx.delete();

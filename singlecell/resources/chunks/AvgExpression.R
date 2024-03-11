@@ -32,7 +32,7 @@ GenerateAveragedData <- function(seuratObj, groupFields, addMetadata) {
         }
     }
 
-    a <- CellMembrane::PseudobulkSeurat(seuratObj, groupFields = groupFields, assays = assayName, additionalFieldsToAggregate = additionalFieldsToAggregate)
+    a <- CellMembrane::PseudobulkSeurat(seuratObj, groupFields = groupFields, assays = assayName, additionalFieldsToAggregate = additionalFieldsToAggregate, nCountRnaStratification = nCountRnaStratification)
 
     if (addMetadata) {
         a <- Rdiscvr::QueryAndApplyMetadataUsingCDNA(a)

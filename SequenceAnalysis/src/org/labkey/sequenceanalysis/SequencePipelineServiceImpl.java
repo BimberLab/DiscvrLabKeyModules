@@ -6,6 +6,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.junit.Assert;
+import org.junit.Test;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
@@ -58,7 +60,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     private static final SequencePipelineServiceImpl _instance = new SequencePipelineServiceImpl();
 
     private static final Logger _log = LogManager.getLogger(SequencePipelineServiceImpl.class);
-    private final Set<PipelineStepProvider> _providers = new HashSet<>();
+    private final Set<PipelineStepProvider<?>> _providers = new HashSet<>();
     private final Set<JobResourceSettings> _resourceSettings = new HashSet<>();
 
     private final Map<Class<? extends PipelineStep>, String> _pipelineStepTypeMap = new HashMap<>();
@@ -85,14 +87,14 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     }
 
     @Override
-    public void registerPipelineStep(PipelineStepProvider provider)
+    public void registerPipelineStep(PipelineStepProvider<?> provider)
     {
         _log.info("registering sequence pipeline provider: " + provider.getName());
         _providers.add(provider);
     }
 
     @Override
-    public Set<PipelineStepProvider> getAllProviders()
+    public Set<PipelineStepProvider<?>> getAllProviders()
     {
         return Collections.unmodifiableSet(_providers);
     }
@@ -101,17 +103,45 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     public <StepType extends PipelineStep> Set<PipelineStepProvider<StepType>> getProviders(Class<StepType> stepType)
     {
         Set<PipelineStepProvider<StepType>> ret = new HashSet<>();
-        for (PipelineStepProvider provider : _providers)
+        for (PipelineStepProvider<?> provider : _providers)
         {
-            ParameterizedType parameterizedType = (ParameterizedType)provider.getClass().getGenericSuperclass();
-            Class clazz = (Class)parameterizedType.getActualTypeArguments()[0];
+            Class<?> clazz = findSuperClassParameterType(provider, 0);
+            if (clazz == null)
+            {
+                _log.error("Unable to infer parameter type for provider: " + provider.getName());
+                continue;
+            }
+
             if (stepType.isAssignableFrom(clazz))
             {
-                ret.add(provider);
+                ret.add((PipelineStepProvider<StepType>) provider);
             }
         }
 
         return ret;
+    }
+
+    @Override
+    public Class<?> findSuperClassParameterType(Object instance)
+    {
+        return findSuperClassParameterType(instance, 0);
+    }
+
+    // Based on: https://www.javacodegeeks.com/2013/12/advanced-java-generics-retreiving-generic-type-arguments.html
+    public static Class<?> findSuperClassParameterType(Object instance, int parameterIndex)
+    {
+        Class<?> clazz = instance.getClass();
+        while (clazz != null && clazz != clazz.getSuperclass())
+        {
+            if (clazz.getGenericSuperclass() instanceof ParameterizedType pt)
+            {
+                return (Class<?>) pt.getActualTypeArguments()[parameterIndex];
+            }
+
+            clazz = clazz.getSuperclass();
+        }
+
+        throw new IllegalStateException("Unable to find ClassParameterType for: " + instance + ", with class: " + instance.getClass().getName());
     }
 
     @Override
@@ -192,7 +222,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         Map<String, String> params;
         if (job instanceof HasJobParams)
         {
-            params = ((HasJobParams)job).getJobParams();
+            params = ((HasJobParams) job).getJobParams();
         }
         else
         {
@@ -409,7 +439,8 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     @Override
     public CommandWrapper getCommandWrapper(Logger log)
     {
-        return new AbstractCommandWrapper(log){
+        return new AbstractCommandWrapper(log)
+        {
 
         };
     }
@@ -591,4 +622,15 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         return new TaskFileManagerImpl();
     }
 
+    public static class TestCase extends Assert
+    {
+        @Test
+        public void testGenerics()
+        {
+            for (PipelineStepProvider<?> p : _instance._providers)
+            {
+                Assert.assertNotNull("Unable to find stepClass for: " + p.getName(), p.getStepClass());
+            }
+        }
+    }
 }

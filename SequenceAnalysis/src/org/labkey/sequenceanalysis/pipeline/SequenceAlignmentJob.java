@@ -50,7 +50,7 @@ public class SequenceAlignmentJob extends SequenceJob
         super(SequencePipelineProvider.NAME, c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), FOLDER_NAME);
 
         _readsetId = readset.getRowId();
-        getSequenceSupport().cacheReadset(readset);
+        getSequenceSupport().cacheReadset(readset, shouldAllowArchivedReadsets());
         writeSupportToDisk();
     }
 

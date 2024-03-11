@@ -1,10 +1,12 @@
 package org.labkey.sequenceanalysis.run.variant;
 
 import htsjdk.samtools.util.Interval;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.PedigreeToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -13,11 +15,10 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.DISCVRSeqRunner;
+import org.labkey.api.util.PageFlowUtil;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -40,8 +41,9 @@ public class SummarizeGenotypeQualityStep extends AbstractPipelineStep implement
                     ToolParameterDescriptor.create("excludeFiltered", "Exclude Filtered", "If selected, filtered sites will be ignored.", "checkbox", new JSONObject()
                     {{
                         put("checked", false);
-                    }}, null)
-            ), null, "");
+                    }}, null),
+                    new PedigreeToolParameterDescriptor()
+            ), PageFlowUtil.set(PedigreeToolParameterDescriptor.getClientDependencyPath()), "");
         }
 
         @Override

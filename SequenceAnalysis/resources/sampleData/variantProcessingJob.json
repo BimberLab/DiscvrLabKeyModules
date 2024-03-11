@@ -9,6 +9,7 @@
   "variantProcessing.SelectVariantsStep.selectType": ["SNP"],
   "variantProcessing.SelectVariantsStep.excludeFiltered": false,
   "variantProcessing.GenotypeFiltrationStep.setFilteredGtToNocall": true,
+  "variantProcessing.VariantAnnotatorStep.pedigreeSource": "laboratory.subjects",
   "variantProcessing.GenotypeFiltrationStep.filters": [[
     "DP-LTE5",
     " DP <= 5"

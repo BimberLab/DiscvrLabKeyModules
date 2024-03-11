@@ -151,7 +151,12 @@ export async function fetchSession(queryParam, sessionId, nativePlugins, refThem
 function applyUrlParams(json, queryParam) {
     const location = queryParam.get('location')
     if (location) {
-        json.location = location;
+        json.location = location
+    }
+
+    const highlight = queryParam.get('highlight')
+    if (highlight) {
+        json.highlight = highlight
     }
 
     const sampleFilters = queryParam.get('sampleFilters')
@@ -205,15 +210,15 @@ function applyUrlParams(json, queryParam) {
     }
 }
 
-function generateViewState(genome, plugins, nativePlugins){
+function generateViewState(json, plugins, nativePlugins){
     return createViewState({
-        assembly: genome.assembly ?? genome.assemblies,
-        tracks: genome.tracks,
-        configuration: genome.configuration,
+        assembly: json.assembly ?? json.assemblies,
+        tracks: json.tracks,
+        configuration: json.configuration,
         plugins: plugins.concat(nativePlugins),
-        location: genome.location,
-        defaultSession: genome.defaultSession,
-        onChange: genome.onChange
+        location: json.location,
+        defaultSession: json.defaultSession,
+        onChange: json.onChange
     })
 }
 

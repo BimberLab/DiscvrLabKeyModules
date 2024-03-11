@@ -172,6 +172,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new ClrNormalizeByGroup.Provider());
         SequenceAnalysisService.get().registerFileHandler(new CellRangerVLoupeRepairHandler());
         SequencePipelineService.get().registerPipelineStep(new PrepareRawCounts.Provider());
+        SequenceAnalysisService.get().registerFileHandler(new VireoHandler());
 
         SequencePipelineService.get().registerPipelineStep(new RemoveCellCycle.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunCellHashing.Provider());
@@ -220,6 +221,13 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new RunSDA.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunLDA.Provider());
         SequencePipelineService.get().registerPipelineStep(new FilterDisallowedClasses.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SummarizeTCellActivation.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunScMetabolism.Provider());
+        SequencePipelineService.get().registerPipelineStep(new ScoreCellCycle.Provider());
+        SequencePipelineService.get().registerPipelineStep(new TrainScTour.Provider());
+        SequencePipelineService.get().registerPipelineStep(new PredictScTour.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunEscape.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunCsCore.Provider());
 
         SequenceAnalysisService.get().registerReadsetListener(new SingleCellReadsetListener());
     }
