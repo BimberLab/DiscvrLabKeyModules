@@ -9,6 +9,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -376,7 +377,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         });
 
         //insert record for any missing parents:
-        Set<String> distinctSubjects = new HashSet<>();
+        Set<String> distinctSubjects = new CaseInsensitiveHashSet();
         for (PedigreeRecord p : pedigreeRecords)
         {
             distinctSubjects.add(p.getSubjectName());
@@ -421,8 +422,8 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
         
         pedigreeRecords.sort((o1, o2) ->
         {
-            boolean o1ParentOfO2 = o1.getSubjectName().equals(o2.getFather()) || o1.getSubjectName().equals(o2.getMother());
-            boolean o2ParentOfO1 = o2.getSubjectName().equals(o1.getFather()) || o2.getSubjectName().equals(o1.getMother());
+            boolean o1ParentOfO2 = o1.getSubjectName().equalsIgnoreCase(o2.getFather()) || o1.getSubjectName().equalsIgnoreCase(o2.getMother());
+            boolean o2ParentOfO1 = o2.getSubjectName().equalsIgnoreCase(o1.getFather()) || o2.getSubjectName().equalsIgnoreCase(o1.getMother());
 
             if (o1ParentOfO2 && o2ParentOfO1)
             {
@@ -435,12 +436,8 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
                 return -1;
             else if (o2ParentOfO1)
                 return 1;
-            else if ((o1.getTotalParents(true) == 0 && o2.getTotalParents(true) != 0))
-                return -1;
-            else if ((o1.getTotalParents(true) != 0 && o2.getTotalParents(true) == 0))
-                return 1;
 
-            return o1.getSubjectName().compareTo(o2.getSubjectName());
+            return o1.getSubjectName().toLowerCase().compareTo(o2.getSubjectName().toLowerCase());
         });
         
         return pedigreeRecords;
