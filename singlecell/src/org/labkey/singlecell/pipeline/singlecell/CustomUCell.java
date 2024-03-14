@@ -34,7 +34,7 @@ public class CustomUCell extends AbstractRiraStep
                     }}, null).delimiter(DELIM),
                     SeuratToolParameter.create("storeRanks", "Store Ranks", "Passed directly to UCell::AddModuleScore_UCell.", "checkbox", new JSONObject(){{
 
-                    }}, false),
+                    }}, false, null, true),
                     SeuratToolParameter.create("assayName", "Assay Name", "Passed directly to UCell::AddModuleScore_UCell.", "textfield", new JSONObject(){{
 
                     }}, "RNA")
