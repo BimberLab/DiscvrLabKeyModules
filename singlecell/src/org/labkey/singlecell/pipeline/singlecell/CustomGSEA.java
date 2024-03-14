@@ -22,7 +22,7 @@ public class CustomGSEA extends AbstractCellMembraneStep
     {
         public Provider()
         {
-            super("CustomUCell", "ssGSEA (Custom)", "escape/ssGSEA", "The seurat object will be subset based on the expression below, which is passed directly to Seurat's subset(subset = X).", Arrays.asList(
+            super("CustomGSEA", "ssGSEA (Custom)", "escape/ssGSEA", "The seurat object will be subset based on the expression below, which is passed directly to Seurat's subset(subset = X).", Arrays.asList(
                     SeuratToolParameter.create("geneSets", "Gene Sets(s)", "This should contain one gene module per line, where the module is in the format (no spaces): SetName:Gene1,Gene2,Gene3. The first token is the name given to the score and the second is a comma-delimited list of gene names.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("allowBlank", false);
                         put("replaceAllWhitespace", true);
