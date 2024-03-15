@@ -39,18 +39,22 @@ if (length(seuratObjects) == 1) {
         message(paste0('Merging batch ', i, ' of ', numBatches))
         start <- 1 + (i-1)*batchSize
         end <- min(start+batchSize-1, length(seuratObjects))
-        message(paste0('processing: ', start, ' to ', end, ' of ', length(seuratObjects)))
+        print(paste0('processing: ', start, ' to ', end, ' of ', length(seuratObjects)))
 
         mergedObjects[[i]] <- mergeBatch(seuratObjects[start:end])
         gc()
     }
 
-    message('Done with batches')
+    print('Done with batches')
     if (length(mergedObjects) == 1) {
         seuratObj <- mergedObjects[[1]]
     } else {
         message('performing final merge')
         seuratObj <- merge(x = mergedObjects[[1]], y = mergedObjects[2:length(mergedObjects)], project = mergedObjects[[1]]@project.name)
+        seuratObj <- CellMembrane::MergeSeuratObjs(mergedObjects, projectName = mergedObjects[[1]]@project.name, doGC = doDiet, errorOnBarcodeSuffix = errorOnBarcodeSuffix)
+        if (HasSplitLayers(seuratObj)) {
+            seuratObj <- MergeSplitLayers(seuratObj)
+        }
     }
 
     rm(mergedObjects)

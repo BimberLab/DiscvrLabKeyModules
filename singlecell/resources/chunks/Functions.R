@@ -74,6 +74,10 @@ saveData <- function(seuratObj, datasetId) {
     print(paste0('Saving dataset: ', datasetId))
     print(seuratObj)
 
+    if (HasSplitLayers(seuratObj)) {
+        stop('This seurat object has split layers!')
+    }
+
     datasetIdForFile <- makeLegalFileName(datasetId)
     fn <- paste0(outputPrefix, '.', datasetIdForFile, '.seurat.rds')
     message(paste0('Filename: ', fn))
