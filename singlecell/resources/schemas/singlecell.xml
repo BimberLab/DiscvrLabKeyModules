@@ -55,6 +55,9 @@
                     <fkDisplayColumnName useRawValue="true"/>
                 </fk>
             </column>
+            <column columnName="disposition">
+                <columnTitle>Sample Disposition</columnTitle>
+            </column>
             <column columnName="assaytype">
                 <columnTitle>Assay Type</columnTitle>
                 <nullable>true</nullable>

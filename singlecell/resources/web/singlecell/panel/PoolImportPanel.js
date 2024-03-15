@@ -60,6 +60,11 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         allowBlank: false,
         transform: 'assaytype'
     },{
+        name: 'disposition',
+        labels: ['Sample Disposition'],
+        allowRowSpan: false,
+        allowBlank: true
+    },{
         name: 'tube_num',
         labels: ['Tube #', 'Stim #'],
         allowRowSpan: false,
@@ -681,6 +686,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 stim: r.stim,
                 celltype: r.celltype,
                 assaytype: r.assaytype || 'None',
+                disposition: r.disposition,
                 tissue: r.tissue,
                 objectId: r.objectId,
                 population: r.population,
@@ -913,6 +919,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                     celltype: row.celltype,
                     tissue: row.tissue,
                     assaytype: row.assaytype || 'None',
+                    disposition: row.disposition,
                     objectId: guid,
                     workbook: row.workbook
                 });
@@ -1201,7 +1208,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
     },
 
     getSampleKey: function(data){
-        return [data.sampleId, data.subjectId, data.stim, data.assaytype, data.tissue, (Ext4.isDate(data.sampleDate) ? Ext4.Date.format(data.sampleDate, 'Y-m-d') : data.sampleDate)].join('|');
+        return [data.sampleId, data.subjectId, data.stim, data.assaytype, data.disposition, data.tissue, (Ext4.isDate(data.sampleDate) ? Ext4.Date.format(data.sampleDate, 'Y-m-d') : data.sampleDate)].join('|');
     },
 
     getSortKey: function(data){
