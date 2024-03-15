@@ -814,7 +814,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             }
 
             Ext4.Array.forEach(colArray, function(col, colIdx){
-                var cell = Ext4.isDefined(col.dataIdx) ? row[col.dataIdx] : '';
+                var cell = Ext4.isDefined(col.dataIdx) ? Ext4.String.trim(row[col.dataIdx]) : '';
                 if (cell){
                     if (col.transform && this.transforms[col.transform]){
                         cell = this.transforms[col.transform](cell, this, data);
