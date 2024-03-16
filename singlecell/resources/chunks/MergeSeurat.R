@@ -51,7 +51,6 @@ if (length(seuratObjects) == 1) {
     } else {
         message('performing final merge')
         seuratObj <- merge(x = mergedObjects[[1]], y = mergedObjects[2:length(mergedObjects)], project = mergedObjects[[1]]@project.name)
-        seuratObj <- CellMembrane::MergeSeuratObjs(mergedObjects, projectName = mergedObjects[[1]]@project.name, doGC = doDiet, errorOnBarcodeSuffix = errorOnBarcodeSuffix)
         if (HasSplitLayers(seuratObj)) {
             seuratObj <- MergeSplitLayers(seuratObj)
         }
