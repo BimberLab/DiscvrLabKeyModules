@@ -229,6 +229,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new RunEscape.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunCsCore.Provider());
         SequencePipelineService.get().registerPipelineStep(new CustomGSEA.Provider());
+        SequencePipelineService.get().registerPipelineStep(new StudyMetadata.Provider());
 
         SequenceAnalysisService.get().registerReadsetListener(new SingleCellReadsetListener());
     }
