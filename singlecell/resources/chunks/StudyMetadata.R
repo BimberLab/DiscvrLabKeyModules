@@ -16,6 +16,8 @@ for (datasetId in names(seuratObjects)) {
         seuratObj <- Rdiscvr::ApplyTBMetadata(seuratObj, errorIfUnknownIdsFound = errorIfUnknownIdsFound)
     } else if (studyName == 'Malaria') {
         seuratObj <- Rdiscvr::ApplyMalariaMetadata(seuratObj, errorIfUnknownIdsFound = errorIfUnknownIdsFound)
+    } else if (studyName == 'PC531') {
+        seuratObj <- Rdiscvr::ApplyPC531Metadata(seuratObj, errorIfUnknownIdsFound = errorIfUnknownIdsFound)
     } else {
         stop(paste0('Unknown study: ', studyName))
     }
