@@ -34,29 +34,46 @@ if (length(seuratObjects) == 1) {
 } else {
     batchSize <- 20
     numBatches <- ceiling(length(seuratObjects) / batchSize)
-    mergedObjects <- list()
+    mergedObjectFiles <- list()
     for (i in 1:numBatches) {
         message(paste0('Merging batch ', i, ' of ', numBatches))
         start <- 1 + (i-1)*batchSize
         end <- min(start+batchSize-1, length(seuratObjects))
-        print(paste0('processing: ', start, ' to ', end, ' of ', length(seuratObjects)))
+        message(paste0('processing: ', start, ' to ', end, ' of ', length(seuratObjects)))
 
-        mergedObjects[[i]] <- mergeBatch(seuratObjects[start:end])
+        fn <- paste0('mergeBatch.', i, '.rds')
+        saveRDS(mergeBatch(seuratObjects[start:end]), file = fn)
+        mergedObjectFiles[[i]] <- fn
+
+        print('mem used:')
+        print(pryr::mem_used())
         gc()
     }
 
     print('Done with batches')
-    if (length(mergedObjects) == 1) {
-        seuratObj <- mergedObjects[[1]]
+    if (length(mergedObjectFiles) == 1) {
+        seuratObj <- readRDS(mergedObjectFiles[[1]])
+        unlink(mergedObjectFiles[[1]])
     } else {
         message('performing final merge')
-        seuratObj <- merge(x = mergedObjects[[1]], y = mergedObjects[2:length(mergedObjects)], project = mergedObjects[[1]]@project.name)
-        if (HasSplitLayers(seuratObj)) {
-            seuratObj <- MergeSplitLayers(seuratObj)
+        seuratObj <- readRDS(mergedObjectFiles[[1]])
+        unlink(mergedObjectFiles[[1]])
+
+        for (i in 2:length(mergedObjectFiles)) {
+            print(paste0('Merging final file ', i, ' of ', length(mergedObjectFiles)))
+            seuratObj <- merge(x = seuratObj, y = readRDS(mergedObjectFiles[[i]]), project = seuratObj@project.name)
+            if (HasSplitLayers(seuratObj)) {
+                seuratObj <- MergeSplitLayers(seuratObj)
+            }
+
+            unlink(mergedObjectFiles[[i]])
+
+            print('mem used:')
+            print(pryr::mem_used())
+            gc()
         }
     }
 
-    rm(mergedObjects)
     gc()
 
     saveData(seuratObj, projectName)
