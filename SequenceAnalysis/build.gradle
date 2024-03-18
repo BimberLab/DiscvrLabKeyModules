@@ -144,18 +144,6 @@ dependencies {
     BuildUtils.addExternalDependency(
             project,
             new ExternalDependency(
-                    "commons-net:commons-net:${commonsNetVersion}",
-                    "Commons Net",
-                    "Apache",
-                    "http://jakarta.apache.org/commons/net/",
-                    ExternalDependency.APACHE_2_LICENSE_NAME,
-                    ExternalDependency.APACHE_2_LICENSE_URL,
-                    "FTPClient used to retrieve resources from other servers (e.g., GO annotations)"
-            )
-    )
-    BuildUtils.addExternalDependency(
-            project,
-            new ExternalDependency(
                     "org.apache.commons:commons-math3:${commonsMath3Version}",
                     "Commons Math",
                     "Apache",
