@@ -3,7 +3,7 @@ doDiet <- exists('doDiet') && doDiet
 mergeBatch <- function(dat) {
     toMerge <- list()
     for (datasetId in names(dat)) {
-        logger::log_info(paste0('Loading: ', datasetId))
+        print(paste0('Loading: ', datasetId))
         if (doDiet) {
             toMerge[[datasetId]] <- Seurat::DietSeurat(readSeuratRDS(dat[[datasetId]]))
             gc()
@@ -46,8 +46,12 @@ if (length(seuratObjects) == 1) {
         mergedObjectFiles[[i]] <- fn
 
         logger::log_info('mem used:')
-        logger::log_info(pryr::mem_used())
+        logger::log_info(print(pryr::mem_used()))
+        logger::log_info('seurat object:')
+        logger::log_info(print(utils::object.size(seuratObj)))
         gc()
+        logger::log_info('after gc:')
+        logger::log_info(print(pryr::mem_used()))
     }
 
     logger::log_info('Done with batches')
@@ -69,8 +73,12 @@ if (length(seuratObjects) == 1) {
             unlink(mergedObjectFiles[[i]])
 
             logger::log_info(paste0('mem used after merge batch ' , i , ' of ', length(mergedObjectFiles)))
-            logger::log_info(pryr::mem_used())
+            logger::log_info(print(pryr::mem_used()))
+            logger::log_info('seurat object:')
+            logger::log_info(print(utils::object.size(seuratObj)))
             gc()
+            logger::log_info('after gc:')
+            logger::log_info(print(pryr::mem_used()))
         }
     }
 
