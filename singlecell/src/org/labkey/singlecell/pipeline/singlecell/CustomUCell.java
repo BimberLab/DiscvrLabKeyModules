@@ -37,7 +37,10 @@ public class CustomUCell extends AbstractRiraStep
                     }}, false, null, true),
                     SeuratToolParameter.create("assayName", "Assay Name", "Passed directly to UCell::AddModuleScore_UCell.", "textfield", new JSONObject(){{
 
-                    }}, "RNA")
+                    }}, "RNA"),
+                    SeuratToolParameter.create("outputAssayName", "Output Assay Name", "If provided, the set of UCell scores will be saved in a standalone assay.", "textfield", new JSONObject(){{
+
+                    }}, null, null, true)
             ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 

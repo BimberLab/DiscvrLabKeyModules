@@ -20,6 +20,13 @@ for (datasetId in names(seuratObjects)) {
     print(Seurat::FeaturePlot(seuratObj, features = paste0(n, '_UCell'), min.cutoff = 'q02', max.cutoff = 'q98'))
   }
 
+  if (!is.null(outputAssayName)) {
+    dat <- as.matrix(seuratObj@meta.data[paste0(names(toCalculate), '_UCell')])
+    rownames(dat) <- rownames(seuratObj@meta.data)
+    colnames(dat) <- gsub(colnames(dat), pattern = '_', replacement = '-')
+    seuratObj[[outputAssayName]] <- Seurat::CreateAssayObject(data = Matrix::t(dat))
+  }
+
   saveData(seuratObj, datasetId)
 
   # Cleanup
