@@ -1,4 +1,9 @@
 doDiet <- exists('doDiet') && doDiet
+disableAutoDietSeurat <- exists('disableAutoDietSeurat') && disableAutoDietSeurat
+if (!doDiet && length(seuratObjects) > 20 && !disableAutoDietSeurat) {
+    logger::log_info('More than 20 objects are being merged, turning on DietSeurat')
+    doDiet <- TRUE
+}
 
 mergeBatch <- function(dat) {
     toMerge <- list()
