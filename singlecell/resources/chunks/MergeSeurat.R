@@ -50,11 +50,9 @@ if (length(seuratObjects) == 1) {
         saveRDS(mergeBatch(seuratObjects[start:end]), file = fn)
         mergedObjectFiles[[i]] <- fn
 
-        logger::log_info('mem used:')
-        logger::log_info(print(pryr::mem_used()))
+        logger::log_info(paste0('mem used: ', R.utils::hsize(as.numeric(pryr::mem_used()))))
         gc()
-        logger::log_info('after gc:')
-        logger::log_info(print(pryr::mem_used()))
+        logger::log_info(paste0('after gc: ', R.utils::hsize(as.numeric(pryr::mem_used()))))
     }
 
     logger::log_info('Done with batches')
@@ -75,13 +73,10 @@ if (length(seuratObjects) == 1) {
 
             unlink(mergedObjectFiles[[i]])
 
-            logger::log_info(paste0('mem used after merge batch ' , i , ' of ', length(mergedObjectFiles)))
-            logger::log_info(print(pryr::mem_used()))
-            logger::log_info('seurat object:')
-            logger::log_info(print(utils::object.size(seuratObj)))
+            logger::log_info(paste0('mem used: ', R.utils::hsize(as.numeric(pryr::mem_used()))))
+            logger::log_info(paste0('seurat object: ', R.utils::hsize(as.numeric(utils::object.size(seuratObj)))))
             gc()
-            logger::log_info('after gc:')
-            logger::log_info(print(pryr::mem_used()))
+            logger::log_info(paste0('after gc: ', R.utils::hsize(as.numeric(pryr::mem_used()))))
         }
     }
 
