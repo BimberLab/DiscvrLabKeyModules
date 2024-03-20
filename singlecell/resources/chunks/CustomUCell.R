@@ -9,7 +9,18 @@ for (datasetId in names(seuratObjects)) {
       stop(paste0('Improper gene set: ', geneSet))
     }
 
-    toCalculate[[vals[1]]] <- unlist(strsplit(vals[2], split = ','))
+    geneList <- unlist(strsplit(vals[2], split = ','))
+    missingGenes <- dplyr::setdiff(geneList, rownames(seuratObj@assays[[assayName]]))
+    if (length(missingGenes) > 0) {
+      print(paste0('The following genes were not present in the object and will be skipped: ', paste0(missingGenes, collapse = ',')))
+    }
+
+    geneList <- intersect(geneList, rownames(seuratObj@assays[[assayName]]))
+    if (length(geneList) == 0) {
+      print(paste0('No genes retained, skipping: ', vals[[1]]))
+    }
+
+    toCalculate[[vals[1]]] <- geneList
   }
 
   seuratObj <- UCell::AddModuleScore_UCell(seuratObj, features = toCalculate, storeRanks = storeRanks, assay = assayName)
