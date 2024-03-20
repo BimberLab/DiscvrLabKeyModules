@@ -6,6 +6,7 @@
         <column name="sortId/sampleId/sampledate" />
         <column name="sortId/sampleId/stim" />
         <column name="sortId/sampleId/tissue" />
+        <column name="sortId/sampleId/assayType" />
         <column name="sortId/population" />
         <column name="sortId/cells" />
         <column name="sortId/hto" />

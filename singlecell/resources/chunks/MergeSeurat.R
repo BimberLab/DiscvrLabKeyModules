@@ -1,9 +1,14 @@
 doDiet <- exists('doDiet') && doDiet
+disableAutoDietSeurat <- exists('disableAutoDietSeurat') && disableAutoDietSeurat
+if (!doDiet && length(seuratObjects) > 20 && !disableAutoDietSeurat) {
+    logger::log_info('More than 20 objects are being merged, turning on DietSeurat')
+    doDiet <- TRUE
+}
 
 mergeBatch <- function(dat) {
     toMerge <- list()
     for (datasetId in names(dat)) {
-        message(paste0('Loading: ', datasetId))
+        print(paste0('Loading: ', datasetId))
         if (doDiet) {
             toMerge[[datasetId]] <- Seurat::DietSeurat(readSeuratRDS(dat[[datasetId]]))
             gc()
@@ -34,26 +39,47 @@ if (length(seuratObjects) == 1) {
 } else {
     batchSize <- 20
     numBatches <- ceiling(length(seuratObjects) / batchSize)
-    mergedObjects <- list()
+    mergedObjectFiles <- list()
     for (i in 1:numBatches) {
-        message(paste0('Merging batch ', i, ' of ', numBatches))
+        logger::log_info(paste0('Merging batch ', i, ' of ', numBatches))
         start <- 1 + (i-1)*batchSize
         end <- min(start+batchSize-1, length(seuratObjects))
-        message(paste0('processing: ', start, ' to ', end, ' of ', length(seuratObjects)))
+        logger::log_info(paste0('processing: ', start, ' to ', end, ' of ', length(seuratObjects)))
 
-        mergedObjects[[i]] <- mergeBatch(seuratObjects[start:end])
+        fn <- paste0('mergeBatch.', i, '.rds')
+        saveRDS(mergeBatch(seuratObjects[start:end]), file = fn)
+        mergedObjectFiles[[i]] <- fn
+
+        logger::log_info(paste0('mem used: ', R.utils::hsize(as.numeric(pryr::mem_used()))))
         gc()
+        logger::log_info(paste0('after gc: ', R.utils::hsize(as.numeric(pryr::mem_used()))))
     }
 
-    message('Done with batches')
-    if (length(mergedObjects) == 1) {
-        seuratObj <- mergedObjects[[1]]
+    logger::log_info('Done with batches')
+    if (length(mergedObjectFiles) == 1) {
+        seuratObj <- readRDS(mergedObjectFiles[[1]])
+        unlink(mergedObjectFiles[[1]])
     } else {
-        message('performing final merge')
-        seuratObj <- merge(x = mergedObjects[[1]], y = mergedObjects[2:length(mergedObjects)], project = mergedObjects[[1]]@project.name)
+        logger::log_info('performing final merge')
+        seuratObj <- readRDS(mergedObjectFiles[[1]])
+        unlink(mergedObjectFiles[[1]])
+
+        for (i in 2:length(mergedObjectFiles)) {
+            logger::log_info(paste0('Merging final file ', i, ' of ', length(mergedObjectFiles)))
+            seuratObj <- merge(x = seuratObj, y = readRDS(mergedObjectFiles[[i]]), project = seuratObj@project.name)
+            if (HasSplitLayers(seuratObj)) {
+                seuratObj <- MergeSplitLayers(seuratObj)
+            }
+
+            unlink(mergedObjectFiles[[i]])
+
+            logger::log_info(paste0('mem used: ', R.utils::hsize(as.numeric(pryr::mem_used()))))
+            logger::log_info(paste0('seurat object: ', R.utils::hsize(as.numeric(utils::object.size(seuratObj)))))
+            gc()
+            logger::log_info(paste0('after gc: ', R.utils::hsize(as.numeric(pryr::mem_used()))))
+        }
     }
 
-    rm(mergedObjects)
     gc()
 
     saveData(seuratObj, projectName)

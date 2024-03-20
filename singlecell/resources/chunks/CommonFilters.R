@@ -95,6 +95,12 @@ for (datasetId in names(seuratObjects)) {
 			stop('Missing field: HTO.Classification')
 		}
 
+		# NOTE: this is added to fix an edge case that could occur if hashing not properly set
+		if (all(is.na(seuratObj$HTO.Classification))) {
+			print('HTO.Classification was NA, setting to NotUsed')
+			seuratObj$HTO.Classification <- 'NotUsed'
+		}
+
 		tryCatch({
 			cells <- Seurat::WhichCells(seuratObj, expression = HTO.Classification!='ND' & HTO.Classification!='Discordant' & HTO.Classification!='Doublet' & HTO.Classification!='Low Counts')
 			if (length(cells) == 0) {

@@ -248,7 +248,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                             items: [{
                                 xtype: 'labkey-combo',
                                 width: 600,
-                                fieldLabel: 'Select Run',
+                                fieldLabel: 'Select Template',
                                 editable: true,
                                 forceSelection: true,
                                 store: {
@@ -259,7 +259,28 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                                     sort: 'name',
                                     filterArray: [LABKEY.Filter.create('taskid', this.jobType)],
                                     autoLoad: true,
-                                    columns: 'rowid,name,json'
+                                    columns: 'rowid,name,json',
+                                    listeners: {
+                                        load: function(store) {
+                                            if (LABKEY.ActionURL.getParameter('template')) {
+                                                var thePanel = Ext4.ComponentQuery.query('#selectionArea')[0];
+                                                LDK.Assert.assertNotEmpty('Missing selectionArea field', thePanel);
+                                                if (!thePanel) {
+                                                    return;
+                                                }
+
+                                                var recIdx = store.find('name', LABKEY.ActionURL.getParameter('template'));
+                                                if (recIdx > -1) {
+                                                    thePanel.down('labkey-combo').setValue(store.getAt(recIdx));
+                                                    var win = thePanel.up('window');
+                                                    var btn = win.down('button[text=Submit]');
+                                                    win.onSubmit(btn);
+                                                }
+                                            }
+                                        },
+                                        delay: 20,
+                                        scope: this
+                                    }
                                 },
                                 displayField: 'name',
                                 valueField: 'rowid',
@@ -281,40 +302,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                         buttons: [{
                             text: 'Submit',
                             handler: function (btn) {
-                                var win = btn.up('window');
-                                var combo = win.down('combo');
-                                if (!combo.getValue()) {
-                                    Ext4.Msg.alert('Error', 'Must choose a protocol');
-                                    return;
-                                }
-
-                                // can occur in rare cases, probably when store is loading
-                                var recIdx = combo.store.find('rowid', combo.getValue());
-                                if (recIdx < 0) {
-                                    Ext4.Msg.alert('Error', 'Must choose a protocol');
-                                    return;
-                                }
-
-                                var rec = combo.store.getAt(recIdx);
-                                var json = rec.get('json');
-                                if (Ext4.isString(rec.get('json'))) {
-                                    json = Ext4.decode(json);
-                                }
-
-                                var useReadsetContainer = win.down('#useReadsetContainer').getValue();
-                                if (!useReadsetContainer) {
-                                    delete json.useOutputFileContainer;
-                                    delete json.submitJobToReadsetContainer;
-                                }
-
-                                win.sequencePanel.applySavedValues(json);
-
-                                var submitJobToReadsetContainer = win.sequencePanel.down('[name="submitJobToReadsetContainer"]');
-                                if (submitJobToReadsetContainer) {
-                                    submitJobToReadsetContainer.setValue(useReadsetContainer);
-                                }
-
-                                win.close();
+                                btn.up('window').onSubmit(btn);
                             }
                         },{
                             text: 'Cancel',
@@ -337,6 +325,42 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                                     scope : this
                                 });
                             }
+                        },
+                        onSubmit: function(btn) {
+                            var win = btn.up('window');
+                            var combo = win.down('combo');
+                            if (!combo.getValue()) {
+                                Ext4.Msg.alert('Error', 'Must choose a protocol');
+                                return;
+                            }
+
+                            // can occur in rare cases, probably when store is loading
+                            var recIdx = combo.store.find('rowid', combo.getValue());
+                            if (recIdx < 0) {
+                                Ext4.Msg.alert('Error', 'Must choose a protocol');
+                                return;
+                            }
+
+                            var rec = combo.store.getAt(recIdx);
+                            var json = rec.get('json');
+                            if (Ext4.isString(rec.get('json'))) {
+                                json = Ext4.decode(json);
+                            }
+
+                            var useReadsetContainer = win.down('#useReadsetContainer').getValue();
+                            if (!useReadsetContainer) {
+                                delete json.useOutputFileContainer;
+                                delete json.submitJobToReadsetContainer;
+                            }
+
+                            win.sequencePanel.applySavedValues(json);
+
+                            var submitJobToReadsetContainer = win.sequencePanel.down('[name="submitJobToReadsetContainer"]');
+                            if (submitJobToReadsetContainer) {
+                                submitJobToReadsetContainer.setValue(useReadsetContainer);
+                            }
+
+                            win.close();
                         }
                     }).show(btn);
                 }
