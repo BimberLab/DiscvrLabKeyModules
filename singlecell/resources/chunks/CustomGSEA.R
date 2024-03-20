@@ -12,7 +12,7 @@ for (datasetId in names(seuratObjects)) {
     toCalculate[[vals[1]]] <- unlist(strsplit(vals[2], split = ','))
   }
 
-  seuratObj <- CellMembrane::RunEscape(seuratObj, customGeneSets = toCalculate, outputAssayName = outputAssayName, doPlot = TRUE, msigdbGeneSets = NULL)
+  seuratObj <- CellMembrane::RunEscape(seuratObj, customGeneSets = toCalculate, outputAssayName = outputAssayName, doPlot = TRUE, msigdbGeneSets = NULL, performDimRedux = performDimRedux)
 
   saveData(seuratObj, datasetId)
 
