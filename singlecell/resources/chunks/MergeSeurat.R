@@ -52,8 +52,6 @@ if (length(seuratObjects) == 1) {
 
         logger::log_info('mem used:')
         logger::log_info(print(pryr::mem_used()))
-        logger::log_info('seurat object:')
-        logger::log_info(print(utils::object.size(seuratObj)))
         gc()
         logger::log_info('after gc:')
         logger::log_info(print(pryr::mem_used()))
