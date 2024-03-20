@@ -278,6 +278,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                                                 }
                                             }
                                         },
+                                        delay: 20,
                                         scope: this
                                     }
                                 },
