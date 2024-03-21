@@ -42,7 +42,7 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                 }}, null),
                 ToolParameterDescriptor.create("maxDepth", "Max Depth", "At a position, read maximally INT reads per input file, to avoid excessive memory usage", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
-                }}, 50000),
+                }}, null),
                 ToolParameterDescriptor.create("contigs", "Allowable Contigs", "A comma-separated list of contig names to use", "textfield", new JSONObject(){{
 
                 }}, "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20"),
@@ -52,7 +52,8 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                     put("category", "VCF File");
                     put("performGenomeFilter", false);
                     put("doNotIncludeInTemplates", true);
-                }}, null)
+                }}, null),
+                ToolParameterDescriptor.create("storeCellSnpVcf", "Store CellSnp-Lite VCF", "If checked, the cellsnp donor calls VCF will be stored as an output file", "checkbox", null, false)
         ));
     }
 
@@ -162,6 +163,7 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
             cellsnp.add(bam.getPath());
             cellsnp.add("-b");
             cellsnp.add(barcodes.getPath());
+            cellsnp.add("--genotype");
 
             File cellsnpDir = new File(ctx.getWorkingDirectory(), "cellsnp");
             if (cellsnpDir.exists())
@@ -279,6 +281,24 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
             }
             so.setCategory("Vireo Demultiplexing");
             ctx.addSequenceOutput(so);
+
+            if (ctx.getParams().optBoolean("storeCellSnpVcf", false))
+            {
+                so = new SequenceOutputFile();
+                so.setReadset(inputFiles.get(0).getReadset());
+                so.setLibrary_id(inputFiles.get(0).getLibrary_id());
+                so.setFile(outFiles[0]);
+                if (so.getReadset() != null)
+                {
+                    so.setName(ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName() + ": Cellsnp-lite VCF");
+                }
+                else
+                {
+                    so.setName(inputFiles.get(0).getName() + ": Cellsnp-lite VCF");
+                }
+                so.setCategory("VCF File");
+                ctx.addSequenceOutput(so);
+            }
         }
     }
 }
