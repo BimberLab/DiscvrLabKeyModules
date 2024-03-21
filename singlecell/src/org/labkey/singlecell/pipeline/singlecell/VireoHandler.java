@@ -36,6 +36,9 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                 ToolParameterDescriptor.create("nDonors", "# Donors", "The number of donors to demultiplex", "ldk-integerfield", new JSONObject(){{
                     put("allowBlank", false);
                 }}, null),
+                ToolParameterDescriptor.create("maxDepth", "Max Depth", "At a position, read maximally INT reads per input file, to avoid excessive memory usage", "ldk-integerfield", new JSONObject(){{
+                    put("minValue", 0);
+                }}, null),
                 ToolParameterDescriptor.create("contigs", "Allowable Contigs", "A comma-separated list of contig names to use", "textfield", new JSONObject(){{
 
                 }}, "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20")
@@ -72,7 +75,7 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
         return new Processor();
     }
 
-    public class Processor implements SequenceOutputProcessor
+    public static class Processor implements SequenceOutputProcessor
     {
         @Override
         public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
@@ -177,6 +180,13 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
 
             cellsnp.add("--minCOUNT");
             cellsnp.add("100");
+
+            String maxDepth = StringUtils.trimToNull(ctx.getParams().optString("maxDepth"));
+            if (maxDepth != null)
+            {
+                cellsnp.add("--maxDEPTH");
+                cellsnp.add(maxDepth);
+            }
 
             cellsnp.add("--gzip");
 
