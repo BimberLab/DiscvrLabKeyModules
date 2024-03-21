@@ -23,7 +23,10 @@ public class RunEscape extends AbstractCellMembraneStep
             super("RunEscape", "Escape/ssGSEA", "escape", "Runs escape to perform ssGSEA using Hallmark gene sets.", Arrays.asList(
                     SeuratToolParameter.create("outputAssayName", "Output Assay Name", "The name of the assay to store results", "textfield", new JSONObject(){{
                         put("allowBank", false);
-                    }}, "escape.ssGSEA")
+                    }}, "escape.ssGSEA"),
+                    SeuratToolParameter.create("performDimRedux", "Perform DimRedux", "If true, the standard seurat PCA/FindClusters/UMAP process will be run on the escape data. This may be most useful when using a customGeneSet or a smaller set of features/pathways", "checkbox", new JSONObject(){{
+
+                    }}, false, null, true)
             ), null, null);
         }
 
