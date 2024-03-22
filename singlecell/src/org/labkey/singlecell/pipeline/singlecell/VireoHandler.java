@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
@@ -35,7 +36,7 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
 
     public VireoHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run Vireo", "This will run cellsnp-lite and vireo to infer cell-to-sample based on genotype.", PageFlowUtil.set("sequenceanalysis/field/SequenceOutputFileSelectorField.js"), Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run Vireo", "This will run cellsnp-lite and vireo to infer cell-to-sample based on genotype.", new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/SequenceOutputFileSelectorField.js")), Arrays.asList(
                 ToolParameterDescriptor.create("nDonors", "# Donors", "The number of donors to demultiplex", "ldk-integerfield", new JSONObject(){{
                     put("allowBlank", false);
                 }}, null),
