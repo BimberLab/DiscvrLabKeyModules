@@ -16,6 +16,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.SingleCellModule;
 import org.labkey.singlecell.run.CellRangerGexCountStep;
@@ -30,18 +31,27 @@ import java.util.List;
 
 public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
+    private static final String REF_VCF =  "refVCF";
+
     public VireoHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run Vireo", "This will run cellsnp-lite and vireo to infer cell-to-sample based on genotype.", null, Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run Vireo", "This will run cellsnp-lite and vireo to infer cell-to-sample based on genotype.", PageFlowUtil.set("sequenceanalysis/field/SequenceOutputFileSelectorField.js"), Arrays.asList(
                 ToolParameterDescriptor.create("nDonors", "# Donors", "The number of donors to demultiplex", "ldk-integerfield", new JSONObject(){{
                     put("allowBlank", false);
                 }}, null),
                 ToolParameterDescriptor.create("maxDepth", "Max Depth", "At a position, read maximally INT reads per input file, to avoid excessive memory usage", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
-                }}, null),
+                }}, 50000),
                 ToolParameterDescriptor.create("contigs", "Allowable Contigs", "A comma-separated list of contig names to use", "textfield", new JSONObject(){{
 
-                }}, "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20")
+                }}, "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20"),
+                ToolParameterDescriptor.createExpDataParam(REF_VCF, "Reference SNV Sites", "If provided, these sites will be used to screen for SNPs, instead of discovering them. If provided, the contig list will be ignored", "sequenceanalysis-sequenceoutputfileselectorfield", new JSONObject()
+                {{
+                    put("allowBlank", true);
+                    put("category", "VCF File");
+                    put("performGenomeFilter", false);
+                    put("doNotIncludeInTemplates", true);
+                }}, null)
         ));
     }
 
@@ -195,11 +205,26 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
             cellsnp.add("--refseq");
             cellsnp.add(genome.getWorkingFastaFile().getPath());
 
-            String contigs = ctx.getParams().optString("contigs", "");
-            if (!StringUtils.isEmpty(contigs))
+            int vcfFile = ctx.getParams().optInt(REF_VCF, -1);
+            if (vcfFile > -1)
             {
-                cellsnp.add("--chrom");
-                cellsnp.add(contigs);
+                File vcf = ctx.getSequenceSupport().getCachedData(vcfFile);
+                if (vcf == null || ! vcf.exists())
+                {
+                    throw new PipelineJobException("Unable to find file with ID: " + vcfFile);
+                }
+
+                cellsnp.add("-R");
+                cellsnp.add(vcf.getPath());
+            }
+            else
+            {
+                String contigs = ctx.getParams().optString("contigs", "");
+                if (!StringUtils.isEmpty(contigs))
+                {
+                    cellsnp.add("--chrom");
+                    cellsnp.add(contigs);
+                }
             }
 
             new SimpleScriptWrapper(ctx.getLogger()).execute(cellsnp);
