@@ -255,7 +255,7 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
 
             new SimpleScriptWrapper(ctx.getLogger()).execute(vireo);
 
-            File[] outFiles = ctx.getWorkingDirectory().listFiles(f -> f.getName().endsWith("_donor_ids.tsv"));
+            File[] outFiles = ctx.getWorkingDirectory().listFiles(f -> f.getName().endsWith("donor_ids.tsv"));
             if (outFiles == null || outFiles.length == 0)
             {
                 throw new PipelineJobException("Missing vireo output file");
