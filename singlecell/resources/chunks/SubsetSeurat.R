@@ -12,8 +12,13 @@ for (datasetId in names(seuratObjects)) {
 	<SUBSET_CODE>
 
 	if (!is.null(seuratObj)) {
-		saveData(seuratObj, datasetId)
-		totalPassed <- totalPassed + 1
+		if (ncol(seuratObj) <= 1) {
+			# NOTE: Seurat v5 assays do not perform well with one cell
+			print(paste0('There is only one cell remaining, skipping'))
+		} else {
+			saveData(seuratObj, datasetId)
+			totalPassed <- totalPassed + 1
+		}
 	}
 
 	# Cleanup
