@@ -17,9 +17,11 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
-import org.apache.lucene.search.TopFieldDocs;
+import org.apache.lucene.search.SortedNumericSortField;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.jetbrains.annotations.Nullable;
@@ -57,6 +59,8 @@ import static org.labkey.jbrowse.JBrowseFieldUtils.getTrack;
 
 public class JBrowseLuceneSearch
 {
+    private static final String ALL_DOCS = "all";
+
     private final JBrowseSession _session;
     private final JsonFile _jsonFile;
     private final User _user;
@@ -130,10 +134,10 @@ public class JBrowseLuceneSearch
         return parts.length > 0 ? parts[0].trim() : null;
     }
 
-    public JSONObject doSearch(User u, String searchString, final int pageSize, final int offset) throws IOException, ParseException
+    public JSONObject doSearch(User u, String searchString, final int pageSize, final int lastDoc, final int lastScore) throws IOException, ParseException
     {
         searchString = tryUrlDecode(searchString);
-        File indexPath = _jsonFile.getExpectedLocationOfLuceneIndex(true);
+        File indexPath = new File("C:\\Users\\sebas\\Desktop\\lucene");//_jsonFile.getExpectedLocationOfLuceneIndex(true);
         Map<String, JBrowseFieldDescriptor> fields = JBrowseFieldUtils.getIndexedFields(_jsonFile, u, getContainer());
 
         // Open directory of lucene path, get a directory reader, and create the index search manager
@@ -182,14 +186,14 @@ public class JBrowseLuceneSearch
 
             BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
 
-            if (searchString.equals("all")) {
+            if (searchString.equals(ALL_DOCS)) {
                 booleanQueryBuilder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
             }
 
             // Split input into tokens, 1 token per query separated by &
             StringTokenizer tokenizer = new StringTokenizer(searchString, "&");
 
-            while (tokenizer.hasMoreTokens() && !searchString.equals("all"))
+            while (tokenizer.hasMoreTokens() && !searchString.equals(ALL_DOCS))
             {
                 String queryString = tokenizer.nextToken();
                 Query query = null;
@@ -226,39 +230,26 @@ public class JBrowseLuceneSearch
 
             BooleanQuery query = booleanQueryBuilder.build();
 
-            // Get chunks of size {pageSize}. Default to 1 chunk -- add to the offset to get more.
-            // We then iterate over the range of documents we want based on the offset. This does grow in memory
-            // linearly with the number of documents, but my understanding is that these are just score,id pairs
-            // rather than full documents, so mem usage *should* still be pretty low.
-            //TopDocs topDocs = indexSearcher.search(query, pageSize * (offset + 1));
+            Sort sort = Sort.INDEXORDER;
 
-            // Define sort field
-            SortField sortField = new SortField("pos", SortField.Type.INT, false);
-            Sort sort = new Sort(sortField);
-
-            // Perform the search with sorting
-            TopFieldDocs topDocs = indexSearcher.search(query, pageSize * (offset + 1), sort);
+            TopDocs topDocs;
+            if (lastDoc > -1) {
+                ScoreDoc lastScoreDoc = new ScoreDoc(lastDoc, lastScore);
+                topDocs = indexSearcher.searchAfter(lastScoreDoc, query, pageSize, sort);
+            } else {
+                topDocs = indexSearcher.search(query, pageSize, sort);
+            }
 
             JSONObject results = new JSONObject();
-
-            // Iterate over the doc list, (either to the total end or until the page ends) grab the requested docs,
-            // and add to returned results
             List<JSONObject> data = new ArrayList<>();
-            for (int i = pageSize * offset; i < Math.min(pageSize * (offset + 1), topDocs.scoreDocs.length); i++)
-            {
+            for (ScoreDoc sd : topDocs.scoreDocs) {
                 JSONObject elem = new JSONObject();
-                Document doc = indexSearcher.doc(topDocs.scoreDocs[i].doc);
+                Document doc = indexSearcher.doc(sd.doc);
 
                 for (IndexableField field : doc.getFields()) {
                     String fieldName = field.name();
                     String[] fieldValues = doc.getValues(fieldName);
-                    if (fieldValues.length > 1) {
-                        // If there is more than one value, put the array of values into the JSON object.
-                        elem.put(fieldName, fieldValues);
-                    } else {
-                        // If there is only one value, just put this single value into the JSON object.
-                        elem.put(fieldName, fieldValues[0]);
-                    }
+                    elem.put(fieldName, fieldValues.length > 1 ? fieldValues : fieldValues[0]);
                 }
 
                 data.add(elem);
@@ -267,7 +258,15 @@ public class JBrowseLuceneSearch
             results.put("data", data);
             results.put("totalHits", topDocs.totalHits.value);
 
-            //TODO: we should probably stream this
+            if(topDocs.scoreDocs.length > 0) {
+                ScoreDoc sortedLastDoc = topDocs.scoreDocs[topDocs.scoreDocs.length - 1];
+                results.put("lastDoc", sortedLastDoc.doc);
+                results.put("lastScore", Float.isNaN(sortedLastDoc.score) ? -1 : sortedLastDoc.score);
+            } else {
+                results.put("lastDoc", -1);
+                results.put("lastScore", -1);
+            }
+
             return results;
         }
     }
