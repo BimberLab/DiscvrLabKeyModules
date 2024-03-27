@@ -22,6 +22,7 @@ import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.util.NumericUtils;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
@@ -50,6 +51,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static org.labkey.jbrowse.JBrowseFieldUtils.VARIABLE_SAMPLES;
 import static org.labkey.jbrowse.JBrowseFieldUtils.getSession;
@@ -61,6 +63,8 @@ public class JBrowseLuceneSearch
     private final JsonFile _jsonFile;
     private final User _user;
     private final String[] specialStartPatterns = {"*:* -", "+", "-"};
+    private static final String ALL_DOCS = "all";
+    private static final String GENOMIC_POSITION = "genomicPosition";
 
     private JBrowseLuceneSearch(final JBrowseSession session, final JsonFile jsonFile, User u)
     {
@@ -130,7 +134,7 @@ public class JBrowseLuceneSearch
         return parts.length > 0 ? parts[0].trim() : null;
     }
 
-    public JSONObject doSearch(User u, String searchString, final int pageSize, final int offset) throws IOException, ParseException
+    public JSONObject doSearch(User u, String searchString, final int pageSize, final int offset, String sortField, boolean sortReverse) throws IOException, ParseException
     {
         searchString = tryUrlDecode(searchString);
         File indexPath = _jsonFile.getExpectedLocationOfLuceneIndex(true);
@@ -146,7 +150,7 @@ public class JBrowseLuceneSearch
             IndexSearcher indexSearcher = new IndexSearcher(indexReader);
 
             List<String> stringQueryParserFields = new ArrayList<>();
-            List<String> numericQueryParserFields = new ArrayList<>();
+            Map<String, SortField.Type> numericQueryParserFields = new HashMap<>();
             PointsConfig intPointsConfig = new PointsConfig(new DecimalFormat(), Integer.class);
             PointsConfig doublePointsConfig = new PointsConfig(new DecimalFormat(), Double.class);
             Map<String, PointsConfig> pointsConfigMap = new HashMap<>();
@@ -161,11 +165,11 @@ public class JBrowseLuceneSearch
                 {
                     case Flag, String, Character -> stringQueryParserFields.add(field);
                     case Float -> {
-                        numericQueryParserFields.add(field);
+                        numericQueryParserFields.put(field, SortField.Type.DOUBLE);
                         pointsConfigMap.put(field, doublePointsConfig);
                     }
                     case Integer -> {
-                        numericQueryParserFields.add(field);
+                        numericQueryParserFields.put(field, SortField.Type.INT);
                         pointsConfigMap.put(field, intPointsConfig);
                     }
                 }
@@ -182,14 +186,14 @@ public class JBrowseLuceneSearch
 
             BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
 
-            if (searchString.equals("all")) {
+            if (searchString.equals(ALL_DOCS)) {
                 booleanQueryBuilder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
             }
 
             // Split input into tokens, 1 token per query separated by &
             StringTokenizer tokenizer = new StringTokenizer(searchString, "&");
 
-            while (tokenizer.hasMoreTokens() && !searchString.equals("all"))
+            while (tokenizer.hasMoreTokens() && !searchString.equals(ALL_DOCS))
             {
                 String queryString = tokenizer.nextToken();
                 Query query = null;
@@ -205,7 +209,7 @@ public class JBrowseLuceneSearch
                 {
                     query = queryParser.parse(queryString);
                 }
-                else if (numericQueryParserFields.contains(fieldName))
+                else if (numericQueryParserFields.containsKey(fieldName))
                 {
                     try
                     {
@@ -226,16 +230,28 @@ public class JBrowseLuceneSearch
 
             BooleanQuery query = booleanQueryBuilder.build();
 
+            // By default, sort in INDEXORDER, which is by genomicPosition
+            Sort sort = Sort.INDEXORDER;
+
+            // If the sort field is not genomicPosition, use the provided sorting data
+            if (!sortField.equals(GENOMIC_POSITION)) {
+                SortField.Type fieldType;
+
+                if (stringQueryParserFields.contains(sortField)) {
+                    fieldType = SortField.Type.STRING;
+                } else if (numericQueryParserFields.containsKey(sortField)) {
+                    fieldType = numericQueryParserFields.get(sortField);
+                } else {
+                    throw new IllegalArgumentException("Could not find type for sort field: " + sortField);
+                }
+
+                sort = new Sort(new SortField(sortField, fieldType, sortReverse));
+            }
+
             // Get chunks of size {pageSize}. Default to 1 chunk -- add to the offset to get more.
             // We then iterate over the range of documents we want based on the offset. This does grow in memory
             // linearly with the number of documents, but my understanding is that these are just score,id pairs
             // rather than full documents, so mem usage *should* still be pretty low.
-            //TopDocs topDocs = indexSearcher.search(query, pageSize * (offset + 1));
-
-            // Define sort field
-            SortField sortField = new SortField("pos", SortField.Type.INT, false);
-            Sort sort = new Sort(sortField);
-
             // Perform the search with sorting
             TopFieldDocs topDocs = indexSearcher.search(query, pageSize * (offset + 1), sort);
 
@@ -253,10 +269,8 @@ public class JBrowseLuceneSearch
                     String fieldName = field.name();
                     String[] fieldValues = doc.getValues(fieldName);
                     if (fieldValues.length > 1) {
-                        // If there is more than one value, put the array of values into the JSON object.
                         elem.put(fieldName, fieldValues);
                     } else {
-                        // If there is only one value, just put this single value into the JSON object.
                         elem.put(fieldName, fieldValues[0]);
                     }
                 }
