@@ -369,15 +369,6 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
     public static File processVCF(File input, Integer libraryId, JobContext ctx, Resumer resumer, boolean subsetToIntervals) throws PipelineJobException
     {
-        try
-        {
-            SequenceAnalysisService.get().ensureVcfIndex(input, ctx.getLogger());
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-
         File currentVCF = input;
 
         ctx.getJob().getLogger().info("***Starting processing of file: " + input.getName());
@@ -409,6 +400,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             }
             else
             {
+                try
+                {
+                    SequenceAnalysisService.get().ensureVcfIndex(input, ctx.getLogger());
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
                 OutputVariantsStartingInIntervalsStep.Wrapper wrapper = new OutputVariantsStartingInIntervalsStep.Wrapper(ctx.getLogger());
                 wrapper.execute(input, outputFile, getIntervals(ctx));
             }
@@ -430,6 +430,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 ctx.getLogger().info("resuming from saved state");
                 currentVCF = resumer.getVcfFromStep(stepIdx, input.getPath());
                 continue;
+            }
+
+            try
+            {
+                SequenceAnalysisService.get().ensureVcfIndex(input, ctx.getLogger());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
             }
 
             RecordedAction action = new RecordedAction(stepCtx.getProvider().getLabel());
