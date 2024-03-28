@@ -5,13 +5,16 @@ import {
     GridColumnVisibilityModel,
     GridPaginationModel,
     GridRenderCellParams,
+    GridSortDirection,
+    GridSortModel,
     GridToolbarColumnsButton,
     GridToolbarContainer,
     GridToolbarDensitySelector,
     GridToolbarExport
 } from '@mui/x-data-grid';
 import SearchIcon from '@mui/icons-material/Search';
-import React, { useEffect, useState, useMemo } from 'react';
+import LinkIcon from '@mui/icons-material/Link';
+import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { AppBar, Box, Button, Dialog, Paper, Popover, Toolbar, Tooltip, Typography } from '@mui/material';
 import { FilterFormModal } from './FilterFormModal';
@@ -67,14 +70,17 @@ const VariantTableWidget = observer(props => {
         session.hideWidget(widget)
     }
 
-    function handleQuery(passedFilters, pushToHistory, pageQueryModel = pageSizeModel) {
+    function handleQuery(passedFilters, pushToHistory, pageQueryModel = pageSizeModel, sortQueryModel = sortModel) {
         const { page = pageSizeModel.page, pageSize = pageSizeModel.pageSize } = pageQueryModel;
+        const { field = "genomicPosition", sort = false } = sortQueryModel[0] ?? {};
 
         const encodedSearchString = createEncodedFilterString(passedFilters, false);
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.set("searchString", encodedSearchString);
         currentUrl.searchParams.set("page", page.toString());
         currentUrl.searchParams.set("pageSize", pageSize.toString());
+        currentUrl.searchParams.set("sortField", field.toString());
+        currentUrl.searchParams.set("sortDirection", sort.toString());
 
         if (pushToHistory) {
           window.history.pushState(null, "", currentUrl.toString());
@@ -82,7 +88,7 @@ const VariantTableWidget = observer(props => {
 
         setFilters(passedFilters);
         setDataLoaded(false)
-        fetchLuceneQuery(passedFilters, sessionId, trackGUID, page, pageSize, (json)=>{handleSearch(json)}, (error) => {setDataLoaded(true); setError(error)});
+        fetchLuceneQuery(passedFilters, sessionId, trackGUID, page, pageSize, field, sort, (json)=>{handleSearch(json)}, (error) => {setDataLoaded(true); setError(error)});
     }
 
     const TableCellWithPopover = (props: { value: any }) => {
@@ -190,7 +196,29 @@ const VariantTableWidget = observer(props => {
                     Search
                 </Button>
                 <GridToolbarDensitySelector />
-                <GridToolbarExport />
+                <GridToolbarExport csvOptions={{
+                    delimiter: ';',
+                }} />
+
+                <Button
+                    startIcon={<LinkIcon />}
+                    size="small"
+                    color="primary"
+                    onClick={() => {
+                        navigator.clipboard.writeText(window.location.href)
+                        .then(() => {
+                            // Popup message for successful copy
+                            alert('URL copied to clipboard.');
+                        })
+                        .catch(err => {
+                            // Error handling
+                            console.error('Failed to copy the URL: ', err);
+                            alert('Failed to copy the URL.');
+                        });
+                    }}
+                >
+                Share
+                </Button>
             </GridToolbarContainer>
         );
     }
@@ -234,10 +262,14 @@ const VariantTableWidget = observer(props => {
     // False until initial data load or an error:
     const [dataLoaded, setDataLoaded] = useState(false)
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const page = parseInt(urlParams.get('page') || '0');
-    const pageSize = parseInt(urlParams.get('pageSize') || '50');
+    const urlParams = new URLSearchParams(window.location.search)
+    const page = parseInt(urlParams.get('page') || '0')
+    const pageSize = parseInt(urlParams.get('pageSize') || '50')
     const [pageSizeModel, setPageSizeModel] = React.useState<GridPaginationModel>({ page, pageSize });
+
+    const sortField = urlParams.get('sortField') || 'genomicPosition'
+    const sortDirection = urlParams.get('sortDirection') || 'desc'
+    const [sortModel, setSortModel] = React.useState<GridSortModel>([{ field: sortField, sort: sortDirection as GridSortDirection }])
 
     const colVisURLComponent = urlParams.get("colVisModel") || "{}"
     const colVisModel = JSON.parse(decodeURIComponent(colVisURLComponent))
@@ -419,6 +451,11 @@ const VariantTableWidget = observer(props => {
                 currentUrl.searchParams.set("colVisModel", encodeURIComponent(JSON.stringify(trueValuesModel)));
                 window.history.pushState(null, "", currentUrl.toString());
             }}
+            sortingMode="server"
+            onSortModelChange={(newModel) => {
+                setSortModel(newModel)
+                handleQuery(filters, true, { page: 0, pageSize: pageSizeModel.pageSize }, newModel);
+            }}
         />
     )
 
@@ -440,7 +477,7 @@ const VariantTableWidget = observer(props => {
                 fieldTypeInfo: fieldTypeInfo,
                 allowedGroupNames: allowedGroupNames,
                 promotedFilters: promotedFilters,
-                handleQuery: (filters) => handleQuery(filters, true)
+                handleQuery: (filters) => handleQuery(filters, true, { page: 0, pageSize: pageSizeModel.pageSize}, sortModel)
             }}
         />
     );
