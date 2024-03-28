@@ -8,6 +8,7 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -36,13 +37,13 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
 
     public VireoHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run Vireo", "This will run cellsnp-lite and vireo to infer cell-to-sample based on genotype.", new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/SequenceOutputFileSelectorField.js")), Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run CellSnp-Lite/Vireo", "This will run cellsnp-lite and vireo to infer cell-to-sample based on genotype.", new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/SequenceOutputFileSelectorField.js")), Arrays.asList(
                 ToolParameterDescriptor.create("nDonors", "# Donors", "The number of donors to demultiplex", "ldk-integerfield", new JSONObject(){{
                     put("allowBlank", false);
                 }}, null),
                 ToolParameterDescriptor.create("maxDepth", "Max Depth", "At a position, read maximally INT reads per input file, to avoid excessive memory usage", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
-                }}, 50000),
+                }}, null),
                 ToolParameterDescriptor.create("contigs", "Allowable Contigs", "A comma-separated list of contig names to use", "textfield", new JSONObject(){{
 
                 }}, "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20"),
@@ -247,6 +248,7 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
             vireo.add(ctx.getWorkingDirectory().getPath());
 
             int nDonors = ctx.getParams().optInt("nDonors", 0);
+            boolean storeCellSnpVcf = ctx.getParams().optBoolean("storeCellSnpVcf", false);
             if (nDonors == 0)
             {
                 throw new PipelineJobException("Must provide nDonors");
@@ -255,39 +257,73 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
             vireo.add("-N");
             vireo.add(String.valueOf(nDonors));
 
-            new SimpleScriptWrapper(ctx.getLogger()).execute(vireo);
-
-            File[] outFiles = ctx.getWorkingDirectory().listFiles(f -> f.getName().endsWith("donor_ids.tsv"));
-            if (outFiles == null || outFiles.length == 0)
+            if (nDonors == 1)
             {
-                throw new PipelineJobException("Missing vireo output file");
-            }
-            else if (outFiles.length > 1)
-            {
-                throw new PipelineJobException("More than one possible vireo output file found");
-            }
-
-            SequenceOutputFile so = new SequenceOutputFile();
-            so.setReadset(inputFiles.get(0).getReadset());
-            so.setLibrary_id(inputFiles.get(0).getLibrary_id());
-            so.setFile(outFiles[0]);
-            if (so.getReadset() != null)
-            {
-                so.setName(ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName() + ": Vireo Demultiplexing");
+                storeCellSnpVcf = true;
+                ctx.getLogger().info("nDonor was 1, skipping vireo");
             }
             else
             {
-                so.setName(inputFiles.get(0).getName() + ": Vireo Demultiplexing");
-            }
-            so.setCategory("Vireo Demultiplexing");
-            ctx.addSequenceOutput(so);
+                new SimpleScriptWrapper(ctx.getLogger()).execute(vireo);
 
-            if (ctx.getParams().optBoolean("storeCellSnpVcf", false))
-            {
-                so = new SequenceOutputFile();
+                File[] outFiles = ctx.getWorkingDirectory().listFiles(f -> f.getName().endsWith("donor_ids.tsv"));
+                if (outFiles == null || outFiles.length == 0)
+                {
+                    throw new PipelineJobException("Missing vireo output file");
+                }
+                else if (outFiles.length > 1)
+                {
+                    throw new PipelineJobException("More than one possible vireo output file found");
+                }
+
+                SequenceOutputFile so = new SequenceOutputFile();
                 so.setReadset(inputFiles.get(0).getReadset());
                 so.setLibrary_id(inputFiles.get(0).getLibrary_id());
                 so.setFile(outFiles[0]);
+                if (so.getReadset() != null)
+                {
+                    so.setName(ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName() + ": Vireo Demultiplexing");
+                }
+                else
+                {
+                    so.setName(inputFiles.get(0).getName() + ": Vireo Demultiplexing");
+                }
+                so.setCategory("Vireo Demultiplexing");
+                ctx.addSequenceOutput(so);
+            }
+
+            File cellSnpBaseVcf = new File(cellsnpDir, "cellSNP.base.vcf.gz");
+            if (!cellSnpBaseVcf.exists())
+            {
+                throw new PipelineJobException("Unable to find cellsnp base VCF");
+            }
+
+
+            File cellSnpCellsVcf = new File(cellsnpDir, "cellSNP.cells.vcf.gz");
+            if (!cellSnpCellsVcf.exists())
+            {
+                throw new PipelineJobException("Unable to find cellsnp calls VCF");
+            }
+
+            try
+            {
+                SequencePipelineService.get().sortVcf(cellSnpBaseVcf, null, genome.getSequenceDictionary(), ctx.getLogger());
+                SequenceAnalysisService.get().ensureVcfIndex(cellSnpBaseVcf, ctx.getLogger());
+
+                SequencePipelineService.get().sortVcf(cellSnpCellsVcf, null, genome.getSequenceDictionary(), ctx.getLogger());
+                SequenceAnalysisService.get().ensureVcfIndex(cellSnpCellsVcf, ctx.getLogger());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            if (storeCellSnpVcf)
+            {
+                SequenceOutputFile so = new SequenceOutputFile();
+                so.setReadset(inputFiles.get(0).getReadset());
+                so.setLibrary_id(inputFiles.get(0).getLibrary_id());
+                so.setFile(cellSnpCellsVcf);
                 if (so.getReadset() != null)
                 {
                     so.setName(ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName() + ": Cellsnp-lite VCF");
