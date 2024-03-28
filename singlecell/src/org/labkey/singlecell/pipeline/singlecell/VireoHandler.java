@@ -3,6 +3,7 @@ package org.labkey.singlecell.pipeline.singlecell;
 import htsjdk.samtools.util.IOUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -16,6 +17,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
@@ -305,18 +307,8 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                 throw new PipelineJobException("Unable to find cellsnp calls VCF");
             }
 
-            try
-            {
-                SequencePipelineService.get().sortVcf(cellSnpBaseVcf, null, genome.getSequenceDictionary(), ctx.getLogger());
-                SequenceAnalysisService.get().ensureVcfIndex(cellSnpBaseVcf, ctx.getLogger());
-
-                SequencePipelineService.get().sortVcf(cellSnpCellsVcf, null, genome.getSequenceDictionary(), ctx.getLogger());
-                SequenceAnalysisService.get().ensureVcfIndex(cellSnpCellsVcf, ctx.getLogger());
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
+            sortAndFixVcf(cellSnpBaseVcf, genome, ctx.getLogger());
+            sortAndFixVcf(cellSnpCellsVcf, genome, ctx.getLogger());
 
             if (storeCellSnpVcf)
             {
@@ -334,6 +326,66 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                 }
                 so.setCategory("VCF File");
                 ctx.addSequenceOutput(so);
+            }
+        }
+
+        private void sortAndFixVcf(File vcf, ReferenceGenome genome, Logger log) throws PipelineJobException
+        {
+            // NOTE: this is required since cellsnp-lite creates a non-compliant header dictionary
+            new UpdateVCFSequenceDictionary(log).execute(vcf, genome.getSequenceDictionary());
+
+            try
+            {
+                SequencePipelineService.get().sortVcf(vcf, null, genome.getSequenceDictionary(), log);
+                SequenceAnalysisService.get().ensureVcfIndex(vcf, log);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
+        public static class UpdateVCFSequenceDictionary extends AbstractGatk4Wrapper
+        {
+            public UpdateVCFSequenceDictionary(Logger log)
+            {
+                super(log);
+            }
+
+            public void execute(File vcf, File dict) throws PipelineJobException
+            {
+                List<String> args = new ArrayList<>(getBaseArgs("UpdateVCFSequenceDictionary"));
+                args.add("-V");
+                args.add(vcf.getPath());
+
+                args.add("--source-dictionary");
+                args.add(dict.getPath());
+
+                args.add("--replace");
+                args.add("true");
+
+                File output = new File(vcf.getParentFile(), "tmp.vcf.gz");
+                args.add("-O");
+                args.add(output.getPath());
+
+                execute(args);
+
+                if (!output.exists())
+                {
+                    throw new PipelineJobException("Unable to find file: " + output.getPath());
+                }
+
+                vcf.delete();
+
+                try
+                {
+                    SequenceAnalysisService.get().ensureVcfIndex(vcf, getLogger(), true);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
             }
         }
     }
