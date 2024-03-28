@@ -180,5 +180,10 @@ options('Seurat.memsafe' = TRUE)
 
 if (Sys.getenv('SEURAT_MAX_THREADS') != '') {
     print(paste0('Setting future::plan workers to: ', Sys.getenv('SEURAT_MAX_THREADS')))
-    future::plan(strategy='multisession', workers=Sys.getenv('SEURAT_MAX_THREADS'))
+    mt <- as.integer(Sys.getenv('SEURAT_MAX_THREADS'))
+    if (is.na(mt)) {
+        stop(paste0('SEURAT_MAX_THREAD is not an integer: ', mt <- Sys.getenv('SEURAT_MAX_THREADS')))
+    }
+
+    future::plan(strategy='multisession', workers=mt)
 }
