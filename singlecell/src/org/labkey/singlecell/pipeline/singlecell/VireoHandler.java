@@ -376,11 +376,20 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                     throw new PipelineJobException("Unable to find file: " + output.getPath());
                 }
 
-                vcf.delete();
-
                 try
                 {
-                    SequenceAnalysisService.get().ensureVcfIndex(vcf, getLogger(), true);
+                    // replace original:
+                    vcf.delete();
+                    FileUtils.moveFile(output, vcf);
+
+                    File outputIdx = new File(output.getPath() + ".tbi");
+                    File vcfIdx = new File(vcf.getPath() + ".tbi");
+                    if (vcfIdx.exists())
+                    {
+                        vcfIdx.delete();
+                    }
+
+                    FileUtils.moveFile(outputIdx, vcfIdx);
                 }
                 catch (IOException e)
                 {
