@@ -176,7 +176,7 @@ readSeuratRDS <- function(filePath) {
 print('Updating future.globals.maxSize')
 options(future.globals.maxSize = Inf)
 
-options('Seurat.memsafe' = TRUE)
+options('Seurat.memsafe' = TRUE, future.globals.onReference = "error")
 
 if (Sys.getenv('SEURAT_MAX_THREADS') != '') {
     print(paste0('Setting future::plan workers to: ', Sys.getenv('SEURAT_MAX_THREADS')))
