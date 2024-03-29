@@ -331,12 +331,13 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
 
         private void sortAndFixVcf(File vcf, ReferenceGenome genome, Logger log) throws PipelineJobException
         {
-            // NOTE: this is required since cellsnp-lite creates a non-compliant header dictionary
-            new UpdateVCFSequenceDictionary(log).execute(vcf, genome.getSequenceDictionary());
-
+            // This original VCF is generally not properly sorted, and has an invalid index. This is redundant, the VCF is not that large:
             try
             {
-                SequencePipelineService.get().sortVcf(vcf, null, genome.getSequenceDictionary(), log);
+                SequencePipelineService.get().sortROD(vcf, log, 2);
+                SequenceAnalysisService.get().ensureVcfIndex(vcf, log, true);
+
+                new UpdateVCFSequenceDictionary(log).execute(vcf, genome.getSequenceDictionary());
                 SequenceAnalysisService.get().ensureVcfIndex(vcf, log);
             }
             catch (IOException e)
