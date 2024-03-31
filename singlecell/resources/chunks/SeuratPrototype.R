@@ -1,9 +1,9 @@
-CheckField <- function(seuratObj, datasetId, fieldName) {
+CheckField <- function(seuratObj, datasetId, fieldName, errorOnNA = TRUE) {
   if (!fieldName %in% names(seuratObj@meta.data)) {
     addErrorMessage(paste0(paste0('Missing ', fieldName, ' for dataset: ', datasetId)))
   }
 
-  if (any(is.na(seuratObj@meta.data[[fieldName]]))) {
+  if (errorOnNA && any(is.na(seuratObj@meta.data[[fieldName]]))) {
     addErrorMessage(paste0(paste0('NA values found for ', fieldName, ' for dataset: ', datasetId)))
   }
 }
@@ -87,7 +87,7 @@ for (datasetId in names(seuratObjects)) {
   }
 
   if (requireScGate) {
-    CheckField(seuratObj, datasetId, 'scGateConsensus')
+    CheckField(seuratObj, datasetId, 'scGateConsensus', errorOnNA = FALSE)
   }
 
   if (length(errorMessages) > 0) {

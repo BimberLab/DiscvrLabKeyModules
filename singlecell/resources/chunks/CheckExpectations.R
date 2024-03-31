@@ -1,9 +1,9 @@
-CheckField <- function(seuratObj, datasetId, fieldName, errorOnNA= TRUE) {
+CheckField <- function(seuratObj, datasetId, fieldName, errorOnNA = TRUE) {
   if (!fieldName %in% names(seuratObj@meta.data)) {
     addErrorMessage(paste0(paste0('Missing ', fieldName, ' for dataset: ', datasetId)))
   }
 
-  if (any(is.na(seuratObj@meta.data[[fieldName]]))) {
+  if (errorOnNA && any(is.na(seuratObj@meta.data[[fieldName]]))) {
     addErrorMessage(paste0(paste0('NA values found for ', fieldName, ' for dataset: ', datasetId)))
   }
 }
