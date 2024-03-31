@@ -1,4 +1,4 @@
-CheckField <- function(seuratObj, datasetId, fieldName) {
+CheckField <- function(seuratObj, datasetId, fieldName, errorOnNA= TRUE) {
   if (!fieldName %in% names(seuratObj@meta.data)) {
     addErrorMessage(paste0(paste0('Missing ', fieldName, ' for dataset: ', datasetId)))
   }
@@ -47,7 +47,7 @@ for (datasetId in names(seuratObjects)) {
   }
 
   if (requireScGate) {
-    CheckField(seuratObj, datasetId, 'scGateConsensus')
+    CheckField(seuratObj, datasetId, 'scGateConsensus', errorOnNA = FALSE)
   }
 
   if (requireRiraImmune) {
