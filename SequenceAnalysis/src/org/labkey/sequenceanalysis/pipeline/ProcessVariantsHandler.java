@@ -778,6 +778,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         public void setStepComplete(int stepIdx, String inputFilePath, RecordedAction action, File scatterOutput) throws PipelineJobException
         {
+            getLogger().debug("Marking step complete with VCF: " + inputFilePath);
             _scatterOutputs.put(getKey(stepIdx, inputFilePath), scatterOutput);
             _recordedActions.add(action);
             saveState();
