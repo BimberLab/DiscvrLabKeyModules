@@ -422,6 +422,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
         {
             ctx.getLogger().info("Starting to run: " + stepCtx.getProvider().getLabel());
+            ctx.getLogger().debug("VCF: " + currentVCF);
             ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + stepCtx.getProvider().getLabel());
             stepIdx++;
 
@@ -476,6 +477,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             {
                 currentVCF = output.getVCF();
 
+                ctx.getJob().getLogger().info("output VCF: " + currentVCF.getPath());
                 ctx.getJob().getLogger().info("total variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), false, true));
                 ctx.getJob().getLogger().info("passing variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), true, false));
                 ctx.getJob().getLogger().debug("index exists: " + (new File(currentVCF.getPath() + ".tbi")).exists());
