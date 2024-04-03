@@ -40,7 +40,6 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.run.util.BgzipRunner;
-import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -400,8 +399,8 @@ public class SequenceUtil
     public static void sortROD(File input, Logger log, Integer startColumnIdx) throws IOException, PipelineJobException
     {
         boolean isCompressed = input.getPath().endsWith(".gz");
-        File sorted = new File(input.getParent(), "sorted.tmp");
-        try (PrintWriter writer = PrintWriters.getPrintWriter(sorted))
+        File tempHeader = new File(input.getParent(), "header.tmp");
+        try (PrintWriter writer = PrintWriters.getPrintWriter(tempHeader))
         {
             //copy header
             try (BufferedReader reader = IOUtil.openFileForBufferedUtf8Reading(input))
@@ -425,17 +424,24 @@ public class SequenceUtil
         //then sort/append the records
         CommandWrapper wrapper = SequencePipelineService.get().getCommandWrapper(log);
         String cat = isCompressed ? "zcat" : "cat";
-        wrapper.execute(Arrays.asList("/bin/sh", "-c", cat + " '" + input.getPath() + "' | grep -v '^#' | sort -V -k1,1" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n")), ProcessBuilder.Redirect.appendTo(sorted));
-
-        if (isCompressed)
-        {
-            sorted = bgzip(sorted, log);
-        }
+        File tempSorted = new File(input.getParent(), "sorted.tmp");
+        wrapper.execute(Arrays.asList("/bin/sh", "-c", "{ cat '" + tempHeader.getPath() + "'; " + cat + " '" + input.getPath() + "' | grep -v '^#' | sort -V -k1,1" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n") + "; } " + (isCompressed ? " | bgzip -c " : "")), ProcessBuilder.Redirect.to(tempSorted));
 
         //replace the non-sorted output
         input.delete();
-        FileUtils.moveFile(sorted, input);
-        sorted.delete();
+        FileUtils.moveFile(tempSorted, input);
+        tempSorted.delete();
+        tempHeader.delete();
+
+        for (String extension : Arrays.asList(".tbi", ".idx"))
+        {
+            File idx = new File(input.getPath() + extension);
+            if (idx.exists())
+            {
+                log.debug("Deleting index: " + idx.getPath());
+                idx.delete();
+            }
+        }
     }
 
     public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel, boolean sortAfterMerge) throws PipelineJobException

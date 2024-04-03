@@ -16,6 +16,7 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
@@ -23,14 +24,12 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
-import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -103,11 +102,7 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler<
             {
                 action.addInput(bam, "BAM File");
 
-                File bai = new File(bam.getPath() + ".bai");
-                if (!bai.exists())
-                {
-                    new BuildBamIndexWrapper(job.getLogger()).executeCommand(bam);
-                }
+                SequenceAnalysisService.get().ensureBamOrCramIdx(bam, ctx.getLogger(), false);
 
                 SamReaderFactory fact = SamReaderFactory.makeDefault();
                 try (SamReader reader = fact.open(bam))

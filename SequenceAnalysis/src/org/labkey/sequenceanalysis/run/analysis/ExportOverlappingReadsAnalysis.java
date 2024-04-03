@@ -84,7 +84,7 @@ public class ExportOverlappingReadsAnalysis extends AbstractPipelineStep impleme
             throw new PipelineJobException("Must provide a list of intervals to query");
         }
 
-        File indexFile = new File(inputBam.getPath() + ".bai");
+        File indexFile = SequenceUtil.getExpectedIndex(inputBam);
         if (!indexFile.exists())
         {
             getPipelineCtx().getLogger().error("BAM index does not exist, expected: " + indexFile.getPath());

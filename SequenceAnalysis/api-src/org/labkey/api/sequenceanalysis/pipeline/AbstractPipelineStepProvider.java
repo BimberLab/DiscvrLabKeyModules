@@ -31,7 +31,7 @@ import java.util.List;
  * Date: 6/14/2014
  * Time: 12:37 PM
  */
-abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep> implements PipelineStepProvider
+abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep> implements PipelineStepProvider<StepType>
 {
     private final String _name;
     private final String _label;
@@ -140,12 +140,11 @@ abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep
     @Override
     public Class<StepType> getStepClass()
     {
-        ParameterizedType parameterizedType = (ParameterizedType) getClass().getGenericSuperclass();
-        return (Class) parameterizedType.getActualTypeArguments()[0];
+        return (Class<StepType>) SequencePipelineService.get().findSuperClassParameterType(this);
     }
 
     @Override
-    public PipelineStepProvider<StepType> combineSteps(int existingStepIdx, PipelineStepCtx toCombine)
+    public PipelineStepProvider<StepType> combineSteps(int existingStepIdx, PipelineStepCtx<StepType> toCombine)
     {
         return null;
     }

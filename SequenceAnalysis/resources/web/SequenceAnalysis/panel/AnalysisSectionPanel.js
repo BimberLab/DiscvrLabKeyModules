@@ -36,13 +36,14 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
         var paramCfg = [];
         if (toolConfig.parameters && toolConfig.parameters.length) {
             Ext4.each(toolConfig.parameters, function (i, idx) {
+                var paramName = this.stepType + '.' + toolConfig.name + '.' + i.name;
                 var o = {
                     xtype: i.fieldXtype,
                     isToolParam: true,
                     fieldLabel: i.label,
                     helpPopup: (i.description || '') + (i.commandLineParam ? '<br>Parameter name: \'' + i.commandLineParam + '\'' : ''),
-                    name: this.stepType + '.' + toolConfig.name + '.' + i.name,
-                    value: i.defaultValue
+                    name: paramName,
+                    value: LABKEY.ActionURL.getParameter(paramName) ? LABKEY.ActionURL.getParameter(paramName) : i.defaultValue
                 };
 
                 if (i.additionalExtConfig){
@@ -569,7 +570,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
         return [];
     },
 
-    applySavedValues: function(values){
+    applySavedValues: function(values, allowUrlOverride){
         if (this.stepType){
             var tools = values[this.stepType] ? values[this.stepType].split(';') : [];
             this.setActiveTools(tools);
@@ -583,6 +584,10 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
                 var name = p.name + (stepIdx ? '.' + stepIdx : '');
                 if (Ext4.isDefined(values[name])){
                     p.setValue(values[name]);
+                }
+
+                if (allowUrlOverride && LABKEY.ActionURL.getParameter(name)) {
+                    p.setValue(LABKEY.ActionURL.getParameter(name));
                 }
             }, this);
         }

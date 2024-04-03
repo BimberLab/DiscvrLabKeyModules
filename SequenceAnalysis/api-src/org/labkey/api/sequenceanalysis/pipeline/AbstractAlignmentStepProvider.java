@@ -28,7 +28,7 @@ import java.util.List;
  * Date: 6/14/2014
  * Time: 2:44 PM
  */
-abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentStep> extends AbstractPipelineStepProvider<StepType> implements AlignmentStepProvider
+abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentStep> extends AbstractPipelineStepProvider<StepType> implements AlignmentStepProvider<StepType>
 {
     public static String ALIGNMENT_MODE_PARAM = "alignmentMode";
     public static String SUPPORT_MERGED_UNALIGNED = "supportsMergeUnaligned";

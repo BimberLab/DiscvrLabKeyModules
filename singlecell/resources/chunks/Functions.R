@@ -74,6 +74,8 @@ saveData <- function(seuratObj, datasetId) {
     print(paste0('Saving dataset: ', datasetId))
     print(seuratObj)
 
+    seuratObj <- .TestSplitLayers(seuratObj)
+
     datasetIdForFile <- makeLegalFileName(datasetId)
     fn <- paste0(outputPrefix, '.', datasetIdForFile, '.seurat.rds')
     message(paste0('Filename: ', fn))
@@ -128,6 +130,35 @@ addErrorMessage <- function(f) {
     errorMessages <<- c(errorMessages, f)
 }
 
+.MergeSplitLayers <- function(seuratObj, assayName) {
+    if (inherits(seuratObj[[assayName]], 'Assay5')) {
+        print(paste0('Joining layers: ', assayName))
+        seuratObj[[assayName]] <- SeuratObject::JoinLayers(seuratObj[[assayName]])
+        print(paste0('After join: ', paste0(SeuratObject::Layers(seuratObj[[assayName]]), collapse = ',')))
+    } else {
+        print(paste0('Not an assay5 object, not joining layers: ', assayName))
+    }
+
+    print(seuratObj)
+    return(seuratObj)
+}
+
+.TestSplitLayers <- function(seuratObj) {
+    for (assayName in Seurat::Assays(seuratObj)) {
+        if (length(suppressWarnings(SeuratObject::Layers(seuratObj, assay = assayName, search = 'counts'))) > 1) {
+            seuratObj <- .MergeSplitLayers(seuratObj, assayName)
+            next
+        }
+
+        if (length(suppressWarnings(SeuratObject::Layers(seuratObj, assay = assayName, search = 'data'))) > 1) {
+            seuratObj <- .MergeSplitLayers(seuratObj, assayName)
+            next
+        }
+    }
+
+    return(seuratObj)
+}
+
 readSeuratRDS <- function(filePath) {
     seuratObj <- readRDS(filePath)
 
@@ -137,15 +168,22 @@ readSeuratRDS <- function(filePath) {
        seuratObj <- Seurat::UpdateSeuratObject(seuratObj)
     }
 
+    seuratObj <- .TestSplitLayers(seuratObj)
+
     return(seuratObj)
 }
 
 print('Updating future.globals.maxSize')
 options(future.globals.maxSize = Inf)
 
-options('Seurat.memsafe' = TRUE)
+options('Seurat.memsafe' = TRUE, future.globals.onReference = "warning")
 
 if (Sys.getenv('SEURAT_MAX_THREADS') != '') {
     print(paste0('Setting future::plan workers to: ', Sys.getenv('SEURAT_MAX_THREADS')))
-    future::plan(strategy='multisession', workers=Sys.getenv('SEURAT_MAX_THREADS'))
+    mt <- as.integer(Sys.getenv('SEURAT_MAX_THREADS'))
+    if (is.na(mt)) {
+        stop(paste0('SEURAT_MAX_THREAD is not an integer: ', mt <- Sys.getenv('SEURAT_MAX_THREADS')))
+    }
+
+    future::plan(strategy='multisession', workers=mt)
 }

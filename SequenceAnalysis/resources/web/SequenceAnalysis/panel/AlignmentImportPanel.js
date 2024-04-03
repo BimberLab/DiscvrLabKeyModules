@@ -86,7 +86,8 @@ Ext4.define('SequenceAnalysis.panel.AlignmentImportPanel', {
                 helpPopup: 'Description for this run, such as detail about the source of the alignments (optional)',
                 itemId: 'jobDescription',
                 name: 'jobDescription',
-                allowBlank: true
+                allowBlank: true,
+                value: LABKEY.ActionURL.getParameter('jobDescription')
             },{
                 fieldLabel: 'Delete Intermediate Files',
                 helpPopup: 'Check to delete the intermediate files created by this pipeline.  In general these are not needed and it will save disk space.  These files might be useful for debugging though.',

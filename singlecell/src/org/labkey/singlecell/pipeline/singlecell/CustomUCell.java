@@ -23,7 +23,7 @@ public class CustomUCell extends AbstractRiraStep
     {
         public Provider()
         {
-            super("CustomUCell", "UCell (Custom)", "UCell/RIRA", "The seurat object will be subset based on the expression below, which is passed directly to Seurat's subset(subset = X).", Arrays.asList(
+            super("CustomUCell", "UCell (Custom)", "UCell/RIRA", "UCell scores will be calculated, based on the custom gene list below", Arrays.asList(
                     SeuratToolParameter.create("geneSets", "Gene Sets(s)", "This should contain one UCell module per line, where the module is in the format (no spaces): SetName:Gene1,Gene2,Gene3. The first token is the name given to UCell and the second is a comma-delimited list of gene names.", "sequenceanalysis-trimmingtextarea", new JSONObject(){{
                         put("allowBlank", false);
                         put("replaceAllWhitespace", true);
@@ -34,10 +34,13 @@ public class CustomUCell extends AbstractRiraStep
                     }}, null).delimiter(DELIM),
                     SeuratToolParameter.create("storeRanks", "Store Ranks", "Passed directly to UCell::AddModuleScore_UCell.", "checkbox", new JSONObject(){{
 
-                    }}, false),
+                    }}, false, null, true),
                     SeuratToolParameter.create("assayName", "Assay Name", "Passed directly to UCell::AddModuleScore_UCell.", "textfield", new JSONObject(){{
 
-                    }}, "RNA")
+                    }}, "RNA"),
+                    SeuratToolParameter.create("outputAssayName", "Output Assay Name", "If provided, the set of UCell scores will be saved in a standalone assay.", "textfield", new JSONObject(){{
+
+                    }}, null, null, true)
             ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 

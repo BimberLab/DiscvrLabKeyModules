@@ -15,6 +15,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.sequenceanalysis.run.util.MarkDuplicatesWrapper;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.util.Arrays;
@@ -78,7 +79,7 @@ public class MarkDuplicatesStep extends AbstractCommandPipelineStep<MarkDuplicat
         {
             wrapper.getLogger().debug("Adding sorted BAM as intermediate file: " + sortedBam.getPath());
             output.addIntermediateFile(sortedBam);
-            output.addIntermediateFile(new File(sortedBam.getPath() + ".bai"));
+            output.addIntermediateFile(SequenceUtil.getExpectedIndex(sortedBam));
         }
 
         //NOTE: depending on whether the BAM is sorted by the wrapper, the metrics file name will differ

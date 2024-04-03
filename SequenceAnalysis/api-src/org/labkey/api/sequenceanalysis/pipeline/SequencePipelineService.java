@@ -53,9 +53,9 @@ abstract public class SequencePipelineService
 
     abstract public void registerPipelineStepType(Class<? extends PipelineStep> clazz, String paramName);
 
-    abstract public void registerPipelineStep(PipelineStepProvider provider);
+    abstract public void registerPipelineStep(PipelineStepProvider<?> provider);
 
-    abstract public Set<PipelineStepProvider> getAllProviders();
+    abstract public Set<PipelineStepProvider<?>> getAllProviders();
 
     abstract public <StepType extends PipelineStep> Set<PipelineStepProvider<StepType>> getProviders(Class<StepType> stepType);
 
@@ -146,4 +146,6 @@ abstract public class SequencePipelineService
     abstract public TaskFileManager getTaskFileManager();
 
     abstract public Set<JobResourceSettings> getResourceSettings();
+
+    abstract public Class<?> findSuperClassParameterType(Object instance);
 }

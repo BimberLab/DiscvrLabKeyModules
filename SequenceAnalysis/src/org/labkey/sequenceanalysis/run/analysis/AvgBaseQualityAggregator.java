@@ -25,8 +25,8 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.SamLocusIterator;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -62,7 +62,7 @@ public class AvgBaseQualityAggregator
         _ref = refFasta;
         _filters = filters;
 
-        _bai = new File(_bam.getPath() + ".bai");
+        _bai = SequenceUtil.getExpectedIndex(_bam);
         if(!_bai.exists())
             throw new FileNotFoundException("Missing index for BAM, expected: " + _bai.getPath());
 

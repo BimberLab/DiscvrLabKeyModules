@@ -19,7 +19,7 @@ function beforeInsert(row, errors){
     beforeUpsert(row, errors);
 }
 
-function beforeUpdate(row, errors){
+function beforeUpdate(row, oldRow, errors){
     beforeUpsert(row, errors);
 }
 

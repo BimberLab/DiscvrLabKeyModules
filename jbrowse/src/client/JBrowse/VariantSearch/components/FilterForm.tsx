@@ -23,7 +23,7 @@ export declare type FilterFormProps = {
 }
 
 const FormControlMinWidth = styled(FormControl)(({ theme }) => ({
-        minWidth: 200,
+        width: 200,
         marginRight: theme.spacing(2)
 }))
 
@@ -59,10 +59,7 @@ const CardActionsCenteredContent = styled(CardActions)(({ theme }) => ({
     display: "flex",
     flexDirection: "column",
     justifyContent: "flex-start",
-    alignItems: "center",
-    "& > :not(:first-child)": {
-        textAlign: "center",
-    }
+    alignItems: "center"
 }))
 
 const FormScroll = styled('div')(({ theme }) => ({
@@ -218,6 +215,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                   <InputLabel id="field-label">Field</InputLabel>
                                   <Select
                                         labelId="field-label"
+                                        label = 'Field'
                                         value={filter.field}
                                         onChange={(event) =>
                                             handleFilterChange(index, "field", event.target.value)
@@ -238,6 +236,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                     <InputLabel id="operator-label">Operator</InputLabel>
                                     <Select
                                         labelId="operator-label"
+                                        label="Operator"
                                         value={filter.operator}
                                         onChange={(event) =>
                                             handleFilterChange(index, "operator", event.target.value)
@@ -265,6 +264,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                         <InputLabel id="value-select-label">Value</InputLabel>
                                         <Select
                                             labelId="value-select-label"
+                                            label="Value"
                                             id={`value-select-${index}`}
                                             value={filter.value}
                                             onChange={(event) =>
@@ -282,11 +282,13 @@ const FilterForm = (props: FilterFormProps ) => {
                                             id={`value-select-${index}`}
                                             inputId={`value-select-${index}`}
                                             aria-labelledby={`value-select-${index}`}
+                                            noOptionsMessage={() => 'Type to search...'}
                                             menuPortalTarget={document.body}
                                             menuPosition={'fixed'}
                                             isDisabled={filter.operator === "is empty" || filter.operator === "is not empty"}
                                             menuShouldBlockScroll={true}
-                                            styles={{menuPortal: base => ({...base, zIndex: 9999})}}
+                                            // See here: https://stackoverflow.com/questions/77625507/my-react-project-with-react-18-2-0-version-and-react-select-5-4-0-v
+                                            styles={{ menuPortal: (base: any) => ({ ...base, zIndex: 9999 }) }}
                                             isMulti={fieldTypeInfo.find(obj => obj.name === filter.field)?.isMultiValued}
                                             defaultOptions={fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length < 20}
                                             loadOptions={(inputValue, callback) => {
@@ -307,6 +309,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                         <InputLabel id="value-select-label">Value</InputLabel>
                                         <Select
                                             labelId="value-select-label"
+                                            label="Value"
                                             id={`value-select-${index}`}
                                             value={filter.value}
                                             disabled={filter.operator === "is empty" || filter.operator === "is not empty"}
@@ -326,6 +329,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                         label="Value"
                                         id={`value-select-${index}`}
                                         sx={ highlightedInputs[index]?.value ? highlightedSx : null }
+                                        variant="outlined"
                                         value={filter.value}
                                         disabled={filter.operator === "is empty" || filter.operator === "is not empty"}
                                         onChange={(event) =>

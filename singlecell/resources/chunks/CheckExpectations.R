@@ -1,3 +1,13 @@
+CheckField <- function(seuratObj, datasetId, fieldName, errorOnNA = TRUE) {
+  if (!fieldName %in% names(seuratObj@meta.data)) {
+    addErrorMessage(paste0(paste0('Missing ', fieldName, ' for dataset: ', datasetId)))
+  }
+
+  if (errorOnNA && any(is.na(seuratObj@meta.data[[fieldName]]))) {
+    addErrorMessage(paste0(paste0('NA values found for ', fieldName, ' for dataset: ', datasetId)))
+  }
+}
+
 for (datasetId in names(seuratObjects)) {
   printName(datasetId)
   seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
@@ -28,16 +38,20 @@ for (datasetId in names(seuratObjects)) {
     }
   }
 
-  if (requireSaturation && !'Saturation.RNA' %in% names(seuratObj@meta.data)) {
-    addErrorMessage(paste0('Missing per-cell RNA saturation data for dataset: ', datasetId))
+  if (requireSaturation) {
+    CheckField(seuratObj, datasetId, 'Saturation.RNA')
   }
 
-  if (requireSingleR && !'SingleRConsensus' %in% names(seuratObj@meta.data)) {
-    addErrorMessage(paste0('Missing SingleRConsensus label for dataset: ', datasetId))
+  if (requireSingleR) {
+    CheckField(seuratObj, datasetId, 'SingleRConsensus')
   }
 
-  if (requireScGate && !'scGateConsensus' %in% names(seuratObj@meta.data)) {
-    addErrorMessage(paste0('Missing scGateConsensus label for dataset: ', datasetId))
+  if (requireScGate) {
+    CheckField(seuratObj, datasetId, 'scGateConsensus', errorOnNA = FALSE)
+  }
+
+  if (requireRiraImmune) {
+    CheckField(seuratObj, datasetId, 'RIRA_Immune_v2.cellclass')
   }
 
   if (length(errorMessages) > 0) {

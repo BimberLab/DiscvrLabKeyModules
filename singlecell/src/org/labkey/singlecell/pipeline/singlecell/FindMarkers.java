@@ -32,7 +32,7 @@ public class FindMarkers extends AbstractCellMembraneStep
                         put("multiSelect", true);
                         put("allowBlank", false);
                         put("storeValues", "wilcox;bimod;roc;t;negbinom;poisson;LR;MAST;DESeq2");
-                        put("initialValues", "wilcox;MAST");
+                        put("initialValues", "wilcox");
                         put("delimiter", ";");
                         put("joinReturnValue", true);
                     }}, null, null, false, true),
@@ -48,7 +48,7 @@ public class FindMarkers extends AbstractCellMembraneStep
                     }}, 0.1),
                     SeuratToolParameter.create("minDiffPct", "Min Diff Pct", "Only test genes that show a minimum difference in the fraction of detection between the two groups", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, null, "minDiffPct", false),
+                    }}, 0.1, "minDiffPct", false),
                     getSeuratThreadsParam()
                 ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }

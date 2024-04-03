@@ -383,6 +383,13 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
     protected void addParameterVariables(SeuratToolParameter pd, List<String> body)
     {
         String val = StringUtils.trimToNull(pd.extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx()));
+
+        // Note: use this only if there is no value provided at all in JSON
+        if (pd.getDefaultValue() != null && !pd.hasValueInJson(getPipelineCtx().getJob(), getProvider(), getStepIdx()))
+        {
+            val = String.valueOf(pd.getDefaultValue());
+        }
+
         if (val == null)
         {
             body.add((pd.getVariableName() + " <- NULL"));

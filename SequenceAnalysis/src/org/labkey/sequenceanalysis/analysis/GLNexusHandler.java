@@ -1,5 +1,9 @@
 package org.labkey.sequenceanalysis.analysis;
 
+import com.google.common.io.Files;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -8,10 +12,12 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.BcftoolsRunner;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -47,7 +53,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Run GLNexus", "This will run GLNexus on the selected gVCFs.", null, Arrays.asList(
                 ToolParameterDescriptor.create("binVersion", "GLNexus Version", "The version of GLNexus to run, which is passed to their docker container", "textfield", new JSONObject(){{
                     put("allowBlank", false);
-                }}, "v1.2.7"),
+                }}, "v1.4.3"),
                 ToolParameterDescriptor.create("configType", "Config Type", "This is passed to the --config argument of GLNexus.", "ldk-simplecombo", new JSONObject()
                 {{
                     put("multiSelect", false);
@@ -159,9 +165,47 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 throw new PipelineJobException("Missing configType");
             }
 
-            File outputVcf = new File(ctx.getOutputDir(), basename + ".vcf.gz");
+            // NOTE: due to strange bad_alloc errors, iterate the genome contig-by-contig for now:
+            List<File> vcfs = new ArrayList<>();
+            ReferenceGenome rg = ctx.getSequenceSupport().getCachedGenome(genomeId);
+            SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(rg.getSequenceDictionary().toPath());
+            for (SAMSequenceRecord r : dict.getSequences())
+            {
+                File contigVcf = new File(ctx.getOutputDir(), basename + "." + r.getSequenceName() + ".vcf.gz");
+                File contigVcfIdx = new File(contigVcf.getPath() + ".tbi");
+                File doneFile = new File(contigVcf.getPath() + ".done");
+                ctx.getFileManager().addIntermediateFile(contigVcf);
+                ctx.getFileManager().addIntermediateFile(contigVcfIdx);
+                ctx.getFileManager().addIntermediateFile(doneFile);
 
-            new GLNexusWrapper(ctx.getLogger()).execute(inputVcfs, outputVcf, ctx.getFileManager(), binVersion, configType);
+                if (doneFile.exists())
+                {
+                    if (!contigVcfIdx.exists())
+                    {
+                        throw new PipelineJobException("Missing index: " + contigVcf.getPath());
+                    }
+
+                    vcfs.add(contigVcf);
+                }
+                else
+                {
+                    ctx.getLogger().debug("Running GLNexus for contig: " + r.getSequenceName());
+                    ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Processing: " + r.getSequenceName());
+                    new GLNexusWrapper(ctx.getLogger()).execute(inputVcfs, contigVcf, ctx.getFileManager(), binVersion, configType, r);
+                    vcfs.add(contigVcf);
+                    try
+                    {
+                        Files.touch(doneFile);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+            }
+
+            File outputVcf = new File(ctx.getOutputDir(), basename + ".vcf.gz");
+            SequenceUtil.combineVcfs(vcfs, rg, outputVcf, ctx.getLogger(), true, null, true);
 
             ctx.getLogger().debug("adding sequence output: " + outputVcf.getPath());
             SequenceOutputFile so1 = new SequenceOutputFile();
@@ -217,7 +261,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
             }
         }
 
-        public void execute(List<File> inputGvcfs, File outputVcf, PipelineOutputTracker tracker, String binVersion, String configType) throws PipelineJobException
+        public void execute(List<File> inputGvcfs, File outputVcf, PipelineOutputTracker tracker, String binVersion, String configType, SAMSequenceRecord rec) throws PipelineJobException
         {
             File workDir = outputVcf.getParentFile();
             tracker.addIntermediateFile(outputVcf);
@@ -233,17 +277,21 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
             File localBashScript = new File(workDir, "docker.sh");
             tracker.addIntermediateFile(localBashScript);
 
-            try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
+            File bed = new File(workDir, "contig.bed");
+            tracker.addIntermediateFile(bed);
+
+            try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript);PrintWriter bedWriter = PrintWriters.getPrintWriter(bed))
             {
                 writer.println("#!/bin/bash");
                 writer.println("set -x");
                 writer.println("WD=`pwd`");
                 writer.println("HOME=`echo ~/`");
                 writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-                writer.println("sudo $DOCKER pull quay.io/mlin/glnexus:" + binVersion);
+                writer.println("sudo $DOCKER pull ghcr.io/dnanexus-rnd/glnexus:" + binVersion);
                 writer.println("sudo $DOCKER run --rm=true \\");
                 writer.println("\t-v \"${WD}:/work\" \\");
                 writer.println("\t-v \"${HOME}:/homeDir\" \\");
+                writer.println("\t -w /work \\");
                 if (!StringUtils.isEmpty(System.getenv("TMPDIR")))
                 {
                     writer.println("\t-v \"${TMPDIR}:/tmp\" \\");
@@ -256,10 +304,10 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 {
                     writer.println("\t--memory='" + maxRam + "g' \\");
                 }
-                writer.println("\tquay.io/mlin/glnexus:" + binVersion + " \\");
+                writer.println("\tghcr.io/dnanexus-rnd/glnexus:" + binVersion + " \\");
                 writer.println("\tglnexus_cli \\");
                 writer.println("\t--config " + configType + " \\");
-
+                writer.println("\t--bed /work/" + bed.getName() + " \\");
                 writer.println("\t--trim-uncalled-alleles \\");
 
                 if (maxRam != null)
@@ -283,10 +331,15 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
 
                 // Command will fail if this exists:
                 File dbDir = new File (outputVcf.getParentFile(), "GLnexus.DB");
+                tracker.addIntermediateFile(dbDir);
                 if (dbDir.exists())
                 {
+                    getLogger().debug("Deleting pre-existing GLnexus.DB dir");
                     FileUtils.deleteDirectory(dbDir);
                 }
+
+                // Create a single-contig BED file:
+                bedWriter.println(rec.getSequenceName() + "\t0\t" + rec.getSequenceLength());
             }
             catch (IOException e)
             {
@@ -301,10 +354,13 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 throw new PipelineJobException("File not found: " + outputVcf.getPath());
             }
 
-            File idxFile = new File(outputVcf.getPath() + ".tbi");
-            if (!idxFile.exists())
+            try
             {
-                throw new PipelineJobException("Missing index: " + idxFile.getPath());
+                SequenceAnalysisService.get().ensureVcfIndex(outputVcf, getLogger(), true);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
             }
         }
     }
