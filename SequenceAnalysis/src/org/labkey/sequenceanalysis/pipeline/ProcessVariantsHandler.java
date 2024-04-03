@@ -435,7 +435,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
             try
             {
-                SequenceAnalysisService.get().ensureVcfIndex(input, ctx.getLogger());
+                SequenceAnalysisService.get().ensureVcfIndex(currentVCF, ctx.getLogger());
             }
             catch (IOException e)
             {
