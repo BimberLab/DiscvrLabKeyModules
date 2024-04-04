@@ -31,6 +31,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.util.Pair;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -236,10 +237,10 @@ public class BamHaplotyper
     {
         _log.info("processing bam: " + bam.getName());
 
-        File index = new File(bam.getPath() + ".bai");
+        File index = SequenceUtil.getExpectedIndex(bam);
         if (!index.exists())
         {
-            throw new IOException("No index found for BAM: " + bam.getPath());
+            throw new IOException("No index found for BAM/CRAM: " + bam.getPath());
         }
 
         List<Pair<Character[][], Integer>> ret = new ArrayList<>();

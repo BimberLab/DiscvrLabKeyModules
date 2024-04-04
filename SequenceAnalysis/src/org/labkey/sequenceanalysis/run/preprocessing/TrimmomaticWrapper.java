@@ -12,7 +12,6 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
-import org.labkey.api.sequenceanalysis.pipeline.PipelineStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PreprocessingStep;
@@ -61,7 +60,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         super(logger);
     }
 
-    abstract private static class AbstractTrimmomaticProvider<StepType extends PipelineStep> extends AbstractPipelineStepProvider<StepType>
+    abstract private static class AbstractTrimmomaticProvider extends AbstractPipelineStepProvider<PreprocessingStep>
     {
         protected String _stepName;
 
@@ -93,7 +92,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public PipelineStepProvider<StepType> combineSteps(int existingStepIdx, PipelineStepCtx toCombine)
+        public PipelineStepProvider<PreprocessingStep> combineSteps(int existingStepIdx, PipelineStepCtx<PreprocessingStep> toCombine)
         {
             if (toCombine.getProvider() instanceof AbstractTrimmomaticProvider)
             {
@@ -115,7 +114,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
     }
 
     //NOTE: for internal use only, this should not be registered
-    public static class MultiStepTrimmomaticProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
+    public static class MultiStepTrimmomaticProvider extends AbstractTrimmomaticProvider
     {
         private final List<Pair<AbstractTrimmomaticProvider, Integer>> _providers = new ArrayList<>();
         public static final String NAME = "Trimmomatic";
@@ -167,7 +166,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
 
         @Override
-        public PipelineStepProvider combineSteps(int existingStepIdx, PipelineStepCtx toCombine)
+        public PipelineStepProvider<PreprocessingStep> combineSteps(int existingStepIdx, PipelineStepCtx<PreprocessingStep> toCombine)
         {
             if (toCombine.getProvider() instanceof AbstractTrimmomaticProvider)
             {
@@ -182,7 +181,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
 
     public static class TrimmomaticPipelineStep extends AbstractCommandPipelineStep<TrimmomaticWrapper> implements PreprocessingStep
     {
-        public TrimmomaticPipelineStep(PipelineStepProvider provider, PipelineContext ctx)
+        public TrimmomaticPipelineStep(PipelineStepProvider<?> provider, PipelineContext ctx)
         {
             super(provider, ctx, new TrimmomaticWrapper(ctx.getLogger()));
         }
@@ -324,7 +323,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         _threshold = threshold;
     }
 
-    public static class ReadLengthFilterProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
+    public static class ReadLengthFilterProvider extends AbstractTrimmomaticProvider
     {
         public ReadLengthFilterProvider()
         {
@@ -335,7 +334,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
     }
 
-    public static class AdapterTrimmingProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
+    public static class AdapterTrimmingProvider extends AbstractTrimmomaticProvider
     {
         public AdapterTrimmingProvider()
         {
@@ -451,7 +450,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
     }
 
-    public static class SlidingWindowTrimmingProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
+    public static class SlidingWindowTrimmingProvider extends AbstractTrimmomaticProvider
     {
         public SlidingWindowTrimmingProvider()
         {
@@ -478,7 +477,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }}, 0.75);
     }
 
-    public static class MaxInfoTrimmingProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
+    public static class MaxInfoTrimmingProvider extends AbstractTrimmomaticProvider
     {
         public MaxInfoTrimmingProvider()
         {
@@ -497,7 +496,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
     }
 
-    public static class AvgQualProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
+    public static class AvgQualProvider extends AbstractTrimmomaticProvider
     {
         public AvgQualProvider()
         {
@@ -511,7 +510,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
     }
 
-    public static class CropReadsProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
+    public static class CropReadsProvider extends AbstractTrimmomaticProvider
     {
         public CropReadsProvider()
         {
@@ -525,7 +524,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
     }
 
-    public static class LeadingTrimProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
+    public static class LeadingTrimProvider extends AbstractTrimmomaticProvider
     {
         public LeadingTrimProvider()
         {
@@ -539,7 +538,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
     }
 
-    public static class TrailingTrimProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
+    public static class TrailingTrimProvider extends AbstractTrimmomaticProvider
     {
         public TrailingTrimProvider()
         {
@@ -553,7 +552,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         }
     }
 
-    public static class HeadCropReadsProvider extends AbstractTrimmomaticProvider<PreprocessingStep>
+    public static class HeadCropReadsProvider extends AbstractTrimmomaticProvider
     {
         public HeadCropReadsProvider()
         {
@@ -722,8 +721,8 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                         }
                         String name = nameBuilder.toString();
 
-                        Integer survivingLength = Integer.parseInt(cells[cells.length - 4]);
-                        Integer basesTrimmed = Integer.parseInt(cells[cells.length - 1]);
+                        int survivingLength = Integer.parseInt(cells[cells.length - 4]);
+                        int basesTrimmed = Integer.parseInt(cells[cells.length - 1]);
 
                         totalInspected++;
                         if (survivingLength == 0)

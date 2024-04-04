@@ -17,6 +17,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.Container;
+import org.labkey.api.laboratory.DemographicsProvider;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -241,7 +242,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(job), outputDir);
 
         List<PipelineStepCtx<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(job, VariantProcessingStep.class);
-        boolean requiresPedigree = false;
+        Set<DemographicsProvider> demographicsProviders = new HashSet<>();
         VariantProcessingJob vj = getVariantPipelineJob(job);
         boolean useScatterGather = vj != null && vj.isScatterJob();
         Set<String> stepsNotScatterGather = new HashSet<>();
@@ -258,9 +259,9 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 }
             }
 
-            if (stepCtx.getProvider() instanceof VariantProcessingStep.RequiresPedigree)
+            if (stepCtx.getProvider() instanceof VariantProcessingStep.RequiresPedigree rp)
             {
-                requiresPedigree = true;
+                demographicsProviders.add(rp.getDemographicsProvider(stepCtx.getProvider(), job, stepCtx.getStepIdx()));
             }
 
             if (useScatterGather)
@@ -282,7 +283,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             throw new PipelineJobException("The follow steps do not support scatter/gather: " + StringUtils.join(stepsNotScatterGather, ", "));
         }
 
-        if (requiresPedigree)
+        if (!demographicsProviders.isEmpty())
         {
             job.getLogger().info("writing pedigree files");
             Set<String> sampleNames = new CaseInsensitiveHashSet();
@@ -291,46 +292,50 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 sampleNames.addAll(getSamples(so.getFile()));
             }
 
-            job.getLogger().info("total samples: " + sampleNames.size());
-            job.getLogger().debug(StringUtils.join(sampleNames, ";"));
-            List<PedigreeRecord> pedigreeRecords = SequenceAnalysisService.get().generatePedigree(sampleNames, job.getContainer(), job.getUser());
-            job.getLogger().info("total pedigree records: " + pedigreeRecords.size());
-
-            File pedFile = getPedigreeFile(outputDir);
-            Set<String> sampleNamesCopy = new HashSet<>(sampleNames);
-            Map<String, Integer> parentMap = new TreeMap<>();
-            try (PrintWriter gatkWriter = PrintWriters.getPrintWriter(pedFile))
+            for (DemographicsProvider d : demographicsProviders)
             {
-                for (PedigreeRecord pd : pedigreeRecords)
+                job.getLogger().info("Processing pedigree source: " + d.getLabel());
+                job.getLogger().info("total samples: " + sampleNames.size());
+                job.getLogger().debug(StringUtils.join(sampleNames, ";"));
+                List<PedigreeRecord> pedigreeRecords = SequenceAnalysisService.get().generatePedigree(sampleNames, job.getContainer(), job.getUser(), d);
+                job.getLogger().info("total pedigree records: " + pedigreeRecords.size());
+
+                File pedFile = getPedigreeFile(outputDir, d.getLabel());
+                Set<String> sampleNamesCopy = new HashSet<>(sampleNames);
+                Map<String, Integer> parentMap = new TreeMap<>();
+                try (PrintWriter gatkWriter = PrintWriters.getPrintWriter(pedFile))
                 {
-                    List<String> vals = Arrays.asList(pd.getSubjectName(), (StringUtils.isEmpty(pd.getFather()) ? "0" : pd.getFather()), (StringUtils.isEmpty(pd.getMother()) ? "0" : pd.getMother()), ("m".equals(pd.getGender()) ? "1" : "f".equals(pd.getGender()) ? "2" : "0"), "0");
-                    gatkWriter.write("FAM01 " + StringUtils.join(vals, " ") + '\n');
-                    sampleNamesCopy.remove(pd.getSubjectName());
+                    for (PedigreeRecord pd : pedigreeRecords)
+                    {
+                        List<String> vals = Arrays.asList(pd.getSubjectName(), (StringUtils.isEmpty(pd.getFather()) ? "0" : pd.getFather()), (StringUtils.isEmpty(pd.getMother()) ? "0" : pd.getMother()), ("m".equals(pd.getGender()) ? "1" : "f".equals(pd.getGender()) ? "2" : "0"), "0");
+                        gatkWriter.write("FAM01 " + StringUtils.join(vals, " ") + '\n');
+                        sampleNamesCopy.remove(pd.getSubjectName());
 
-                    String parentKey = pd.getTotalParents(false) + "/" + pd.getTotalParents(true);
-                    if (!parentMap.containsKey(parentKey))
-                        parentMap.put(parentKey, 0);
+                        String parentKey = pd.getTotalParents(false) + "/" + pd.getTotalParents(true);
+                        if (!parentMap.containsKey(parentKey))
+                            parentMap.put(parentKey, 0);
 
-                    parentMap.put(parentKey, parentMap.get(parentKey) + 1);
+                        parentMap.put(parentKey, parentMap.get(parentKey) + 1);
+                    }
                 }
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-
-            if (!sampleNamesCopy.isEmpty())
-            {
-                job.getLogger().warn("the following " + sampleNamesCopy.size() + " animals do not have pedigree records: ");
-                for (String sn : sampleNamesCopy)
+                catch (IOException e)
                 {
-                    job.getLogger().warn(sn);
+                    throw new PipelineJobException(e);
                 }
-            }
 
-            for (String key : parentMap.keySet())
-            {
-                job.getLogger().info("records with " + key + " (known / total including placeholder) parents: " + parentMap.get(key));
+                if (!sampleNamesCopy.isEmpty())
+                {
+                    job.getLogger().warn("the following " + sampleNamesCopy.size() + " animals do not have pedigree records: ");
+                    for (String sn : sampleNamesCopy)
+                    {
+                        job.getLogger().warn(sn);
+                    }
+                }
+
+                for (String key : parentMap.keySet())
+                {
+                    job.getLogger().info("records with " + key + " (known / total including placeholder) parents: " + parentMap.get(key));
+                }
             }
         }
         else
@@ -339,9 +344,10 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         }
     }
 
-    public static File getPedigreeFile(File outputDir)
+    public static File getPedigreeFile(File outputDir, String providerName)
     {
-        return new File(outputDir, "gatk.ped");
+        providerName = FileUtil.makeLegalName(providerName);
+        return new File(outputDir, providerName + ".ped");
     }
 
     public static List<Interval> getIntervals(JobContext ctx)
@@ -363,15 +369,6 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
     public static File processVCF(File input, Integer libraryId, JobContext ctx, Resumer resumer, boolean subsetToIntervals) throws PipelineJobException
     {
-        try
-        {
-            SequenceAnalysisService.get().ensureVcfIndex(input, ctx.getLogger());
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-
         File currentVCF = input;
 
         ctx.getJob().getLogger().info("***Starting processing of file: " + input.getName());
@@ -403,6 +400,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             }
             else
             {
+                try
+                {
+                    SequenceAnalysisService.get().ensureVcfIndex(input, ctx.getLogger());
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
                 OutputVariantsStartingInIntervalsStep.Wrapper wrapper = new OutputVariantsStartingInIntervalsStep.Wrapper(ctx.getLogger());
                 wrapper.execute(input, outputFile, getIntervals(ctx));
             }
@@ -416,6 +422,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
         {
             ctx.getLogger().info("Starting to run: " + stepCtx.getProvider().getLabel());
+            ctx.getLogger().debug("VCF: " + currentVCF);
             ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + stepCtx.getProvider().getLabel());
             stepIdx++;
 
@@ -424,6 +431,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 ctx.getLogger().info("resuming from saved state");
                 currentVCF = resumer.getVcfFromStep(stepIdx, input.getPath());
                 continue;
+            }
+
+            try
+            {
+                SequenceAnalysisService.get().ensureVcfIndex(currentVCF, ctx.getLogger());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
             }
 
             RecordedAction action = new RecordedAction(stepCtx.getProvider().getLabel());
@@ -461,6 +477,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             {
                 currentVCF = output.getVCF();
 
+                ctx.getJob().getLogger().info("output VCF: " + currentVCF.getPath());
                 ctx.getJob().getLogger().info("total variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), false, true));
                 ctx.getJob().getLogger().info("passing variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), true, false));
                 ctx.getJob().getLogger().debug("index exists: " + (new File(currentVCF.getPath() + ".tbi")).exists());
@@ -761,6 +778,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         public void setStepComplete(int stepIdx, String inputFilePath, RecordedAction action, File scatterOutput) throws PipelineJobException
         {
+            getLogger().debug("Marking step complete with VCF: " + inputFilePath);
             _scatterOutputs.put(getKey(stepIdx, inputFilePath), scatterOutput);
             _recordedActions.add(action);
             saveState();

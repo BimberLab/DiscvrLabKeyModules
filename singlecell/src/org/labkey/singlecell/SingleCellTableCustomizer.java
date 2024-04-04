@@ -4,6 +4,7 @@ import org.labkey.api.data.AbstractTableInfo;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.gwt.client.FacetingBehaviorType;
 import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.table.AbstractTableCustomizer;
 import org.labkey.api.query.DetailsURL;
@@ -201,11 +202,22 @@ public class SingleCellTableCustomizer extends AbstractTableCustomizer
                     "END)");
             ExprColumn newCol = new ExprColumn(ti, totalCells, sql, JdbcType.INTEGER, ti.getColumn("rowid"));
             newCol.setLabel("cDNA/Total Cells");
-            UserSchema us = QueryService.get().getUserSchema(ti.getUserSchema().getUser(), (ti.getUserSchema().getContainer().isWorkbook() ? ti.getUserSchema().getContainer().getParent() : ti.getUserSchema().getContainer()), SingleCellSchema.NAME);
-            newCol.setFk(QueryForeignKey.from(us, ti.getContainerFilter())
-                    .table(SingleCellSchema.TABLE_CDNAS)
-                    .key("rowid")
-                    .display("rowid"));
+            ti.addColumn(newCol);
+        }
+
+        String assayTypes = "assayTypes";
+        if (ti.getColumn(assayTypes) == null)
+        {
+            SQLFragment sql = new SQLFragment("(SELECT ").append(
+                    ti.getSqlDialect().getGroupConcat(new SQLFragment("sm.assaytype"), true, true, new SQLFragment("','"))).append(" as expr " +
+                    " FROM " + SingleCellSchema.NAME + "." + SingleCellSchema.TABLE_CDNAS + " c " +
+                    " JOIN " + SingleCellSchema.NAME + "." + SingleCellSchema.TABLE_SORTS + " ss ON (c.sortid = ss.rowid) " +
+                    " JOIN " + SingleCellSchema.NAME + "." + SingleCellSchema.TABLE_SAMPLES + " sm ON (ss.sampleid = sm.rowid) " +
+                    " WHERE c.readsetid = " + ExprColumn.STR_TABLE_ALIAS + ".rowid OR c.tcrreadsetid = " + ExprColumn.STR_TABLE_ALIAS + ".rowid)");
+
+            ExprColumn newCol = new ExprColumn(ti, assayTypes, sql, JdbcType.VARCHAR, ti.getColumn("rowid"));
+            newCol.setLabel("cDNA/Assay Types");
+            newCol.setFacetingBehaviorType(FacetingBehaviorType.ALWAYS_OFF);
             ti.addColumn(newCol);
         }
     }

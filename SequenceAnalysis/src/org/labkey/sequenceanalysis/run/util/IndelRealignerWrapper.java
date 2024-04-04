@@ -3,26 +3,17 @@ package org.labkey.sequenceanalysis.run.util;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.module.Module;
-import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.pipeline.PipelineJobService;
-import org.labkey.api.resource.FileResource;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractGatkWrapper;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.Path;
-import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -179,7 +170,7 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
                 if (outputBam == null)
                 {
                     tempFiles.add(inputBam);
-                    File idx = new File(inputBam.getPath() + ".bai");
+                    File idx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(inputBam);
                     if (idx.exists())
                     {
                         tempFiles.add(idx);
@@ -189,7 +180,7 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
                 {
                     tempFiles.add(sorted);
 
-                    File idx = new File(sorted.getPath() + ".bai");
+                    File idx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(sorted);
                     if (idx.exists())
                     {
                         tempFiles.add(idx);
@@ -210,7 +201,7 @@ public class IndelRealignerWrapper extends AbstractGatkWrapper
 
         ensureDictionary(referenceFasta);
 
-        File expectedIndex = new File(inputBam.getPath() + ".bai");
+        File expectedIndex = SequenceAnalysisService.get().getExpectedBamOrCramIndex(inputBam);
         if (expectedIndex.exists() && expectedIndex.lastModified() < inputBam.lastModified())
         {
             getLogger().info("deleting out of date index: " + expectedIndex.getPath());

@@ -1,7 +1,6 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -14,17 +13,12 @@ import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
-import org.labkey.api.sequenceanalysis.pipeline.ProcessUtils;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SamtoolsRunner;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.StringUtilsLabKey;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -43,7 +37,7 @@ public class BWAMemWrapper extends BWAWrapper
 
     public static class BWAMemAlignmentStep extends BWAAlignmentStep<BWAMemWrapper>
     {
-        public BWAMemAlignmentStep(AlignmentStepProvider provider, PipelineContext ctx)
+        public BWAMemAlignmentStep(AlignmentStepProvider<?> provider, PipelineContext ctx)
         {
             super(provider, ctx, new BWAMemWrapper(ctx.getLogger()));
         }
@@ -68,7 +62,7 @@ public class BWAMemWrapper extends BWAWrapper
             rg.add("PL:" + (rs.getPlatform() == null ? "ILLUMINA" : rs.getPlatform()));
             rg.add("PU:" + (platformUnit == null ? rs.getReadsetId().toString() : platformUnit));
             rg.add("SM:" + rs.getName().replaceAll(" ", "_"));
-            extraArgs.add(StringUtils.join(rg, "\\t"));
+            extraArgs.add("'" + StringUtils.join(rg, "\\t") + "'");
 
             getWrapper().performMemAlignment(getPipelineCtx().getJob(), output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename, extraArgs);
         }
@@ -102,93 +96,48 @@ public class BWAMemWrapper extends BWAWrapper
     {
         setOutputDir(outputDirectory);
 
-        getLogger().info("Running BWA-Mem (Piped)");
+        getLogger().info("Running BWA-Mem");
         getLogger().debug("will write BAM to: " + outputDirectory);
 
-        List<String> args = new ArrayList<>();
-        args.add(getExe().getPath());
-        args.add("mem");
-        args.add("-v");
-        args.add("1");
+        List<String> bwaArgs = new ArrayList<>();
+        bwaArgs.add(getExe().getPath());
+        bwaArgs.add("mem");
+        bwaArgs.add("-v");
+        bwaArgs.add("1");
         if (additionalArgs != null)
-            args.addAll(additionalArgs);
-        appendThreads(job, args);
+        {
+            bwaArgs.addAll(additionalArgs);
+        }
+        appendThreads(job, bwaArgs);
 
-        args.add(new File(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
-        args.add(inputFastq1.getPath());
+        bwaArgs.add("'" + new File(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath() + "'");
+        bwaArgs.add("'" + inputFastq1.getPath() + "'");
 
         if (inputFastq2 != null)
         {
-            args.add(inputFastq2.getPath());
+            bwaArgs.add("'" + inputFastq2.getPath() + "'");
         }
 
-        try
+        //run BWA and pipe directly to samtools to make BAM
+        File bam = new File(outputDirectory, basename + ".bam");
+        output.addCommandExecuted(StringUtils.join(bwaArgs, " "));
+
+        SamtoolsRunner sr = new SamtoolsRunner(getLogger());
+        List<String> samtoolsArgs = Arrays.asList(sr.getSamtoolsPath().getPath(), "view", "-b", "-h", "-S", "-T", "'" + referenceGenome.getWorkingFastaFile().getPath() + "'", "-o", "'" + bam.getPath() + "'", "-");
+        output.addCommandExecuted(StringUtils.join(samtoolsArgs, " "));
+
+        List<String> bashArgs = new ArrayList<>();
+        bashArgs.add("/bin/bash");
+        bashArgs.add("-c");
+        bashArgs.add(StringUtils.join(bwaArgs, " ") + " | " + StringUtils.join(samtoolsArgs, " "));
+
+        execute(bashArgs);
+
+        if (!bam.exists())
         {
-            //run BWA and pipe directly to samtools to make BAM
-            File bam = new File(outputDirectory, basename + ".bam");
-
-            output.addCommandExecuted(StringUtils.join(args, " "));
-            ProcessBuilder bwaProcessBuilder = getProcessBuilder(args);
-            getLogger().info(StringUtils.join(args, " "));
-
-            SamtoolsRunner sr = new SamtoolsRunner(getLogger());
-            List<String> samtoolsArgs = Arrays.asList(sr.getSamtoolsPath().getPath(), "view", "-b", "-h", "-S", "-T", referenceGenome.getWorkingFastaFile().getPath(), "-o", bam.getPath(), "-");
-            output.addCommandExecuted(StringUtils.join(samtoolsArgs, " "));
-            ProcessBuilder samtoolsProcessBuilder = sr.getProcessBuilder(samtoolsArgs);
-            samtoolsProcessBuilder.redirectErrorStream(true);
-            getLogger().info(StringUtils.join(samtoolsArgs, " "));
-
-            Process bwaProcess = null;
-            Process samtoolsProcess = null;
-            try
-            {
-                samtoolsProcess = samtoolsProcessBuilder.start();
-                bwaProcess = bwaProcessBuilder.start();
-                new ProcessUtils.ProcessReader(getLogger(), true, true).readProcess(bwaProcess); //read STDERR in separate thread
-                new ProcessUtils.StreamRedirector(getLogger()).redirectStreams(bwaProcess, samtoolsProcess);
-
-                try (BufferedReader procReader = new BufferedReader(new InputStreamReader(samtoolsProcess.getInputStream(), StringUtilsLabKey.DEFAULT_CHARSET)))
-                {
-                    String line;
-                    while ((line = procReader.readLine()) != null)
-                    {
-                        getLogger().log(Level.DEBUG, "\t" + line);
-                    }
-                }
-
-                int lastReturnCode = samtoolsProcess.waitFor();
-                if (lastReturnCode != 0)
-                {
-                    throw new PipelineJobException("process exited with non-zero value: " + lastReturnCode);
-                }
-            }
-            catch (InterruptedException e)
-            {
-                throw new PipelineJobException(e);
-            }
-            finally
-            {
-                if (bwaProcess != null)
-                {
-                    bwaProcess.destroy();
-                }
-
-                if (samtoolsProcess != null)
-                {
-                    samtoolsProcess.destroy();
-                }
-            }
-
-            if (!bam.exists())
-            {
-                throw new PipelineJobException("Unable to find output file: " + bam.getPath());
-            }
-
-            output.addOutput(bam, AlignmentOutputImpl.BAM_ROLE);
+            throw new PipelineJobException("Unable to find output file: " + bam.getPath());
         }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
+
+        output.addOutput(bam, AlignmentOutputImpl.BAM_ROLE);
     }
 }

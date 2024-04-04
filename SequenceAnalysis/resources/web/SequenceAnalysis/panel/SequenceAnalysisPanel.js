@@ -300,7 +300,8 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 height: 100,
                 helpPopup: 'Description for this analysis (optional)',
                 name: 'jobDescription',
-                allowBlank:true
+                allowBlank: true,
+                value: LABKEY.ActionURL.getParameter('jobDescription')
             },{
                 fieldLabel: 'Delete Intermediate Files',
                 helpPopup: 'Check to delete the intermediate files created by this pipeline.  In general these are not needed and it will save disk space.  These files might be useful for debugging though.',

@@ -91,7 +91,7 @@ public class RunConga extends AbstractRDiscvrStep
                 throw new PipelineJobException("Unable to find HTML file: " + expectedFile.getPath());
             }
 
-            output.addSequenceOutput(expectedFile, "CoNGA Report: " + inputObjects.get(0).getDatasetName() + (sn == null ? "" : ", subset: " + sn), "CoNGA Report", inputObjects.get(0).getReadsetId(), ctx.getSequenceSupport().getCachedGenomes().iterator().next().getGenomeId(), null, null);
+            output.addSequenceOutput(expectedFile, "CoNGA Report: " + inputObjects.get(0).getDatasetName() + (sn == null ? "" : ", subset: " + sn), "CoNGA Report", inputObjects.get(0).getReadsetId(), null, ctx.getSequenceSupport().getCachedGenomes().iterator().next().getGenomeId(), null);
         }
 
         //TODO: handle subset reports?

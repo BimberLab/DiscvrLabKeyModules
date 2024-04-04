@@ -28,7 +28,6 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
-import org.labkey.api.util.Compress;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 
@@ -399,7 +398,7 @@ public class NimbleHelper
         Map<NimbleGenome, File> resultMap = new HashMap<>();
 
         File localBam = ensureLocalCopy(bam, output);
-        ensureLocalCopy(new File(bam.getPath() + ".bai"), output);
+        ensureLocalCopy(SequenceAnalysisService.get().getExpectedBamOrCramIndex(bam), output);
 
         List<File> localRefJsons = refJsons.stream().map(refJson -> {
             try
@@ -440,7 +439,7 @@ public class NimbleHelper
             alignArgs.add(strandedness);
         }
 
-        File alignmentTsvBase = new File(getPipelineCtx().getWorkingDirectory(), "alignResults." + (genomes.size() == 1 ? genomes.get(0).genomeId + "." : "") + "txt");
+        File alignmentTsvBase = new File(getPipelineCtx().getWorkingDirectory(), "alignResults." + (genomes.size() == 1 ? genomes.get(0).genomeId + "." : "") + "txt.gz");
 
         alignArgs.add("--reference");
         alignArgs.add(localRefJsons.stream().map(x -> "/work/" + x.getName()).collect(Collectors.joining(",")));
@@ -461,8 +460,8 @@ public class NimbleHelper
         boolean dockerRan = runUsingDocker(alignArgs, output, "align.all");
         for (NimbleGenome genome : genomes)
         {
-            File alignResultsTsv = new File(getPipelineCtx().getWorkingDirectory(), "alignResults." + genome.genomeId + ".txt");
-            if (dockerRan && !alignResultsTsv.exists())
+            File alignResultsGz = new File(getPipelineCtx().getWorkingDirectory(), "alignResults." + genome.genomeId + ".txt.gz");
+            if (dockerRan && !alignResultsGz.exists())
             {
                 File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "align.all");
                 if (doneFile.exists())
@@ -470,24 +469,10 @@ public class NimbleHelper
                     doneFile.delete();
                 }
 
-                throw new PipelineJobException("Expected to find file: " + alignResultsTsv.getPath());
+                throw new PipelineJobException("Expected to find file: " + alignResultsGz.getPath());
             }
 
-            File alignResultsGz = new File(alignResultsTsv.getPath() + ".gz");
-            if (dockerRan)
-            {
-                if (alignResultsGz.exists())
-                {
-                    getPipelineCtx().getLogger().debug("Deleting pre-existing gz output: " + alignResultsGz.getName());
-                    alignResultsGz.delete();
-                }
-
-                // NOTE: perform compression outside of nimble until nimble bugs fixed
-                getPipelineCtx().getLogger().debug("Compressing results TSV file");
-                alignResultsGz = Compress.compressGzip(alignResultsTsv);
-                alignResultsTsv.delete();
-            }
-            else if (!alignResultsGz.exists())
+            if (!alignResultsGz.exists())
             {
                 throw new PipelineJobException("Expected to find gz file: " + alignResultsGz.getPath());
             }

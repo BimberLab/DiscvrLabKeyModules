@@ -65,6 +65,12 @@ public class DeepVariantHandler extends AbstractParameterizedOutputHandler<Seque
         return true;
     }
 
+    @Override
+    public boolean requiresSingleGenome()
+    {
+        return false;
+    }
+
     public class Processor implements SequenceOutputProcessor
     {
         @Override
@@ -91,6 +97,7 @@ public class DeepVariantHandler extends AbstractParameterizedOutputHandler<Seque
             action.addInput(so.getFile(), "Input BAM File");
 
             File outputFile = new File(ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()) + ".g.vcf.gz");
+            File outputFileVcf = new File(ctx.getOutputDir(), FileUtil.getBaseName(so.getFile()) + ".vcf.gz");
 
             DeepVariantAnalysis.DeepVariantWrapper wrapper = new DeepVariantAnalysis.DeepVariantWrapper(job.getLogger());
             wrapper.setOutputDir(ctx.getOutputDir());
@@ -117,7 +124,8 @@ public class DeepVariantHandler extends AbstractParameterizedOutputHandler<Seque
                 throw new PipelineJobException("Missing binVersion");
             }
 
-            wrapper.execute(so.getFile(), referenceGenome.getWorkingFastaFile(), outputFile, ctx.getFileManager(), binVersion, args);
+            boolean retainVcf = ctx.getParams().optBoolean("retainVcf", false);
+            wrapper.execute(so.getFile(), referenceGenome.getWorkingFastaFile(), outputFile, retainVcf, ctx.getFileManager(), binVersion, args);
 
             action.addOutput(outputFile, "gVCF File", false);
 
@@ -130,6 +138,19 @@ public class DeepVariantHandler extends AbstractParameterizedOutputHandler<Seque
             o.setDescription("DeepVariant Version: " + binVersion);
 
             ctx.addSequenceOutput(o);
+
+            if (retainVcf)
+            {
+                SequenceOutputFile vcf = new SequenceOutputFile();
+                vcf.setName(outputFileVcf.getName());
+                vcf.setFile(outputFileVcf);
+                vcf.setLibrary_id(so.getLibrary_id());
+                vcf.setCategory("DeepVariant VCF File");
+                vcf.setReadset(so.getReadset());
+                vcf.setDescription("DeepVariant Version: " + binVersion);
+
+                ctx.addSequenceOutput(vcf);
+            }
 
             ctx.addActions(action);
         }

@@ -151,7 +151,12 @@ export async function fetchSession(queryParam, sessionId, nativePlugins, refThem
 function applyUrlParams(json, queryParam) {
     const location = queryParam.get('location')
     if (location) {
-        json.location = location;
+        json.location = location
+    }
+
+    const highlight = queryParam.get('highlight')
+    if (highlight) {
+        json.highlight = highlight
     }
 
     const sampleFilters = queryParam.get('sampleFilters')
@@ -205,15 +210,15 @@ function applyUrlParams(json, queryParam) {
     }
 }
 
-function generateViewState(genome, plugins, nativePlugins){
+function generateViewState(json, plugins, nativePlugins){
     return createViewState({
-        assembly: genome.assembly ?? genome.assemblies,
-        tracks: genome.tracks,
-        configuration: genome.configuration,
+        assembly: json.assembly ?? json.assemblies,
+        tracks: json.tracks,
+        configuration: json.configuration,
         plugins: plugins.concat(nativePlugins),
-        location: genome.location,
-        defaultSession: genome.defaultSession,
-        onChange: genome.onChange
+        location: json.location,
+        defaultSession: json.defaultSession,
+        onChange: json.onChange
     })
 }
 
@@ -414,7 +419,7 @@ function generateLuceneString(field, operator, value) {
   return luceneQueryString;
 }
 
-export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pageSize, successCallback, failureCallback) {
+export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pageSize, sortField, sortReverseString, successCallback, failureCallback) {
     if (!offset) {
         offset = 0
     }
@@ -434,6 +439,13 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pa
         return
     }
 
+    let sortReverse;
+    if(sortReverseString == "asc") {
+        sortReverse = true
+    } else {
+        sortReverse = false
+    }
+
     return Ajax.request({
         url: ActionURL.buildURL('jbrowse', 'luceneQuery.api'),
         method: 'GET',
@@ -444,7 +456,15 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pa
         failure: function(res) {
             failureCallback("There was an error: " + res.status + "\n Status Body: " + res.responseText + "\n Session ID:" + sessionId)
         },
-        params: {"searchString": createEncodedFilterString(filters, true), "sessionId": sessionId, "trackId": trackGUID, "offset": offset, "pageSize": pageSize},
+        params: {
+            "searchString": createEncodedFilterString(filters, true),
+            "sessionId": sessionId,
+            "trackId": trackGUID,
+            "offset": offset,
+            "pageSize": pageSize,
+            "sortField": sortField ?? "genomicPosition",
+            "sortReverse": sortReverse 
+        },
     });
 }
 

@@ -61,7 +61,8 @@ Ext4.define('SequenceAnalysis.panel.VariantProcessingPanel', {
 				height: 100,
 				helpPopup: 'Description for this analysis (optional)',
 				name: 'jobDescription',
-				allowBlank:true
+				allowBlank: true,
+				value: LABKEY.ActionURL.getParameter('jobDescription')
 			},{
 				xtype: 'sequenceanalysis-variantscattergatherpanel',
 				width: 620,

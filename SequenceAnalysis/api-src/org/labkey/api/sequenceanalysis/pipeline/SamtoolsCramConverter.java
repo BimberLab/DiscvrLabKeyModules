@@ -57,7 +57,7 @@ public class SamtoolsCramConverter extends SamtoolsRunner
         return outputCram;
     }
 
-    private void doIndex(File input, @Nullable Integer threads) throws PipelineJobException
+    public File doIndex(File input, @Nullable Integer threads) throws PipelineJobException
     {
         List<String> params = new ArrayList<>();
         params.add(getSamtoolsPath().getPath());
@@ -77,6 +77,8 @@ public class SamtoolsCramConverter extends SamtoolsRunner
         {
             throw new PipelineJobException("Unable to find CRAM index: " + idx.getPath());
         }
+
+        return idx;
     }
 
     public static File getExpectedCramIndex(File input)

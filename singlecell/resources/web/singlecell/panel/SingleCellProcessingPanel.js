@@ -58,7 +58,8 @@ Ext4.define('SingleCell.panel.SingleCellProcessingPanel', {
                 height: 100,
                 helpPopup: 'Description for this analysis (optional)',
                 name: 'jobDescription',
-                allowBlank:true
+                allowBlank:true,
+                value: LABKEY.ActionURL.getParameter('jobDescription')
             },{
                 xtype: 'combo',
                 name: 'submissionType',

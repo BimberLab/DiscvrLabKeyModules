@@ -70,7 +70,8 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
                 }}, "X,Y"),
                 ToolParameterDescriptor.create("binVersion", "DeepVariant Version", "The version of DeepVariant to run, which is passed to their docker container", "textfield", new JSONObject(){{
                     put("allowBlank", false);
-                }}, "1.6.0")
+                }}, "1.6.0"),
+                ToolParameterDescriptor.create("retainVcf", "Retain VCF", "If selected, the VCF with called genotypes will be retained", "checkbox", null, false)
         );
     }
 
@@ -153,15 +154,28 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             throw new PipelineJobException("Missing binVersion");
         }
 
+        boolean retainVcf = getProvider().getParameterByName("retainVcf").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+
         getWrapper().setOutputDir(outputDir);
         getWrapper().setWorkingDir(outputDir);
-        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, output, binVersion, args);
+        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, retainVcf, output, binVersion, args);
 
         output.addOutput(outputFile, "gVCF File");
         output.addSequenceOutput(outputFile, outputFile.getName(), "DeepVariant gVCF File", rs.getReadsetId(), null, referenceGenome.getGenomeId(), "DeepVariant Version: " + binVersion);
         if (idxFile.exists())
         {
             output.addOutput(idxFile, "VCF Index");
+        }
+
+        if (retainVcf)
+        {
+            File outputFileVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".vcf.gz");
+            if (!outputFileVcf.exists())
+            {
+                throw new PipelineJobException("Missing expected file: " + outputFileVcf.getPath());
+            }
+
+            output.addSequenceOutput(outputFile, outputFileVcf.getName(), "DeepVariant VCF File", rs.getReadsetId(), null, referenceGenome.getGenomeId(), "DeepVariant Version: " + binVersion);
         }
 
         return output;
@@ -206,12 +220,15 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             }
         }
 
-        public void execute(File inputBam, File refFasta, File outputGvcf, PipelineOutputTracker tracker, String binVersion, List<String> extraArgs) throws PipelineJobException
+        public void execute(File inputBam, File refFasta, File outputGvcf, boolean retainVcf, PipelineOutputTracker tracker, String binVersion, List<String> extraArgs) throws PipelineJobException
         {
             File workDir = outputGvcf.getParentFile();
             File outputVcf = new File(outputGvcf.getPath().replaceAll(".g.vcf", ".vcf"));
-            tracker.addIntermediateFile(outputVcf);
-            tracker.addIntermediateFile(new File(outputVcf.getPath() + ".tbi"));
+            if (!retainVcf)
+            {
+                tracker.addIntermediateFile(outputVcf);
+                tracker.addIntermediateFile(new File(outputVcf.getPath() + ".tbi"));
+            }
 
             File inputBamLocal = ensureLocalCopy(inputBam, workDir, tracker);
             ensureLocalCopy(SequenceUtil.getExpectedIndex(inputBam), workDir, tracker);
@@ -226,6 +243,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             tracker.addIntermediateFile(dockerBashScript);
 
             List<String> bashArgs = new ArrayList<>(Arrays.asList("/opt/deepvariant/bin/run_deepvariant"));
+            bashArgs.add("--make_examples_extra_args='normalize_reads=true'");
             bashArgs.add("--ref=/work/" + refFastaLocal.getName());
             bashArgs.add("--reads=/work/" + inputBamLocal.getName());
             bashArgs.add("--output_gvcf=/work/" + outputGvcf.getName());

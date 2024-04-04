@@ -564,6 +564,7 @@ public class JBrowseTest extends BaseWebDriverTest
         String sessionId = info.getKey();
         String trackId = info.getValue();
 
+
         // all
         // this should return 143 results. We can't make any other assumptions about the content
         String url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=all&pageSize=143";
@@ -574,7 +575,6 @@ public class JBrowseTest extends BaseWebDriverTest
         JSONObject mainJsonObject = new JSONObject(jsonString);
         JSONArray jsonArray = mainJsonObject.getJSONArray("data");
         Assert.assertEquals(143, jsonArray.length());
-
 
         // stringType:
         // ref equals A
@@ -1143,6 +1143,91 @@ public class JBrowseTest extends BaseWebDriverTest
             JSONObject jsonObject = jsonArray.getJSONObject(i);
             Assert.assertEquals(1, jsonObject.getInt("contig"));
             Assert.assertEquals("A", jsonObject.getString("ref"));
+        }
+
+        // Default genomic position sort (ascending)
+        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=all&pageSize=100";
+        beginAt(url);
+        waitForText("data");
+        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
+        jsonString = getText(Locator.tagWithClass("pre", "data"));
+        mainJsonObject = new JSONObject(jsonString);
+        jsonArray = mainJsonObject.getJSONArray("data");
+
+        long previousGenomicPosition = Long.MIN_VALUE;
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject jsonObject = jsonArray.getJSONObject(i);
+            long currentGenomicPosition = jsonObject.getLong("genomicPosition");
+            Assert.assertTrue(currentGenomicPosition >= previousGenomicPosition);
+            previousGenomicPosition = currentGenomicPosition;
+        }
+
+        // Sort by alt, ascending
+        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=all&pageSize=100&sortField=alt";
+        beginAt(url);
+        waitForText("data");
+        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
+        jsonString = getText(Locator.tagWithClass("pre", "data"));
+        mainJsonObject = new JSONObject(jsonString);
+        jsonArray = mainJsonObject.getJSONArray("data");
+
+        String previousAlt = "";
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject jsonObject = jsonArray.getJSONObject(i);
+            String currentAlt = jsonObject.getString("alt");
+            Assert.assertTrue(currentAlt.compareTo(previousAlt) >= 0);
+            previousAlt = currentAlt;
+        }
+
+        // Sort by alt, descending
+        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=all&pageSize=100&sortField=alt&sortReverse=true";
+        beginAt(url);
+        waitForText("data");
+        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
+        jsonString = getText(Locator.tagWithClass("pre", "data"));
+        mainJsonObject = new JSONObject(jsonString);
+        jsonArray = mainJsonObject.getJSONArray("data");
+
+        previousAlt = "ZZZZ"; // Assuming 'Z' is higher than any character in your data
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject jsonObject = jsonArray.getJSONObject(i);
+            String currentAlt = jsonObject.getString("alt");
+            Assert.assertTrue(currentAlt.compareTo(previousAlt) <= 0);
+            previousAlt = currentAlt;
+        }
+
+        // Sort by af, ascending
+        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=all&pageSize=100&sortField=AF";
+        beginAt(url);
+        waitForText("data");
+        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
+        jsonString = getText(Locator.tagWithClass("pre", "data"));
+        mainJsonObject = new JSONObject(jsonString);
+        jsonArray = mainJsonObject.getJSONArray("data");
+
+        double previousAf = -1.0;
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject jsonObject = jsonArray.getJSONObject(i);
+            double currentAf = jsonObject.getDouble("AF");
+            Assert.assertTrue(currentAf >= previousAf);
+            previousAf = currentAf;
+        }
+
+        // Sort by af, descending
+        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=all&pageSize=100&sortField=AF&sortReverse=true";
+        beginAt(url);
+        waitForText("data");
+        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
+        jsonString = getText(Locator.tagWithClass("pre", "data"));
+        mainJsonObject = new JSONObject(jsonString);
+        jsonArray = mainJsonObject.getJSONArray("data");
+
+        previousAf = 2.0; // Assuming 'af' is <= 1.0
+        for (int i = 0; i < jsonArray.length(); i++) {
+            JSONObject jsonObject = jsonArray.getJSONObject(i);
+            double currentAf = jsonObject.getDouble("AF");
+            Assert.assertTrue(currentAf <= previousAf);
+            previousAf = currentAf;
         }
 
         testLuceneSearchUI(sessionId);

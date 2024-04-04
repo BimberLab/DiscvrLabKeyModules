@@ -192,8 +192,8 @@ public class CellHashingServiceImpl extends CellHashingService
                     {
                         if (results.getObject(FieldKey.fromString("hashingReadsetId")) == null)
                         {
-                            job.getLogger().error("cDNA specifies HTO, but does not list a hashing readset: " + results.getString(FieldKey.fromString("rowid")));
-                            hasError.set(true);
+                            // NOTE: there can be lanes with single HTOs/lane. This will fail down the line
+                            job.getLogger().warn("cDNA specifies HTO, but does not list a hashing readset: " + results.getString(FieldKey.fromString("rowid")) + ". This may not be a problem if there is a single sample per lane");
                         }
                         else
                         {
