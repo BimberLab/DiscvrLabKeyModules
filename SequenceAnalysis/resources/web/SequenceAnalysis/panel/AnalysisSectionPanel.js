@@ -570,7 +570,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
         return [];
     },
 
-    applySavedValues: function(values){
+    applySavedValues: function(values, allowUrlOverride){
         if (this.stepType){
             var tools = values[this.stepType] ? values[this.stepType].split(';') : [];
             this.setActiveTools(tools);
@@ -584,6 +584,10 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
                 var name = p.name + (stepIdx ? '.' + stepIdx : '');
                 if (Ext4.isDefined(values[name])){
                     p.setValue(values[name]);
+                }
+
+                if (allowUrlOverride && LABKEY.ActionURL.getParameter(name)) {
+                    p.setValue(LABKEY.ActionURL.getParameter(name));
                 }
             }, this);
         }

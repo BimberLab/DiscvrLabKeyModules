@@ -369,15 +369,6 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
     public static File processVCF(File input, Integer libraryId, JobContext ctx, Resumer resumer, boolean subsetToIntervals) throws PipelineJobException
     {
-        try
-        {
-            SequenceAnalysisService.get().ensureVcfIndex(input, ctx.getLogger());
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-
         File currentVCF = input;
 
         ctx.getJob().getLogger().info("***Starting processing of file: " + input.getName());
@@ -409,6 +400,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             }
             else
             {
+                try
+                {
+                    SequenceAnalysisService.get().ensureVcfIndex(input, ctx.getLogger());
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
                 OutputVariantsStartingInIntervalsStep.Wrapper wrapper = new OutputVariantsStartingInIntervalsStep.Wrapper(ctx.getLogger());
                 wrapper.execute(input, outputFile, getIntervals(ctx));
             }
@@ -422,6 +422,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
         {
             ctx.getLogger().info("Starting to run: " + stepCtx.getProvider().getLabel());
+            ctx.getLogger().debug("VCF: " + currentVCF);
             ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + stepCtx.getProvider().getLabel());
             stepIdx++;
 
@@ -430,6 +431,15 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 ctx.getLogger().info("resuming from saved state");
                 currentVCF = resumer.getVcfFromStep(stepIdx, input.getPath());
                 continue;
+            }
+
+            try
+            {
+                SequenceAnalysisService.get().ensureVcfIndex(currentVCF, ctx.getLogger());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
             }
 
             RecordedAction action = new RecordedAction(stepCtx.getProvider().getLabel());
@@ -467,6 +477,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             {
                 currentVCF = output.getVCF();
 
+                ctx.getJob().getLogger().info("output VCF: " + currentVCF.getPath());
                 ctx.getJob().getLogger().info("total variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), false, true));
                 ctx.getJob().getLogger().info("passing variants: " + getVCFLineCount(currentVCF, ctx.getJob().getLogger(), true, false));
                 ctx.getJob().getLogger().debug("index exists: " + (new File(currentVCF.getPath() + ".tbi")).exists());
@@ -767,6 +778,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
         public void setStepComplete(int stepIdx, String inputFilePath, RecordedAction action, File scatterOutput) throws PipelineJobException
         {
+            getLogger().debug("Marking step complete with VCF: " + inputFilePath);
             _scatterOutputs.put(getKey(stepIdx, inputFilePath), scatterOutput);
             _recordedActions.add(action);
             saveState();
