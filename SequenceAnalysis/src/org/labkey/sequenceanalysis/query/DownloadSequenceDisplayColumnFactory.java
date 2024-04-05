@@ -6,20 +6,16 @@ import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.RenderContext;
-import org.labkey.api.data.Sort;
-import org.labkey.api.data.UrlColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.util.StringExpression;
-import org.labkey.api.util.StringExpressionFactory;
-import org.labkey.api.util.URLHelper;
+import org.labkey.api.view.HttpView;
 import org.labkey.api.view.template.ClientDependency;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -39,11 +35,21 @@ public class DownloadSequenceDisplayColumnFactory implements DisplayColumnFactor
     {
         DataColumn ret = new DataColumn(colInfo)
         {
+            private boolean _handlerRegistered = false;
+
             @Override
             public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
             {
                 Object val = ctx.get(FieldKey.fromString(getBoundColumn().getFieldKey().getParent(), "rowId"));
-                out.write(PageFlowUtil.link("Download Sequence").onClick("SequenceAnalysis.window.DownloadSequencesWindow.downloadSingle(" + val + ")").toString());
+                out.write(PageFlowUtil.link("Download Sequence").attributes(Map.of(
+                    "data-rowid", val.toString()
+                )).addClass("sdc-row").toString());
+
+                if (!_handlerRegistered)
+                {
+                    HttpView.currentPageConfig().addHandlerForQuerySelector("a.sdc-row", "click", "SequenceAnalysis.window.DownloadSequencesWindow.downloadSingle(this.attributes.getNamedItem('data-rowid').value); return false;");
+                    _handlerRegistered = true;
+                }
             }
 
             @Override
