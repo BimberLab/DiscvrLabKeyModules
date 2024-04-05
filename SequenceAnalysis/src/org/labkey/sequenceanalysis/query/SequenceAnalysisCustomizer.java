@@ -28,6 +28,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.HttpView;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
@@ -232,6 +233,8 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
         {
             return new DataColumn(colInfo)
             {
+                private boolean _handlerRegistered = false;
+
                 @Override
                 public @NotNull Set<ClientDependency> getClientDependencies()
                 {
@@ -275,8 +278,13 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
                             }
                         }
 
-                        String onclick = "onclick=\"SequenceAnalysis.window.ManageFileSetsWindow.buttonHandlerForOutputFiles(" + PageFlowUtil.jsString(rowId.toString()) + ", " + PageFlowUtil.jsString(ctx.getCurrentRegion().getName()) + ");\"";
-                        out.write("<a class=\"fa fa-pencil lk-dr-action-icon\" data-tt=\"tooltip\" data-original-title=\"add/edit\" " + onclick + "></a>");
+                        out.write("<a class=\"fa fa-pencil lk-dr-action-icon sfs-row\" data-tt=\"tooltip\" data-rowid=\"" + rowId +"\" data-original-title=\"add/edit\"></a>");
+
+                        if (!_handlerRegistered)
+                        {
+                            HttpView.currentPageConfig().addHandlerForQuerySelector("a.sfs-row", "click", "SequenceAnalysis.window.ManageFileSetsWindow.buttonHandlerForOutputFiles(this.attributes.getNamedItem('data-rowid').value, " + PageFlowUtil.jsString(ctx.getCurrentRegion().getName()) + "); return false;");
+                            _handlerRegistered = true;
+                        }
                     }
                 }
             };
