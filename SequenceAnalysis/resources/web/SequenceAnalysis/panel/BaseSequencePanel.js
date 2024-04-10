@@ -269,6 +269,9 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                                                     return;
                                                 }
 
+                                                // If auto-loading, assume we want to read the URL
+                                                thePanel.down('#readUrlParams').setValue(true);
+
                                                 var recIdx = store.find('name', LABKEY.ActionURL.getParameter('template'));
                                                 if (recIdx > -1) {
                                                     thePanel.down('labkey-combo').setValue(store.getAt(recIdx));
@@ -296,6 +299,12 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                                 itemId: 'useReadsetContainer',
                                 helpPopup: 'By default, the pipelines jobs and their outputs will be created in the workbook you selected. However, in certain cases, such as bulk submission of many jobs, it might be preferable to submit each job to the source folder/workbook for each input. Checking this box will enable this.',
                                 fieldLabel: 'Submit Jobs to Same Folder/Workbook as Readset',
+                                labelWidth: 200
+                            },{
+                                xtype: 'checkbox',
+                                itemId: 'readUrlParams',
+                                helpPopup: 'If true, any parameters provided on the URL with the same name as a parameter in the JSON will be read and override the template.',
+                                fieldLabel: 'Read Parameters From URL',
                                 labelWidth: 200
                             }]
                         }],
@@ -353,7 +362,8 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
                                 delete json.submitJobToReadsetContainer;
                             }
 
-                            win.sequencePanel.applySavedValues(json);
+                            var readUrlParams = win.down('#readUrlParams').getValue();
+                            win.sequencePanel.applySavedValues(json, readUrlParams);
 
                             var submitJobToReadsetContainer = win.sequencePanel.down('[name="submitJobToReadsetContainer"]');
                             if (submitJobToReadsetContainer) {
@@ -386,7 +396,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
         }
     },
 
-    applySavedValues: function(values){
+    applySavedValues: function(values, allowUrlOverride){
         //allows for subclasses to exclude this panel
         var alignPanel = this.down('sequenceanalysis-alignmentpanel');
         if (alignPanel) {
@@ -395,7 +405,7 @@ Ext4.define('SequenceAnalysis.panel.BaseSequencePanel', {
 
         var sections = this.query('sequenceanalysis-analysissectionpanel');
         Ext4.Array.forEach(sections, function(s){
-            s.applySavedValues(values);
+            s.applySavedValues(values, allowUrlOverride);
         }, this);
 
         // For top-level properties:

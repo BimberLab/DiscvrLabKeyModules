@@ -1,3 +1,13 @@
+CheckField <- function(seuratObj, datasetId, fieldName, errorOnNA = TRUE) {
+  if (!fieldName %in% names(seuratObj@meta.data)) {
+    addErrorMessage(paste0(paste0('Missing ', fieldName, ' for dataset: ', datasetId)))
+  }
+
+  if (errorOnNA && any(is.na(seuratObj@meta.data[[fieldName]]))) {
+    addErrorMessage(paste0(paste0('NA values found for ', fieldName, ' for dataset: ', datasetId)))
+  }
+}
+
 metricData <- data.frame(dataId = integer(), readsetId = integer(), metricname = character(), metricvalue = numeric())
 
 for (datasetId in names(seuratObjects)) {
@@ -72,12 +82,12 @@ for (datasetId in names(seuratObjects)) {
     metricData <- rbind(metricData, data.frame(dataId = datasetId, readsetId = datasetIdToReadset[[datasetId]], metricname = 'MeanSaturation.RNA', metricvalue = meanSaturation.RNA))
   }
 
-  if (requireSingleR && !'SingleRConsensus' %in% names(seuratObj@meta.data)) {
-    addErrorMessage(paste0('Missing SingleRConsensus label for dataset: ', datasetId))
+  if (requireSingleR) {
+    CheckField(seuratObj, datasetId, 'SingleRConsensus')
   }
 
-  if (requireScGate && !'scGateConsensus' %in% names(seuratObj@meta.data)) {
-    addErrorMessage(paste0('Missing scGateConsensus label for dataset: ', datasetId))
+  if (requireScGate) {
+    CheckField(seuratObj, datasetId, 'scGateConsensus', errorOnNA = FALSE)
   }
 
   if (length(errorMessages) > 0) {
