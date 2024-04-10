@@ -34,6 +34,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.webdav.WebdavService;
+import org.labkey.filters.ContentSecurityPolicyFilter;
 import org.labkey.jbrowse.button.AddLibraryButton;
 import org.labkey.jbrowse.button.AddTrackButton;
 import org.labkey.jbrowse.button.ModifyTrackConfigButton;
@@ -110,6 +111,9 @@ public class JBrowseModule extends ExtendedSimpleModule
 
         JBrowseService.get().registerFieldCustomizer(new JBrowseLuceneSearch.DefaultJBrowseFieldCustomizer());
         JBrowseService.get().registerGroupsProvider(new JBrowseLuceneSearch.TestJBrowseGroupProvider());
+
+        // These are all part of the JBrowse demo data:
+        ContentSecurityPolicyFilter.registerAllowedConnectionSource(this.getClass().getName(), "https://jbrowse.org", "https://s3.amazonaws.com", "https://ftp.ncbi.nlm.nih.gov/pub/clinvar");
     }
 
     public static void registerPipelineSteps()
