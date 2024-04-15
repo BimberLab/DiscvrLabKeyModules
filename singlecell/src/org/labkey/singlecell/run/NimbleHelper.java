@@ -343,7 +343,7 @@ public class NimbleHelper
                 config.put("num_mismatches", 5);
                 config.put("intersect_level", 0);
                 config.put("score_threshold", 45);
-                config.put("score_percent", 0.75);
+                config.put("score_percent", 0.45);
                 config.put("score_filter", 25);
                 //discard_multiple_matches: false
                 //discard_multi_hits: ?
@@ -353,7 +353,8 @@ public class NimbleHelper
             {
                 config.put("num_mismatches", 0);
                 config.put("intersect_level", 0);
-                config.put("score_percent", 0.99);
+                // NOTE: this allows a small amount of mismatched ends:
+                config.put("score_percent", 0.90);
                 config.put("score_threshold", 45);
                 config.put("score_filter", 25);
             }
