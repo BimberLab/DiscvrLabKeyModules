@@ -127,6 +127,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 FieldKey.fromString("citeseqReadsetId/totalFiles"),
                 FieldKey.fromString("citeseqPanel"),
                 FieldKey.fromString("status"),
+                FieldKey.fromString("plateId"),
                 FieldKey.fromString("readsetId"))
         );
 
@@ -151,6 +152,7 @@ public class CellHashingServiceImpl extends CellHashingService
             writer.writeNext(new String[]{"ReadsetId", "CDNA_ID", "SubjectId", "Stim", "Population", "HashingReadsetId", "HasHashingReads", "HTO_Name", "HTO_Seq", "CiteSeqReadsetId", "HasCiteSeqReads", "CiteSeqPanel"});
             Set<String> distinctHTOs = new HashSet<>();
             Set<Boolean> hashingStatus = new HashSet<>();
+            Map<String, Set<String>> plateToHto = new HashMap<>();
             AtomicInteger totalWritten = new AtomicInteger(0);
             for (Readset rs : cachedReadsets)
             {
@@ -186,10 +188,17 @@ public class CellHashingServiceImpl extends CellHashingService
                         uniqueGex.add(results.getInt(FieldKey.fromString("readsetId")));
                     }
 
-                    boolean useCellHashing = results.getObject(FieldKey.fromString("sortId/hto")) != null;
-                    hashingStatus.add(useCellHashing);
-                    if (useCellHashing)
+                    boolean hasHTO = results.getObject(FieldKey.fromString("sortId/hto")) != null;
+
+                    if (!plateToHto.containsKey(results.getString(FieldKey.fromString("plateId"))))
                     {
+                        plateToHto.put(results.getString(FieldKey.fromString("plateId")), new HashSet<>());
+                    }
+
+                    if (hasHTO)
+                    {
+                        plateToHto.get(results.getString(FieldKey.fromString("plateId"))).add(results.getString(FieldKey.fromString("sortId/hto")));
+
                         if (results.getObject(FieldKey.fromString("hashingReadsetId")) == null)
                         {
                             // NOTE: there can be lanes with single HTOs/lane. This will fail down the line
@@ -244,12 +253,17 @@ public class CellHashingServiceImpl extends CellHashingService
                     throw new PipelineJobException("There is a problem with either cell hashing or CITE-seq. See the file: " + output.getName());
                 }
 
+                // If there is one HTO per plate, hashing is not actually needed:
+                for (String plateId : plateToHto.keySet())
+                {
+                    Set<String> htos = plateToHto.get(plateId);
+                    hashingStatus.add(htos.size() > 1);
+                }
+
                 if (hashingStatus.size() > 1)
                 {
                     job.getLogger().info("The selected readsets/cDNA records use a mixture of cell hashing and non-hashing.");
                 }
-
-                //NOTE: hashingStatus.isEmpty() indicates there are no cDNA records associated with the data
             }
 
             if (doH5Caching)
