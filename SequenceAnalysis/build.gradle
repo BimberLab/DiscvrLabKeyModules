@@ -21,9 +21,7 @@ repositories {
 
 configurations.all {
     resolutionStrategy {
-        force "jakarta.activation:jakarta.activation-api:${activationVersion}"
-        // NOTE: this should be kept in sync with mcc module:
-        force "jakarta.xml.bind:jakarta.xml.bind-api:${jaxbVersion}"
+        force "org.glassfish.jaxb:jaxb-runtime:${jaxbVersion}"
     }
 }
 
@@ -49,7 +47,7 @@ dependencies {
     BuildUtils.addExternalDependency(
             project,
             new ExternalDependency(
-                    'org.biojava:biojava-core:7.0.2',
+                    'org.biojava:biojava-core:7.1.1',
                     'biojava-core',
                     'biojava',
                     'http://biojava.org/wiki/Main_Page',
@@ -58,16 +56,16 @@ dependencies {
                     'Java framework for processing biological data'
             ),
             {
-                // Exclude activation jars from webapp to avoid classloader conflicts with <tomcat>/lib/javax.activation.jar
-                exclude group: 'com.sun.activation', module: 'jakarta.activation'
-                exclude group: 'javax.activation', module: 'javax.activation-api'
+                // Exclude in favor of angus activation from API
+                exclude group: 'org.eclipse.angus', module: 'angus-activation'
+                exclude group: "jakarta.activation", module: "jakarta.activation-api"
             }
     )
 
     BuildUtils.addExternalDependency(
             project,
             new ExternalDependency(
-                    'org.biojava:biojava-genome:7.0.2',
+                    'org.biojava:biojava-genome:7.1.1',
                     'biojava-genome',
                     'biojava',
                     'http://biojava.org/wiki/Main_Page',
@@ -76,9 +74,9 @@ dependencies {
                     'Java framework for processing biological data'
             ),
             {
-                // Exclude activation jars from webapp to avoid classloader conflicts with <tomcat>/lib/javax.activation.jar
-                exclude group: 'com.sun.activation', module: 'jakarta.activation'
-                exclude group: 'javax.activation', module: 'javax.activation-api'
+                // Exclude in favor of angus activation from API
+                exclude group: 'org.eclipse.angus', module: 'angus-activation'
+                exclude group: "jakarta.activation", module: "jakarta.activation-api"
             }
     )
 
