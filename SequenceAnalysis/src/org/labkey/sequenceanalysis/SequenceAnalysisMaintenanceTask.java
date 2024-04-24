@@ -12,6 +12,7 @@ import org.labkey.api.data.Sort;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.ldk.LDKService;
 import org.labkey.api.pipeline.PipeRoot;
@@ -34,6 +35,8 @@ import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by bimber on 9/15/2014.
@@ -227,6 +231,30 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                 else if (!d.getFile().exists())
                 {
                     log.error("Unable to find file associated with analysis: " + m.getAnalysisId() + ", " + m.getAlignmentFile() + ", " + d.getFile().getPath() + " for container: " + (c == null ? m.getContainer() : c.getPath()));
+                }
+            }
+
+            if (m.getRunId() != null)
+            {
+                ExpRun run = ExperimentService.get().getExpRun(m.getRunId());
+                if (run == null)
+                {
+                    log.error("Missing runId: " + m.getRunId());
+                }
+                else
+                {
+                    try (Stream<Path> stream = Files.walk(run.getFilePathRootPath()))
+                    {
+                        List<Path> files = stream.filter(x -> x.getFileName().startsWith("core.")).toList();
+                        if (!files.isEmpty())
+                        {
+                            files.forEach(x -> log.error("Found core file: " + x.toFile().getPath()));
+                        }
+                    }
+                    catch (IOException e)
+                    {
+                        log.error(e.getMessage());
+                    }
                 }
             }
         }
