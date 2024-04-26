@@ -366,8 +366,13 @@ public class JBrowseLuceneSearch
 
         @Override
         public boolean shouldCache(Query query) throws IOException {
-            if (query instanceof MatchAllDocsQuery) {
-                return true;
+            if (query instanceof BooleanQuery) {
+                BooleanQuery bq = (BooleanQuery) query;
+                for (BooleanClause clause : bq) {
+                    if (clause.getQuery() instanceof MatchAllDocsQuery) {
+                        return true;
+                    }
+                }
             }
 
             return defaultPolicy.shouldCache(query);
