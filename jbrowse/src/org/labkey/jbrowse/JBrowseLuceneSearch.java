@@ -15,11 +15,15 @@ import org.apache.lucene.queryparser.flexible.standard.config.PointsConfig;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.LRUQueryCache;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.QueryCache;
+import org.apache.lucene.search.QueryCachingPolicy;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TopFieldDocs;
+import org.apache.lucene.search.UsageTrackingQueryCachingPolicy;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.NumericUtils;
@@ -49,6 +53,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -65,6 +70,11 @@ public class JBrowseLuceneSearch
     private final String[] specialStartPatterns = {"*:* -", "+", "-"};
     private static final String ALL_DOCS = "all";
     private static final String GENOMIC_POSITION = "genomicPosition";
+    private static final int maxCachedQueries = 25;
+    private static final long maxRamBytesUsed = 250 * 1024 * 1024L;
+
+    private static final ConcurrentHashMap<String, QueryCache> queryCaches = new ConcurrentHashMap<>();
+    private static final QueryCachingPolicy cachingPolicy = new UsageTrackingQueryCachingPolicy();
 
     private JBrowseLuceneSearch(final JBrowseSession session, final JsonFile jsonFile, User u)
     {
@@ -83,6 +93,10 @@ public class JBrowseLuceneSearch
         JBrowseSession session = getSession(sessionId);
 
         return new JBrowseLuceneSearch(session, getTrack(session, trackId, u), u);
+    }
+
+    private static QueryCache getCacheForSession(String sessionName) {
+        return queryCaches.computeIfAbsent(sessionName, k -> new LRUQueryCache(maxCachedQueries, maxRamBytesUsed));
     }
 
     private String templateReplace(final String searchString) {
@@ -148,6 +162,8 @@ public class JBrowseLuceneSearch
         )
         {
             IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+            indexSearcher.setQueryCache(getCacheForSession(_session.getName()));
+            indexSearcher.setQueryCachingPolicy(cachingPolicy);
 
             List<String> stringQueryParserFields = new ArrayList<>();
             Map<String, SortField.Type> numericQueryParserFields = new HashMap<>();
