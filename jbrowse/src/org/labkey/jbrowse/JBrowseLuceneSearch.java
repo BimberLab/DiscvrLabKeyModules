@@ -74,7 +74,6 @@ public class JBrowseLuceneSearch
     private static final long maxRamBytesUsed = 250 * 1024 * 1024L;
 
     private static final ConcurrentHashMap<String, QueryCache> queryCaches = new ConcurrentHashMap<>();
-    private static final QueryCachingPolicy cachingPolicy = new UsageTrackingQueryCachingPolicy();
 
     private JBrowseLuceneSearch(final JBrowseSession session, final JsonFile jsonFile, User u)
     {
@@ -162,8 +161,8 @@ public class JBrowseLuceneSearch
         )
         {
             IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-            indexSearcher.setQueryCache(getCacheForSession(_session.getName()));
-            indexSearcher.setQueryCachingPolicy(cachingPolicy);
+            indexSearcher.setQueryCache(getCacheForSession(_session.getObjectId()));
+            indexSearcher.setQueryCachingPolicy(new ForceMatchAllDocsCachingPolicy());
 
             List<String> stringQueryParserFields = new ArrayList<>();
             Map<String, SortField.Type> numericQueryParserFields = new HashMap<>();
@@ -359,6 +358,24 @@ public class JBrowseLuceneSearch
         public boolean isAvailable(Container c, User u)
         {
             return true;
+        }
+    }
+
+    public class ForceMatchAllDocsCachingPolicy implements QueryCachingPolicy {
+        private final UsageTrackingQueryCachingPolicy defaultPolicy = new UsageTrackingQueryCachingPolicy();
+
+        @Override
+        public boolean shouldCache(Query query) throws IOException {
+            if (query instanceof MatchAllDocsQuery) {
+                return true;
+            }
+
+            return defaultPolicy.shouldCache(query);
+        }
+
+        @Override
+        public void onUse(Query query) {
+            defaultPolicy.onUse(query);
         }
     }
 }
