@@ -241,6 +241,10 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                 {
                     log.error("Missing runId: " + m.getRunId());
                 }
+                else if (run.getFilePathRootPath() == null)
+                {
+                    log.error("Run fileroot is null for runId: " + m.getRunId());
+                }
                 else
                 {
                     try (Stream<Path> stream = Files.walk(run.getFilePathRootPath()))
