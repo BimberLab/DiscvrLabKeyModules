@@ -257,7 +257,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                     }
                     catch (IOException e)
                     {
-                        log.error(e.getMessage());
+                        log.error("Error walking file root: " + run.getFilePathRootPath(), e);
                     }
                 }
             }
