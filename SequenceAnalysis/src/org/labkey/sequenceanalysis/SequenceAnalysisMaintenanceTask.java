@@ -239,13 +239,13 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                 ExpRun run = ExperimentService.get().getExpRun(m.getRunId());
                 if (run == null)
                 {
-                    log.error("Missing runId: " + m.getRunId());
+                    log.info("Not ExpRun found for runId: " + m.getRunId());
                 }
                 else if (run.getFilePathRootPath() == null)
                 {
                     log.error("Run fileroot is null for runId: " + m.getRunId());
                 }
-                else if (!run.getFilePathRootPath().toFile().exists())
+                else if (!run.getFilePathRoot().exists())
                 {
                     log.error("Run fileroot does not exist: " + m.getRunId() + " / " + run.getFilePathRoot());
                 }
