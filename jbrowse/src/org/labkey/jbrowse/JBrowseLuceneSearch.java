@@ -26,9 +26,11 @@ import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.search.UsageTrackingQueryCachingPolicy;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.NumericUtils;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.labkey.api.cache.Cache;
+import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.jbrowse.AbstractJBrowseFieldCustomizer;
@@ -53,10 +55,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static org.labkey.jbrowse.JBrowseFieldUtils.VARIABLE_SAMPLES;
 import static org.labkey.jbrowse.JBrowseFieldUtils.getSession;
@@ -73,7 +73,7 @@ public class JBrowseLuceneSearch
     private static final int maxCachedQueries = 25;
     private static final long maxRamBytesUsed = 250 * 1024 * 1024L;
 
-    private static final ConcurrentHashMap<String, QueryCache> queryCaches = new ConcurrentHashMap<>();
+    private static final Cache<String, LRUQueryCache> _cache = CacheManager.getStringKeyCache(1000, CacheManager.UNLIMITED, "JBrowseLuceneSearchCache");
 
     private JBrowseLuceneSearch(final JBrowseSession session, final JsonFile jsonFile, User u)
     {
@@ -94,8 +94,15 @@ public class JBrowseLuceneSearch
         return new JBrowseLuceneSearch(session, getTrack(session, trackId, u), u);
     }
 
-    private static QueryCache getCacheForSession(String sessionName) {
-        return queryCaches.computeIfAbsent(sessionName, k -> new LRUQueryCache(maxCachedQueries, maxRamBytesUsed));
+    private static synchronized QueryCache getCacheForSession(String sessionName) {
+        LRUQueryCache qc = _cache.get(sessionName);
+        if (qc == null)
+        {
+            qc = new LRUQueryCache(maxCachedQueries, maxRamBytesUsed);
+            _cache.put(sessionName, qc);
+        }
+
+        return qc;
     }
 
     private String templateReplace(final String searchString) {
@@ -278,7 +285,7 @@ public class JBrowseLuceneSearch
             for (int i = pageSize * offset; i < Math.min(pageSize * (offset + 1), topDocs.scoreDocs.length); i++)
             {
                 JSONObject elem = new JSONObject();
-                Document doc = indexSearcher.doc(topDocs.scoreDocs[i].doc);
+                Document doc = indexSearcher.storedFields().document(topDocs.scoreDocs[i].doc);
 
                 for (IndexableField field : doc.getFields()) {
                     String fieldName = field.name();
@@ -361,13 +368,12 @@ public class JBrowseLuceneSearch
         }
     }
 
-    public class ForceMatchAllDocsCachingPolicy implements QueryCachingPolicy {
+    public static class ForceMatchAllDocsCachingPolicy implements QueryCachingPolicy {
         private final UsageTrackingQueryCachingPolicy defaultPolicy = new UsageTrackingQueryCachingPolicy();
 
         @Override
         public boolean shouldCache(Query query) throws IOException {
-            if (query instanceof BooleanQuery) {
-                BooleanQuery bq = (BooleanQuery) query;
+            if (query instanceof BooleanQuery bq) {
                 for (BooleanClause clause : bq) {
                     if (clause.getQuery() instanceof MatchAllDocsQuery) {
                         return true;
@@ -382,5 +388,24 @@ public class JBrowseLuceneSearch
         public void onUse(Query query) {
             defaultPolicy.onUse(query);
         }
+    }
+
+    public static JSONArray reportCacheInfo()
+    {
+        JSONArray cacheInfo = new JSONArray();
+        for (String sessionId : _cache.getKeys())
+        {
+            LRUQueryCache qc = _cache.get(sessionId);
+            JSONObject info = new JSONObject();
+            info.put("cacheSize", qc.getCacheSize());
+            info.put("cacheCount", qc.getCacheCount());
+            info.put("hitCount", qc.getHitCount());
+            info.put("missCount", qc.getMissCount());
+            info.put("evictionCount", qc.getEvictionCount());
+            info.put("totalCount", qc.getTotalCount());
+            cacheInfo.put(info);
+        }
+
+        return cacheInfo;
     }
 }
