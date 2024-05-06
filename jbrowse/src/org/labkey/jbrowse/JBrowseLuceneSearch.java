@@ -409,6 +409,18 @@ public class JBrowseLuceneSearch
         return cacheInfo;
     }
 
+    public void cacheDefaultQuery()
+    {
+        try
+        {
+            doSearch(_user, ALL_DOCS, 100, 0, GENOMIC_POSITION, false);
+        }
+        catch (ParseException | IOException e)
+        {
+
+        }
+    }
+
     public static void clearCache(@Nullable String jbrowseTrackId)
     {
         if (jbrowseTrackId == null)
