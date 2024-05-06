@@ -245,7 +245,7 @@ public class JBrowseLuceneSearch
                     throw new IllegalArgumentException("Could not find type for sort field: " + sortField);
                 }
 
-                sort = new Sort(new SortField(sortField, fieldType, sortReverse));
+                sort = new Sort(new SortField(sortField + "_sort", fieldType, sortReverse));
             }
 
             // Get chunks of size {pageSize}. Default to 1 chunk -- add to the offset to get more.
