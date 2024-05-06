@@ -50,9 +50,9 @@ import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
+import org.labkey.jbrowse.JBrowseLuceneSearch;
 import org.labkey.jbrowse.JBrowseManager;
 import org.labkey.jbrowse.JBrowseSchema;
-import org.labkey.jbrowse.pipeline.IndexVariantsStep;
 import org.labkey.jbrowse.pipeline.JBrowseLucenePipelineJob;
 import org.labkey.sequenceanalysis.run.util.TabixRunner;
 
@@ -964,6 +964,8 @@ public class JsonFile
             }
             else if (existingLuceneDir != null && existingLuceneDir.exists())
             {
+                JBrowseLuceneSearch.clearCache(getObjectId());
+
                 // Note: this could exist, but be an empty folder:
                 if (luceneDir.exists())
                 {
@@ -1004,7 +1006,7 @@ public class JsonFile
                     try
                     {
                         PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainerObj());
-                        PipelineService.get().queueJob(new JBrowseLucenePipelineJob(getContainerObj(), null, root, vcf, luceneDir, getInfoFieldsToIndex(), allowLenientLuceneProcessing()));
+                        PipelineService.get().queueJob(new JBrowseLucenePipelineJob(getContainerObj(), null, root, getObjectId(), vcf, luceneDir, getInfoFieldsToIndex(), allowLenientLuceneProcessing()));
                     }
                     catch (PipelineValidationException e)
                     {
@@ -1030,6 +1032,7 @@ public class JsonFile
                 if (forceReprocess || !doesLuceneIndexExist())
                 {
                     JBrowseLucenePipelineJob.prepareLuceneIndex(targetFile, luceneDir, log, getInfoFieldsToIndex(), allowLenientLuceneProcessing());
+                    JBrowseLuceneSearch.clearCache(getObjectId());
                 }
                 else
                 {

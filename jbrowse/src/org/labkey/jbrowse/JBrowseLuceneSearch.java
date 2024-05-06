@@ -70,7 +70,7 @@ public class JBrowseLuceneSearch
     private final String[] specialStartPatterns = {"*:* -", "+", "-"};
     private static final String ALL_DOCS = "all";
     private static final String GENOMIC_POSITION = "genomicPosition";
-    private static final int maxCachedQueries = 25;
+    private static final int maxCachedQueries = 1000;
     private static final long maxRamBytesUsed = 250 * 1024 * 1024L;
 
     private static final Cache<String, LRUQueryCache> _cache = CacheManager.getStringKeyCache(1000, CacheManager.UNLIMITED, "JBrowseLuceneSearchCache");
@@ -94,12 +94,12 @@ public class JBrowseLuceneSearch
         return new JBrowseLuceneSearch(session, getTrack(session, trackId, u), u);
     }
 
-    private static synchronized QueryCache getCacheForSession(String sessionName) {
-        LRUQueryCache qc = _cache.get(sessionName);
+    private static synchronized QueryCache getCacheForSession(String trackObjectId) {
+        LRUQueryCache qc = _cache.get(trackObjectId);
         if (qc == null)
         {
             qc = new LRUQueryCache(maxCachedQueries, maxRamBytesUsed);
-            _cache.put(sessionName, qc);
+            _cache.put(trackObjectId, qc);
         }
 
         return qc;
@@ -168,7 +168,7 @@ public class JBrowseLuceneSearch
         )
         {
             IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-            indexSearcher.setQueryCache(getCacheForSession(_session.getObjectId()));
+            indexSearcher.setQueryCache(getCacheForSession(_jsonFile.getObjectId()));
             indexSearcher.setQueryCachingPolicy(new ForceMatchAllDocsCachingPolicy());
 
             List<String> stringQueryParserFields = new ArrayList<>();
@@ -407,5 +407,17 @@ public class JBrowseLuceneSearch
         }
 
         return cacheInfo;
+    }
+
+    public static void clearCache(@Nullable String jbrowseTrackId)
+    {
+        if (jbrowseTrackId == null)
+        {
+            _cache.clear();
+        }
+        else
+        {
+            _cache.remove(jbrowseTrackId);
+        }
     }
 }
