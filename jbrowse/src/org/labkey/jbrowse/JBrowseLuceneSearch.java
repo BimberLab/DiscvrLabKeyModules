@@ -1,6 +1,7 @@
 package org.labkey.jbrowse;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -39,6 +40,7 @@ import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.security.User;
 import org.labkey.api.settings.AppProps;
+import org.labkey.api.util.logging.LogHelper;
 import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 
@@ -64,6 +66,7 @@ import static org.labkey.jbrowse.JBrowseFieldUtils.getTrack;
 
 public class JBrowseLuceneSearch
 {
+    private static final Logger _log = LogHelper.getLogger(JBrowseLuceneSearch.class, "Logger related to JBrowse/Lucene indexing and queries");
     private final JBrowseSession _session;
     private final JsonFile _jsonFile;
     private final User _user;
@@ -413,11 +416,12 @@ public class JBrowseLuceneSearch
     {
         try
         {
+            JBrowseLuceneSearch.clearCache(_jsonFile.getObjectId());
             doSearch(_user, ALL_DOCS, 100, 0, GENOMIC_POSITION, false);
         }
         catch (ParseException | IOException e)
         {
-
+            _log.error("Unable to cache default query for: " + _jsonFile.getObjectId(), e);
         }
     }
 
