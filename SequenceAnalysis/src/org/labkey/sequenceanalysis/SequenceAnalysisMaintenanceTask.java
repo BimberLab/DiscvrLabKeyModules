@@ -18,6 +18,7 @@ import org.labkey.api.ldk.LDKService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
@@ -234,37 +235,59 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                 }
             }
 
-            if (m.getRunId() != null)
+            inspectForCoreFiles(m.getRunId(), log);
+        }
+    }
+
+    private void inspectForCoreFiles(Integer runId, Logger log)
+    {
+        if (runId == null)
+        {
+            return;
+        }
+
+        ExpRun run = ExperimentService.get().getExpRun(runId);
+        if (run == null)
+        {
+            log.info("Not ExpRun found for runId: " + runId);
+            return;
+        }
+        else if (run.getJobId() == null)
+        {
+            log.info("ExpRun lacks jobId: " + runId);
+            return;
+        }
+
+        PipelineStatusFile sf = PipelineService.get().getStatusFile(run.getJobId());
+        if (sf == null)
+        {
+            log.error("Unknown statusFile: " + run.getJobId() + ", for run: " + runId);
+            return;
+        }
+        else if (sf.getFilePath() == null)
+        {
+            log.error("StatusFile filepath is null: " + run.getJobId() + ", for run: " + runId);
+            return;
+        }
+
+        File root = new File(sf.getFilePath());
+        if (!root.exists())
+        {
+            log.error("Run fileroot does not exist: " + runId + " / " + root.getPath());
+            return;
+        }
+
+        try (Stream<Path> stream = Files.walk(root.toPath()))
+        {
+            List<Path> files = stream.filter(x -> x.getFileName().startsWith("core.")).toList();
+            if (!files.isEmpty())
             {
-                ExpRun run = ExperimentService.get().getExpRun(m.getRunId());
-                if (run == null)
-                {
-                    log.info("Not ExpRun found for runId: " + m.getRunId());
-                }
-                else if (run.getFilePathRootPath() == null)
-                {
-                    log.error("Run fileroot is null for runId: " + m.getRunId());
-                }
-                else if (!run.getFilePathRoot().exists())
-                {
-                    log.error("Run fileroot does not exist: " + m.getRunId() + " / " + run.getFilePathRoot());
-                }
-                else
-                {
-                    try (Stream<Path> stream = Files.walk(run.getFilePathRootPath()))
-                    {
-                        List<Path> files = stream.filter(x -> x.getFileName().startsWith("core.")).toList();
-                        if (!files.isEmpty())
-                        {
-                            files.forEach(x -> log.error("Found core file: " + x.toFile().getPath()));
-                        }
-                    }
-                    catch (IOException e)
-                    {
-                        log.error("Error walking file root: " + run.getFilePathRootPath(), e);
-                    }
-                }
+                files.forEach(x -> log.error("Found core file: " + x.toFile().getPath()));
             }
+        }
+        catch (IOException e)
+        {
+            log.error("Error walking file root: " + run.getFilePathRootPath(), e);
         }
     }
 
