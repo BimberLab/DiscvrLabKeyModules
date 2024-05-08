@@ -1,6 +1,7 @@
 package org.labkey.jbrowse;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
@@ -15,16 +16,22 @@ import org.apache.lucene.queryparser.flexible.standard.config.PointsConfig;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.LRUQueryCache;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.QueryCache;
+import org.apache.lucene.search.QueryCachingPolicy;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TopFieldDocs;
+import org.apache.lucene.search.UsageTrackingQueryCachingPolicy;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-import org.apache.lucene.util.NumericUtils;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.labkey.api.cache.Cache;
+import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.jbrowse.AbstractJBrowseFieldCustomizer;
@@ -33,6 +40,7 @@ import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.security.User;
 import org.labkey.api.settings.AppProps;
+import org.labkey.api.util.logging.LogHelper;
 import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 
@@ -51,7 +59,6 @@ import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static org.labkey.jbrowse.JBrowseFieldUtils.VARIABLE_SAMPLES;
 import static org.labkey.jbrowse.JBrowseFieldUtils.getSession;
@@ -59,12 +66,17 @@ import static org.labkey.jbrowse.JBrowseFieldUtils.getTrack;
 
 public class JBrowseLuceneSearch
 {
+    private static final Logger _log = LogHelper.getLogger(JBrowseLuceneSearch.class, "Logger related to JBrowse/Lucene indexing and queries");
     private final JBrowseSession _session;
     private final JsonFile _jsonFile;
     private final User _user;
     private final String[] specialStartPatterns = {"*:* -", "+", "-"};
     private static final String ALL_DOCS = "all";
     private static final String GENOMIC_POSITION = "genomicPosition";
+    private static final int maxCachedQueries = 1000;
+    private static final long maxRamBytesUsed = 250 * 1024 * 1024L;
+
+    private static final Cache<String, LRUQueryCache> _cache = CacheManager.getStringKeyCache(1000, CacheManager.UNLIMITED, "JBrowseLuceneSearchCache");
 
     private JBrowseLuceneSearch(final JBrowseSession session, final JsonFile jsonFile, User u)
     {
@@ -83,6 +95,17 @@ public class JBrowseLuceneSearch
         JBrowseSession session = getSession(sessionId);
 
         return new JBrowseLuceneSearch(session, getTrack(session, trackId, u), u);
+    }
+
+    private static synchronized QueryCache getCacheForSession(String trackObjectId) {
+        LRUQueryCache qc = _cache.get(trackObjectId);
+        if (qc == null)
+        {
+            qc = new LRUQueryCache(maxCachedQueries, maxRamBytesUsed);
+            _cache.put(trackObjectId, qc);
+        }
+
+        return qc;
     }
 
     private String templateReplace(final String searchString) {
@@ -148,6 +171,8 @@ public class JBrowseLuceneSearch
         )
         {
             IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+            indexSearcher.setQueryCache(getCacheForSession(_jsonFile.getObjectId()));
+            indexSearcher.setQueryCachingPolicy(new ForceMatchAllDocsCachingPolicy());
 
             List<String> stringQueryParserFields = new ArrayList<>();
             Map<String, SortField.Type> numericQueryParserFields = new HashMap<>();
@@ -263,7 +288,7 @@ public class JBrowseLuceneSearch
             for (int i = pageSize * offset; i < Math.min(pageSize * (offset + 1), topDocs.scoreDocs.length); i++)
             {
                 JSONObject elem = new JSONObject();
-                Document doc = indexSearcher.doc(topDocs.scoreDocs[i].doc);
+                Document doc = indexSearcher.storedFields().document(topDocs.scoreDocs[i].doc);
 
                 for (IndexableField field : doc.getFields()) {
                     String fieldName = field.name();
@@ -343,6 +368,72 @@ public class JBrowseLuceneSearch
         public boolean isAvailable(Container c, User u)
         {
             return true;
+        }
+    }
+
+    public static class ForceMatchAllDocsCachingPolicy implements QueryCachingPolicy {
+        private final UsageTrackingQueryCachingPolicy defaultPolicy = new UsageTrackingQueryCachingPolicy();
+
+        @Override
+        public boolean shouldCache(Query query) throws IOException {
+            if (query instanceof BooleanQuery bq) {
+                for (BooleanClause clause : bq) {
+                    if (clause.getQuery() instanceof MatchAllDocsQuery) {
+                        return true;
+                    }
+                }
+            }
+
+            return defaultPolicy.shouldCache(query);
+        }
+
+        @Override
+        public void onUse(Query query) {
+            defaultPolicy.onUse(query);
+        }
+    }
+
+    public static JSONArray reportCacheInfo()
+    {
+        JSONArray cacheInfo = new JSONArray();
+        for (String sessionId : _cache.getKeys())
+        {
+            LRUQueryCache qc = _cache.get(sessionId);
+            JSONObject info = new JSONObject();
+            info.put("cacheSize", qc.getCacheSize());
+            info.put("cacheCount", qc.getCacheCount());
+            info.put("hitCount", qc.getHitCount());
+            info.put("missCount", qc.getMissCount());
+            info.put("evictionCount", qc.getEvictionCount());
+            info.put("totalCount", qc.getTotalCount());
+            cacheInfo.put(info);
+        }
+
+        return cacheInfo;
+    }
+
+    public void cacheDefaultQuery()
+    {
+        try
+        {
+            JBrowseLuceneSearch.clearCache(_jsonFile.getObjectId());
+            doSearch(_user, ALL_DOCS, 100, 0, GENOMIC_POSITION, false);
+        }
+        catch (ParseException | IOException e)
+        {
+            _log.error("Unable to cache default query for: " + _jsonFile.getObjectId(), e);
+        }
+    }
+
+    public static void clearCache(@Nullable String jbrowseTrackId)
+    {
+        if (jbrowseTrackId == null)
+        {
+            _cache.clear();
+        }
+        else
+        {
+            _cache.remove(jbrowseTrackId);
         }
     }
 }
