@@ -48,6 +48,8 @@ abstract public class JBrowseService
 
     abstract public void registerLuceneIndexDetector(LuceneIndexDetector detector);
 
+    abstract public void cacheDefaultQuery(User u, String sessionId, String trackId);
+
     public interface LuceneIndexDetector
     {
         SequenceOutputFile findMatchingLuceneIndex(SequenceOutputFile vcfFile, List<String> infoFieldsToIndex, User u, @Nullable Logger log) throws PipelineJobException;
