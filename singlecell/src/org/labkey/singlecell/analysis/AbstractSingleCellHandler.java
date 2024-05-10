@@ -1107,11 +1107,6 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             descriptions.add("Cite-seq Normalization: " + citeNormalize);
         }
 
-        if (ctx.getParams().optBoolean("singleCell.AppendCiteSeq.runCellBender", false))
-        {
-            descriptions.add("Cite-seq/CellBender: true");
-        }
-
         return StringUtils.join(descriptions, "\n");
     }
 }

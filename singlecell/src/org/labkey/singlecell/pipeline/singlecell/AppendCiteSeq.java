@@ -54,10 +54,6 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
             put("initialValues", "clr");
         }}, "clr"));
 
-        ret.add(SeuratToolParameter.create("runCellBender", "Run CellBender", "If checked, cellbender will be run on the raw count matrix to remove background/ambient RNA signal", "checkbox", new JSONObject(){{
-
-        }}, false));
-
         ret.add(SeuratToolParameter.create("dropAggregateBarcodes", "Drop Aggregate Barcodes", "If checked, any barcodes marked as protein aggregates by cellranger will be dropped.", "checkbox", new JSONObject(){{
             put("checked", true);
         }}, true));

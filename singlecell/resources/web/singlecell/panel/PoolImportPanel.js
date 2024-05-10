@@ -94,7 +94,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         transform: 'hto'
     },{
         name: 'cells',
-        labels: ['Cells', 'Cell #', 'Sort', 'Sort Cell Count'],
+        labels: ['Cells', 'Cell #', 'Sort', 'Sort Cell Count', 'Cells/sample'],
         allowRowSpan: false,
         allowBlank: false,
         transform: 'cells'
