@@ -51,7 +51,23 @@ for (datasetId in names(seuratObjects)) {
   }
 
   if (requireRiraImmune) {
-    CheckField(seuratObj, datasetId, 'RIRA_Immune_v2.cellclass')
+    # Note: if a given dataset has fewer than 200 cells, it will return NAs for RIRA:
+    if (!'RIRA_Immune_v2.cellclass' %in% names(seuratObj@meta.data)) {
+      addErrorMessage(paste0(paste0('Missing ', 'RIRA_Immune_v2.cellclass', ' for dataset: ', datasetId)))
+    }
+
+    if ('DatasetId' %in% names(seuratObj@meta.data)) {
+      for (ds in sort(unique(seuratObj@meta.data$DatasetId))) {
+        dat <- seuratObj@meta.data$RIRA_Immune_v2.cellclass[seuratObj@meta.data$DatasetId == ds]
+        if (any(is.na(dat))) {
+          if (length(dat) > 200) {
+            addErrorMessage(paste0('NA values found for RIRA_Immune_v2.cellclass for DatasetId: ', ds, ', for dataset: ', datasetId))
+          } else {
+            print(paste0('NA values found for RIRA_Immune_v2.cellclass for DatasetId: ', ds, ', for dataset: ', datasetId, '. ignoring because there are fewer than 200 total cells'))
+          }
+        }
+      }
+    }
   }
 
   if (length(errorMessages) > 0) {

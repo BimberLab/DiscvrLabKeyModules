@@ -24,7 +24,7 @@ for (datasetId in names(seuratObjects)) {
             }
         }
 
-        seuratObj <- CellMembrane::AppendCiteSeq(seuratObj, unfilteredMatrixDir = matrixDir, normalizeMethod = normalizeMethod, datasetId = datasetId, featureMetadata = featureMetadata, adtWhitelist = adtWhitelist, runCellBender = runCellBender, aggregateBarcodeFile = aggregateBarcodeFile)
+        seuratObj <- CellMembrane::AppendCiteSeq(seuratObj, unfilteredMatrixDir = matrixDir, normalizeMethod = normalizeMethod, datasetId = datasetId, featureMetadata = featureMetadata, adtWhitelist = adtWhitelist, aggregateBarcodeFile = aggregateBarcodeFile)
     } else {
         print('matrixDir was NULL, skipping CITE-seq')
     }

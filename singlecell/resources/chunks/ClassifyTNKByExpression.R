@@ -1,12 +1,24 @@
+if (!file.exists('/homeDir/.netrc')) {
+    print(list.files('/homeDir'))
+    stop('Unable to find file: /homeDir/.netrc')
+}
+
+invisible(Rlabkey::labkey.setCurlOptions(NETRC_FILE = '/homeDir/.netrc'))
+Rdiscvr::SetLabKeyDefaults(baseUrl = serverBaseUrl, defaultFolder = defaultLabKeyFolder)
+
 for (datasetId in names(seuratObjects)) {
-    printName(datasetId)
-    seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
+  printName(datasetId)
+  seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
-    seuratObj <- Rdiscvr::ClassifyTNKByExpression(seuratObj)
+  if (!'HasCDR3Data' %in% names(seuratObj@meta.data)) {
+    seuratObj <- Rdiscvr::DownloadAndAppendTcrClonotypes(seuratObj)
+  }
 
-    saveData(seuratObj, datasetId)
+  seuratObj <- Rdiscvr::ClassifyTNKByExpression(seuratObj)
 
-    # Cleanup
-    rm(seuratObj)
-    gc()
+  saveData(seuratObj, datasetId)
+
+  # Cleanup
+  rm(seuratObj)
+  gc()
 }
