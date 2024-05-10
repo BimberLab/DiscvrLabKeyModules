@@ -72,7 +72,7 @@ public class IndexVariantsStep extends AbstractCommandPipelineStep<SelectVariant
             throw new PipelineJobException("Unable to find file: " + idx.getPath());
         }
 
-        output.addSequenceOutput(idx, "Lucene index: " + inputVCF.getName(), CATEGORY, null, null, genome.getGenomeId(), "Fields indexed: " + infoFieldsRaw);
+        output.addSequenceOutput(idx, "Lucene index: " + inputVCF.getName(), CATEGORY, null, null, genome.getGenomeId(), "Fields indexed: " + infoFields.size());
 
         return output;
     }
