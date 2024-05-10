@@ -12,11 +12,13 @@ import org.labkey.api.data.Sort;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.ldk.LDKService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
@@ -34,6 +36,8 @@ import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -44,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by bimber on 9/15/2014.
@@ -229,6 +234,60 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                     log.error("Unable to find file associated with analysis: " + m.getAnalysisId() + ", " + m.getAlignmentFile() + ", " + d.getFile().getPath() + " for container: " + (c == null ? m.getContainer() : c.getPath()));
                 }
             }
+
+            inspectForCoreFiles(m.getRunId(), log);
+        }
+    }
+
+    private void inspectForCoreFiles(Integer runId, Logger log)
+    {
+        if (runId == null)
+        {
+            return;
+        }
+
+        ExpRun run = ExperimentService.get().getExpRun(runId);
+        if (run == null)
+        {
+            log.info("Not ExpRun found for runId: " + runId);
+            return;
+        }
+        else if (run.getJobId() == null)
+        {
+            log.info("ExpRun lacks jobId: " + runId);
+            return;
+        }
+
+        PipelineStatusFile sf = PipelineService.get().getStatusFile(run.getJobId());
+        if (sf == null)
+        {
+            log.error("Unknown statusFile: " + run.getJobId() + ", for run: " + runId);
+            return;
+        }
+        else if (sf.getFilePath() == null)
+        {
+            log.error("StatusFile filepath is null: " + run.getJobId() + ", for run: " + runId);
+            return;
+        }
+
+        File root = new File(sf.getFilePath());
+        if (!root.exists())
+        {
+            log.error("Run fileroot does not exist: " + runId + " / " + root.getPath());
+            return;
+        }
+
+        try (Stream<Path> stream = Files.walk(root.toPath()))
+        {
+            List<Path> files = stream.filter(x -> x.getFileName().startsWith("core.")).toList();
+            if (!files.isEmpty())
+            {
+                files.forEach(x -> log.error("Found core file: " + x.toFile().getPath()));
+            }
+        }
+        catch (IOException e)
+        {
+            log.error("Error walking file root: " + run.getFilePathRootPath(), e);
         }
     }
 

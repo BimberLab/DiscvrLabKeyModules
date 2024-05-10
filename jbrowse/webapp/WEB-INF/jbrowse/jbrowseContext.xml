@@ -8,6 +8,7 @@
             <list>
                 <bean class="org.labkey.jbrowse.pipeline.JBrowseSessionTask$Factory"/>
                 <bean class="org.labkey.jbrowse.pipeline.JBrowseLuceneTask$Factory"/>
+                <bean class="org.labkey.jbrowse.pipeline.JBrowseLuceneFinalTask$Factory"/>
             </list>
         </property>
         <property name="pipelines">
@@ -25,6 +26,7 @@
                     <property name="taskProgressionSpec">
                         <list>
                             <value type="java.lang.Class">org.labkey.jbrowse.pipeline.JBrowseLuceneTask</value>
+                            <value type="java.lang.Class">org.labkey.jbrowse.pipeline.JBrowseLuceneFinalTask</value>
                         </list>
                     </property>
                 </bean>

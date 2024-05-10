@@ -39,6 +39,7 @@ import java.util.List;
 public class JBrowseLucenePipelineJob extends PipelineJob
 {
     private List<String> _infoFields;
+    private String _jbrowseTrackId;
     private File _vcf;
     private File _targetDir;
     private boolean _allowLenientLuceneProcessing = false;
@@ -48,9 +49,10 @@ public class JBrowseLucenePipelineJob extends PipelineJob
     {
     }
 
-    public JBrowseLucenePipelineJob(Container c, User user, PipeRoot pipeRoot, File vcf, File targetDir, List<String> infoFields, boolean allowLenientLuceneProcessing)
+    public JBrowseLucenePipelineJob(Container c, User user, PipeRoot pipeRoot, String jbrowseTrackId, File vcf, File targetDir, List<String> infoFields, boolean allowLenientLuceneProcessing)
     {
         super(JBrowseLucenePipelineProvider.NAME, new ViewBackgroundInfo(c, user, null), pipeRoot);
+        _jbrowseTrackId = jbrowseTrackId;
         _vcf = vcf;
         _targetDir = targetDir;
         _infoFields = infoFields;
@@ -90,7 +92,7 @@ public class JBrowseLucenePipelineJob extends PipelineJob
     }
 
     @Override
-    public TaskPipeline getTaskPipeline()
+    public TaskPipeline<?> getTaskPipeline()
     {
         return PipelineJobService.get().getTaskPipeline(new TaskId(JBrowseLucenePipelineJob.class));
     }
@@ -103,6 +105,16 @@ public class JBrowseLucenePipelineJob extends PipelineJob
     public void setInfoFields(List<String> infoFields)
     {
         _infoFields = infoFields;
+    }
+
+    public String getJbrowseTrackId()
+    {
+        return _jbrowseTrackId;
+    }
+
+    public void setJbrowseTrackId(String jbrowseTrackId)
+    {
+        _jbrowseTrackId = jbrowseTrackId;
     }
 
     public File getVcf()
