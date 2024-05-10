@@ -177,7 +177,7 @@ dependencies {
 if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null && project.hasProperty("teamcity"))
 {
     project.evaluationDependsOn(BuildUtils.getTestProjectPath(project.gradle))
-    def configDir = "${ServerDeployExtension.getServerDeployDirectory(project)}/config"
+    def configDir = new File(ServerDeployExtension.getServerDeployDirectory(project), "config")
     def testProject = project.findProject(BuildUtils.getTestProjectPath(project.gradle))
     def createPipelineConfigTask = project.tasks.register("createPipelineConfig", Copy) {
         Copy task ->
@@ -197,13 +197,9 @@ if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null &
                 return newLine
 
             })
-            task.destinationDir = new File(configDir)
+            task.destinationDir = configDir
 
             if (BuildUtils.useEmbeddedTomcat(project)) {
-                task.doFirst {
-                    new File(new File(BuildUtils.getEmbeddedConfigPath(project)), "application.properties") << "\n${configDir}"
-                }
-
                 rootProject.allprojects {
                     task.mustRunAfter tasks.withType(DoThenSetup)
                 }
@@ -213,7 +209,8 @@ if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null &
         dependsOn(createPipelineConfigTask)
         if (BuildUtils.useEmbeddedTomcat(project)) {
             it.doFirst {
-                new File(new File(BuildUtils.getEmbeddedConfigPath(project)), "application.properties") << "\ncontext.pipelineConfig=${configDir}"
+                new File(new File(BuildUtils.getEmbeddedConfigPath(project)), "application.properties")
+                        << "\ncontext.pipelineConfig=${configDir.getAbsolutePath().replace("\\", "\\\\")}"
             }
         }
     }
