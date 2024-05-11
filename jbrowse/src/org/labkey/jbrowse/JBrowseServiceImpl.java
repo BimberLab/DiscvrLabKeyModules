@@ -312,6 +312,13 @@ public class JBrowseServiceImpl extends JBrowseService
         _detectors.add(detector);
     }
 
+    @Override
+    public void cacheDefaultQuery(User u, String sessionId, String trackId)
+    {
+        JBrowseLuceneSearch luceneSearch = JBrowseLuceneSearch.create(sessionId, trackId, u);
+        luceneSearch.cacheDefaultQuery();
+    }
+
     public static final class DefaultLuceneIndexDetector implements LuceneIndexDetector
     {
         @Override

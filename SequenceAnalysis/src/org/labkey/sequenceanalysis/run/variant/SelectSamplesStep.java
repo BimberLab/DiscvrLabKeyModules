@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.run.variant;
 import htsjdk.samtools.util.Interval;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -41,7 +42,8 @@ public class SelectSamplesStep extends AbstractCommandPipelineStep<SelectVariant
         {
             super("SelectSamples", "Select Specific Samples", "GATK SelectVariants", "A VCF will be generated containing only the samples specified below.", Arrays.asList(
                 ToolParameterDescriptor.create(SAMPLE_INCLUDE, "Select Sample(s) Include", "Only variants of the selected type(s) will be included", "sequenceanalysis-trimmingtextarea", null, null),
-                ToolParameterDescriptor.create(SAMPLE_EXCLUDE, "Select Samples(s) To Exclude", "Variants of the selected type(s) will be excluded", "sequenceanalysis-trimmingtextarea", null, null)
+                ToolParameterDescriptor.create(SAMPLE_EXCLUDE, "Select Samples(s) To Exclude", "Variants of the selected type(s) will be excluded", "sequenceanalysis-trimmingtextarea", null, null),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--allow-nonoverlapping-command-line-samples"), "allowNnonoverlappingSamples", "Allow non-overlapping Samples", "Normally the job will fail is samples are selected that do not exist in the VCF.  If checked, this will be allowed.", "checkbox", null, null)
             ), PageFlowUtil.set("/sequenceanalysis/field/TrimmingTextArea.js"), "https://software.broadinstitute.org/gatk/");
         }
 
@@ -71,6 +73,8 @@ public class SelectSamplesStep extends AbstractCommandPipelineStep<SelectVariant
                 options.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
             });
         }
+
+        options.addAll(getClientCommandArgs());
 
         File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".selectSamples.vcf.gz");
         getWrapper().execute(genome.getWorkingFastaFile(), inputVCF, outputVcf, options);

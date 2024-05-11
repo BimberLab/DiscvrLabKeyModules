@@ -1035,5 +1035,15 @@ public class JBrowseController extends SpringActionController
             this.includeDefaultFields = includeDefaultFields;
         }
     }
+
+    @RequiresPermission(ReadPermission.class)
+    public static class GetLuceneCacheInfoAction extends ReadOnlyApiAction<Object>
+    {
+        @Override
+        public ApiResponse execute(Object form, BindException errors)
+        {
+            return new ApiSimpleResponse("cacheInfo", JBrowseLuceneSearch.reportCacheInfo());
+        }
+    }
 }
 
