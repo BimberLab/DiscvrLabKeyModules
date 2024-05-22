@@ -43,12 +43,17 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         super(provider, ctx);
     }
 
+    private String getSavedSeuratFileName(String outputPrefix)
+    {
+        return outputPrefix + ".savedSeuratObjects.txt";
+    }
+
     @Override
     public Output execute(SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
     {
         SingleCellOutput output = new SingleCellOutput();
 
-        File tracker = new File(ctx.getOutputDir(), "savedSeuratObjects.txt");
+        File tracker = new File(ctx.getOutputDir(), getSavedSeuratFileName(outputPrefix));
         if (tracker.exists())
         {
             ctx.getLogger().debug("deleting pre-existing file: " + tracker.getName());
@@ -481,6 +486,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         }
         body.add("");
         body.add("outputPrefix <- '" + outputPrefix + "'");
+        body.add("trackerFile <- paste0('/work/" + getSavedSeuratFileName(outputPrefix) + "'");
 
         //Read RDS:
         body.add("");
