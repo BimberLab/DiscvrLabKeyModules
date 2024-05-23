@@ -486,7 +486,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         }
         body.add("");
         body.add("outputPrefix <- '" + outputPrefix + "'");
-        body.add("trackerFile <- paste0('/work/" + getSavedSeuratFileName(outputPrefix) + "'");
+        body.add("trackerFile <- '/work/" + getSavedSeuratFileName(outputPrefix) + "'");
 
         //Read RDS:
         body.add("");
