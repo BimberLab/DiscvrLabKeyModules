@@ -24,8 +24,10 @@ public class FindClustersAndDimRedux extends AbstractCellMembraneStep
                     SeuratToolParameter.create("minDimsToUse", "Min. PCs to Use", "The minimum number of PCs to use", "ldk-integerfield", new JSONObject()
                     {{
                         put("minValue", 0);
-                    }}, 15)
+                    }}, 15),
+                    SeuratToolParameter.create("useLeiden", "Use Leiden Clustering", "If true, FindClusters() will use algorith=4 (leiden), as opposed to the default (louvain)", "checkbox", new JSONObject(){{
 
+                    }}, false)
             ), null, null);
         }
 
