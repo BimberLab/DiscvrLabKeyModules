@@ -34,7 +34,7 @@ public class CheckExpectations extends AbstractCellMembraneStep
                     SeuratToolParameter.create("requireSaturation", "Require Per-Cell Saturation", "If this dataset uses TCR sequencing, these data are required", "checkbox", null, true),
                     SeuratToolParameter.create("requireSingleR", "Require SingleR", "If checked, SingleR calls, including singleRConsensus are required to pass", "checkbox", null, true),
                     SeuratToolParameter.create("requireScGate", "Require scGate", "If checked, scGateConsensus calls are required to pass", "checkbox", null, true),
-                    SeuratToolParameter.create("requireRiraImmune", "Require RIRA Immune V2", "If checked, RIRA_Immune_v2 calls (field RIRA_Immune_v2.cellclass) are required to pass", "checkbox", null, true)
+                    SeuratToolParameter.create("requireRiraImmune", "Require RIRA Immune V2", "If checked, RIRA_Immune_v2 calls (field RIRA_Immune_v2.cellclass) are required to pass", "checkbox", null, false)
             ), null, null);
         }
 
