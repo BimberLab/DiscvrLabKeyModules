@@ -43,7 +43,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static org.labkey.singlecell.run.NimbleAlignmentStep.ALIGN_OUTPUT;
 import static org.labkey.singlecell.run.NimbleAlignmentStep.MAX_HITS_TO_REPORT;
 import static org.labkey.singlecell.run.NimbleAlignmentStep.REF_GENOMES;
 import static org.labkey.singlecell.run.NimbleAlignmentStep.STRANDEDNESS;
@@ -425,14 +424,6 @@ public class NimbleHelper
             alignArgs.add(String.valueOf(maxThreads));
         }
 
-        boolean alignOutput = getProvider().getParameterByName(ALIGN_OUTPUT).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
-        File alignmentOutputFile = new File(getPipelineCtx().getWorkingDirectory(), "nimbleAlignment." + (genomes.size() == 1 ? genomes.get(0).genomeId + "." : "") + "bam");
-        if (alignOutput)
-        {
-            alignArgs.add("--alignment_path");
-            alignArgs.add("/work/" + alignmentOutputFile.getName());
-        }
-
         String strandedness = getProvider().getParameterByName(STRANDEDNESS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null);
         if (strandedness != null)
         {
@@ -450,13 +441,6 @@ public class NimbleHelper
 
         alignArgs.add("--input");
         alignArgs.add("/work/" + localBam.getName());
-
-        Integer maxRam = SequencePipelineService.get().getMaxRam();
-        if (maxRam != null)
-        {
-            alignArgs.add("-m");
-            alignArgs.add(maxRam + "000"); // in MB
-        }
 
         boolean dockerRan = runUsingDocker(alignArgs, output, "align.all");
         for (NimbleGenome genome : genomes)
