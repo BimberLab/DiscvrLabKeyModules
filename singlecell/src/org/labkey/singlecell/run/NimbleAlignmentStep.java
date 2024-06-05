@@ -57,9 +57,6 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
                     put("initialValues", "unstranded");
                     put("delimiter", ";");
                 }}, null),
-                ToolParameterDescriptor.create(ALIGN_OUTPUT, "Create Alignment/Debug Output", "If checked, an alignment-level summary TSV will be created", "checkbox", new JSONObject(){{
-                    put("checked", true);
-                }}, true),
                 ToolParameterDescriptor.create(MAX_HITS_TO_REPORT, "Max Hits To Report", "If a given hit has more than this number of references, it is discarded", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
                 }}, 4)
