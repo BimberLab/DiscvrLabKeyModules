@@ -4,8 +4,9 @@ for (datasetId in names(seuratObjects)) {
 
     seuratObj <- RIRA::Classify_ImmuneCells(seuratObj, maxBatchSize = maxBatchSize, retainProbabilityMatrix = retainProbabilityMatrix)
     seuratObj <- RIRA::Classify_TNK(seuratObj, maxBatchSize = maxBatchSize, retainProbabilityMatrix = retainProbabilityMatrix)
-
     seuratObj$RIRA_TNK_v2.predicted_labels[seuratObj$RIRA_Immune_v2.majority_voting != 'T_NK'] <- 'Other'
+
+    seuratObj <- RIRA::Classify_Myeloid(seuratObj, maxBatchSize = maxBatchSize, retainProbabilityMatrix = retainProbabilityMatrix)
 
     saveData(seuratObj, datasetId)
 }
