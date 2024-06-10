@@ -113,6 +113,7 @@ import org.labkey.sequenceanalysis.run.util.CombineGVCFsHandler;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.run.util.GenomicsDBAppendHandler;
 import org.labkey.sequenceanalysis.run.util.GenomicsDBImportHandler;
+import org.labkey.sequenceanalysis.run.util.SVAnnotateStep;
 import org.labkey.sequenceanalysis.run.variant.*;
 import org.labkey.sequenceanalysis.util.Barcoder;
 import org.labkey.sequenceanalysis.util.ChainFileValidator;
@@ -300,6 +301,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new MendelianViolationReportStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SummarizeGenotypeQualityStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new BcftoolsFillTagsStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SVAnnotateStep.Provider());
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
