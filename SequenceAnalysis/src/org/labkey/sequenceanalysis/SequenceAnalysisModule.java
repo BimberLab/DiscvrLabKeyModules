@@ -77,6 +77,7 @@ import org.labkey.sequenceanalysis.run.alignment.Bowtie2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.BowtieWrapper;
 import org.labkey.sequenceanalysis.run.alignment.GSnapWrapper;
 import org.labkey.sequenceanalysis.run.alignment.MosaikWrapper;
+import org.labkey.sequenceanalysis.run.alignment.ParagraphStep;
 import org.labkey.sequenceanalysis.run.alignment.Pbmm2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.StarWrapper;
 import org.labkey.sequenceanalysis.run.alignment.VulcanWrapper;
@@ -336,6 +337,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new PbsvJointCallingHandler());
         SequenceAnalysisService.get().registerFileHandler(new DeepVariantHandler());
         SequenceAnalysisService.get().registerFileHandler(new GLNexusHandler());
+        SequenceAnalysisService.get().registerFileHandler(new ParagraphStep());
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
         SequenceAnalysisService.get().registerReadsetHandler(new RestoreSraDataHandler());
