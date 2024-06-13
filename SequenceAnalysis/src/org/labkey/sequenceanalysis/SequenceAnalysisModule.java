@@ -59,6 +59,7 @@ import org.labkey.sequenceanalysis.analysis.RecalculateSequenceMetricsHandler;
 import org.labkey.sequenceanalysis.analysis.RnaSeqcHandler;
 import org.labkey.sequenceanalysis.analysis.SbtGeneCountHandler;
 import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
+import org.labkey.sequenceanalysis.analysis.UpdateReadsetFilesHandler;
 import org.labkey.sequenceanalysis.button.AddSraRunButton;
 import org.labkey.sequenceanalysis.button.ArchiveReadsetsButton;
 import org.labkey.sequenceanalysis.button.ChangeReadsetStatusButton;
@@ -338,6 +339,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new DeepVariantHandler());
         SequenceAnalysisService.get().registerFileHandler(new GLNexusHandler());
         SequenceAnalysisService.get().registerFileHandler(new ParagraphStep());
+        SequenceAnalysisService.get().registerFileHandler(new UpdateReadsetFilesHandler());
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
         SequenceAnalysisService.get().registerReadsetHandler(new RestoreSraDataHandler());
