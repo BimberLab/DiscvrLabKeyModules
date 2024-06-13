@@ -77,6 +77,7 @@ import org.labkey.sequenceanalysis.run.alignment.Bowtie2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.BowtieWrapper;
 import org.labkey.sequenceanalysis.run.alignment.GSnapWrapper;
 import org.labkey.sequenceanalysis.run.alignment.MosaikWrapper;
+import org.labkey.sequenceanalysis.run.alignment.ParagraphStep;
 import org.labkey.sequenceanalysis.run.alignment.Pbmm2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.StarWrapper;
 import org.labkey.sequenceanalysis.run.alignment.VulcanWrapper;
@@ -113,6 +114,7 @@ import org.labkey.sequenceanalysis.run.util.CombineGVCFsHandler;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.run.util.GenomicsDBAppendHandler;
 import org.labkey.sequenceanalysis.run.util.GenomicsDBImportHandler;
+import org.labkey.sequenceanalysis.run.util.SVAnnotateStep;
 import org.labkey.sequenceanalysis.run.variant.*;
 import org.labkey.sequenceanalysis.util.Barcoder;
 import org.labkey.sequenceanalysis.util.ChainFileValidator;
@@ -300,6 +302,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new MendelianViolationReportStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SummarizeGenotypeQualityStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new BcftoolsFillTagsStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SVAnnotateStep.Provider());
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
@@ -334,6 +337,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new PbsvJointCallingHandler());
         SequenceAnalysisService.get().registerFileHandler(new DeepVariantHandler());
         SequenceAnalysisService.get().registerFileHandler(new GLNexusHandler());
+        SequenceAnalysisService.get().registerFileHandler(new ParagraphStep());
 
         SequenceAnalysisService.get().registerReadsetHandler(new MultiQCHandler());
         SequenceAnalysisService.get().registerReadsetHandler(new RestoreSraDataHandler());

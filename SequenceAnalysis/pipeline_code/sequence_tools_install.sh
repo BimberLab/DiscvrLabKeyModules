@@ -336,30 +336,6 @@ fi
 
 
 #
-# BisSNP
-#
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install BisSNP"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/BisSNP.jar || ! -z $FORCE_REINSTALL ]];
-then
-    echo "Cleaning up previous installs"
-    rm -Rf BisSNP*
-    rm -Rf $LKTOOLS_DIR/BisSNP.jar
-
-    wget $WGET_OPTS https://downloads.sourceforge.net/project/bissnp/BisSNP-0.82.2/BisSNP-0.82.2.jar
-
-    install ./BisSNP-0.82.2.jar $LKTOOLS_DIR/BisSNP.jar
-else
-    echo "Already installed"
-fi
-
-
-#
 #mosaik
 #
 echo ""
