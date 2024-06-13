@@ -109,7 +109,7 @@ abstract class AbstractClusterEngineConfig implements PipelineJobService.RemoteE
         return javaOpts;
     }
 
-    public List<String> getJobArgs(File localPipelineDir, File localSerializedJobXmlFile, PipelineJob job, RemoteExecutionEngine engine)
+    public List<String> getJobArgs(File localPipelineDir, File localSerializedJobXmlFile, PipelineJob job, RemoteExecutionEngine<?> engine)
     {
         List<String> ret = new ArrayList<>();
         ret.addAll(getFinalJavaOpts(job, engine));

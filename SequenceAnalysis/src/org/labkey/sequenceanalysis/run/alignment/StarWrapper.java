@@ -53,7 +53,7 @@ public class StarWrapper extends AbstractCommandWrapper
 
     public static class StarAlignmentStep extends AbstractAlignmentPipelineStep<StarWrapper> implements AlignmentStep
     {
-        public StarAlignmentStep(AlignmentStepProvider provider, PipelineContext ctx)
+        public StarAlignmentStep(AlignmentStepProvider<?> provider, PipelineContext ctx)
         {
             super(provider, ctx, new StarWrapper(ctx.getLogger()));
         }

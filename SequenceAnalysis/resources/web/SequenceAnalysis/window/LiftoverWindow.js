@@ -104,7 +104,7 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                 maxValue: 1.0,
                 value: 0.95,
                 fieldLabel: 'Min Percent Match',
-                helpPopup: 'In order to lift to the target genome, the feature must have at least this percent match.  Lower this value to be more permissive; however, this risks incorrect liftovers',
+                helpPopup: 'In order to lift to the target genome, the feature must have at least this percent match.  Lower this value to be more permissive; however, this risks incorrect liftovers. This is ignored if using bcftools.',
                 itemId: 'pctField'
             },{
                 xtype: 'checkbox',
@@ -112,6 +112,11 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                 checked: false,
                 helpPopup: 'If checked, no genotypes will be written to the output file (applies to VCFs only).  This can be useful (and necessary) when lifting VCFs with extremely high sample number.',
                 fieldLabel: 'Drop Genotypes'
+            },{
+                xtype: 'checkbox',
+                itemId: 'useBcfTools',
+                checked: false,
+                fieldLabel: 'Use bcftools'
             }].concat(SequenceAnalysis.window.OutputHandlerWindow.getCfgForToolParameters(this.toolParameters)),
             buttons: [{
                 text: 'Submit',
