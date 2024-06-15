@@ -13,17 +13,20 @@ for (datasetId in names(seuratObjects)) {
             next
         }
 
-        P1 <- Seurat::DimPlot(seuratObj, group.by = field, reduction = 'tsne')
-        P2 <- Seurat::DimPlot(seuratObj, group.by = field, reduction = 'umap')
-
-        if ('wnn.umap' %in% names(seuratObj@reductions)) {
-            P3 <- Seurat::DimPlot(seuratObj, group.by = field, reduction = 'wnn.umap')
-            P1 <- P1 | P2 | P3
-        } else {
-            P1 <- P1 | P2
+        plotList <- list()
+        if ('tsne' %in% names(seuratObj@reductions)) {
+            plotList[['tsne']] <- Seurat::DimPlot(seuratObj, group.by = field, reduction = 'tsne')
         }
 
-        P1 <- P1 + patchwork::plot_annotation(title = field) + patchwork::plot_layout(guides = "collect")
+        if ('umap' %in% names(seuratObj@reductions)) {
+            plotList[['umap']] <- Seurat::DimPlot(seuratObj, group.by = field, reduction = 'umap')
+        }
+
+        if ('wnn.umap' %in% names(seuratObj@reductions)) {
+            plotList[['wnn.umap']] <- Seurat::DimPlot(seuratObj, group.by = field, reduction = 'wnn.umap')
+        }
+
+        P1 <- patchwork::wrap_plots(plotList) + patchwork::plot_layout(ncol = length(plotList)) + patchwork::plot_annotation(title = field) + patchwork::plot_layout(guides = "collect")
 
         print(P1)
     }
