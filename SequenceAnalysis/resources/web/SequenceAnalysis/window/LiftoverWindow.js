@@ -157,6 +157,14 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
             params.dropGenotypes = this.down('#dropGenotypes').getValue();
         }
 
+        if (this.down('#useBcfTools').getValue()){
+            params.useBcfTools = this.down('#useBcfTools').getValue();
+        }
+
+        if (this.down('#doNotRetainUnmapped').getValue()){
+            params.doNotRetainUnmapped = this.down('#doNotRetainUnmapped').getValue();
+        }
+
         Ext4.Msg.wait('Saving...');
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler', this.containerPath),

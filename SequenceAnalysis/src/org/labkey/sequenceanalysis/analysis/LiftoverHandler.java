@@ -176,6 +176,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
 
             boolean dropGenotypes = params.optBoolean("dropGenotypes", false);
             boolean useBcfTools = params.optBoolean("useBcfTools", false);
+            boolean doNotRetainUnmapped = params.optBoolean("doNotRetainUnmapped", false);
 
             int chainFileId = params.getInt("chainFileId");
             File chainFile = ctx.getSequenceSupport().getCachedData(chainFileId);
@@ -214,7 +215,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
                 }
 
                 File lifted = new File(outDir, baseName + ".lifted-" + targetGenomeId + ext);
-                File unmappedOutput = new File(outDir, baseName + ".unmapped-" + targetGenomeId + ext);
+                File unmappedOutput = doNotRetainUnmapped ? new File(outDir, baseName + ".unmapped-" + targetGenomeId + ext) : null;
 
                 try
                 {
@@ -260,7 +261,11 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
                     ctx.addSequenceOutput(so1);
                 }
 
-                if (!unmappedOutput.exists())
+                if (unmappedOutput == null)
+                {
+                    // skip
+                }
+                else if (!unmappedOutput.exists())
                 {
                     job.getLogger().info("no unmapped intervals");
                 }
