@@ -486,10 +486,10 @@ then
     rm -Rf bcftools*
     rm -Rf $LKTOOLS_DIR/bcftools
 
-    wget $WGET_OPTS https://github.com/samtools/bcftools/releases/download/1.18/bcftools-1.18.tar.bz2
-    tar xjvf bcftools-1.18.tar.bz2
-    chmod 755 bcftools-1.18
-    cd bcftools-1.18
+    wget $WGET_OPTS https://github.com/samtools/bcftools/releases/download/1.20/bcftools-1.20.tar.bz2
+    tar xjvf bcftools-1.20.tar.bz2
+    chmod 755 bcftools-1.20
+    cd bcftools-1.20
     rm -f plugins/liftover.c
     wget $WGET_OPTS -P plugins https://raw.githubusercontent.com/freeseek/score/master/liftover.c
 

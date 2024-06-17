@@ -215,7 +215,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
                 }
 
                 File lifted = new File(outDir, baseName + ".lifted-" + targetGenomeId + ext);
-                File unmappedOutput = doNotRetainUnmapped ? new File(outDir, baseName + ".unmapped-" + targetGenomeId + ext) : null;
+                File unmappedOutput = doNotRetainUnmapped ? null : new File(outDir, baseName + ".unmapped-" + targetGenomeId + ext);
 
                 try
                 {
