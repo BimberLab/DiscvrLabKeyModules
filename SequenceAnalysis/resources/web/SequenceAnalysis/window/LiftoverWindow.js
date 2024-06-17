@@ -117,6 +117,11 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                 itemId: 'useBcfTools',
                 checked: false,
                 fieldLabel: 'Use bcftools'
+            },{
+                xtype: 'checkbox',
+                itemId: 'doNotRetainUnmapped',
+                checked: false,
+                fieldLabel: 'Do Not Retain Unmapped'
             }].concat(SequenceAnalysis.window.OutputHandlerWindow.getCfgForToolParameters(this.toolParameters)),
             buttons: [{
                 text: 'Submit',
