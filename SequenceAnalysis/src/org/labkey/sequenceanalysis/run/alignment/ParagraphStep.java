@@ -76,11 +76,12 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 throw new PipelineJobException("Unable to find file: " + inputVCF.getPath());
             }
 
+            Integer threads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
             for (SequenceOutputFile so : inputFiles)
             {
                 List<String> depthArgs = new ArrayList<>();
                 depthArgs.add("idxdepth");
-                depthArgs.add("-d");
+                depthArgs.add("-b");
                 depthArgs.add(so.getFile().getPath());
 
                 File coverageFile = new File(ctx.getWorkingDirectory(), "coverage.txt");
@@ -89,6 +90,12 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
 
                 depthArgs.add("-r");
                 depthArgs.add(ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id()).getWorkingFastaFile().getPath());
+
+                if (threads != null)
+                {
+                    depthArgs.add("--threads");
+                    depthArgs.add(threads.toString());
+                }
 
                 new SimpleScriptWrapper(ctx.getLogger()).execute(depthArgs);
 
@@ -137,7 +144,6 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 paragraphArgs.add("--scratch-dir");
                 paragraphArgs.add(SequencePipelineService.get().getJavaTempDir());
 
-                Integer threads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
                 if (threads != null)
                 {
                     paragraphArgs.add("--threads");
