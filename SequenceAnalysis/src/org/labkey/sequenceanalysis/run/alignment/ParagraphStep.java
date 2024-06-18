@@ -12,6 +12,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
@@ -109,7 +110,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 //    TNPRC-IB18  ../IB18.cram 29.77   150
 
                 List<String> paragraphArgs = new ArrayList<>();
-                paragraphArgs.add("multigrmpy.py");
+                paragraphArgs.add(AbstractCommandWrapper.resolveFileInPath("multigrmpy.py", null, true).getPath());
                 paragraphArgs.add("--verbose");
 
                 File paragraphOut = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(so.getFile()) + ".paragraph.txt");
