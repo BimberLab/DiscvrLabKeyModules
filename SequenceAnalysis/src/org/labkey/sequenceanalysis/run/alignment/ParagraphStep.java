@@ -15,7 +15,6 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
-import org.labkey.sequenceanalysis.run.variant.DepthOfCoverageHandler;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -57,7 +56,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
     @Override
     public SequenceOutputProcessor getProcessor()
     {
-        return new DepthOfCoverageHandler.Processor();
+        return new Processor();
     }
 
     public static class Processor implements SequenceOutputProcessor
