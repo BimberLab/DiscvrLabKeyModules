@@ -28,6 +28,7 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.run.SelectVariantsWrapper;
 import org.labkey.api.util.FileType;
@@ -333,6 +334,8 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
         {
             LiftoverBcfToolsWrapper wrapper = new LiftoverBcfToolsWrapper(job.getLogger());
             wrapper.doLiftover(currentVCF, chain, sourceGenome.getWorkingFastaFile(), targetGenome.getWorkingFastaFile(), unmappedOutput, output);
+
+            SequencePipelineService.get().sortVcf(output, null, targetGenome.getSequenceDictionary(), ctx.getLogger());
         }
         else
         {
