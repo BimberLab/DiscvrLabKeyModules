@@ -71,10 +71,20 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
-            File inputVCF = ctx.getSequenceSupport().getCachedData(ctx.getParams().getInt("svVCF"));
-            if (!inputVCF.exists())
+            int svVcfId = ctx.getParams().optInt("svVCF", 0);
+            if (svVcfId == 0)
             {
-                throw new PipelineJobException("Unable to find file: " + inputVCF.getPath());
+                throw new PipelineJobException("svVCF param was null");
+            }
+
+            File svVcf = ctx.getSequenceSupport().getCachedData(svVcfId);
+            if (svVcf == null)
+            {
+                throw new PipelineJobException("File not found for ID: " + svVcfId);
+            }
+            else if (!svVcf.exists())
+            {
+                throw new PipelineJobException("Missing file: " + svVcf.getPath());
             }
 
             Integer threads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
@@ -116,22 +126,6 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 File paragraphOut = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(so.getFile()) + ".paragraph.txt");
                 paragraphArgs.add("-o");
                 paragraphArgs.add(paragraphOut.getPath());
-
-                int svVcfId = ctx.getParams().optInt("svVCF");
-                if (svVcfId == 0)
-                {
-                    throw new PipelineJobException("Missing svVCF ID");
-                }
-
-                File svVcf = ctx.getSequenceSupport().getCachedData(svVcfId);
-                if (svVcf == null)
-                {
-                    throw new PipelineJobException("File not found for ID: " + svVcfId);
-                }
-                else if (!svVcf.exists())
-                {
-                    throw new PipelineJobException("Missing file: " + svVcf.getPath());
-                }
 
                 paragraphArgs.add("-i");
                 paragraphArgs.add(svVcf.getPath());
