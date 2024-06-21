@@ -141,7 +141,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
 
                     String rgId = header.getReadGroups().get(0).getSample();
 
-                    JSONObject json = new JSONObject(FileUtils.readFileToString(coverageFile, Charset.defaultCharset()));
+                    JSONObject json = new JSONObject(FileUtils.readFileToString(coverageJson, Charset.defaultCharset()));
                     writer.println("id\tpath\tdepth\tread length");
                     double depth = json.getJSONObject("autosome").getDouble("depth");
                     double readLength = json.getInt("read_length");
