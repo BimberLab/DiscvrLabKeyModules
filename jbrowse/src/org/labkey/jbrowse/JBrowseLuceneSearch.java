@@ -76,7 +76,7 @@ public class JBrowseLuceneSearch
     private static final int maxCachedQueries = 1000;
     private static final long maxRamBytesUsed = 250 * 1024 * 1024L;
 
-    private static final Cache<String, LRUQueryCache> _cache = CacheManager.getStringKeyCache(1000, CacheManager.UNLIMITED, "JBrowseLuceneSearchCache");
+    private static final Cache<String, CacheEntry> _cache = CacheManager.getStringKeyCache(1000, CacheManager.UNLIMITED, "JBrowseLuceneSearchCache");
 
     private JBrowseLuceneSearch(final JBrowseSession session, final JsonFile jsonFile, User u)
     {
@@ -97,15 +97,15 @@ public class JBrowseLuceneSearch
         return new JBrowseLuceneSearch(session, getTrack(session, trackId, u), u);
     }
 
-    private static synchronized QueryCache getCacheForSession(String trackObjectId) {
-        LRUQueryCache qc = _cache.get(trackObjectId);
-        if (qc == null)
-        {
-            qc = new LRUQueryCache(maxCachedQueries, maxRamBytesUsed);
-            _cache.put(trackObjectId, qc);
+    private static synchronized CacheEntry getCacheEntryForSession(String trackObjectId, Directory indexDirectory) throws IOException {
+        CacheEntry cacheEntry = _cache.get(trackObjectId);
+        if (cacheEntry == null) {
+            LRUQueryCache queryCache = new LRUQueryCache(maxCachedQueries, maxRamBytesUsed);
+            IndexReader indexReader = DirectoryReader.open(indexDirectory);
+            cacheEntry = new CacheEntry(queryCache, indexReader);
+            _cache.put(trackObjectId, cacheEntry);
         }
-
-        return qc;
+        return cacheEntry;
     }
 
     private String templateReplace(final String searchString) {
@@ -166,12 +166,12 @@ public class JBrowseLuceneSearch
         // Open directory of lucene path, get a directory reader, and create the index search manager
         try (
                 Directory indexDirectory = FSDirectory.open(indexPath.toPath());
-                IndexReader indexReader = DirectoryReader.open(indexDirectory);
                 Analyzer analyzer = new StandardAnalyzer();
         )
         {
-            IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-            indexSearcher.setQueryCache(getCacheForSession(_jsonFile.getObjectId()));
+            CacheEntry cacheEntry = getCacheEntryForSession(_jsonFile.getObjectId(), indexDirectory);
+            IndexSearcher indexSearcher = new IndexSearcher(cacheEntry.getIndexReader());
+            indexSearcher.setQueryCache(cacheEntry.getQueryCache());
             indexSearcher.setQueryCachingPolicy(new ForceMatchAllDocsCachingPolicy());
 
             List<String> stringQueryParserFields = new ArrayList<>();
@@ -382,6 +382,8 @@ public class JBrowseLuceneSearch
                         return true;
                     }
                 }
+            } else if (query instanceof MatchAllDocsQuery) {
+                return true;
             }
 
             return defaultPolicy.shouldCache(query);
@@ -393,12 +395,30 @@ public class JBrowseLuceneSearch
         }
     }
 
+    public static class CacheEntry {
+        private final LRUQueryCache queryCache;
+        private final IndexReader indexReader;
+
+        public CacheEntry(LRUQueryCache queryCache, IndexReader indexReader) {
+            this.queryCache = queryCache;
+            this.indexReader = indexReader;
+        }
+
+        public LRUQueryCache getQueryCache() {
+            return queryCache;
+        }
+
+        public IndexReader getIndexReader() {
+            return indexReader;
+        }
+    }
+
     public static JSONArray reportCacheInfo()
     {
         JSONArray cacheInfo = new JSONArray();
         for (String sessionId : _cache.getKeys())
         {
-            LRUQueryCache qc = _cache.get(sessionId);
+            LRUQueryCache qc = _cache.get(sessionId).getQueryCache();
             JSONObject info = new JSONObject();
             info.put("cacheSize", qc.getCacheSize());
             info.put("cacheCount", qc.getCacheCount());
