@@ -117,6 +117,11 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                 itemId: 'useBcfTools',
                 checked: false,
                 fieldLabel: 'Use bcftools'
+            },{
+                xtype: 'checkbox',
+                itemId: 'doNotRetainUnmapped',
+                checked: false,
+                fieldLabel: 'Do Not Retain Unmapped'
             }].concat(SequenceAnalysis.window.OutputHandlerWindow.getCfgForToolParameters(this.toolParameters)),
             buttons: [{
                 text: 'Submit',
@@ -155,6 +160,14 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
 
         if (this.down('#dropGenotypes').getValue()){
             params.dropGenotypes = this.down('#dropGenotypes').getValue();
+        }
+
+        if (this.down('#useBcfTools').getValue()){
+            params.useBcfTools = this.down('#useBcfTools').getValue();
+        }
+
+        if (this.down('#doNotRetainUnmapped').getValue()){
+            params.doNotRetainUnmapped = this.down('#doNotRetainUnmapped').getValue();
         }
 
         Ext4.Msg.wait('Saving...');
