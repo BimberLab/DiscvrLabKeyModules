@@ -189,7 +189,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 paragraphArgs.add("--logfile");
                 paragraphArgs.add(new File("/work/paragraph.log").getPath());
 
-                dockerWrapper.execute(paragraphArgs, ctx.getWorkingDirectory());
+                dockerWrapper.executeWithDocker(paragraphArgs, ctx.getWorkingDirectory(), ctx.getFileManager());
 
                 File genotypes = new File(ctx.getWorkingDirectory(), "genotypes.vcf.gz");
                 if (!genotypes.exists())

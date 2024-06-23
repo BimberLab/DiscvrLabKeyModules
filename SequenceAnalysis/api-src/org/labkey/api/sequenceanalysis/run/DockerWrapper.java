@@ -11,6 +11,7 @@ import org.labkey.api.writer.PrintWriters;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.List;
 
 public class DockerWrapper extends AbstractCommandWrapper
@@ -29,7 +30,7 @@ public class DockerWrapper extends AbstractCommandWrapper
         _tmpDir = tmpDir;
     }
 
-    public void execute(List<String> containerArgs, File workDir, PipelineOutputTracker tracker) throws PipelineJobException
+    public void executeWithDocker(List<String> containerArgs, File workDir, PipelineOutputTracker tracker) throws PipelineJobException
     {
         File localBashScript = new File(workDir, "docker.sh");
         File dockerBashScript = new File(workDir, "dockerRun.sh");
@@ -77,6 +78,8 @@ public class DockerWrapper extends AbstractCommandWrapper
         {
             throw new PipelineJobException(e);
         }
+
+        execute(Arrays.asList("/bin/bash", localBashScript.getPath()));
     }
 
     public File ensureLocalCopy(File input, File workingDirectory, PipelineOutputTracker output) throws PipelineJobException
