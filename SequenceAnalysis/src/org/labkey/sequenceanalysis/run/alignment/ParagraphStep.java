@@ -127,6 +127,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 //    id  path    depth   read length
                 //    TNPRC-IB18  ../IB18.cram 29.77   150
                 File coverageFile = new File(ctx.getWorkingDirectory(), "coverage.txt");
+                String rgId = null;
                 try (PrintWriter writer = PrintWriters.getPrintWriter(coverageFile); SamReader reader = SamReaderFactory.makeDefault().open(so.getFile()))
                 {
                     SAMFileHeader header = reader.getFileHeader();
@@ -139,13 +140,13 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                         throw new PipelineJobException("More than one read group found in BAM");
                     }
 
-                    String rgId = header.getReadGroups().get(0).getSample();
+                    rgId = header.getReadGroups().get(0).getSample();
 
                     JSONObject json = new JSONObject(FileUtils.readFileToString(coverageJson, Charset.defaultCharset()));
                     writer.println("id\tpath\tdepth\tread length");
                     double depth = json.getJSONObject("autosome").getDouble("depth");
                     double readLength = json.getInt("read_length");
-                    writer.println(rgId + "\t" + so.getFile().getPath() + "\t" + depth + "\t" + readLength);
+                    writer.println(rgId + "\t" + "/work/" + so.getFile().getName() + "\t" + depth + "\t" + readLength);
                 }
                 catch (IOException e)
                 {
@@ -157,9 +158,12 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 List<String> paragraphArgs = new ArrayList<>();
                 paragraphArgs.add("/opt/paragraph/bin/multigrmpy.py");
 
-                File paragraphOut = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(so.getFile()) + ".paragraph.txt");
+                dockerWrapper.ensureLocalCopy(so.getFile(), ctx.getWorkingDirectory(), ctx.getFileManager());
+                dockerWrapper.ensureLocalCopy(SequenceAnalysisService.get().getExpectedBamOrCramIndex(so.getFile()), ctx.getWorkingDirectory(), ctx.getFileManager());
+
+                File paragraphOutDir = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(so.getFile()));
                 paragraphArgs.add("-o");
-                paragraphArgs.add("/work/" + paragraphOut.getName());
+                paragraphArgs.add("/work/" + paragraphOutDir.getName());
 
                 paragraphArgs.add("-i");
                 dockerWrapper.ensureLocalCopy(svVcf, ctx.getWorkingDirectory(), ctx.getFileManager());
@@ -187,7 +191,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
 
                 dockerWrapper.executeWithDocker(paragraphArgs, ctx.getWorkingDirectory(), ctx.getFileManager());
 
-                File genotypes = new File(ctx.getWorkingDirectory(), "genotypes.vcf.gz");
+                File genotypes = new File(paragraphOutDir, "genotypes.vcf.gz");
                 if (!genotypes.exists())
                 {
                     throw new PipelineJobException("Missing file: " + genotypes.getPath());
