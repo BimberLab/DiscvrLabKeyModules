@@ -165,6 +165,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
 
                 paragraphArgs.add("-i");
                 dockerWrapper.ensureLocalCopy(svVcf, ctx.getWorkingDirectory(), ctx.getFileManager());
+                dockerWrapper.ensureLocalCopy(new File(svVcf.getPath() + ".tbi"), ctx.getWorkingDirectory(), ctx.getFileManager());
                 paragraphArgs.add("/work/" + svVcf.getName());
 
                 paragraphArgs.add("-m");
