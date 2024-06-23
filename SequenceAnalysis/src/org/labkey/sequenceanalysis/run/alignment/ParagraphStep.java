@@ -16,7 +16,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.api.sequenceanalysis.run.DockerWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
@@ -153,25 +153,32 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 }
                 ctx.getFileManager().addIntermediateFile(coverageFile);
 
+                DockerWrapper dockerWrapper = new DockerWrapper("ghcr.io/bimberlabinternal/paragraph:latest", ctx.getLogger());
                 List<String> paragraphArgs = new ArrayList<>();
-                paragraphArgs.add(AbstractCommandWrapper.resolveFileInPath("multigrmpy.py", null, true).getPath());
+                paragraphArgs.add("/opt/paragraph/bin/multigrmpy.py");
+
                 paragraphArgs.add("--verbose");
 
                 File paragraphOut = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(so.getFile()) + ".paragraph.txt");
                 paragraphArgs.add("-o");
-                paragraphArgs.add(paragraphOut.getPath());
+                paragraphArgs.add("/work/" + paragraphOut.getName());
 
                 paragraphArgs.add("-i");
-                paragraphArgs.add(svVcf.getPath());
+                dockerWrapper.ensureLocalCopy(svVcf, ctx.getWorkingDirectory(), ctx.getFileManager());
+                paragraphArgs.add("/work/" + svVcf.getName());
 
                 paragraphArgs.add("-m");
-                paragraphArgs.add(coverageFile.getPath());
+                paragraphArgs.add("/work/" + coverageFile.getName());
 
                 paragraphArgs.add("-r");
-                paragraphArgs.add(ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id()).getWorkingFastaFile().getPath());
+                File genomeFasta = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id()).getWorkingFastaFile();
+                dockerWrapper.ensureLocalCopy(genomeFasta, ctx.getWorkingDirectory(), ctx.getFileManager());
+                dockerWrapper.ensureLocalCopy(new File(genomeFasta.getPath() + ".fai"), ctx.getWorkingDirectory(), ctx.getFileManager());
+                paragraphArgs.add("/work/" + genomeFasta.getName());
 
                 paragraphArgs.add("--scratch-dir");
-                paragraphArgs.add(SequencePipelineService.get().getJavaTempDir());
+                paragraphArgs.add("/tmp");
+                dockerWrapper.setTmpDir(new File(SequencePipelineService.get().getJavaTempDir()));
 
                 if (threads != null)
                 {
@@ -180,9 +187,9 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 }
 
                 paragraphArgs.add("--logfile");
-                paragraphArgs.add(new File(ctx.getWorkingDirectory(), "paragraph.log").getPath());
+                paragraphArgs.add(new File("/work/paragraph.log").getPath());
 
-                new SimpleScriptWrapper(ctx.getLogger()).execute(paragraphArgs);
+                dockerWrapper.execute(paragraphArgs, ctx.getWorkingDirectory());
 
                 File genotypes = new File(ctx.getWorkingDirectory(), "genotypes.vcf.gz");
                 if (!genotypes.exists())
