@@ -28,6 +28,7 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.run.SelectVariantsWrapper;
 import org.labkey.api.util.FileType;
@@ -176,6 +177,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
 
             boolean dropGenotypes = params.optBoolean("dropGenotypes", false);
             boolean useBcfTools = params.optBoolean("useBcfTools", false);
+            boolean doNotRetainUnmapped = params.optBoolean("doNotRetainUnmapped", false);
 
             int chainFileId = params.getInt("chainFileId");
             File chainFile = ctx.getSequenceSupport().getCachedData(chainFileId);
@@ -214,7 +216,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
                 }
 
                 File lifted = new File(outDir, baseName + ".lifted-" + targetGenomeId + ext);
-                File unmappedOutput = new File(outDir, baseName + ".unmapped-" + targetGenomeId + ext);
+                File unmappedOutput = doNotRetainUnmapped ? null : new File(outDir, baseName + ".unmapped-" + targetGenomeId + ext);
 
                 try
                 {
@@ -260,7 +262,11 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
                     ctx.addSequenceOutput(so1);
                 }
 
-                if (!unmappedOutput.exists())
+                if (unmappedOutput == null)
+                {
+                    // skip
+                }
+                else if (!unmappedOutput.exists())
                 {
                     job.getLogger().info("no unmapped intervals");
                 }
@@ -328,6 +334,8 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
         {
             LiftoverBcfToolsWrapper wrapper = new LiftoverBcfToolsWrapper(job.getLogger());
             wrapper.doLiftover(currentVCF, chain, sourceGenome.getWorkingFastaFile(), targetGenome.getWorkingFastaFile(), unmappedOutput, output);
+
+            SequencePipelineService.get().sortVcf(output, null, targetGenome.getSequenceDictionary(), ctx.getLogger());
         }
         else
         {

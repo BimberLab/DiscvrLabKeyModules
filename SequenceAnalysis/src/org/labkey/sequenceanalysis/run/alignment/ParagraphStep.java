@@ -1,5 +1,9 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
+import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -12,14 +16,17 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
-import org.labkey.sequenceanalysis.run.variant.DepthOfCoverageHandler;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -57,7 +64,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
     @Override
     public SequenceOutputProcessor getProcessor()
     {
-        return new DepthOfCoverageHandler.Processor();
+        return new Processor();
     }
 
     public static class Processor implements SequenceOutputProcessor
@@ -71,60 +78,88 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
-            File inputVCF = ctx.getSequenceSupport().getCachedData(ctx.getParams().getInt("svVCF"));
-            if (!inputVCF.exists())
+            int svVcfId = ctx.getParams().optInt("svVCF", 0);
+            if (svVcfId == 0)
             {
-                throw new PipelineJobException("Unable to find file: " + inputVCF.getPath());
+                throw new PipelineJobException("svVCF param was null");
             }
 
+            File svVcf = ctx.getSequenceSupport().getCachedData(svVcfId);
+            if (svVcf == null)
+            {
+                throw new PipelineJobException("File not found for ID: " + svVcfId);
+            }
+            else if (!svVcf.exists())
+            {
+                throw new PipelineJobException("Missing file: " + svVcf.getPath());
+            }
+
+            Integer threads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
             for (SequenceOutputFile so : inputFiles)
             {
                 List<String> depthArgs = new ArrayList<>();
                 depthArgs.add("idxdepth");
-                depthArgs.add("-d");
+                depthArgs.add("-b");
                 depthArgs.add(so.getFile().getPath());
 
-                File coverageFile = new File(ctx.getWorkingDirectory(), "coverage.txt");
+                File coverageJson = new File(ctx.getWorkingDirectory(), "coverage.json");
                 depthArgs.add("-o");
-                depthArgs.add(coverageFile.getPath());
+                depthArgs.add(coverageJson.getPath());
 
                 depthArgs.add("-r");
                 depthArgs.add(ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id()).getWorkingFastaFile().getPath());
 
+                if (threads != null)
+                {
+                    depthArgs.add("--threads");
+                    depthArgs.add(threads.toString());
+                }
+
                 new SimpleScriptWrapper(ctx.getLogger()).execute(depthArgs);
 
-                if (!coverageFile.exists())
+                if (!coverageJson.exists())
                 {
-                    throw new PipelineJobException("Missing file: " + coverageFile.getPath());
+                    throw new PipelineJobException("Missing file: " + coverageJson.getPath());
                 }
+                ctx.getFileManager().addIntermediateFile(coverageJson);
 
                 // Should produce a simple text file:
                 //    id  path    depth   read length
                 //    TNPRC-IB18  ../IB18.cram 29.77   150
+                File coverageFile = new File(ctx.getWorkingDirectory(), "coverage.txt");
+                try (PrintWriter writer = PrintWriters.getPrintWriter(coverageFile); SamReader reader = SamReaderFactory.makeDefault().open(so.getFile()))
+                {
+                    SAMFileHeader header = reader.getFileHeader();
+                    if (header.getReadGroups().size() == 0)
+                    {
+                        throw new PipelineJobException("No read groups found in input BAM");
+                    }
+                    else if (header.getReadGroups().size() > 1)
+                    {
+                        throw new PipelineJobException("More than one read group found in BAM");
+                    }
+
+                    String rgId = header.getReadGroups().get(0).getSample();
+
+                    JSONObject json = new JSONObject(FileUtils.readFileToString(coverageJson, Charset.defaultCharset()));
+                    writer.println("id\tpath\tdepth\tread length");
+                    double depth = json.getJSONObject("autosome").getDouble("depth");
+                    double readLength = json.getInt("read_length");
+                    writer.println(rgId + "\t" + so.getFile().getPath() + "\t" + depth + "\t" + readLength);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+                ctx.getFileManager().addIntermediateFile(coverageFile);
 
                 List<String> paragraphArgs = new ArrayList<>();
-                paragraphArgs.add("multigrmpy.py");
+                paragraphArgs.add(AbstractCommandWrapper.resolveFileInPath("multigrmpy.py", null, true).getPath());
                 paragraphArgs.add("--verbose");
 
                 File paragraphOut = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(so.getFile()) + ".paragraph.txt");
                 paragraphArgs.add("-o");
                 paragraphArgs.add(paragraphOut.getPath());
-
-                int svVcfId = ctx.getParams().optInt("svVCF");
-                if (svVcfId == 0)
-                {
-                    throw new PipelineJobException("Missing svVCF ID");
-                }
-
-                File svVcf = ctx.getSequenceSupport().getCachedData(svVcfId);
-                if (svVcf == null)
-                {
-                    throw new PipelineJobException("File not found for ID: " + svVcfId);
-                }
-                else if (!svVcf.exists())
-                {
-                    throw new PipelineJobException("Missing file: " + svVcf.getPath());
-                }
 
                 paragraphArgs.add("-i");
                 paragraphArgs.add(svVcf.getPath());
@@ -138,7 +173,6 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 paragraphArgs.add("--scratch-dir");
                 paragraphArgs.add(SequencePipelineService.get().getJavaTempDir());
 
-                Integer threads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
                 if (threads != null)
                 {
                     paragraphArgs.add("--threads");
