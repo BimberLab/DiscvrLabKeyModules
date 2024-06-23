@@ -157,8 +157,6 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 List<String> paragraphArgs = new ArrayList<>();
                 paragraphArgs.add("/opt/paragraph/bin/multigrmpy.py");
 
-                paragraphArgs.add("--verbose");
-
                 File paragraphOut = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(so.getFile()) + ".paragraph.txt");
                 paragraphArgs.add("-o");
                 paragraphArgs.add("/work/" + paragraphOut.getName());
