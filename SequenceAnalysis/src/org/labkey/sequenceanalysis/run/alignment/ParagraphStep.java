@@ -207,6 +207,11 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 }
 
                 ctx.getFileManager().addSequenceOutput(genotypes, "paraGRAPH Genotypes: " + so.getName(), "paraGRAPH Genoypes", so.getReadset(), null, so.getLibrary_id(), "Input VCF: " + svVcf.getName() + " (" + svVcfId + ")");
+
+                ctx.getFileManager().addIntermediateFile(new File(paragraphOutDir, "variants.json.gz"));
+                ctx.getFileManager().addIntermediateFile(new File(paragraphOutDir, "variants.vcf.gz"));
+                ctx.getFileManager().addIntermediateFile(new File(paragraphOutDir, "genotypes.json.gz"));
+                ctx.getFileManager().addIntermediateFile(new File(paragraphOutDir, "grmpy.log"));
             }
         }
     }
