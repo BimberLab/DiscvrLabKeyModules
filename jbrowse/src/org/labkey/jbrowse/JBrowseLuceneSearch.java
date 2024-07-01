@@ -97,13 +97,25 @@ public class JBrowseLuceneSearch
         return new JBrowseLuceneSearch(session, getTrack(session, trackId, u), u);
     }
 
-    private static synchronized CacheEntry getCacheEntryForSession(String trackObjectId, Directory indexDirectory) throws IOException {
+    private static synchronized CacheEntry getCacheEntryForSession(String trackObjectId, File indexPath) throws IOException {
         CacheEntry cacheEntry = _cache.get(trackObjectId);
+
+        // Open directory of lucene path, get a directory reader, and create the index search manager
         if (cacheEntry == null) {
-            LRUQueryCache queryCache = new LRUQueryCache(maxCachedQueries, maxRamBytesUsed);
-            IndexReader indexReader = DirectoryReader.open(indexDirectory);
-            cacheEntry = new CacheEntry(queryCache, indexReader);
-            _cache.put(trackObjectId, cacheEntry);
+            try
+            {
+                Directory indexDirectory = FSDirectory.open(indexPath.toPath());
+                LRUQueryCache queryCache = new LRUQueryCache(maxCachedQueries, maxRamBytesUsed);
+                IndexReader indexReader = DirectoryReader.open(indexDirectory);
+                IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+                indexSearcher.setQueryCache(queryCache);
+                indexSearcher.setQueryCachingPolicy(new ForceMatchAllDocsCachingPolicy());
+                cacheEntry = new CacheEntry(queryCache, indexSearcher);
+                _cache.put(trackObjectId, cacheEntry);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return cacheEntry;
     }
@@ -163,152 +175,143 @@ public class JBrowseLuceneSearch
         File indexPath = _jsonFile.getExpectedLocationOfLuceneIndex(true);
         Map<String, JBrowseFieldDescriptor> fields = JBrowseFieldUtils.getIndexedFields(_jsonFile, u, getContainer());
 
-        // Open directory of lucene path, get a directory reader, and create the index search manager
-        try (
-                Directory indexDirectory = FSDirectory.open(indexPath.toPath());
-                Analyzer analyzer = new StandardAnalyzer();
-        )
+        CacheEntry cacheEntry = getCacheEntryForSession(_jsonFile.getObjectId(), indexPath);
+        Analyzer analyzer = new StandardAnalyzer();
+
+        List<String> stringQueryParserFields = new ArrayList<>();
+        Map<String, SortField.Type> numericQueryParserFields = new HashMap<>();
+        PointsConfig intPointsConfig = new PointsConfig(new DecimalFormat(), Integer.class);
+        PointsConfig doublePointsConfig = new PointsConfig(new DecimalFormat(), Double.class);
+        Map<String, PointsConfig> pointsConfigMap = new HashMap<>();
+
+        // Iterate fields and split them into fields for the queryParser and the numericQueryParser
+        for (Map.Entry<String, JBrowseFieldDescriptor> entry : fields.entrySet())
         {
-            CacheEntry cacheEntry = getCacheEntryForSession(_jsonFile.getObjectId(), indexDirectory);
-            IndexSearcher indexSearcher = new IndexSearcher(cacheEntry.getIndexReader());
-            indexSearcher.setQueryCache(cacheEntry.getQueryCache());
-            indexSearcher.setQueryCachingPolicy(new ForceMatchAllDocsCachingPolicy());
+            String field = entry.getKey();
+            JBrowseFieldDescriptor descriptor = entry.getValue();
 
-            List<String> stringQueryParserFields = new ArrayList<>();
-            Map<String, SortField.Type> numericQueryParserFields = new HashMap<>();
-            PointsConfig intPointsConfig = new PointsConfig(new DecimalFormat(), Integer.class);
-            PointsConfig doublePointsConfig = new PointsConfig(new DecimalFormat(), Double.class);
-            Map<String, PointsConfig> pointsConfigMap = new HashMap<>();
-
-            // Iterate fields and split them into fields for the queryParser and the numericQueryParser
-            for (Map.Entry<String, JBrowseFieldDescriptor> entry : fields.entrySet())
+            switch(descriptor.getType())
             {
-                String field = entry.getKey();
-                JBrowseFieldDescriptor descriptor = entry.getValue();
-
-                switch(descriptor.getType())
-                {
-                    case Flag, String, Character -> stringQueryParserFields.add(field);
-                    case Float -> {
-                        numericQueryParserFields.put(field, SortField.Type.DOUBLE);
-                        pointsConfigMap.put(field, doublePointsConfig);
-                    }
-                    case Integer -> {
-                        numericQueryParserFields.put(field, SortField.Type.INT);
-                        pointsConfigMap.put(field, intPointsConfig);
-                    }
+                case Flag, String, Character -> stringQueryParserFields.add(field);
+                case Float -> {
+                    numericQueryParserFields.put(field, SortField.Type.DOUBLE);
+                    pointsConfigMap.put(field, doublePointsConfig);
+                }
+                case Integer -> {
+                    numericQueryParserFields.put(field, SortField.Type.INT);
+                    pointsConfigMap.put(field, intPointsConfig);
                 }
             }
-
-            // The numericQueryParser can perform range queries, but numeric fields they can't be indexed alongside
-            // lexicographic  fields, so they get split into a separate parser
-            MultiFieldQueryParser queryParser = new MultiFieldQueryParser(stringQueryParserFields.toArray(new String[0]), new StandardAnalyzer());
-            queryParser.setAllowLeadingWildcard(true);
-
-            StandardQueryParser numericQueryParser = new StandardQueryParser();
-            numericQueryParser.setAnalyzer(analyzer);
-            numericQueryParser.setPointsConfigMap(pointsConfigMap);
-
-            BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
-
-            if (searchString.equals(ALL_DOCS)) {
-                booleanQueryBuilder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
-            }
-
-            // Split input into tokens, 1 token per query separated by &
-            StringTokenizer tokenizer = new StringTokenizer(searchString, "&");
-
-            while (tokenizer.hasMoreTokens() && !searchString.equals(ALL_DOCS))
-            {
-                String queryString = tokenizer.nextToken();
-                Query query = null;
-
-                String fieldName = extractFieldName(queryString);
-
-                if (VARIABLE_SAMPLES.equals(fieldName))
-                {
-                    queryString = templateReplace(queryString);
-                }
-
-                if (stringQueryParserFields.contains(fieldName))
-                {
-                    query = queryParser.parse(queryString);
-                }
-                else if (numericQueryParserFields.containsKey(fieldName))
-                {
-                    try
-                    {
-                        query = numericQueryParser.parse(queryString, "");
-                    }
-                    catch (QueryNodeException e)
-                    {
-                        e.printStackTrace();
-                    }
-                }
-                else
-                {
-                    throw new IllegalArgumentException("No such field(s), or malformed query: " + queryString + ", field: " + fieldName);
-                }
-
-                booleanQueryBuilder.add(query, BooleanClause.Occur.MUST);
-            }
-
-            BooleanQuery query = booleanQueryBuilder.build();
-
-            // By default, sort in INDEXORDER, which is by genomicPosition
-            Sort sort = Sort.INDEXORDER;
-
-            // If the sort field is not genomicPosition, use the provided sorting data
-            if (!sortField.equals(GENOMIC_POSITION)) {
-                SortField.Type fieldType;
-
-                if (stringQueryParserFields.contains(sortField)) {
-                    fieldType = SortField.Type.STRING;
-                } else if (numericQueryParserFields.containsKey(sortField)) {
-                    fieldType = numericQueryParserFields.get(sortField);
-                } else {
-                    throw new IllegalArgumentException("Could not find type for sort field: " + sortField);
-                }
-
-                sort = new Sort(new SortField(sortField + "_sort", fieldType, sortReverse));
-            }
-
-            // Get chunks of size {pageSize}. Default to 1 chunk -- add to the offset to get more.
-            // We then iterate over the range of documents we want based on the offset. This does grow in memory
-            // linearly with the number of documents, but my understanding is that these are just score,id pairs
-            // rather than full documents, so mem usage *should* still be pretty low.
-            // Perform the search with sorting
-            TopFieldDocs topDocs = indexSearcher.search(query, pageSize * (offset + 1), sort);
-
-            JSONObject results = new JSONObject();
-
-            // Iterate over the doc list, (either to the total end or until the page ends) grab the requested docs,
-            // and add to returned results
-            List<JSONObject> data = new ArrayList<>();
-            for (int i = pageSize * offset; i < Math.min(pageSize * (offset + 1), topDocs.scoreDocs.length); i++)
-            {
-                JSONObject elem = new JSONObject();
-                Document doc = indexSearcher.storedFields().document(topDocs.scoreDocs[i].doc);
-
-                for (IndexableField field : doc.getFields()) {
-                    String fieldName = field.name();
-                    String[] fieldValues = doc.getValues(fieldName);
-                    if (fieldValues.length > 1) {
-                        elem.put(fieldName, fieldValues);
-                    } else {
-                        elem.put(fieldName, fieldValues[0]);
-                    }
-                }
-
-                data.add(elem);
-            }
-
-            results.put("data", data);
-            results.put("totalHits", topDocs.totalHits.value);
-
-            //TODO: we should probably stream this
-            return results;
         }
+
+        // The numericQueryParser can perform range queries, but numeric fields they can't be indexed alongside
+        // lexicographic  fields, so they get split into a separate parser
+        MultiFieldQueryParser queryParser = new MultiFieldQueryParser(stringQueryParserFields.toArray(new String[0]), new StandardAnalyzer());
+        queryParser.setAllowLeadingWildcard(true);
+
+        StandardQueryParser numericQueryParser = new StandardQueryParser();
+        numericQueryParser.setAnalyzer(analyzer);
+        numericQueryParser.setPointsConfigMap(pointsConfigMap);
+
+        BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
+
+        if (searchString.equals(ALL_DOCS)) {
+            booleanQueryBuilder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
+        }
+
+        // Split input into tokens, 1 token per query separated by &
+        StringTokenizer tokenizer = new StringTokenizer(searchString, "&");
+
+        while (tokenizer.hasMoreTokens() && !searchString.equals(ALL_DOCS))
+        {
+            String queryString = tokenizer.nextToken();
+            Query query = null;
+
+            String fieldName = extractFieldName(queryString);
+
+            if (VARIABLE_SAMPLES.equals(fieldName))
+            {
+                queryString = templateReplace(queryString);
+            }
+
+            if (stringQueryParserFields.contains(fieldName))
+            {
+                query = queryParser.parse(queryString);
+            }
+            else if (numericQueryParserFields.containsKey(fieldName))
+            {
+                try
+                {
+                    query = numericQueryParser.parse(queryString, "");
+                }
+                catch (QueryNodeException e)
+                {
+                    e.printStackTrace();
+                }
+            }
+            else
+            {
+                throw new IllegalArgumentException("No such field(s), or malformed query: " + queryString + ", field: " + fieldName);
+            }
+
+            booleanQueryBuilder.add(query, BooleanClause.Occur.MUST);
+        }
+
+        BooleanQuery query = booleanQueryBuilder.build();
+
+        // By default, sort in INDEXORDER, which is by genomicPosition
+        Sort sort = Sort.INDEXORDER;
+
+        // If the sort field is not genomicPosition, use the provided sorting data
+        if (!sortField.equals(GENOMIC_POSITION)) {
+            SortField.Type fieldType;
+
+            if (stringQueryParserFields.contains(sortField)) {
+                fieldType = SortField.Type.STRING;
+            } else if (numericQueryParserFields.containsKey(sortField)) {
+                fieldType = numericQueryParserFields.get(sortField);
+            } else {
+                throw new IllegalArgumentException("Could not find type for sort field: " + sortField);
+            }
+
+            sort = new Sort(new SortField(sortField + "_sort", fieldType, sortReverse));
+        }
+
+        // Get chunks of size {pageSize}. Default to 1 chunk -- add to the offset to get more.
+        // We then iterate over the range of documents we want based on the offset. This does grow in memory
+        // linearly with the number of documents, but my understanding is that these are just score,id pairs
+        // rather than full documents, so mem usage *should* still be pretty low.
+        // Perform the search with sorting
+        TopFieldDocs topDocs = cacheEntry.indexSearcher.search(query, pageSize * (offset + 1), sort);
+
+        JSONObject results = new JSONObject();
+
+        // Iterate over the doc list, (either to the total end or until the page ends) grab the requested docs,
+        // and add to returned results
+        List<JSONObject> data = new ArrayList<>();
+        for (int i = pageSize * offset; i < Math.min(pageSize * (offset + 1), topDocs.scoreDocs.length); i++)
+        {
+            JSONObject elem = new JSONObject();
+            Document doc = cacheEntry.indexSearcher.storedFields().document(topDocs.scoreDocs[i].doc);
+
+            for (IndexableField field : doc.getFields()) {
+                String fieldName = field.name();
+                String[] fieldValues = doc.getValues(fieldName);
+                if (fieldValues.length > 1) {
+                    elem.put(fieldName, fieldValues);
+                } else {
+                    elem.put(fieldName, fieldValues[0]);
+                }
+            }
+
+            data.add(elem);
+        }
+
+        results.put("data", data);
+        results.put("totalHits", topDocs.totalHits.value);
+
+        //TODO: we should probably stream this
+        return results;
     }
 
     public static class DefaultJBrowseFieldCustomizer extends AbstractJBrowseFieldCustomizer
@@ -397,19 +400,19 @@ public class JBrowseLuceneSearch
 
     public static class CacheEntry {
         private final LRUQueryCache queryCache;
-        private final IndexReader indexReader;
+        private final IndexSearcher indexSearcher;
 
-        public CacheEntry(LRUQueryCache queryCache, IndexReader indexReader) {
+        public CacheEntry(LRUQueryCache queryCache, IndexSearcher indexSearcher) {
             this.queryCache = queryCache;
-            this.indexReader = indexReader;
+            this.indexSearcher = indexSearcher;
         }
 
         public LRUQueryCache getQueryCache() {
             return queryCache;
         }
 
-        public IndexReader getIndexReader() {
-            return indexReader;
+        public IndexSearcher getIndexSearcher() {
+            return indexSearcher;
         }
     }
 
