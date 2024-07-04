@@ -194,7 +194,7 @@ public class JBrowseLuceneSearch
                         pointsConfigMap.put(field, doublePointsConfig);
                     }
                     case Integer -> {
-                        numericQueryParserFields.put(field, SortField.Type.INT);
+                        numericQueryParserFields.put(field, SortField.Type.LONG);
                         pointsConfigMap.put(field, intPointsConfig);
                     }
                 }

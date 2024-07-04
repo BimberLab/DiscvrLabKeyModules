@@ -16,7 +16,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.api.sequenceanalysis.run.DockerWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
@@ -127,6 +127,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 //    id  path    depth   read length
                 //    TNPRC-IB18  ../IB18.cram 29.77   150
                 File coverageFile = new File(ctx.getWorkingDirectory(), "coverage.txt");
+                String rgId = null;
                 try (PrintWriter writer = PrintWriters.getPrintWriter(coverageFile); SamReader reader = SamReaderFactory.makeDefault().open(so.getFile()))
                 {
                     SAMFileHeader header = reader.getFileHeader();
@@ -139,13 +140,13 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                         throw new PipelineJobException("More than one read group found in BAM");
                     }
 
-                    String rgId = header.getReadGroups().get(0).getSample();
+                    rgId = header.getReadGroups().get(0).getSample();
 
                     JSONObject json = new JSONObject(FileUtils.readFileToString(coverageJson, Charset.defaultCharset()));
                     writer.println("id\tpath\tdepth\tread length");
                     double depth = json.getJSONObject("autosome").getDouble("depth");
                     double readLength = json.getInt("read_length");
-                    writer.println(rgId + "\t" + so.getFile().getPath() + "\t" + depth + "\t" + readLength);
+                    writer.println(rgId + "\t" + "/work/" + so.getFile().getName() + "\t" + depth + "\t" + readLength);
                 }
                 catch (IOException e)
                 {
@@ -153,25 +154,34 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 }
                 ctx.getFileManager().addIntermediateFile(coverageFile);
 
+                DockerWrapper dockerWrapper = new DockerWrapper("ghcr.io/bimberlabinternal/paragraph:latest", ctx.getLogger());
                 List<String> paragraphArgs = new ArrayList<>();
-                paragraphArgs.add(AbstractCommandWrapper.resolveFileInPath("multigrmpy.py", null, true).getPath());
-                paragraphArgs.add("--verbose");
+                paragraphArgs.add("/opt/paragraph/bin/multigrmpy.py");
 
-                File paragraphOut = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(so.getFile()) + ".paragraph.txt");
+                dockerWrapper.ensureLocalCopy(so.getFile(), ctx.getWorkingDirectory(), ctx.getFileManager());
+                dockerWrapper.ensureLocalCopy(SequenceAnalysisService.get().getExpectedBamOrCramIndex(so.getFile()), ctx.getWorkingDirectory(), ctx.getFileManager());
+
+                File paragraphOutDir = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(so.getFile()));
                 paragraphArgs.add("-o");
-                paragraphArgs.add(paragraphOut.getPath());
+                paragraphArgs.add("/work/" + paragraphOutDir.getName());
 
                 paragraphArgs.add("-i");
-                paragraphArgs.add(svVcf.getPath());
+                dockerWrapper.ensureLocalCopy(svVcf, ctx.getWorkingDirectory(), ctx.getFileManager());
+                dockerWrapper.ensureLocalCopy(new File(svVcf.getPath() + ".tbi"), ctx.getWorkingDirectory(), ctx.getFileManager());
+                paragraphArgs.add("/work/" + svVcf.getName());
 
                 paragraphArgs.add("-m");
-                paragraphArgs.add(coverageFile.getPath());
+                paragraphArgs.add("/work/" + coverageFile.getName());
 
                 paragraphArgs.add("-r");
-                paragraphArgs.add(ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id()).getWorkingFastaFile().getPath());
+                File genomeFasta = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id()).getWorkingFastaFile();
+                dockerWrapper.ensureLocalCopy(genomeFasta, ctx.getWorkingDirectory(), ctx.getFileManager());
+                dockerWrapper.ensureLocalCopy(new File(genomeFasta.getPath() + ".fai"), ctx.getWorkingDirectory(), ctx.getFileManager());
+                paragraphArgs.add("/work/" + genomeFasta.getName());
 
                 paragraphArgs.add("--scratch-dir");
-                paragraphArgs.add(SequencePipelineService.get().getJavaTempDir());
+                paragraphArgs.add("/tmp");
+                dockerWrapper.setTmpDir(new File(SequencePipelineService.get().getJavaTempDir()));
 
                 if (threads != null)
                 {
@@ -179,12 +189,9 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                     paragraphArgs.add(threads.toString());
                 }
 
-                paragraphArgs.add("--logfile");
-                paragraphArgs.add(new File(ctx.getWorkingDirectory(), "paragraph.log").getPath());
+                dockerWrapper.executeWithDocker(paragraphArgs, ctx.getWorkingDirectory(), ctx.getFileManager());
 
-                new SimpleScriptWrapper(ctx.getLogger()).execute(paragraphArgs);
-
-                File genotypes = new File(ctx.getWorkingDirectory(), "genotypes.vcf.gz");
+                File genotypes = new File(paragraphOutDir, "genotypes.vcf.gz");
                 if (!genotypes.exists())
                 {
                     throw new PipelineJobException("Missing file: " + genotypes.getPath());
@@ -200,6 +207,11 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 }
 
                 ctx.getFileManager().addSequenceOutput(genotypes, "paraGRAPH Genotypes: " + so.getName(), "paraGRAPH Genoypes", so.getReadset(), null, so.getLibrary_id(), "Input VCF: " + svVcf.getName() + " (" + svVcfId + ")");
+
+                ctx.getFileManager().addIntermediateFile(new File(paragraphOutDir, "variants.json.gz"));
+                ctx.getFileManager().addIntermediateFile(new File(paragraphOutDir, "variants.vcf.gz"));
+                ctx.getFileManager().addIntermediateFile(new File(paragraphOutDir, "genotypes.json.gz"));
+                ctx.getFileManager().addIntermediateFile(new File(paragraphOutDir, "grmpy.log"));
             }
         }
     }
