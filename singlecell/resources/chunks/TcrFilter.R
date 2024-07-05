@@ -26,7 +26,8 @@ for (datasetId in names(seuratObjects)) {
       return(length(intersect(values, cdr3ForLocus)) != 0)
     })
 
-    if (sum(matchingCells) == 0) {
+    if (sum(matchingCells) <= thresholdToKeep) {
+      print(paste0('Too few cells, skipping: ', datasetId))
       next
     }
 
