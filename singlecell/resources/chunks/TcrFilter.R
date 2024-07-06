@@ -26,8 +26,8 @@ for (datasetId in names(seuratObjects)) {
       return(length(intersect(values, cdr3ForLocus)) != 0)
     })
 
-    if (sum(matchingCells) <= thresholdToKeep) {
-      print(paste0('Too few cells, skipping: ', datasetId))
+    if (sum(matchingCells) == 0) {
+      print(paste0('No matching cells, skipping: ', datasetId))
       next
     }
 
@@ -41,6 +41,8 @@ for (datasetId in names(seuratObjects)) {
 
   if (all(is.null(cellsToKeep))) {
     print('There were no matching cells')
+  } else if (length(cellsToKeep) <= thresholdToKeep) {
+    print(paste0('Too few cells, skipping: ', datasetId))
   } else {
     print(paste0('Total passing cells: ', length(cellsToKeep)))
     seuratObj <- subset(seuratObj, cells = cellsToKeep)
