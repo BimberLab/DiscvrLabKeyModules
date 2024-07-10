@@ -320,9 +320,9 @@ public class JBrowseServiceImpl extends JBrowseService
     }
 
     @Override
-    public void clearLuceneCacheEntry(String trackObjectId)
+    public void clearLuceneCacheEntry(File luceneIndexDir)
     {
-        JBrowseLuceneSearch.clearCache(trackObjectId);
+        JBrowseLuceneSearch.clearCacheForFile(luceneIndexDir);
     }
 
     public static final class DefaultLuceneIndexDetector implements LuceneIndexDetector

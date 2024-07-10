@@ -19,7 +19,6 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.LRUQueryCache;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.QueryCache;
 import org.apache.lucene.search.QueryCachingPolicy;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
@@ -27,9 +26,11 @@ import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.search.UsageTrackingQueryCachingPolicy;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.labkey.api.cache.BlockingCache;
 import org.labkey.api.cache.Cache;
 import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.Container;
@@ -77,7 +78,7 @@ public class JBrowseLuceneSearch
     private static final int maxCachedQueries = 1000;
     private static final long maxRamBytesUsed = 250 * 1024 * 1024L;
 
-    private static final Cache<String, CacheEntry> _cache = CacheManager.getStringKeyCache(1000, CacheManager.UNLIMITED, "JBrowseLuceneSearchCache");
+    private static final Cache<String, CacheEntry> _cache = new LuceneIndexCache();
 
     private JBrowseLuceneSearch(final JBrowseSession session, final JsonFile jsonFile, User u)
     {
@@ -111,7 +112,7 @@ public class JBrowseLuceneSearch
                 IndexSearcher indexSearcher = new IndexSearcher(indexReader);
                 indexSearcher.setQueryCache(queryCache);
                 indexSearcher.setQueryCachingPolicy(new ForceMatchAllDocsCachingPolicy());
-                cacheEntry = new CacheEntry(queryCache, indexSearcher);
+                cacheEntry = new CacheEntry(queryCache, indexSearcher, indexPath);
                 _cache.put(trackObjectId, cacheEntry);
             }
             catch (Exception e) {
@@ -399,21 +400,84 @@ public class JBrowseLuceneSearch
         }
     }
 
-    public static class CacheEntry {
-        private final LRUQueryCache queryCache;
-        private final IndexSearcher indexSearcher;
-
-        public CacheEntry(LRUQueryCache queryCache, IndexSearcher indexSearcher) {
-            this.queryCache = queryCache;
-            this.indexSearcher = indexSearcher;
+    public static class LuceneIndexCache extends BlockingCache<String, CacheEntry>
+    {
+        public LuceneIndexCache()
+        {
+            super(CacheManager.getStringKeyCache(1000, CacheManager.UNLIMITED, "JBrowseLuceneSearchCache"));
         }
 
-        public LRUQueryCache getQueryCache() {
+        @Override
+        public void remove(@NotNull String key)
+        {
+            CacheEntry e = get(key);
+            super.remove(key);
+
+            closeReader(e);
+        }
+
+        @Override
+        public void clear()
+        {
+            for (String key : getKeys())
+            {
+                closeReader(get(key));
+            }
+        }
+
+        @Override
+        public void close()
+        {
+            for (String key : getKeys())
+            {
+                closeReader(get(key));
+            }
+        }
+
+        private void closeReader(@Nullable CacheEntry entry)
+        {
+            if (entry == null)
+            {
+                return;
+            }
+
+            try
+            {
+                entry.getIndexSearcher().getIndexReader().close();
+            }
+            catch (IOException e)
+            {
+                _log.error("Error closing JBrowseLuceneSearch index reader", e);
+            }
+        }
+    }
+
+    public static class CacheEntry
+    {
+        private final LRUQueryCache queryCache;
+        private final IndexSearcher indexSearcher;
+        private final File luceneIndexDir;
+
+        public CacheEntry(LRUQueryCache queryCache, IndexSearcher indexSearcher, File luceneIndexDir)
+        {
+            this.queryCache = queryCache;
+            this.indexSearcher = indexSearcher;
+            this.luceneIndexDir = luceneIndexDir;
+        }
+
+        public LRUQueryCache getQueryCache()
+        {
             return queryCache;
         }
 
-        public IndexSearcher getIndexSearcher() {
+        public IndexSearcher getIndexSearcher()
+        {
             return indexSearcher;
+        }
+
+        public File getLuceneIndexDir()
+        {
+            return luceneIndexDir;
         }
     }
 
@@ -452,6 +516,18 @@ public class JBrowseLuceneSearch
     public static void emptyCache()
     {
         clearCache(null);
+    }
+
+    public static void clearCacheForFile(@NotNull File luceneIndexDir)
+    {
+        for (String key : _cache.getKeys())
+        {
+            CacheEntry entry = _cache.get(key);
+            if (entry != null && luceneIndexDir.equals(entry.getLuceneIndexDir()))
+            {
+                _cache.remove(key);
+            }
+        }
     }
 
     public static void clearCache(@Nullable String jbrowseTrackId)
