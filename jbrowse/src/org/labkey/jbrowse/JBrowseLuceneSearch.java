@@ -40,6 +40,7 @@ import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.security.User;
 import org.labkey.api.settings.AppProps;
+import org.labkey.api.util.ShutdownListener;
 import org.labkey.api.util.logging.LogHelper;
 import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
@@ -448,6 +449,11 @@ public class JBrowseLuceneSearch
         }
     }
 
+    public static void emptyCache()
+    {
+        clearCache(null);
+    }
+
     public static void clearCache(@Nullable String jbrowseTrackId)
     {
         if (jbrowseTrackId == null)
@@ -457,6 +463,28 @@ public class JBrowseLuceneSearch
         else
         {
             _cache.remove(jbrowseTrackId);
+        }
+    }
+
+    public static class ShutdownHandler implements ShutdownListener
+    {
+        @Override
+        public String getName()
+        {
+            return "JBrowse-Lucene Shutdown Listener";
+        }
+
+        @Override
+        public void shutdownPre()
+        {
+
+        }
+
+        @Override
+        public void shutdownStarted()
+        {
+            _log.info("Clearing all open JBrowse/Lucene cached readers");
+            JBrowseLuceneSearch.emptyCache();
         }
     }
 }

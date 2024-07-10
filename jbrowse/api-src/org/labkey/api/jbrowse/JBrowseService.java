@@ -56,4 +56,6 @@ abstract public class JBrowseService
 
         boolean isAvailable(Container c);
     }
+
+    abstract public void clearLuceneCacheEntry(String trackObjectId);
 }
