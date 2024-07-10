@@ -30,9 +30,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.labkey.api.cache.BlockingCache;
 import org.labkey.api.cache.Cache;
+import org.labkey.api.cache.CacheLoader;
 import org.labkey.api.cache.CacheManager;
+import org.labkey.api.cache.TrackingCache;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.jbrowse.AbstractJBrowseFieldCustomizer;
@@ -41,6 +42,7 @@ import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.security.User;
 import org.labkey.api.settings.AppProps;
+import org.labkey.api.util.Filter;
 import org.labkey.api.util.ShutdownListener;
 import org.labkey.api.util.logging.LogHelper;
 import org.labkey.jbrowse.model.JBrowseSession;
@@ -58,6 +60,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -400,18 +403,21 @@ public class JBrowseLuceneSearch
         }
     }
 
-    public static class LuceneIndexCache extends BlockingCache<String, CacheEntry>
+    public static class LuceneIndexCache implements Cache<String, CacheEntry>
     {
+        private final Cache<String, CacheEntry> _cache;
+
         public LuceneIndexCache()
         {
-            super(CacheManager.getStringKeyCache(1000, CacheManager.UNLIMITED, "JBrowseLuceneSearchCache"));
+            _cache = CacheManager.getStringKeyCache(1000, CacheManager.UNLIMITED, "JBrowseLuceneSearchCache");
+
         }
 
         @Override
         public void remove(@NotNull String key)
         {
             CacheEntry e = get(key);
-            super.remove(key);
+            _cache.remove(key);
 
             closeReader(e);
         }
@@ -423,6 +429,8 @@ public class JBrowseLuceneSearch
             {
                 closeReader(get(key));
             }
+
+            _cache.clear();
         }
 
         @Override
@@ -432,6 +440,8 @@ public class JBrowseLuceneSearch
             {
                 closeReader(get(key));
             }
+
+            _cache.close();
         }
 
         private void closeReader(@Nullable CacheEntry entry)
@@ -449,6 +459,54 @@ public class JBrowseLuceneSearch
             {
                 _log.error("Error closing JBrowseLuceneSearch index reader", e);
             }
+        }
+
+        @Override
+        public void put(@NotNull String key, CacheEntry value)
+        {
+            _cache.put(key, value);
+        }
+
+        @Override
+        public void put(@NotNull String key, CacheEntry value, long timeToLive)
+        {
+            _cache.put(key, value, timeToLive);
+        }
+
+        @Override
+        public CacheEntry get(@NotNull String key)
+        {
+            return _cache.get(key);
+        }
+
+        @Override
+        public CacheEntry get(@NotNull String key, @Nullable Object arg, CacheLoader<String, CacheEntry> loader)
+        {
+            return _cache.get(key, arg, loader);
+        }
+
+        @Override
+        public int removeUsingFilter(Filter<String> filter)
+        {
+            return _cache.removeUsingFilter(filter);
+        }
+
+        @Override
+        public Set<String> getKeys()
+        {
+            return _cache.getKeys();
+        }
+
+        @Override
+        public TrackingCache<String, CacheEntry> getTrackingCache()
+        {
+            return _cache.getTrackingCache();
+        }
+
+        @Override
+        public Cache<String, CacheEntry> createTemporaryCache()
+        {
+            return _cache.createTemporaryCache();
         }
     }
 
