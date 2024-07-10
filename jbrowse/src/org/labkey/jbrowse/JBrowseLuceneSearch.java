@@ -106,7 +106,8 @@ public class JBrowseLuceneSearch
         CacheEntry cacheEntry = _cache.get(trackObjectId);
 
         // Open directory of lucene path, get a directory reader, and create the index search manager
-        if (cacheEntry == null) {
+        if (cacheEntry == null)
+        {
             try
             {
                 Directory indexDirectory = FSDirectory.open(indexPath.toPath());
@@ -118,14 +119,19 @@ public class JBrowseLuceneSearch
                 cacheEntry = new CacheEntry(queryCache, indexSearcher, indexPath);
                 _cache.put(trackObjectId, cacheEntry);
             }
-            catch (Exception e) {
-                e.printStackTrace();
+            catch (Exception e)
+            {
+                _log.error("Error creating jbrowse/lucene index reader for: " + trackObjectId, e);
+
+                throw new IllegalStateException("Error creating search index reader for: " + trackObjectId);
             }
         }
+
         return cacheEntry;
     }
 
-    private String templateReplace(final String searchString) {
+    private String templateReplace(final String searchString)
+    {
         String result = searchString;
         Pattern pattern = Pattern.compile("~(.*?)~");
         Matcher matcher = pattern.matcher(searchString);
@@ -145,25 +151,34 @@ public class JBrowseLuceneSearch
         return result;
     }
 
-    private String tryUrlDecode(String input) {
-        try {
+    private String tryUrlDecode(String input)
+    {
+        try
+        {
             //special case for urls containing +; this isn't necessary for strings sent from the client-side, but URLs
             //sent via unit tests autodecode, and strings containing + rather than the URL-encoded symbol are unsafe
             //to pass through URLDecoded.decode
-            if (input.contains("+")) {
+            if (input.contains("+"))
+            {
                 return input;
             }
 
             return URLDecoder.decode(input, StandardCharsets.UTF_8);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e)
+        {
+            _log.error("Unable to URL decode input string: " + input, e);
+
             return input;
         }
     }
 
-    public String extractFieldName(String queryString) {
+    public String extractFieldName(String queryString)
+    {
         // Check if the query starts with any of the start patterns
-        for (String pattern : specialStartPatterns) {
-            if (queryString.startsWith(pattern)) {
+        for (String pattern : specialStartPatterns)
+        {
+            if (queryString.startsWith(pattern))
+            {
                 queryString = queryString.substring(pattern.length()).trim();
                 break;
             }
@@ -220,7 +235,8 @@ public class JBrowseLuceneSearch
 
         BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
 
-        if (searchString.equals(ALL_DOCS)) {
+        if (searchString.equals(ALL_DOCS))
+        {
             booleanQueryBuilder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
         }
 
@@ -251,11 +267,15 @@ public class JBrowseLuceneSearch
                 }
                 catch (QueryNodeException e)
                 {
-                    e.printStackTrace();
+                    _log.error("Unable to parse query for field " + fieldName + ": " + queryString, e);
+
+                    throw new IllegalArgumentException("Unable to parse query: " + queryString + " for field: " + fieldName);
                 }
             }
             else
             {
+                _log.error("No such field(s), or malformed query: " + queryString + ", field: " + fieldName);
+
                 throw new IllegalArgumentException("No such field(s), or malformed query: " + queryString + ", field: " + fieldName);
             }
 
