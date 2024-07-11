@@ -1063,7 +1063,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 pf.setMaximumFractionDigits(2);
 
                 NumberFormat decimal = DecimalFormat.getNumberInstance();
-                decimal.setGroupingUsed(false);
+                decimal.setGroupingUsed(true);
 
                 descriptions.add("Total Cells: " + decimal.format(totalCells));
                 if (hashingUsed)
