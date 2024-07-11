@@ -319,6 +319,12 @@ public class JBrowseServiceImpl extends JBrowseService
         luceneSearch.cacheDefaultQuery();
     }
 
+    @Override
+    public void clearLuceneCacheEntry(File luceneIndexDir)
+    {
+        JBrowseLuceneSearch.clearCacheForFile(luceneIndexDir);
+    }
+
     public static final class DefaultLuceneIndexDetector implements LuceneIndexDetector
     {
         @Override

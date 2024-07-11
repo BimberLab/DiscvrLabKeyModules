@@ -30,6 +30,7 @@ import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.settings.AdminConsole;
+import org.labkey.api.util.ContextListener;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
@@ -110,6 +111,8 @@ public class JBrowseModule extends ExtendedSimpleModule
 
         JBrowseService.get().registerFieldCustomizer(new JBrowseLuceneSearch.DefaultJBrowseFieldCustomizer());
         JBrowseService.get().registerGroupsProvider(new JBrowseLuceneSearch.TestJBrowseGroupProvider());
+
+        ContextListener.addShutdownListener(new JBrowseLuceneSearch.ShutdownHandler());
     }
 
     public static void registerPipelineSteps()

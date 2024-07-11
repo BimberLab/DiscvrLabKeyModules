@@ -44,6 +44,12 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
     }
 
     @Override
+    public boolean doSplitJobs()
+    {
+        return true;
+    }
+
+    @Override
     public boolean canProcess(SequenceOutputFile o)
     {
         return o.getFile() != null && o.getFile().exists() && SequenceUtil.FILETYPE.bamOrCram.getFileType().isType(o.getFile());
