@@ -15,6 +15,11 @@ mergeBatch <- function(dat) {
         } else {
             toMerge[[datasetId]] <- readSeuratRDS(dat[[datasetId]])
         }
+
+        if (ncol(toMerge[[datasetId]]) == 1) {
+            logger::log_info(paste0('Dataset has single cell, skipping: ', datasetId))
+            toMerge[[datasetId]] <- NULL
+        }
     }
 
     if (!is.null(assaysToDrop)) {
@@ -26,6 +31,10 @@ mergeBatch <- function(dat) {
                 }
             }
         }
+    }
+
+    if (length(toMerge) == 0) {
+        stop('There were no passing seurat objects!')
     }
 
     seuratObj <- CellMembrane::MergeSeuratObjs(toMerge, projectName = projectName, doGC = doDiet, errorOnBarcodeSuffix = errorOnBarcodeSuffix)
@@ -61,6 +70,7 @@ if (length(seuratObjects) == 1) {
         unlink(mergedObjectFiles[[1]])
     } else {
         logger::log_info('performing final merge')
+        # TODO: check for single cell in object
         seuratObj <- readRDS(mergedObjectFiles[[1]])
         unlink(mergedObjectFiles[[1]])
 
