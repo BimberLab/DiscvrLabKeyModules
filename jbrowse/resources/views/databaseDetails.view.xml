@@ -1,7 +1,7 @@
 <view xmlns="http://labkey.org/data/xml/view" title="JBrowse Session" frame="none">
-    <permissions>
-        <permission name="admin"/>
-    </permissions>
+    <permissionClasses>
+        <permissionClass name="org.labkey.api.security.permissions.AdminPermission"/>
+    </permissionClasses>
     <dependencies>
         <dependency path="laboratory.context" />
     </dependencies>

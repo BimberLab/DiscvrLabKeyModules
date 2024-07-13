@@ -1,7 +1,7 @@
 <view xmlns="http://labkey.org/data/xml/view" title="DISCVR-Seq Site Settings">
-    <permissions>
-        <permission name="admin"/>
-    </permissions>
+    <permissionClasses>
+        <permissionClass name="org.labkey.api.security.permissions.AdminPermission"/>
+    </permissionClasses>
     <dependencies>
         <dependency path="laboratory.context"/>
         <dependency path="SequenceAnalysis/sequenceAnalysis"/>

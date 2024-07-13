@@ -7,24 +7,23 @@ module.exports = {
     apps: [{
         name: 'jbrowseBrowser',
         title: 'JBrowse Genome Browser',
-        permission: 'read',
+        permissionClasses: ['org.labkey.api.security.permissions.ReadPermission'],
         path: './src/client/JBrowse/Browser'
     },{
         name: 'jbrowse2SearchWebpart',
         title: 'JBrowse Search',
-        permission: 'read',
         template: 'app',
         generateLib: true,
         path: './src/client/JBrowse/Search/webpart'
     },{
         name: 'variantSearch',
         title: 'Variant Search',
-        permission: 'read',
+        permissionClasses: ['org.labkey.api.security.permissions.ReadPermission'],
         path: './src/client/JBrowse/VariantSearch'
     },{
         name: 'variantTable',
         title: 'Variant Table',
-        permission: 'read',
+        permissionClasses: ['org.labkey.api.security.permissions.ReadPermission'],
         path: './src/client/JBrowse/VariantTable'
     }]
 };
