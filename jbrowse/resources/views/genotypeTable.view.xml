@@ -1,7 +1,7 @@
 <view xmlns="http://labkey.org/data/xml/view" title="Genotypes">
-    <permissions>
-        <permission name="read"/>
-    </permissions>
+    <permissionClasses>
+        <permissionClass name="org.labkey.api.security.permissions.ReadPermission"/>
+    </permissionClasses>
     <dependencies>
         <dependency path="laboratory.context" />
         <dependency path="internal/jQuery"/>
