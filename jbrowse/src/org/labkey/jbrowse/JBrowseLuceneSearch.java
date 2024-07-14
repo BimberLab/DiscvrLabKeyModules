@@ -19,7 +19,6 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.LRUQueryCache;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
-import org.apache.lucene.search.QueryCache;
 import org.apache.lucene.search.QueryCachingPolicy;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
@@ -27,11 +26,14 @@ import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.search.UsageTrackingQueryCachingPolicy;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.cache.Cache;
+import org.labkey.api.cache.CacheLoader;
 import org.labkey.api.cache.CacheManager;
+import org.labkey.api.cache.TrackingCache;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.jbrowse.AbstractJBrowseFieldCustomizer;
@@ -40,6 +42,8 @@ import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.security.User;
 import org.labkey.api.settings.AppProps;
+import org.labkey.api.util.Filter;
+import org.labkey.api.util.ShutdownListener;
 import org.labkey.api.util.logging.LogHelper;
 import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
@@ -56,6 +60,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -76,7 +81,7 @@ public class JBrowseLuceneSearch
     private static final int maxCachedQueries = 1000;
     private static final long maxRamBytesUsed = 250 * 1024 * 1024L;
 
-    private static final Cache<String, LRUQueryCache> _cache = CacheManager.getStringKeyCache(1000, CacheManager.UNLIMITED, "JBrowseLuceneSearchCache");
+    private static final Cache<String, CacheEntry> _cache = new LuceneIndexCache();
 
     private JBrowseLuceneSearch(final JBrowseSession session, final JsonFile jsonFile, User u)
     {
@@ -97,18 +102,36 @@ public class JBrowseLuceneSearch
         return new JBrowseLuceneSearch(session, getTrack(session, trackId, u), u);
     }
 
-    private static synchronized QueryCache getCacheForSession(String trackObjectId) {
-        LRUQueryCache qc = _cache.get(trackObjectId);
-        if (qc == null)
+    private static synchronized CacheEntry getCacheEntryForSession(String trackObjectId, File indexPath) throws IOException {
+        CacheEntry cacheEntry = _cache.get(trackObjectId);
+
+        // Open directory of lucene path, get a directory reader, and create the index search manager
+        if (cacheEntry == null)
         {
-            qc = new LRUQueryCache(maxCachedQueries, maxRamBytesUsed);
-            _cache.put(trackObjectId, qc);
+            try
+            {
+                Directory indexDirectory = FSDirectory.open(indexPath.toPath());
+                LRUQueryCache queryCache = new LRUQueryCache(maxCachedQueries, maxRamBytesUsed);
+                IndexReader indexReader = DirectoryReader.open(indexDirectory);
+                IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+                indexSearcher.setQueryCache(queryCache);
+                indexSearcher.setQueryCachingPolicy(new ForceMatchAllDocsCachingPolicy());
+                cacheEntry = new CacheEntry(queryCache, indexSearcher, indexPath);
+                _cache.put(trackObjectId, cacheEntry);
+            }
+            catch (Exception e)
+            {
+                _log.error("Error creating jbrowse/lucene index reader for: " + trackObjectId, e);
+
+                throw new IllegalStateException("Error creating search index reader for: " + trackObjectId);
+            }
         }
 
-        return qc;
+        return cacheEntry;
     }
 
-    private String templateReplace(final String searchString) {
+    private String templateReplace(final String searchString)
+    {
         String result = searchString;
         Pattern pattern = Pattern.compile("~(.*?)~");
         Matcher matcher = pattern.matcher(searchString);
@@ -128,25 +151,34 @@ public class JBrowseLuceneSearch
         return result;
     }
 
-    private String tryUrlDecode(String input) {
-        try {
+    private String tryUrlDecode(String input)
+    {
+        try
+        {
             //special case for urls containing +; this isn't necessary for strings sent from the client-side, but URLs
             //sent via unit tests autodecode, and strings containing + rather than the URL-encoded symbol are unsafe
             //to pass through URLDecoded.decode
-            if (input.contains("+")) {
+            if (input.contains("+"))
+            {
                 return input;
             }
 
             return URLDecoder.decode(input, StandardCharsets.UTF_8);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException e)
+        {
+            _log.error("Unable to URL decode input string: " + input, e);
+
             return input;
         }
     }
 
-    public String extractFieldName(String queryString) {
+    public String extractFieldName(String queryString)
+    {
         // Check if the query starts with any of the start patterns
-        for (String pattern : specialStartPatterns) {
-            if (queryString.startsWith(pattern)) {
+        for (String pattern : specialStartPatterns)
+        {
+            if (queryString.startsWith(pattern))
+            {
                 queryString = queryString.substring(pattern.length()).trim();
                 break;
             }
@@ -163,152 +195,148 @@ public class JBrowseLuceneSearch
         File indexPath = _jsonFile.getExpectedLocationOfLuceneIndex(true);
         Map<String, JBrowseFieldDescriptor> fields = JBrowseFieldUtils.getIndexedFields(_jsonFile, u, getContainer());
 
-        // Open directory of lucene path, get a directory reader, and create the index search manager
-        try (
-                Directory indexDirectory = FSDirectory.open(indexPath.toPath());
-                IndexReader indexReader = DirectoryReader.open(indexDirectory);
-                Analyzer analyzer = new StandardAnalyzer();
-        )
+        CacheEntry cacheEntry = getCacheEntryForSession(_jsonFile.getObjectId(), indexPath);
+        Analyzer analyzer = new StandardAnalyzer();
+
+        List<String> stringQueryParserFields = new ArrayList<>();
+        Map<String, SortField.Type> numericQueryParserFields = new HashMap<>();
+        PointsConfig intPointsConfig = new PointsConfig(new DecimalFormat(), Integer.class);
+        PointsConfig doublePointsConfig = new PointsConfig(new DecimalFormat(), Double.class);
+        Map<String, PointsConfig> pointsConfigMap = new HashMap<>();
+
+        // Iterate fields and split them into fields for the queryParser and the numericQueryParser
+        for (Map.Entry<String, JBrowseFieldDescriptor> entry : fields.entrySet())
         {
-            IndexSearcher indexSearcher = new IndexSearcher(indexReader);
-            indexSearcher.setQueryCache(getCacheForSession(_jsonFile.getObjectId()));
-            indexSearcher.setQueryCachingPolicy(new ForceMatchAllDocsCachingPolicy());
+            String field = entry.getKey();
+            JBrowseFieldDescriptor descriptor = entry.getValue();
 
-            List<String> stringQueryParserFields = new ArrayList<>();
-            Map<String, SortField.Type> numericQueryParserFields = new HashMap<>();
-            PointsConfig intPointsConfig = new PointsConfig(new DecimalFormat(), Integer.class);
-            PointsConfig doublePointsConfig = new PointsConfig(new DecimalFormat(), Double.class);
-            Map<String, PointsConfig> pointsConfigMap = new HashMap<>();
-
-            // Iterate fields and split them into fields for the queryParser and the numericQueryParser
-            for (Map.Entry<String, JBrowseFieldDescriptor> entry : fields.entrySet())
+            switch(descriptor.getType())
             {
-                String field = entry.getKey();
-                JBrowseFieldDescriptor descriptor = entry.getValue();
-
-                switch(descriptor.getType())
-                {
-                    case Flag, String, Character -> stringQueryParserFields.add(field);
-                    case Float -> {
-                        numericQueryParserFields.put(field, SortField.Type.DOUBLE);
-                        pointsConfigMap.put(field, doublePointsConfig);
-                    }
-                    case Integer -> {
-                        numericQueryParserFields.put(field, SortField.Type.INT);
-                        pointsConfigMap.put(field, intPointsConfig);
-                    }
+                case Flag, String, Character -> stringQueryParserFields.add(field);
+                case Float -> {
+                    numericQueryParserFields.put(field, SortField.Type.DOUBLE);
+                    pointsConfigMap.put(field, doublePointsConfig);
+                }
+                case Integer -> {
+                    numericQueryParserFields.put(field, SortField.Type.LONG);
+                    pointsConfigMap.put(field, intPointsConfig);
                 }
             }
-
-            // The numericQueryParser can perform range queries, but numeric fields they can't be indexed alongside
-            // lexicographic  fields, so they get split into a separate parser
-            MultiFieldQueryParser queryParser = new MultiFieldQueryParser(stringQueryParserFields.toArray(new String[0]), new StandardAnalyzer());
-            queryParser.setAllowLeadingWildcard(true);
-
-            StandardQueryParser numericQueryParser = new StandardQueryParser();
-            numericQueryParser.setAnalyzer(analyzer);
-            numericQueryParser.setPointsConfigMap(pointsConfigMap);
-
-            BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
-
-            if (searchString.equals(ALL_DOCS)) {
-                booleanQueryBuilder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
-            }
-
-            // Split input into tokens, 1 token per query separated by &
-            StringTokenizer tokenizer = new StringTokenizer(searchString, "&");
-
-            while (tokenizer.hasMoreTokens() && !searchString.equals(ALL_DOCS))
-            {
-                String queryString = tokenizer.nextToken();
-                Query query = null;
-
-                String fieldName = extractFieldName(queryString);
-
-                if (VARIABLE_SAMPLES.equals(fieldName))
-                {
-                    queryString = templateReplace(queryString);
-                }
-
-                if (stringQueryParserFields.contains(fieldName))
-                {
-                    query = queryParser.parse(queryString);
-                }
-                else if (numericQueryParserFields.containsKey(fieldName))
-                {
-                    try
-                    {
-                        query = numericQueryParser.parse(queryString, "");
-                    }
-                    catch (QueryNodeException e)
-                    {
-                        e.printStackTrace();
-                    }
-                }
-                else
-                {
-                    throw new IllegalArgumentException("No such field(s), or malformed query: " + queryString + ", field: " + fieldName);
-                }
-
-                booleanQueryBuilder.add(query, BooleanClause.Occur.MUST);
-            }
-
-            BooleanQuery query = booleanQueryBuilder.build();
-
-            // By default, sort in INDEXORDER, which is by genomicPosition
-            Sort sort = Sort.INDEXORDER;
-
-            // If the sort field is not genomicPosition, use the provided sorting data
-            if (!sortField.equals(GENOMIC_POSITION)) {
-                SortField.Type fieldType;
-
-                if (stringQueryParserFields.contains(sortField)) {
-                    fieldType = SortField.Type.STRING;
-                } else if (numericQueryParserFields.containsKey(sortField)) {
-                    fieldType = numericQueryParserFields.get(sortField);
-                } else {
-                    throw new IllegalArgumentException("Could not find type for sort field: " + sortField);
-                }
-
-                sort = new Sort(new SortField(sortField + "_sort", fieldType, sortReverse));
-            }
-
-            // Get chunks of size {pageSize}. Default to 1 chunk -- add to the offset to get more.
-            // We then iterate over the range of documents we want based on the offset. This does grow in memory
-            // linearly with the number of documents, but my understanding is that these are just score,id pairs
-            // rather than full documents, so mem usage *should* still be pretty low.
-            // Perform the search with sorting
-            TopFieldDocs topDocs = indexSearcher.search(query, pageSize * (offset + 1), sort);
-
-            JSONObject results = new JSONObject();
-
-            // Iterate over the doc list, (either to the total end or until the page ends) grab the requested docs,
-            // and add to returned results
-            List<JSONObject> data = new ArrayList<>();
-            for (int i = pageSize * offset; i < Math.min(pageSize * (offset + 1), topDocs.scoreDocs.length); i++)
-            {
-                JSONObject elem = new JSONObject();
-                Document doc = indexSearcher.storedFields().document(topDocs.scoreDocs[i].doc);
-
-                for (IndexableField field : doc.getFields()) {
-                    String fieldName = field.name();
-                    String[] fieldValues = doc.getValues(fieldName);
-                    if (fieldValues.length > 1) {
-                        elem.put(fieldName, fieldValues);
-                    } else {
-                        elem.put(fieldName, fieldValues[0]);
-                    }
-                }
-
-                data.add(elem);
-            }
-
-            results.put("data", data);
-            results.put("totalHits", topDocs.totalHits.value);
-
-            //TODO: we should probably stream this
-            return results;
         }
+
+        // The numericQueryParser can perform range queries, but numeric fields they can't be indexed alongside
+        // lexicographic  fields, so they get split into a separate parser
+        MultiFieldQueryParser queryParser = new MultiFieldQueryParser(stringQueryParserFields.toArray(new String[0]), new StandardAnalyzer());
+        queryParser.setAllowLeadingWildcard(true);
+
+        StandardQueryParser numericQueryParser = new StandardQueryParser();
+        numericQueryParser.setAnalyzer(analyzer);
+        numericQueryParser.setPointsConfigMap(pointsConfigMap);
+
+        BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
+
+        if (searchString.equals(ALL_DOCS))
+        {
+            booleanQueryBuilder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
+        }
+
+        // Split input into tokens, 1 token per query separated by &
+        StringTokenizer tokenizer = new StringTokenizer(searchString, "&");
+
+        while (tokenizer.hasMoreTokens() && !searchString.equals(ALL_DOCS))
+        {
+            String queryString = tokenizer.nextToken();
+            Query query = null;
+
+            String fieldName = extractFieldName(queryString);
+
+            if (VARIABLE_SAMPLES.equals(fieldName))
+            {
+                queryString = templateReplace(queryString);
+            }
+
+            if (stringQueryParserFields.contains(fieldName))
+            {
+                query = queryParser.parse(queryString);
+            }
+            else if (numericQueryParserFields.containsKey(fieldName))
+            {
+                try
+                {
+                    query = numericQueryParser.parse(queryString, "");
+                }
+                catch (QueryNodeException e)
+                {
+                    _log.error("Unable to parse query for field " + fieldName + ": " + queryString, e);
+
+                    throw new IllegalArgumentException("Unable to parse query: " + queryString + " for field: " + fieldName);
+                }
+            }
+            else
+            {
+                _log.error("No such field(s), or malformed query: " + queryString + ", field: " + fieldName);
+
+                throw new IllegalArgumentException("No such field(s), or malformed query: " + queryString + ", field: " + fieldName);
+            }
+
+            booleanQueryBuilder.add(query, BooleanClause.Occur.MUST);
+        }
+
+        BooleanQuery query = booleanQueryBuilder.build();
+
+        // By default, sort in INDEXORDER, which is by genomicPosition
+        Sort sort = Sort.INDEXORDER;
+
+        // If the sort field is not genomicPosition, use the provided sorting data
+        if (!sortField.equals(GENOMIC_POSITION)) {
+            SortField.Type fieldType;
+
+            if (stringQueryParserFields.contains(sortField)) {
+                fieldType = SortField.Type.STRING;
+            } else if (numericQueryParserFields.containsKey(sortField)) {
+                fieldType = numericQueryParserFields.get(sortField);
+            } else {
+                throw new IllegalArgumentException("Could not find type for sort field: " + sortField);
+            }
+
+            sort = new Sort(new SortField(sortField + "_sort", fieldType, sortReverse));
+        }
+
+        // Get chunks of size {pageSize}. Default to 1 chunk -- add to the offset to get more.
+        // We then iterate over the range of documents we want based on the offset. This does grow in memory
+        // linearly with the number of documents, but my understanding is that these are just score,id pairs
+        // rather than full documents, so mem usage *should* still be pretty low.
+        // Perform the search with sorting
+        TopFieldDocs topDocs = cacheEntry.indexSearcher.search(query, pageSize * (offset + 1), sort);
+
+        JSONObject results = new JSONObject();
+
+        // Iterate over the doc list, (either to the total end or until the page ends) grab the requested docs,
+        // and add to returned results
+        List<JSONObject> data = new ArrayList<>();
+        for (int i = pageSize * offset; i < Math.min(pageSize * (offset + 1), topDocs.scoreDocs.length); i++)
+        {
+            JSONObject elem = new JSONObject();
+            Document doc = cacheEntry.indexSearcher.storedFields().document(topDocs.scoreDocs[i].doc);
+
+            for (IndexableField field : doc.getFields()) {
+                String fieldName = field.name();
+                String[] fieldValues = doc.getValues(fieldName);
+                if (fieldValues.length > 1) {
+                    elem.put(fieldName, fieldValues);
+                } else {
+                    elem.put(fieldName, fieldValues[0]);
+                }
+            }
+
+            data.add(elem);
+        }
+
+        results.put("data", data);
+        results.put("totalHits", topDocs.totalHits.value);
+
+        //TODO: we should probably stream this
+        return results;
     }
 
     public static class DefaultJBrowseFieldCustomizer extends AbstractJBrowseFieldCustomizer
@@ -382,6 +410,8 @@ public class JBrowseLuceneSearch
                         return true;
                     }
                 }
+            } else if (query instanceof MatchAllDocsQuery) {
+                return true;
             }
 
             return defaultPolicy.shouldCache(query);
@@ -393,12 +423,148 @@ public class JBrowseLuceneSearch
         }
     }
 
+    public static class LuceneIndexCache implements Cache<String, CacheEntry>
+    {
+        private final Cache<String, CacheEntry> _cache;
+
+        public LuceneIndexCache()
+        {
+            _cache = CacheManager.getStringKeyCache(1000, CacheManager.UNLIMITED, "JBrowseLuceneSearchCache");
+
+        }
+
+        @Override
+        public void remove(@NotNull String key)
+        {
+            CacheEntry e = get(key);
+            _cache.remove(key);
+
+            closeReader(e);
+        }
+
+        @Override
+        public void clear()
+        {
+            for (String key : getKeys())
+            {
+                closeReader(get(key));
+            }
+
+            _cache.clear();
+        }
+
+        @Override
+        public void close()
+        {
+            for (String key : getKeys())
+            {
+                closeReader(get(key));
+            }
+
+            _cache.close();
+        }
+
+        private void closeReader(@Nullable CacheEntry entry)
+        {
+            if (entry == null)
+            {
+                return;
+            }
+
+            try
+            {
+                entry.getIndexSearcher().getIndexReader().close();
+            }
+            catch (IOException e)
+            {
+                _log.error("Error closing JBrowseLuceneSearch index reader", e);
+            }
+        }
+
+        @Override
+        public void put(@NotNull String key, CacheEntry value)
+        {
+            _cache.put(key, value);
+        }
+
+        @Override
+        public void put(@NotNull String key, CacheEntry value, long timeToLive)
+        {
+            _cache.put(key, value, timeToLive);
+        }
+
+        @Override
+        public CacheEntry get(@NotNull String key)
+        {
+            return _cache.get(key);
+        }
+
+        @Override
+        public CacheEntry get(@NotNull String key, @Nullable Object arg, CacheLoader<String, CacheEntry> loader)
+        {
+            return _cache.get(key, arg, loader);
+        }
+
+        @Override
+        public int removeUsingFilter(Filter<String> filter)
+        {
+            return _cache.removeUsingFilter(filter);
+        }
+
+        @Override
+        public Set<String> getKeys()
+        {
+            return _cache.getKeys();
+        }
+
+        @Override
+        public TrackingCache<String, CacheEntry> getTrackingCache()
+        {
+            return _cache.getTrackingCache();
+        }
+
+        @Override
+        public Cache<String, CacheEntry> createTemporaryCache()
+        {
+            return _cache.createTemporaryCache();
+        }
+    }
+
+    public static class CacheEntry
+    {
+        private final LRUQueryCache queryCache;
+        private final IndexSearcher indexSearcher;
+        private final File luceneIndexDir;
+
+        public CacheEntry(LRUQueryCache queryCache, IndexSearcher indexSearcher, File luceneIndexDir)
+        {
+            this.queryCache = queryCache;
+            this.indexSearcher = indexSearcher;
+            this.luceneIndexDir = luceneIndexDir;
+        }
+
+        public LRUQueryCache getQueryCache()
+        {
+            return queryCache;
+        }
+
+        public IndexSearcher getIndexSearcher()
+        {
+            return indexSearcher;
+        }
+
+        public File getLuceneIndexDir()
+        {
+            return luceneIndexDir;
+        }
+    }
+
     public static JSONArray reportCacheInfo()
     {
         JSONArray cacheInfo = new JSONArray();
         for (String sessionId : _cache.getKeys())
         {
-            LRUQueryCache qc = _cache.get(sessionId);
+            LRUQueryCache qc = _cache.get(sessionId).getQueryCache();
             JSONObject info = new JSONObject();
             info.put("cacheSize", qc.getCacheSize());
             info.put("cacheCount", qc.getCacheCount());
@@ -425,6 +591,23 @@ public class JBrowseLuceneSearch
         }
     }
 
+    public static void emptyCache()
+    {
+        clearCache(null);
+    }
+
+    public static void clearCacheForFile(@NotNull File luceneIndexDir)
+    {
+        for (String key : _cache.getKeys())
+        {
+            CacheEntry entry = _cache.get(key);
+            if (entry != null && luceneIndexDir.equals(entry.getLuceneIndexDir()))
+            {
+                _cache.remove(key);
+            }
+        }
+    }
+
     public static void clearCache(@Nullable String jbrowseTrackId)
     {
         if (jbrowseTrackId == null)
@@ -434,6 +617,28 @@ public class JBrowseLuceneSearch
         else
         {
             _cache.remove(jbrowseTrackId);
+        }
+    }
+
+    public static class ShutdownHandler implements ShutdownListener
+    {
+        @Override
+        public String getName()
+        {
+            return "JBrowse-Lucene Shutdown Listener";
+        }
+
+        @Override
+        public void shutdownPre()
+        {
+
+        }
+
+        @Override
+        public void shutdownStarted()
+        {
+            _log.info("Clearing all open JBrowse/Lucene cached readers");
+            JBrowseLuceneSearch.emptyCache();
         }
     }
 }

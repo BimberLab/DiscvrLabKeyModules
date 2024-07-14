@@ -2,6 +2,7 @@ package org.labkey.singlecell.pipeline.singlecell;
 
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
+import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
@@ -18,6 +19,7 @@ public class ClassifyTNKByExpression extends AbstractRDiscvrStep
         public Provider()
         {
             super("ClassifyTNKByExpression", "Classify T/NK By Expression", "RDiscvr", "Classify T and NK By Expression and TCR clonotype, using best available evidence of ground-truth.", Arrays.asList(
+                    ToolParameterDescriptor.create("collapseGOnlyToGD", "Collapse Gamma/Only", "If checked, cells labeled as gamma-chain-only will be collapsed to the Gamma/Delta category", "checkbox", null, false)
             ), null, null);
         }
 

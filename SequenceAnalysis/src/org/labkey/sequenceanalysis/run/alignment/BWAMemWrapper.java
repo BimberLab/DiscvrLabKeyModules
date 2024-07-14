@@ -17,6 +17,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SamtoolsRunner;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.FileUtil;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -61,7 +62,7 @@ public class BWAMemWrapper extends BWAWrapper
             rg.add("LB:" + rs.getReadsetId().toString());
             rg.add("PL:" + (rs.getPlatform() == null ? "ILLUMINA" : rs.getPlatform()));
             rg.add("PU:" + (platformUnit == null ? rs.getReadsetId().toString() : platformUnit));
-            rg.add("SM:" + rs.getName().replaceAll(" ", "_"));
+            rg.add("SM:" + SequenceUtil.getLegalReadGroupName(rs));
             extraArgs.add("'" + StringUtils.join(rg, "\\t") + "'");
 
             getWrapper().performMemAlignment(getPipelineCtx().getJob(), output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename, extraArgs);

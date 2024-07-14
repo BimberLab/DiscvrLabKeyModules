@@ -27,6 +27,7 @@ import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,7 +111,7 @@ public class SampleRenameStep extends AbstractCommandPipelineStep<VariantFiltrat
             List<Interval> queryIntervals = intervals;
             if (queryIntervals == null || queryIntervals.isEmpty())
             {
-                queryIntervals.add(null);
+                queryIntervals = Collections.singletonList(null);
             }
 
             int i = 0;
