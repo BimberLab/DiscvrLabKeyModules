@@ -26,7 +26,7 @@ public class RunSingleR extends AbstractCellMembraneStep
                     SeuratToolParameter.create("nThreads", "# Threads", "If provided, this value will be passed to BiocParallel::MulticoreParam().", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, null),
-                    SeuratToolParameter.create("singleRSpecies", "Tests To Use", "If human, hpca, blueprint, dice, monaco, and immgen will be used. If mouse, MouseRNAseqData will be used.", "ldk-simplecombo", new JSONObject()
+                    SeuratToolParameter.create("singleRSpecies", "Species", "If human, hpca, blueprint, dice, monaco, and immgen will be used. If mouse, MouseRNAseqData will be used.", "ldk-simplecombo", new JSONObject()
                     {{
                         put("multiSelect", false);
                         put("allowBlank", false);

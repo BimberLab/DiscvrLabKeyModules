@@ -420,7 +420,8 @@ public class ChainFileValidator
             refName = StringUtils.join(Arrays.copyOfRange(tokens, 1, tokens.length), "_");
         }
 
-        if (refName.equals("chrM"))
+        // NOTE: hg19 and GRCh37 have different MT contigs. chrM is the legacy version.
+        if (refName.equals("chrMT"))
         {
             return "MT";
         }

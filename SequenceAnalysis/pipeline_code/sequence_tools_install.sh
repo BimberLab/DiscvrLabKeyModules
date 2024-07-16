@@ -336,30 +336,6 @@ fi
 
 
 #
-# BisSNP
-#
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install BisSNP"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/BisSNP.jar || ! -z $FORCE_REINSTALL ]];
-then
-    echo "Cleaning up previous installs"
-    rm -Rf BisSNP*
-    rm -Rf $LKTOOLS_DIR/BisSNP.jar
-
-    wget $WGET_OPTS https://downloads.sourceforge.net/project/bissnp/BisSNP-0.82.2/BisSNP-0.82.2.jar
-
-    install ./BisSNP-0.82.2.jar $LKTOOLS_DIR/BisSNP.jar
-else
-    echo "Already installed"
-fi
-
-
-#
 #mosaik
 #
 echo ""
@@ -510,10 +486,10 @@ then
     rm -Rf bcftools*
     rm -Rf $LKTOOLS_DIR/bcftools
 
-    wget $WGET_OPTS https://github.com/samtools/bcftools/releases/download/1.18/bcftools-1.18.tar.bz2
-    tar xjvf bcftools-1.18.tar.bz2
-    chmod 755 bcftools-1.18
-    cd bcftools-1.18
+    wget $WGET_OPTS https://github.com/samtools/bcftools/releases/download/1.20/bcftools-1.20.tar.bz2
+    tar xjvf bcftools-1.20.tar.bz2
+    chmod 755 bcftools-1.20
+    cd bcftools-1.20
     rm -f plugins/liftover.c
     wget $WGET_OPTS -P plugins https://raw.githubusercontent.com/freeseek/score/master/liftover.c
 

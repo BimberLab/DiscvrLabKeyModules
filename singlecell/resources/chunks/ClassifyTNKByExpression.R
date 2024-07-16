@@ -14,7 +14,7 @@ for (datasetId in names(seuratObjects)) {
     seuratObj <- Rdiscvr::DownloadAndAppendTcrClonotypes(seuratObj)
   }
 
-  seuratObj <- Rdiscvr::ClassifyTNKByExpression(seuratObj)
+  seuratObj <- Rdiscvr::ClassifyTNKByExpression(seuratObj, collapseGOnlyToGD = collapseGOnlyToGD)
 
   saveData(seuratObj, datasetId)
 
