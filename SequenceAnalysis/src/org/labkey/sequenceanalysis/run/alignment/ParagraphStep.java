@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
 import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import org.apache.commons.io.FileUtils;
@@ -30,6 +31,8 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
@@ -141,16 +144,23 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                     {
                         throw new PipelineJobException("No read groups found in input BAM");
                     }
-                    else if (header.getReadGroups().size() > 1)
+
+                    Set<String> uniqueSamples = header.getReadGroups().stream().map(SAMReadGroupRecord::getSample).collect(Collectors.toSet());
+                    if (uniqueSamples.size() > 1)
                     {
-                        throw new PipelineJobException("More than one read group found in BAM");
+                        throw new PipelineJobException("Readgroups contained more than one unique sample");
                     }
 
-                    rgId = header.getReadGroups().get(0).getSample();
+                    rgId = uniqueSamples.iterator().next();
 
                     JSONObject json = new JSONObject(FileUtils.readFileToString(coverageJson, Charset.defaultCharset()));
                     writer.println("id\tpath\tdepth\tread length");
                     double depth = json.getJSONObject("autosome").getDouble("depth");
+                    if (depth <= 0)
+                    {
+                        throw new PipelineJobException("Depth was zero for file: " + so.getFile().getPath());
+                    }
+
                     double readLength = json.getInt("read_length");
                     writer.println(rgId + "\t" + "/work/" + so.getFile().getName() + "\t" + depth + "\t" + readLength);
                 }
