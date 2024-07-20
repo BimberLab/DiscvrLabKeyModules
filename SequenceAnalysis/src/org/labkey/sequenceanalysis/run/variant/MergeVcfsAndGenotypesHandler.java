@@ -10,6 +10,7 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandl
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
@@ -31,7 +32,8 @@ public class MergeVcfsAndGenotypesHandler extends AbstractParameterizedOutputHan
     public MergeVcfsAndGenotypesHandler()
     {
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Merge Vcfs And Genotypes", "Combine multiple VCF files", null, List.of(
-                ToolParameterDescriptor.create("basename", "Output File Name", "This will be used as the name for the output VCF.", "textfield", null, "")
+                ToolParameterDescriptor.create("basename", "Output File Name", "This will be used as the name for the output VCF.", "textfield", null, ""),
+                ToolParameterDescriptor.create("doSort", "Sort Inputs", "If checked, the input VCFs will be sorted prior to merge. This is usually not necessary", "checkbox", null, false)
         ));
     }
 
@@ -78,6 +80,7 @@ public class MergeVcfsAndGenotypesHandler extends AbstractParameterizedOutputHan
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
             File outputVcf = new File(ctx.getOutputDir(), ctx.getParams().getString("basename") + ".combined.vcf.gz");
+            boolean doSort = ctx.getParams().optBoolean("doSort", false);
 
             RecordedAction action = new RecordedAction(getName());
 
@@ -90,13 +93,22 @@ public class MergeVcfsAndGenotypesHandler extends AbstractParameterizedOutputHan
 
             List<File> inputVCFs = new ArrayList<>();
             inputFiles.forEach(x -> inputVCFs.add(x.getFile()));
-            inputFiles.forEach(x -> action.addInput(x.getFile(), "Combined VCF"));
+            inputFiles.forEach(x -> action.addInput(x.getFile(), "Input VCF"));
 
             ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(genomeIds.iterator().next());
             new MergeVcfsAndGenotypesWrapper(ctx.getLogger()).execute(genome.getWorkingFastaFile(), inputVCFs, outputVcf, null);
             if (!outputVcf.exists())
             {
                 throw new PipelineJobException("unable to find output: " + outputVcf.getPath());
+            }
+
+            if (doSort)
+            {
+                ctx.getLogger().info("Sorting VCFs");
+                for (File f : inputVCFs)
+                {
+                    SequencePipelineService.get().sortVcf(f, null, genome.getSequenceDictionary(), ctx.getLogger());
+                }
             }
 
             action.addOutput(outputVcf, "Combined VCF", false);

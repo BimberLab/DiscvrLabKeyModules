@@ -37,6 +37,9 @@
                         name: 'VLoupe Files Needing TCR Import',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'outputfiles', 'query.readset/status~isblank': null, 'query.readset/numTcrResults~eq': 0, 'query.category~eq': '10x VLoupe', 'query.sort': 'readset/name'})
                     },{
+                        name: 'Stim Data Needing Activation Data',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'outputfiles', 'query.readset/assaytypes~contains': 'stim', 'query.readset/numTcrResults~eq': 0, 'query.category~eq': 'Seurat Object Prototype', 'query.readset/outputFileTypes~doesnotcontain': 'TCell Activation', 'query.sort': 'readset/name'})
+                    },{
                         name: 'Loupe Files Missing Prototype',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'outputfiles', 'query.category~eq': '10x Loupe File', 'query.readset/status~isblank': null, 'query.readset/cDNA/rowid~isnonblank': null, 'query.readset/outputFileTypes~doesnotcontain': 'Prototype', 'query.sort': 'readset/name', 'query.maxRows': 250})
                     },{

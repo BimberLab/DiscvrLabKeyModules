@@ -1,0 +1,17 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+   <columns>
+       <!--<column name="rowid" />-->
+       <column name="genomeId1" />
+       <column name="genomeId2" />
+       <column name="source" />
+       <column name="version" />
+       <column name="dateDisabled" />
+       <column name="chainFile" />
+       <column name="chainFile/DataFileUrl" />
+   </columns>
+   <sorts>
+       <sort column="genomeId1/name"/>
+       <sort column="genomeId2/name"/>
+       <sort column="version"/>
+   </sorts>
+</customView>

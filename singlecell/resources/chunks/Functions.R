@@ -61,16 +61,16 @@ printName <- function(datasetId) {
 }
 
 savedFiles <- data.frame(datasetId = character(), datasetName = character(), filename = character(), outputFileId = character(), readsetId = character())
-if (file.exists('/work/savedSeuratObjects.txt')) {
-    print('Deleting pre-existing savedSeuratObjects.txt file')
-    unlink('/work/savedSeuratObjects.txt')
+if (file.exists(trackerFile)) {
+    print(paste0('Deleting pre-existing ', trackerFile, ' file'))
+    unlink(trackerFile)
 }
 
-file.create('/work/savedSeuratObjects.txt')
-print(paste0('Total lines in savedSeuratObjects.txt on job start:', length(readLines('savedSeuratObjects.txt'))))
+file.create(trackerFile)
+print(paste0('Total lines in ', trackerFile, ' on job start:', length(readLines(trackerFile))))
 
 saveData <- function(seuratObj, datasetId) {
-    message(paste0('Saving dataset: ', datasetId, ' with ', ncol(seuratObj), ' cells'))
+    logger::log_info(paste0('Saving dataset: ', datasetId, ' with ', ncol(seuratObj), ' cells'))
     print(paste0('Saving dataset: ', datasetId))
     print(seuratObj)
 
@@ -78,9 +78,8 @@ saveData <- function(seuratObj, datasetId) {
 
     datasetIdForFile <- makeLegalFileName(datasetId)
     fn <- paste0(outputPrefix, '.', datasetIdForFile, '.seurat.rds')
-    message(paste0('Filename: ', fn))
 
-    message(paste0('Saving RDS file: ', fn, ' with ', ncol(seuratObj), ' cells'))
+    logger::log_info(paste0('Saving RDS file: ', fn, ' with ', ncol(seuratObj), ' cells'))
     barcodeFile <- paste0(outputPrefix, '.', datasetIdForFile, '.cellBarcodes.csv')
     metaFile <- paste0(outputPrefix, '.', datasetIdForFile, '.seurat.meta.txt')
 
@@ -101,8 +100,9 @@ saveData <- function(seuratObj, datasetId) {
         stop('Error saving seurat objects, more than one row!')
     }
 
-    write.table(toAppend, file = 'savedSeuratObjects.txt', quote = FALSE, sep = '\t', row.names = FALSE, col.names = FALSE, append = TRUE)
-    print(paste0('Total lines in savedSeuratObjects.txt after save:', length(readLines('savedSeuratObjects.txt'))))
+    print(paste0('Total lines in ', trackerFile, ' before save:', length(readLines(trackerFile))))
+    write.table(toAppend, file = trackerFile, quote = FALSE, sep = '\t', row.names = FALSE, col.names = FALSE, append = TRUE)
+    print(paste0('Total lines in ', trackerFile, ' after save:', length(readLines(trackerFile))))
 
     # Write cell barcodes and metadata:
     metaDf <- seuratObj@meta.data
