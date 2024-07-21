@@ -30,6 +30,7 @@ import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.settings.AdminConsole;
+import org.labkey.api.util.ContextListener;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.SystemMaintenance;
 import org.labkey.api.view.WebPartFactory;
@@ -114,6 +115,8 @@ public class JBrowseModule extends ExtendedSimpleModule
 
         // These are all part of the JBrowse demo data:
         ContentSecurityPolicyFilter.registerAllowedConnectionSource(this.getClass().getName(), "https://jbrowse.org", "https://s3.amazonaws.com", "https://ftp.ncbi.nlm.nih.gov");
+
+        ContextListener.addShutdownListener(new JBrowseLuceneSearch.ShutdownHandler());
     }
 
     public static void registerPipelineSteps()

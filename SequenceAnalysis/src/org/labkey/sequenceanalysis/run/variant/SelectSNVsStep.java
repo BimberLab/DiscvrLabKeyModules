@@ -33,7 +33,7 @@ public class SelectSNVsStep extends AbstractCommandPipelineStep<SelectVariantsWr
     public static String SELECT_TYPE_TO_INCLUDE = "selectType";
     public static String SELECT_TYPE_TO_EXCLUDE = "selectTypeToExclude";
 
-    public SelectSNVsStep(PipelineStepProvider provider, PipelineContext ctx)
+    public SelectSNVsStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new SelectVariantsWrapper(ctx.getLogger()));
     }

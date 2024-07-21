@@ -31,6 +31,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
+import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.CommandWrapper;
@@ -649,5 +650,15 @@ public class SequenceUtil
         }
 
         return null;
+    }
+
+    public static String getLegalReadGroupName(Readset rs)
+    {
+        return getLegalReadGroupName(rs.getName());
+    }
+
+    public static String getLegalReadGroupName(String rsName)
+    {
+        return rsName.replaceAll(" ", "_");
     }
 }

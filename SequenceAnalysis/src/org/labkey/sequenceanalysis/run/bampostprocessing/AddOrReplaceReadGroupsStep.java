@@ -11,6 +11,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.run.util.AddOrReplaceReadGroupsWrapper;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 
@@ -21,7 +22,7 @@ import java.io.File;
  */
 public class AddOrReplaceReadGroupsStep extends AbstractCommandPipelineStep<AddOrReplaceReadGroupsWrapper> implements BamProcessingStep
 {
-    public AddOrReplaceReadGroupsStep(PipelineStepProvider provider, PipelineContext ctx)
+    public AddOrReplaceReadGroupsStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new AddOrReplaceReadGroupsWrapper(ctx.getLogger()));
     }
@@ -48,7 +49,7 @@ public class AddOrReplaceReadGroupsStep extends AbstractCommandPipelineStep<AddO
 
         File outputBam = new File(outputDirectory, FileUtil.getBaseName(inputBam) + ".readgroups.bam");
         output.addIntermediateFile(outputBam);
-        output.setBAM(getWrapper().executeCommand(inputBam, outputBam, rs.getReadsetId().toString(), rs.getPlatform(), rs.getReadsetId().toString(), rs.getName().replaceAll(" ", "_")));
+        output.setBAM(getWrapper().executeCommand(inputBam, outputBam, rs.getReadsetId().toString(), rs.getPlatform(), rs.getReadsetId().toString(), SequenceUtil.getLegalReadGroupName(rs)));
 
         return output;
     }
