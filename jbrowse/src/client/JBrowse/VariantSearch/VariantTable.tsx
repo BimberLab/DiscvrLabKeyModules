@@ -89,7 +89,6 @@ function VariantTable() {
     return (
         <ThemeProvider theme={theme}>
         <div style={{height: "80vh", display:"block"}}>
-            {/* @ts-ignore -- FIXME: Build is resolving the wrong @types/react */}
             <ErrorBoundary>
                 <VariantTableWidget assembly={assembly} trackId={trackId} parsedLocString={parsedLocString} sessionId={sessionId} session={session} pluginManager={pluginManager}/>
             </ErrorBoundary>
