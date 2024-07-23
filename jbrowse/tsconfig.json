@@ -1,6 +1,9 @@
 {
   "extends": "./node_modules/@labkey/build/webpack/tsconfig.json",
   "include": ["src/client/**/*"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "paths": {
+    "react": ["./node_modules/@types/react"]
+  }
 }
 
