@@ -51,6 +51,7 @@ function View(){
     return (
         //TODO: can we make this expand to full page height?
         <div style={{height: "100%"}}>
+            {/* @ts-ignore -- FIXME: Build is resolving the wrong @types/react */}
             <ErrorBoundary>
                 <ThemeProvider theme={theme}>
                     <JBrowseLinearGenomeView viewState={state as ViewModel} />

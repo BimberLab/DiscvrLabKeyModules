@@ -88,6 +88,7 @@ function VariantTable() {
     return (
         <ThemeProvider theme={theme}>
             <div style={{height: "80vh", display:"block"}}>
+                {/* @ts-ignore -- FIXME: Build is resolving the wrong @types/react */}
                 <ErrorBoundary>
                     <JBrowseFilterPanel session={state.session}/>
                     <VariantTableWidget assembly={assembly} assemblyName={assemblyName} trackId={trackId} locString={locString}
