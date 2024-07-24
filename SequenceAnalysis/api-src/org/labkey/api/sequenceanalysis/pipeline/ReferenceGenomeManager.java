@@ -103,6 +103,11 @@ public class ReferenceGenomeManager
         }
 
         File localCacheDir = SequencePipelineService.get().getRemoteGenomeCacheDirectory();
+        if (localCacheDir == null)
+        {
+            throw new PipelineJobException("RemoteGenomeCacheDirectory was not set");
+        }
+
         if (isUpToDate(genome))
         {
             log.debug("Genome up-to-date, will not repeat rsync: " + genome.getGenomeId());

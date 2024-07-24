@@ -98,11 +98,6 @@ abstract public class SequencePipelineService
      */
     abstract public String getDockerCommand();
 
-    /**
-     * This allows instances to supply a user that will be passed to 'docker login'. This is rarely needed. It can be set using DOCKER_USER in pipelineConfig.xml
-     */
-    abstract public String getDockerUser();
-
     abstract public List<File> getSequenceJobInputFiles(PipelineJob job);
 
     /**
