@@ -22,7 +22,7 @@ import java.io.File;
  */
 public class AddOrReplaceReadGroupsStep extends AbstractCommandPipelineStep<AddOrReplaceReadGroupsWrapper> implements BamProcessingStep
 {
-    public AddOrReplaceReadGroupsStep(PipelineStepProvider provider, PipelineContext ctx)
+    public AddOrReplaceReadGroupsStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new AddOrReplaceReadGroupsWrapper(ctx.getLogger()));
     }

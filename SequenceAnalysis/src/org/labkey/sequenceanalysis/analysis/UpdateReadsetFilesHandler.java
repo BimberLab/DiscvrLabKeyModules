@@ -39,6 +39,8 @@ import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
@@ -119,17 +121,25 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
             try (SamReader reader = samReaderFactory.open(so.getFile()))
             {
                 SAMFileHeader header = reader.getFileHeader().clone();
-                int nSamples = reader.getFileHeader().getReadGroups().size();
-                if (nSamples != 1)
+                List<SAMReadGroupRecord> rgs = header.getReadGroups();
+                Set<String> distinctLibraries = rgs.stream().map(SAMReadGroupRecord::getLibrary).collect(Collectors.toSet());
+                if (distinctLibraries.size() > 1)
                 {
-                    throw new PipelineJobException("File has more than one read group, found: " + nSamples);
+                    throw new PipelineJobException("File has more than one library in read group(s), found: " + distinctLibraries.stream().collect(Collectors.joining(", ")));
                 }
 
-                List<SAMReadGroupRecord> rgs = header.getReadGroups();
-                String existingSample = rgs.get(0).getSample();
-                if (existingSample.equals(newRsName))
+                Set<String> distinctSamples = rgs.stream().map(SAMReadGroupRecord::getSample).collect(Collectors.toSet());
+                if (distinctSamples.size() > 1)
                 {
-                    throw new PipelineJobException("Sample names match, aborting");
+                    throw new PipelineJobException("File has more than one sample in read group(s), found: " + distinctSamples.stream().collect(Collectors.joining(", ")));
+                }
+
+                if (
+                        distinctLibraries.stream().filter(x -> !x.equals(newRsName)).count() == 0L &&
+                        distinctSamples.stream().filter(x -> !x.equals(newRsName)).count() == 0L
+                )
+                {
+                    throw new PipelineJobException("Sample and library names match in read group(s), aborting");
                 }
 
                 return header;
@@ -252,13 +262,23 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
 
                 List<SAMReadGroupRecord> rgs = header.getReadGroups();
                 String existingSample = rgs.get(0).getSample();
-                rgs.get(0).setSample(newRsName);
+                String existingLibrary = rgs.get(0).getLibrary();
+                rgs.forEach(rg -> {
+                    rg.setSample(newRsName);
+                    rg.setLibrary(newRsName);
+                });
 
                 File headerBam = new File(ctx.getWorkingDirectory(), "header.bam");
                 try (SAMFileWriter writer = new SAMFileWriterFactory().makeBAMWriter(header, false, headerBam))
                 {
 
                 }
+
+                if (!headerBam.exists())
+                {
+                    throw new PipelineJobException("Expected header was not created: " + headerBam.getPath());
+                }
+
                 ctx.getFileManager().addIntermediateFile(headerBam);
                 ctx.getFileManager().addIntermediateFile(SequencePipelineService.get().getExpectedIndex(headerBam));
 
