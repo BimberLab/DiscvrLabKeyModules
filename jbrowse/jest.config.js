@@ -19,7 +19,7 @@ module.exports = {
         '^.+\\.tsx?$': [
             'ts-jest',
             {
-                tsconfig: 'node_modules/@labkey/build/webpack/tsconfig.json',
+                isolatedModules: true,
             }
         ],
     },

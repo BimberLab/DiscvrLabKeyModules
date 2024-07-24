@@ -5,7 +5,7 @@
   "scripts": {
     "setup": "npm ci",
     "build": "npm run build-dev",
-    "start": "cross-env NODE_ENV=development webpack-dev-server --config ./config/watch.config.js",
+    "start": "cross-env NODE_ENV=development webpack serve --config ./config/watch.config.js",
     "build-no-pkg": "npm run clean && cross-env NODE_ENV=development webpack --config ./config/dev.config.js --progress --profile",
     "build-dev": "npm run build-no-pkg",
     "build-prod": "npm run clean && cross-env NODE_ENV=production PROD_SOURCE_MAP=source-map webpack --config ./config/prod.config.js --progress --profile",
@@ -21,9 +21,9 @@
     "@jbrowse/plugin-svg": "^2.10.3",
     "@jbrowse/plugin-variants": "^2.10.3",
     "@jbrowse/react-linear-genome-view": "^2.10.3",
-    "@labkey/api": "^1.25.0",
-    "@labkey/components": "^2.0.0",
+    "@labkey/api": "1.35.0",
     "@mui/x-data-grid": "^6.0.1",
+    "@yao-pkg/pkg": "^5.12.0",
     "assert": "^2.0.0",
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
@@ -34,31 +34,41 @@
     "jspdf-autotable": "^3.5.31",
     "node-polyfill-webpack-plugin": "2.0.1",
     "path-browserify": "^1.0.1",
-    "pkg": "^5.8.1",
+    "react": "^16.14.0",
     "react-data-grid": "7.0.0-beta.10",
+    "react-dom": "^16.14.0",
     "react-google-charts": "^4.0.1",
-    "react-hot-loader": "^4.13.1",
     "react-select": "^5.7.4",
     "regenerator-runtime": "^0.13.11",
     "stream-browserify": "^3.0.0",
-    "typescript": "^5.1.6",
     "util": "^0.12.5",
     "uuid": "^9.0.0",
     "vm-browserify": "^1.1.2"
   },
   "devDependencies": {
-    "@labkey/build": "6.16.0",
+    "@labkey/build": "7.4.0",
     "@types/jest": "^29.0.0",
     "@types/jexl": "^2.3.1",
     "@types/jquery": "^3.0.0",
-    "@types/node": "^18.17.1",
-    "@wojtekmaj/enzyme-adapter-react-17": "^0.8.0",
+    "@types/node": "^20.14.11",
+    "@types/react": "16.14.60",
+    "@types/react-dom": "16.9.24",
     "enzyme": "^3.11.0",
+    "enzyme-adapter-react-16": "^1.15.8",
     "jest": "^29.0.0",
     "jest-cli": "^29.0.0",
     "jest-environment-jsdom": "^29.7.0",
     "jest-mock": "^29.0.0",
-    "rimraf": "^3.0.2",
-    "ts-jest": "^29.0.0"
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.0.0",
+    "typescript": "^5.1.6"
+  },
+  "overrides": {
+    "@types/react": {
+      ".": "16.14.60"
+    },
+    "@types/react-dom": {
+      ".": "16.9.24"
+    }
   }
 }
