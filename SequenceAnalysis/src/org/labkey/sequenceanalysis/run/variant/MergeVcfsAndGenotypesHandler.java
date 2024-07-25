@@ -110,6 +110,10 @@ public class MergeVcfsAndGenotypesHandler extends AbstractParameterizedOutputHan
                     SequencePipelineService.get().sortVcf(f, null, genome.getSequenceDictionary(), ctx.getLogger());
                 }
             }
+            else
+            {
+                ctx.getLogger().debug("Pre-sorting will not be performed");
+            }
 
             action.addOutput(outputVcf, "Combined VCF", false);
             SequenceOutputFile so = new SequenceOutputFile();
