@@ -115,7 +115,7 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
             },{
                 xtype: 'checkbox',
                 itemId: 'useBcfTools',
-                checked: false,
+                checked: true,
                 fieldLabel: 'Use bcftools'
             },{
                 xtype: 'checkbox',
