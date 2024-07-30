@@ -352,6 +352,8 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         File indexDir = AlignerIndexUtil.getIndexDir(referenceGenome, getIndexCachedDirName(getPipelineCtx().getJob()));
         args.add("--transcriptome=" + indexDir.getPath());
 
+        args.add("--create-bam=true");
+
         getWrapper().setWorkingDir(outputDirectory);
 
         //Note: we can safely assume only this server is working on these files, so if the _lock file exists, it was from a previous failed job.

@@ -252,6 +252,8 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             File indexDir = makeDummyIndex(ctx);
             args.add("--transcriptome=" + indexDir.getPath());
 
+            args.add("--create-bam=false");
+
             wrapper.setWorkingDir(ctx.getOutputDir());
 
             //Note: we can safely assume only this server is working on these files, so if the _lock file exists, it was from a previous failed job.
@@ -284,12 +286,10 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             File outsdir = new File(crDir, "outs");
 
             File bam = new File(outsdir, "possorted_genome_bam.bam");
-            if (!bam.exists())
+            if (bam.exists())
             {
-                throw new PipelineJobException("Unable to find file: " + bam.getPath());
+                throw new PipelineJobException("Did not expect to find BAM: " + bam.getPath());
             }
-            bam.delete();
-            SequenceAnalysisService.get().getExpectedBamOrCramIndex(bam).delete();
 
             wrapper.deleteSymlinks(wrapper.getLocalFastqDir(ctx.getOutputDir()));
 
