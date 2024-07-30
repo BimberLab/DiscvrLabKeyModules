@@ -96,11 +96,6 @@ public class MergeVcfsAndGenotypesHandler extends AbstractParameterizedOutputHan
             inputFiles.forEach(x -> action.addInput(x.getFile(), "Input VCF"));
 
             ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(genomeIds.iterator().next());
-            new MergeVcfsAndGenotypesWrapper(ctx.getLogger()).execute(genome.getWorkingFastaFile(), inputVCFs, outputVcf, null);
-            if (!outputVcf.exists())
-            {
-                throw new PipelineJobException("unable to find output: " + outputVcf.getPath());
-            }
 
             if (doSort)
             {
@@ -113,6 +108,12 @@ public class MergeVcfsAndGenotypesHandler extends AbstractParameterizedOutputHan
             else
             {
                 ctx.getLogger().debug("Pre-sorting will not be performed");
+            }
+
+            new MergeVcfsAndGenotypesWrapper(ctx.getLogger()).execute(genome.getWorkingFastaFile(), inputVCFs, outputVcf, null);
+            if (!outputVcf.exists())
+            {
+                throw new PipelineJobException("unable to find output: " + outputVcf.getPath());
             }
 
             action.addOutput(outputVcf, "Combined VCF", false);
