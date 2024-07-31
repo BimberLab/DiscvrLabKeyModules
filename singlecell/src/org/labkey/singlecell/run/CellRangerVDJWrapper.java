@@ -216,7 +216,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                     "TRD".equals(locus) ||
                                     "TRG".equals(locus) ||
                                     // Add all TRAVs (which are not already tagged TRA/TRD) to the file:
-                                    (nt.getLineage().contains("V") && "TRA".equals(nt.getLocus())))
+                                    (nt.getLineage().contains("V") && "TRA".equals(nt.getLocus())) ||
+                                    ("C-REGION".equals(type)))
                             {
                                 gdWriter.write(header + "\n");
                                 gdWriter.write(seq + "\n");
@@ -226,7 +227,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                     "TRA".equals(locus) ||
                                     "TRB".equals(locus) ||
                                     // Add all TRDVs (which are not already tagged TRA/TRD) to the file:
-                                    (nt.getLineage().contains("V") && "TRD".equals(nt.getLocus())))
+                                    (nt.getLineage().contains("V") && "TRD".equals(nt.getLocus())) ||
+                                    ("C-REGION".equals(type)))
                             {
                                 abWriter.write(header + "\n");
                                 abWriter.write(seq + "\n");
@@ -330,6 +332,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 List<String> args = new ArrayList<>();
                 args.add(getWrapper().getExe().getPath());
                 args.add("multi");
+                args.add("--disable-ui");
 
                 String idParam = StringUtils.trimToNull(getProvider().getParameterByName("id").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
                 String id = FileUtil.makeLegalName(rs.getName()) + (idParam == null ? "" : "-" + idParam);
@@ -388,7 +391,6 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                     writer.println("[vdj]");
                     writer.println("reference," + indexDir.getPath());
                     writer.println("inner-enrichment-primers," + primerFile);
-                    writer.println("create-bam,false");
                     writer.println("");
                     writer.println("[libraries]");
                     writer.println("fastq_id,fastqs,lanes,feature_types,subsample_rate");
