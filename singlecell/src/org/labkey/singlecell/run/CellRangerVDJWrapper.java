@@ -31,7 +31,6 @@ import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStepProvider;
-import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -45,7 +44,6 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -70,8 +68,6 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
     }
 
     public static final String INNER_ENRICHMENT_PRIMERS = "innerEnrichmentPrimers";
-    public static final String INCLUDE_GD = "includeGD";
-    public static final String CHAIN = "chain";
 
     public static class VDJProvider extends AbstractAlignmentStepProvider<AlignmentStep>
     {
@@ -113,8 +109,6 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         }
     }
 
-    private static final String LINEAGE_NUMBER_ADDITION = "999";
-
     public static class CellRangerVDJAlignmentStep extends AbstractAlignmentPipelineStep<CellRangerVDJWrapper> implements AlignmentStep
     {
         public CellRangerVDJAlignmentStep(AlignmentStepProvider<?> provider, PipelineContext ctx, CellRangerVDJWrapper wrapper)
@@ -136,9 +130,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             if (!hasCachedIndex)
             {
                 getPipelineCtx().getLogger().info("Creating FASTA for CellRanger VDJ Index for genome: " + referenceGenome.getGenomeId());
-                File abFasta = getGenomeFasta(false);
-                File gdFasta = getGenomeFasta(true);
-                try (PrintWriter abWriter = PrintWriters.getPrintWriter(abFasta);PrintWriter gdWriter = PrintWriters.getPrintWriter(gdFasta))
+                File fasta = getGenomeFasta();
+                try (PrintWriter writer = PrintWriters.getPrintWriter(fasta))
                 {
                     final AtomicInteger i = new AtomicInteger(0);
                     UserSchema us = QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), getPipelineCtx().getJob().getContainer(), "sequenceanalysis");
@@ -159,7 +152,6 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                             String seq = nt.getSequence();
 
                             //example: >1|TRAV41*01 TRAV41|TRAV41|L-REGION+V-REGION|TR|TRA|None|None
-                            //Note: for g/d recovery, add any gamma segments as TRA and delta as TRB. Also inject 99 into the segment number (i.e. TRDV1 -> TRBV1d and TRGJ2 -> TRAJ2g)
                             String name = nt.getName();
                             String lineage = nt.getLineage();
 
@@ -212,27 +204,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
                             header.append(type).append("|TR|").append(locus).append("|None|None");
 
-                            if (
-                                    "TRD".equals(locus) ||
-                                    "TRG".equals(locus) ||
-                                    // Add all TRAVs (which are not already tagged TRA/TRD) to the file:
-                                    (nt.getLineage().contains("V") && "TRA".equals(nt.getLocus())) ||
-                                    ("C-REGION".equals(type)))
-                            {
-                                gdWriter.write(header + "\n");
-                                gdWriter.write(seq + "\n");
-                            }
-
-                            if (
-                                    "TRA".equals(locus) ||
-                                    "TRB".equals(locus) ||
-                                    // Add all TRDVs (which are not already tagged TRA/TRD) to the file:
-                                    (nt.getLineage().contains("V") && "TRD".equals(nt.getLocus())) ||
-                                    ("C-REGION".equals(type)))
-                            {
-                                abWriter.write(header + "\n");
-                                abWriter.write(seq + "\n");
-                            }
+                            writer.write(header + "\n");
+                            writer.write(seq + "\n");
                         }
                         nt.clearCachedSequence();
                     });
@@ -244,9 +217,9 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             }
         }
 
-        private File getGenomeFasta(boolean forGD)
+        private File getGenomeFasta()
         {
-            return new File(getPipelineCtx().getSourceDirectory(), "cellRangerVDJ" + (forGD ? ".gd" : ".ab") + ".fasta");
+            return new File(getPipelineCtx().getSourceDirectory(), "cellRangerVDJ.fasta");
         }
 
         @Override
@@ -255,60 +228,50 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             return getProvider().getName();
         }
 
-        public String getIndexCachedDirName(PipelineJob job, boolean isGammaDelta)
-        {
-            return getIndexCachedDirName(job) + "-" + (isGammaDelta ? "gamma-delta" : "alpha-beta");
-        }
-
         @Override
         public AlignmentStep.IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
-            // Repeat once for alpha/beta and once for gamma/delta
-            for (String label : Arrays.asList("alpha-beta", "gamma-delta"))
+            File indexDir = new File(outputDir, getIndexCachedDirName(getPipelineCtx().getJob()));
+            boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(getPipelineCtx().getJob()), referenceGenome);
+            if (hasCachedIndex)
             {
-                boolean isGammaDelta = "gamma-delta".equals(label);
-                File indexDir = new File(outputDir, getIndexCachedDirName(getPipelineCtx().getJob(), isGammaDelta));
-                    boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(getPipelineCtx().getJob(), isGammaDelta), referenceGenome);
-                if (hasCachedIndex)
-                {
-                    continue;
-                }
-
-                getPipelineCtx().getLogger().info("Creating CellRanger VDJ Index");
-                getPipelineCtx().getLogger().info("using file: " + getGenomeFasta(isGammaDelta).getPath());
-                output.addIntermediateFile(getGenomeFasta(isGammaDelta));
-
-                //remove if directory exists
-                if (indexDir.exists())
-                {
-                    try
-                    {
-                        FileUtils.deleteDirectory(indexDir);
-                    }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
-                    }
-                }
-
-                output.addInput(getGenomeFasta(isGammaDelta), "Input FASTA");
-
-                List<String> args = new ArrayList<>();
-                args.add(getWrapper().getExe().getPath());
-                args.add("mkvdjref");
-                args.add("--seqs=" + getGenomeFasta(isGammaDelta).getPath());
-                args.add("--genome=" + indexDir.getName());
-
-                getWrapper().setWorkingDir(indexDir.getParentFile());
-                getWrapper().execute(args);
-
-                output.appendOutputs(referenceGenome.getWorkingFastaFile(), indexDir);
-
-                //recache if not already
-                AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getIndexCachedDirName(getPipelineCtx().getJob(), isGammaDelta), referenceGenome);
+                return output;
             }
+
+            getPipelineCtx().getLogger().info("Creating CellRanger VDJ Index");
+            getPipelineCtx().getLogger().info("using file: " + getGenomeFasta().getPath());
+            output.addIntermediateFile(getGenomeFasta());
+
+            //remove if directory exists
+            if (indexDir.exists())
+            {
+                try
+                {
+                    FileUtils.deleteDirectory(indexDir);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+
+            output.addInput(getGenomeFasta(), "Input FASTA");
+
+            List<String> args = new ArrayList<>();
+            args.add(getWrapper().getExe().getPath());
+            args.add("mkvdjref");
+            args.add("--seqs=" + getGenomeFasta().getPath());
+            args.add("--genome=" + indexDir.getName());
+
+            getWrapper().setWorkingDir(indexDir.getParentFile());
+            getWrapper().execute(args);
+
+            output.appendOutputs(referenceGenome.getWorkingFastaFile(), indexDir);
+
+            //recache if not already
+            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getIndexCachedDirName(getPipelineCtx().getJob()), referenceGenome);
 
             return output;
         }
@@ -324,170 +287,170 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
 
-            // Repeat once for alpha/beta and once for gamma/delta
-            for (String label : Arrays.asList("alpha-beta", "gamma-delta"))
+            List<String> args = new ArrayList<>();
+            args.add(getWrapper().getExe().getPath());
+            args.add("multi");
+            args.add("--disable-ui");
+
+            String idParam = StringUtils.trimToNull(getProvider().getParameterByName("id").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
+            String id = FileUtil.makeLegalName(rs.getName()) + (idParam == null ? "" : "-" + idParam);
+            id = id.replaceAll("[^a-zA-z0-9_\\-]", "_");
+            args.add("--id=" + id);
+
+            File indexDir = AlignerIndexUtil.getIndexDir(referenceGenome, getIndexCachedDirName(getPipelineCtx().getJob()));
+
+            String primers = StringUtils.trimToNull(getProvider().getParameterByName(INNER_ENRICHMENT_PRIMERS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null));
+            File primerFile = new File(outputDirectory, "primers.txt");
+            if (primers != null)
             {
-                boolean isGammaDelta = "gamma-delta".equals(label);
+                primers = primers.replaceAll("\\s+", ",");
+                primers = primers.replaceAll(",+", ",");
 
-                List<String> args = new ArrayList<>();
-                args.add(getWrapper().getExe().getPath());
-                args.add("multi");
-                args.add("--disable-ui");
-
-                String idParam = StringUtils.trimToNull(getProvider().getParameterByName("id").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
-                String id = FileUtil.makeLegalName(rs.getName()) + (idParam == null ? "" : "-" + idParam);
-                id = id.replaceAll("[^a-zA-z0-9_\\-]", "_");
-                args.add("--id=" + id + (isGammaDelta ? "-gd" : "-ab"));
-
-                File indexDir = AlignerIndexUtil.getIndexDir(referenceGenome, getIndexCachedDirName(getPipelineCtx().getJob(), isGammaDelta));
-
-                String primers = StringUtils.trimToNull(getProvider().getParameterByName(INNER_ENRICHMENT_PRIMERS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null));
-                File primerFile = new File(outputDirectory, "primers.txt");
-                if (primers != null)
+                try (PrintWriter writer = PrintWriters.getPrintWriter(primerFile))
                 {
-                    primers = primers.replaceAll("\\s+", ",");
-                    primers = primers.replaceAll(",+", ",");
-
-                    try (PrintWriter writer = PrintWriters.getPrintWriter(primerFile))
-                    {
-                        Arrays.stream(primers.split(",")).forEach(x -> {
-                            x = StringUtils.trimToNull(x);
-                            if (x != null)
-                            {
-                                writer.println(x);
-                            }
-                        });
-                    }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
-                    }
-
-                    output.addIntermediateFile(primerFile);
-                }
-
-                Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
-                if (maxThreads != null)
-                {
-                    args.add("--localcores=" + maxThreads);
-                }
-
-                Integer maxRam = SequencePipelineService.get().getMaxRam();
-                if (maxRam != null)
-                {
-                    args.add("--localmem=" + maxRam);
-                }
-
-                File localFqDir = new File(outputDirectory, "localFq");
-                output.addIntermediateFile(localFqDir);
-                Set<String> sampleNames = prepareFastqSymlinks(rs, localFqDir);
-
-                getPipelineCtx().getLogger().debug("Sample names: [" + StringUtils.join(sampleNames, ",") + "]");
-
-                File sampleFile = new File(getPipelineCtx().getWorkingDirectory(), "sample." + label + ".csv");
-                output.addIntermediateFile(sampleFile);
-                try (PrintWriter writer = PrintWriters.getPrintWriter(sampleFile))
-                {
-                    writer.println("[vdj]");
-                    writer.println("reference," + indexDir.getPath());
-                    writer.println("inner-enrichment-primers," + primerFile);
-                    writer.println("");
-                    writer.println("[libraries]");
-                    writer.println("fastq_id,fastqs,lanes,feature_types,subsample_rate");
-                    for (String sampleName : sampleNames)
-                    {
-                        writer.println(sampleName + "," + localFqDir.getPath() + ",,VDJ-T" + (isGammaDelta ? "-GD" : "") + ",");
-                    }
+                    Arrays.stream(primers.split(",")).forEach(x -> {
+                        x = StringUtils.trimToNull(x);
+                        if (x != null)
+                        {
+                            writer.println(x);
+                        }
+                    });
                 }
                 catch (IOException e)
                 {
                     throw new PipelineJobException(e);
                 }
 
-                args.add("--csv=" + sampleFile.getPath());
+                output.addIntermediateFile(primerFile);
+            }
 
-                getWrapper().setWorkingDir(outputDirectory);
+            Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
+            if (maxThreads != null)
+            {
+                args.add("--localcores=" + maxThreads);
+            }
 
-                //Note: we can safely assume only this server is working on these files, so if the _lock file exists, it was from a previous failed job.
-                File lockFile = new File(outputDirectory, id + "/_lock");
-                if (lockFile.exists())
+            Integer maxRam = SequencePipelineService.get().getMaxRam();
+            if (maxRam != null)
+            {
+                args.add("--localmem=" + maxRam);
+            }
+
+            File localFqDir = new File(outputDirectory, "localFq");
+            output.addIntermediateFile(localFqDir);
+            Set<String> sampleNames = prepareFastqSymlinks(rs, localFqDir);
+
+            getPipelineCtx().getLogger().debug("Sample names: [" + StringUtils.join(sampleNames, ",") + "]");
+
+            File sampleFile = new File(getPipelineCtx().getWorkingDirectory(), "sample.csv");
+            output.addIntermediateFile(sampleFile);
+            try (PrintWriter writer = PrintWriters.getPrintWriter(sampleFile))
+            {
+                writer.println("[vdj]");
+                writer.println("reference," + indexDir.getPath());
+                writer.println("inner-enrichment-primers," + primerFile);
+                writer.println("");
+                writer.println("[libraries]");
+                writer.println("fastq_id,fastqs,lanes,feature_types,subsample_rate");
+                for (String sampleName : sampleNames)
                 {
-                    getPipelineCtx().getLogger().info("Lock file exists, deleting: " + lockFile.getPath());
-                    lockFile.delete();
+                    writer.println(sampleName + "," + localFqDir.getPath() + ",,VDJ-T" + ",");
                 }
 
-                getWrapper().execute(args);
-
-                File outdir = new File(outputDirectory, id);
-                outdir = new File(outdir, "outs");
-
-                File bam = new File(outdir, "all_contig.bam");
-                if (!bam.exists())
+                for (String sampleName : sampleNames)
                 {
-                    throw new PipelineJobException("Unable to find file: " + bam.getPath());
+                    writer.println(sampleName + "-GD" + "," + localFqDir.getPath() + ",,VDJ-T-GD" + ",");
                 }
-                output.setBAM(bam);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
 
-                //now do cleanup/rename:
-                try
+            args.add("--csv=" + sampleFile.getPath());
+
+            getWrapper().setWorkingDir(outputDirectory);
+
+            //Note: we can safely assume only this server is working on these files, so if the _lock file exists, it was from a previous failed job.
+            File lockFile = new File(outputDirectory, id + "/_lock");
+            if (lockFile.exists())
+            {
+                getPipelineCtx().getLogger().info("Lock file exists, deleting: " + lockFile.getPath());
+                lockFile.delete();
+            }
+
+            getWrapper().execute(args);
+
+            File outdir = new File(outputDirectory, id);
+            outdir = new File(outdir, "outs");
+
+
+            // TODO: cleanup from here on:
+            File bam = new File(outdir, "all_contig.bam");
+            if (!bam.exists())
+            {
+                throw new PipelineJobException("Unable to find file: " + bam.getPath());
+            }
+            output.setBAM(bam);
+
+            //now do cleanup/rename:
+            try
+            {
+                String prefix = FileUtil.makeLegalName(rs.getName() + "_");
+                File outputHtml = new File(outdir, "web_summary.html");
+                if (!outputHtml.exists())
                 {
-                    String fileSuffix = (isGammaDelta ? ".gd" : ".ab");
-                    String prefix = FileUtil.makeLegalName(rs.getName() + fileSuffix + "_");
-                    File outputHtml = new File(outdir, "web_summary.html");
-                    if (!outputHtml.exists())
-                    {
-                        throw new PipelineJobException("Unable to find file: " + outputHtml.getPath());
-                    }
-
-                    File outputHtmlRename = new File(outdir, prefix + outputHtml.getName());
-                    if (outputHtmlRename.exists())
-                    {
-                        outputHtmlRename.delete();
-                    }
-                    FileUtils.moveFile(outputHtml, outputHtmlRename);
-
-                    output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x VDJ Summary", "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
-
-                    File outputVloupe = new File(outdir, "vloupe.vloupe");
-                    File csv = new File(outdir, "all_contig_annotations.csv");
-                    if (!outputVloupe.exists())
-                    {
-                        //NOTE: if there were no A/B hits, the vLoupe isnt created, but all other outputs exist
-                        if (!csv.exists())
-                        {
-                            throw new PipelineJobException("Unable to find file: " + outputVloupe.getPath());
-                        }
-                    }
-                    else
-                    {
-                        File outputVloupeRename = new File(outdir, prefix + outputVloupe.getName());
-                        if (outputVloupeRename.exists())
-                        {
-                            outputVloupeRename.delete();
-                        }
-                        FileUtils.moveFile(outputVloupe, outputVloupeRename);
-                        output.addSequenceOutput(outputVloupeRename, rs.getName() + " 10x VLoupe", "10x VLoupe", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
-                    }
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
+                    throw new PipelineJobException("Unable to find file: " + outputHtml.getPath());
                 }
 
-                //NOTE: this folder has many unnecessary files and symlinks that get corrupted when we rename the main outputs
-                File directory = new File(outdir.getParentFile(), "SC_VDJ_ASSEMBLER_CS");
-                if (directory.exists())
+                File outputHtmlRename = new File(outdir, prefix + outputHtml.getName());
+                if (outputHtmlRename.exists())
                 {
-                    //NOTE: this will have lots of symlinks, including corrupted ones, which java handles badly
-                    new SimpleScriptWrapper(getPipelineCtx().getLogger()).execute(Arrays.asList("rm", "-Rf", directory.getPath()));
+                    outputHtmlRename.delete();
+                }
+                FileUtils.moveFile(outputHtml, outputHtmlRename);
+
+                output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x VDJ Summary", "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
+
+                File outputVloupe = new File(outdir, "vloupe.vloupe");
+                File csv = new File(outdir, "all_contig_annotations.csv");
+                if (!outputVloupe.exists())
+                {
+                    //NOTE: if there were no A/B hits, the vLoupe isnt created, but all other outputs exist
+                    if (!csv.exists())
+                    {
+                        throw new PipelineJobException("Unable to find file: " + outputVloupe.getPath());
+                    }
                 }
                 else
                 {
-                    getPipelineCtx().getLogger().warn("Unable to find folder: " + directory.getPath());
+                    File outputVloupeRename = new File(outdir, prefix + outputVloupe.getName());
+                    if (outputVloupeRename.exists())
+                    {
+                        outputVloupeRename.delete();
+                    }
+                    FileUtils.moveFile(outputVloupe, outputVloupeRename);
+                    output.addSequenceOutput(outputVloupeRename, rs.getName() + " 10x VLoupe", "10x VLoupe", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
                 }
-
-                deleteSymlinks(localFqDir);
             }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            //NOTE: this folder has many unnecessary files and symlinks that get corrupted when we rename the main outputs
+            File directory = new File(outdir.getParentFile(), "SC_VDJ_ASSEMBLER_CS");
+            if (directory.exists())
+            {
+                //NOTE: this will have lots of symlinks, including corrupted ones, which java handles badly
+                new SimpleScriptWrapper(getPipelineCtx().getLogger()).execute(Arrays.asList("rm", "-Rf", directory.getPath()));
+            }
+            else
+            {
+                getPipelineCtx().getLogger().warn("Unable to find folder: " + directory.getPath());
+            }
+
+            deleteSymlinks(localFqDir);
 
             return output;
         }
@@ -518,11 +481,16 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
         private String getSymlinkFileName(String fileName, boolean doRename, String sampleName, int idx, boolean isReversed)
         {
+            return getSymlinkFileName(fileName, doRename, sampleName, idx, isReversed, null);
+        }
+
+        private String getSymlinkFileName(String fileName, boolean doRename, String sampleName, int idx, boolean isReversed, @Nullable String suffix)
+        {
             //NOTE: cellranger is very picky about file name formatting
             if (doRename)
             {
                 sampleName = FileUtil.makeLegalName(sampleName.replaceAll("_", "-")).replaceAll(" ", "-").replaceAll("\\.", "-");
-                return sampleName + "_S1_L001_R" + (isReversed ? "2" : "1") + "_" + StringUtils.leftPad(String.valueOf(idx), 3, "0") + ".fastq.gz";
+                return sampleName + (suffix == null ? "" : suffix) + "_S1_L001_R" + (isReversed ? "2" : "1") + "_" + StringUtils.leftPad(String.valueOf(idx), 3, "0") + ".fastq.gz";
             }
             else
             {
@@ -585,6 +553,19 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                     Files.createSymbolicLink(target1.toPath(), rd.getFile1().toPath());
                     ret.add(getSampleName(target1.getName()));
 
+                    // repeat for g/d:
+                    File target1gd = new File(localFqDir, getSymlinkFileName(rd.getFile1().getName(), doRename,  rs.getName(), idx, false, "-GD"));
+                    getPipelineCtx().getLogger().debug("file: " + rd.getFile1().getPath());
+                    getPipelineCtx().getLogger().debug("target: " + target1gd.getPath());
+                    if (target1gd.exists())
+                    {
+                        getPipelineCtx().getLogger().debug("deleting existing symlink: " + target1gd.getName());
+                        Files.delete(target1gd.toPath());
+                    }
+
+                    Files.createSymbolicLink(target1gd.toPath(), rd.getFile1().toPath());
+
+                    // a/b:
                     if (rd.getFile2() != null)
                     {
                         File target2 = new File(localFqDir, getSymlinkFileName(rd.getFile2().getName(), doRename, rs.getName(), idx, true));
@@ -597,6 +578,16 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         }
                         Files.createSymbolicLink(target2.toPath(), rd.getFile2().toPath());
                         ret.add(getSampleName(target2.getName()));
+
+                        File target2gd = new File(localFqDir, getSymlinkFileName(rd.getFile2().getName(), doRename, rs.getName(), idx, true, "-GD"));
+                        getPipelineCtx().getLogger().debug("file: " + rd.getFile2().getPath());
+                        getPipelineCtx().getLogger().debug("target: " + target2gd.getPath());
+                        if (target2gd.exists())
+                        {
+                            getPipelineCtx().getLogger().debug("deleting existing symlink: " + target2gd.getName());
+                            Files.delete(target2gd.toPath());
+                        }
+                        Files.createSymbolicLink(target2gd.toPath(), rd.getFile2().toPath());
                     }
                 }
                 catch (IOException e)
