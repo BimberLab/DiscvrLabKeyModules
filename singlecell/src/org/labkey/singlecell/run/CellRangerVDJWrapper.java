@@ -382,10 +382,23 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             getWrapper().execute(args);
 
             File outdir = new File(outputDirectory, id);
+            outdir = new File(outdir, "multi");
             outdir = new File(outdir, "outs");
 
+            File abDir = new File(outdir, "vdj_t");
+            File gdDir = new File(outdir, "vdj_t_gd");
 
-            // TODO: cleanup from here on:
+            File csvAB = processOutputsForType(rs, referenceGenome, abDir, output, "alpha/beta");
+            File csvGD = processOutputsForType(rs, referenceGenome, gdDir, output, "gamma/delta");
+
+            deleteSymlinks(localFqDir);
+
+            throw new PipelineJobException("This is under development!");
+            //return output;
+        }
+
+        private File processOutputsForType(Readset rs, ReferenceGenome referenceGenome, File outdir, AlignmentOutputImpl output, String chainType) throws PipelineJobException
+        {
             File bam = new File(outdir, "all_contig.bam");
             if (!bam.exists())
             {
@@ -410,7 +423,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 }
                 FileUtils.moveFile(outputHtml, outputHtmlRename);
 
-                output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x VDJ Summary", "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
+                output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x VDJ Summary: " + chainType, "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
 
                 File outputVloupe = new File(outdir, "vloupe.vloupe");
                 File csv = new File(outdir, "all_contig_annotations.csv");
@@ -432,27 +445,25 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                     FileUtils.moveFile(outputVloupe, outputVloupeRename);
                     output.addSequenceOutput(outputVloupeRename, rs.getName() + " 10x VLoupe", "10x VLoupe", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
                 }
+
+                //NOTE: this folder has many unnecessary files and symlinks that get corrupted when we rename the main outputs
+                File directory = new File(outdir.getParentFile(), "SC_VDJ_ASSEMBLER_CS");
+                if (directory.exists())
+                {
+                    //NOTE: this will have lots of symlinks, including corrupted ones, which java handles badly
+                    new SimpleScriptWrapper(getPipelineCtx().getLogger()).execute(Arrays.asList("rm", "-Rf", directory.getPath()));
+                }
+                else
+                {
+                    getPipelineCtx().getLogger().warn("Unable to find folder: " + directory.getPath());
+                }
+
+                return csv;
             }
             catch (IOException e)
             {
                 throw new PipelineJobException(e);
             }
-
-            //NOTE: this folder has many unnecessary files and symlinks that get corrupted when we rename the main outputs
-            File directory = new File(outdir.getParentFile(), "SC_VDJ_ASSEMBLER_CS");
-            if (directory.exists())
-            {
-                //NOTE: this will have lots of symlinks, including corrupted ones, which java handles badly
-                new SimpleScriptWrapper(getPipelineCtx().getLogger()).execute(Arrays.asList("rm", "-Rf", directory.getPath()));
-            }
-            else
-            {
-                getPipelineCtx().getLogger().warn("Unable to find folder: " + directory.getPath());
-            }
-
-            deleteSymlinks(localFqDir);
-
-            return output;
         }
 
         @Override
@@ -479,45 +490,16 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             return true;
         }
 
-        private String getSymlinkFileName(String fileName, boolean doRename, String sampleName, int idx, boolean isReversed)
+        private String getSymlinkFileName(String sampleName, int idx, boolean isReverseRead)
         {
-            return getSymlinkFileName(fileName, doRename, sampleName, idx, isReversed, null);
+            return getSymlinkFileName(sampleName, idx, isReverseRead, null);
         }
 
-        private String getSymlinkFileName(String fileName, boolean doRename, String sampleName, int idx, boolean isReversed, @Nullable String suffix)
+        private String getSymlinkFileName(String sampleName, int idx, boolean isReverseRead, @Nullable String suffix)
         {
             //NOTE: cellranger is very picky about file name formatting
-            if (doRename)
-            {
-                sampleName = FileUtil.makeLegalName(sampleName.replaceAll("_", "-")).replaceAll(" ", "-").replaceAll("\\.", "-");
-                return sampleName + (suffix == null ? "" : suffix) + "_S1_L001_R" + (isReversed ? "2" : "1") + "_" + StringUtils.leftPad(String.valueOf(idx), 3, "0") + ".fastq.gz";
-            }
-            else
-            {
-                Matcher m = FILE_PATTERN.matcher(fileName);
-                if (m.matches())
-                {
-                    if (!StringUtils.isEmpty(m.group(7)))
-                    {
-                        return m.group(1).replaceAll("_", "-") + StringUtils.trimToEmpty(m.group(2)) + "_L" + StringUtils.trimToEmpty(m.group(3)) + "_" + StringUtils.trimToEmpty(m.group(4)) + StringUtils.trimToEmpty(m.group(5)) + StringUtils.trimToEmpty(m.group(6)) + ".fastq.gz";
-                    }
-                    else if (m.group(1).contains("_"))
-                    {
-                        getPipelineCtx().getLogger().info("replacing underscores in file/sample name");
-                        return m.group(1).replaceAll("_", "-") + StringUtils.trimToEmpty(m.group(2)) + "_L" + StringUtils.trimToEmpty(m.group(3)) + "_" + StringUtils.trimToEmpty(m.group(4)) + StringUtils.trimToEmpty(m.group(5)) + StringUtils.trimToEmpty(m.group(6)) + ".fastq.gz";
-                    }
-                    else
-                    {
-                        getPipelineCtx().getLogger().info("no additional characters found");
-                    }
-                }
-                else
-                {
-                    getPipelineCtx().getLogger().warn("filename does not match Illumina formatting: " + fileName);
-                }
-            }
-
-            return FileUtil.makeLegalName(fileName);
+            sampleName = FileUtil.makeLegalName(sampleName.replaceAll("_", "-")).replaceAll(" ", "-").replaceAll("\\.", "-");
+            return sampleName + (suffix == null ? "" : suffix) + "_S1_L001_R" + (isReverseRead ? "2" : "1") + "_" + StringUtils.leftPad(String.valueOf(idx), 3, "0") + ".fastq.gz";
         }
 
         public Set<String> prepareFastqSymlinks(Readset rs, File localFqDir) throws PipelineJobException
@@ -535,13 +517,13 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             }
 
             int idx = 0;
-            boolean doRename = true;  //cellranger is too picky - simply rename files all the time
             for (ReadData rd : rs.getReadData())
             {
                 idx++;
                 try
                 {
-                    File target1 = new File(localFqDir, getSymlinkFileName(rd.getFile1().getName(), doRename,  rs.getName(), idx, false));
+                    // a/b:
+                    File target1 = new File(localFqDir, getSymlinkFileName(rs.getName(), idx, false));
                     getPipelineCtx().getLogger().debug("file: " + rd.getFile1().getPath());
                     getPipelineCtx().getLogger().debug("target: " + target1.getPath());
                     if (target1.exists())
@@ -554,7 +536,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                     ret.add(getSampleName(target1.getName()));
 
                     // repeat for g/d:
-                    File target1gd = new File(localFqDir, getSymlinkFileName(rd.getFile1().getName(), doRename,  rs.getName(), idx, false, "-GD"));
+                    File target1gd = new File(localFqDir, getSymlinkFileName(rs.getName(), idx, false, "-GD"));
                     getPipelineCtx().getLogger().debug("file: " + rd.getFile1().getPath());
                     getPipelineCtx().getLogger().debug("target: " + target1gd.getPath());
                     if (target1gd.exists())
@@ -565,10 +547,10 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
                     Files.createSymbolicLink(target1gd.toPath(), rd.getFile1().toPath());
 
-                    // a/b:
                     if (rd.getFile2() != null)
                     {
-                        File target2 = new File(localFqDir, getSymlinkFileName(rd.getFile2().getName(), doRename, rs.getName(), idx, true));
+                        // a/b:
+                        File target2 = new File(localFqDir, getSymlinkFileName(rs.getName(), idx, true));
                         getPipelineCtx().getLogger().debug("file: " + rd.getFile2().getPath());
                         getPipelineCtx().getLogger().debug("target: " + target2.getPath());
                         if (target2.exists())
@@ -579,7 +561,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         Files.createSymbolicLink(target2.toPath(), rd.getFile2().toPath());
                         ret.add(getSampleName(target2.getName()));
 
-                        File target2gd = new File(localFqDir, getSymlinkFileName(rd.getFile2().getName(), doRename, rs.getName(), idx, true, "-GD"));
+                        // g/d
+                        File target2gd = new File(localFqDir, getSymlinkFileName(rs.getName(), idx, true, "-GD"));
                         getPipelineCtx().getLogger().debug("file: " + rd.getFile2().getPath());
                         getPipelineCtx().getLogger().debug("target: " + target2gd.getPath());
                         if (target2gd.exists())
@@ -619,6 +602,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         {
             getPipelineCtx().getLogger().debug("adding 10x metrics");
 
+            // TODO: improve
             File metrics = new File(model.getAlignmentFileObject().getParentFile(), "metrics_summary.csv");
             if (metrics.exists())
             {
