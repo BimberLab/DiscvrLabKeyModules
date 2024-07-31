@@ -135,7 +135,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(getPipelineCtx().getJob()), referenceGenome);
             if (!hasCachedIndex)
             {
-                getPipelineCtx().getLogger().info("Creating FASTA for CellRanger VDJ Index for genome: " + referenceGenome.getName());
+                getPipelineCtx().getLogger().info("Creating FASTA for CellRanger VDJ Index for genome: " + referenceGenome.getGenomeId());
                 File abFasta = getGenomeFasta(false);
                 File gdFasta = getGenomeFasta(true);
                 try (PrintWriter abWriter = PrintWriters.getPrintWriter(abFasta);PrintWriter gdWriter = PrintWriters.getPrintWriter(gdFasta))
@@ -337,7 +337,6 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 args.add("--id=" + id + (isGammaDelta ? "-gd" : "-ab"));
 
                 File indexDir = AlignerIndexUtil.getIndexDir(referenceGenome, getIndexCachedDirName(getPipelineCtx().getJob(), isGammaDelta));
-                String chainArg = getProvider().getParameterByName(CHAIN).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
 
                 String primers = StringUtils.trimToNull(getProvider().getParameterByName(INNER_ENRICHMENT_PRIMERS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null));
                 File primerFile = new File(outputDirectory, "primers.txt");
