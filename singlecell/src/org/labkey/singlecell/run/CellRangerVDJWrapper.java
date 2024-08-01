@@ -821,7 +821,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 {
                     if (printHeader)
                     {
-                        writer.println(line + "\tchain_type");
+                        writer.println(line + ",chain_type");
                     }
 
                     continue;
@@ -897,7 +897,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
                 if (acceptableChains.contains(tokens[5]))
                 {
-                    writer.println(StringUtils.join(tokens, ",") + "\t" + chainType);
+                    writer.println(StringUtils.join(tokens, ",") + "," + chainType);
                 }
             }
 
