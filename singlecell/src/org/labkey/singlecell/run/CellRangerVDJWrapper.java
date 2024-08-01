@@ -389,7 +389,10 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             File csvAB = processOutputsForType(id, rs, referenceGenome, outdir, output, "vdj_t");
             File csvGD = processOutputsForType(id, rs, referenceGenome, outdir, output, "vdj_t_gd");
 
-            File combinedCSV = processAndMergeCSVs(csvAB, csvGD, getPipelineCtx().getLogger());
+            processAndMergeCSVs(csvAB, csvGD, getPipelineCtx().getLogger());
+
+            // Repeat for filtered contig annotations:
+            processAndMergeCSVs(new File(csvAB.getParentFile(), "filtered_contig_annotations.csv"), new File(csvGD.getParentFile(), "filtered_contig_annotations.csv"), getPipelineCtx().getLogger());
 
             //NOTE: this folder has many unnecessary files and symlinks that get corrupted when we rename the main outputs
             File directory = new File(outdir.getParentFile(), "SC_MULTI_CS");
@@ -788,9 +791,9 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         return SequencePipelineService.get().getExeForPackage("CELLRANGERPATH", "cellranger");
     }
 
-    private static File processAndMergeCSVs(File abCSV, File gdCSV, Logger log) throws PipelineJobException
+    private static void processAndMergeCSVs(File abCSV, File gdCSV, Logger log) throws PipelineJobException
     {
-        File output = new File(abCSV.getParentFile(), "all_contig_annotations_combined.csv");
+        File output = new File(abCSV.getParentFile(), FileUtil.getBaseName(abCSV) + "_combined.csv");
 
         try (PrintWriter writer = PrintWriters.getPrintWriter(output))
         {
@@ -801,8 +804,6 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         {
             throw new PipelineJobException(e);
         }
-
-        return output;
     }
 
     private static void processCSV(PrintWriter writer, boolean printHeader, File inputCsv, Logger log, List<String> acceptableChains, String chainType) throws IOException
