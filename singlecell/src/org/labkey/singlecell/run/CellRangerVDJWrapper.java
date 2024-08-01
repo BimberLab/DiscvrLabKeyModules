@@ -785,8 +785,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
         try (PrintWriter writer = PrintWriters.getPrintWriter(output))
         {
-            processCSV(writer, true, abCSV, log, Arrays.asList("TRA", "TRB"));
-            processCSV(writer, false, gdCSV, log, Arrays.asList("TRD", "TRG"));
+            processCSV(writer, true, abCSV, log, Arrays.asList("TRA", "TRB"), "vdj_t");
+            processCSV(writer, false, gdCSV, log, Arrays.asList("TRD", "TRG"), "vdj_t_gd");
         }
         catch (IOException e)
         {
@@ -796,7 +796,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         return output;
     }
 
-    private static void processCSV(PrintWriter writer, boolean printHeader, File inputCsv, Logger log, List<String> acceptableChains) throws IOException
+    private static void processCSV(PrintWriter writer, boolean printHeader, File inputCsv, Logger log, List<String> acceptableChains, String chainType) throws IOException
     {
         log.info("Processing CSV: " + inputCsv.getPath());
         try (BufferedReader reader = Readers.getReader(inputCsv))
@@ -812,7 +812,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 {
                     if (printHeader)
                     {
-                        writer.println(line);
+                        writer.println(line + "\tchain_type");
                     }
 
                     continue;
@@ -888,7 +888,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
                 if (acceptableChains.contains(tokens[5]))
                 {
-                    writer.println(StringUtils.join(tokens, ","));
+                    writer.println(StringUtils.join(tokens, ",") + "\t" + chainType);
                 }
             }
 
