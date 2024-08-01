@@ -634,106 +634,115 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             }
         }
 
-        public void addMetrics(AnalysisModel model) throws PipelineJobException
+        public void addMetrics(File outDir, AnalysisModel model) throws PipelineJobException
         {
             getPipelineCtx().getLogger().debug("adding 10x metrics");
 
-            // TODO: improve
-            //File outputHtml = new File(outdir, "per_sample_outs/" + id + "/web_summary.html");
-            File metrics = new File(model.getAlignmentFileObject().getParentFile(), "metrics_summary.csv");
-            if (metrics.exists())
+            File metrics = new File(outDir, "metrics_summary.csv");
+            if (!metrics.exists())
             {
-                try (CSVReader reader = new CSVReader(Readers.getReader(metrics)))
-                {
-                    String[] line;
-                    String[] header = null;
-                    String[] metricValues = null;
-
-                    int i = 0;
-                    while ((line = reader.readNext()) != null)
-                    {
-                        if (i == 0)
-                        {
-                            header = line;
-                        }
-                        else
-                        {
-                            metricValues = line;
-                            break;
-                        }
-
-                        i++;
-                    }
-
-                    if (model.getAlignmentFile() == null)
-                    {
-                        throw new PipelineJobException("model.getAlignmentFile() was null");
-                    }
-
-                    int totalAdded = 0;
-                    TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
-
-                    //NOTE: if this job errored and restarted, we may have duplicate records:
-                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), model.getReadset());
-                    filter.addCondition(FieldKey.fromString("analysis_id"), model.getRowId(), CompareType.EQUAL);
-                    filter.addCondition(FieldKey.fromString("dataid"), model.getAlignmentFile(), CompareType.EQUAL);
-                    filter.addCondition(FieldKey.fromString("category"), "Cell Ranger VDJ", CompareType.EQUAL);
-                    filter.addCondition(FieldKey.fromString("container"), getPipelineCtx().getJob().getContainer().getId(), CompareType.EQUAL);
-                    TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), filter, null);
-                    if (ts.exists())
-                    {
-                        getPipelineCtx().getLogger().info("Deleting existing QC metrics (probably from prior restarted job)");
-                        ts.getArrayList(Integer.class).forEach(rowid -> {
-                            Table.delete(ti, rowid);
-                        });
-                    }
-
-                    for (int j = 0; j < header.length; j++)
-                    {
-                        Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
-                        toInsert.put("container", getPipelineCtx().getJob().getContainer().getId());
-                        toInsert.put("createdby", getPipelineCtx().getJob().getUser().getUserId());
-                        toInsert.put("created", new Date());
-                        toInsert.put("readset", model.getReadset());
-                        toInsert.put("analysis_id", model.getRowId());
-                        toInsert.put("dataid", model.getAlignmentFile());
-
-                        toInsert.put("category", "Cell Ranger VDJ");
-                        toInsert.put("metricname", header[j]);
-
-                        metricValues[j] = metricValues[j].replaceAll(",", "");
-                        Object val = metricValues[j];
-                        if (metricValues[j].contains("%"))
-                        {
-                            metricValues[j] = metricValues[j].replaceAll("%", "");
-                            Double d = ConvertHelper.convert(metricValues[j], Double.class);
-                            d = d / 100.0;
-                            val = d;
-                        }
-
-                        toInsert.put("metricvalue", val);
-
-                        Table.insert(getPipelineCtx().getJob().getUser(), ti, toInsert);
-                        totalAdded++;
-                    }
-
-                    getPipelineCtx().getLogger().info("total metrics added: " + totalAdded);
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
+                throw new PipelineJobException("Unable to find file: " + metrics.getPath());
             }
-            else
+
+            if (model.getAlignmentFile() == null)
             {
-                getPipelineCtx().getLogger().warn("unable to find metrics file: " + metrics.getPath());
+                throw new PipelineJobException("model.getAlignmentFile() was null");
+            }
+
+            try (CSVReader reader = new CSVReader(Readers.getReader(metrics)))
+            {
+                String[] line;
+                List<String[]> metricValues = new ArrayList<>();
+
+                int i = 0;
+                while ((line = reader.readNext()) != null)
+                {
+                    i++;
+                    if (i == 1)
+                    {
+                        continue;
+                    }
+
+                    metricValues.add(line);
+                }
+
+                int totalAdded = 0;
+                TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
+
+                //NOTE: if this job errored and restarted, we may have duplicate records:
+                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), model.getReadset());
+                filter.addCondition(FieldKey.fromString("analysis_id"), model.getRowId(), CompareType.EQUAL);
+                filter.addCondition(FieldKey.fromString("dataid"), model.getAlignmentFile(), CompareType.EQUAL);
+                filter.addCondition(FieldKey.fromString("category"), "Cell Ranger VDJ", CompareType.EQUAL);
+                filter.addCondition(FieldKey.fromString("container"), getPipelineCtx().getJob().getContainer().getId(), CompareType.EQUAL);
+                TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), filter, null);
+                if (ts.exists())
+                {
+                    getPipelineCtx().getLogger().info("Deleting existing QC metrics (probably from prior restarted job)");
+                    ts.getArrayList(Integer.class).forEach(rowid -> {
+                        Table.delete(ti, rowid);
+                    });
+                }
+
+                for (String[] row : metricValues)
+                {
+                    if ("Fastq ID".equals(row[2]) || "Physical library ID".equals(row[2]))
+                    {
+                        continue;
+                    }
+
+                    Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
+                    toInsert.put("container", getPipelineCtx().getJob().getContainer().getId());
+                    toInsert.put("createdby", getPipelineCtx().getJob().getUser().getUserId());
+                    toInsert.put("created", new Date());
+                    toInsert.put("readset", model.getReadset());
+                    toInsert.put("analysis_id", model.getRowId());
+                    toInsert.put("dataid", model.getAlignmentFile());
+
+                    toInsert.put("category", "Cell Ranger VDJ");
+
+                    String mn = row[4];
+                    if (Arrays.asList("Cells with productive V-J spanning pair", "Estimated number of cells", "Number of cells with productive V-J spanning pair", "Paired clonotype diversity").contains(mn))
+                    {
+                        mn = ("VDJ T GD".equals(row[1]) ? "Gamma/Delta" : "Alpha/Beta") + ": " + mn;
+                    }
+                    toInsert.put("metricname", mn);
+
+                    row[5] = row[5].replaceAll(",", ""); //remove commas
+                    Object val = row[5];
+                    if (row[5].contains("%"))
+                    {
+                        row[5] = row[5].replaceAll("%", "");
+                        Double d = ConvertHelper.convert(row[5], Double.class);
+                        d = d / 100.0;
+                        val = d;
+                    }
+
+                    toInsert.put("metricvalue", val);
+
+                    Table.insert(getPipelineCtx().getJob().getUser(), ti, toInsert);
+                    totalAdded++;
+                }
+
+                getPipelineCtx().getLogger().info("total metrics added: " + totalAdded);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
             }
         }
 
         @Override
         public void complete(SequenceAnalysisJobSupport support, AnalysisModel model, Collection<SequenceOutputFile> outputFilesCreated) throws PipelineJobException
         {
-            addMetrics(model);
+            if (outputFilesCreated == null || outputFilesCreated.isEmpty())
+            {
+                throw new PipelineJobException("Expected sequence outputs to be created");
+            }
+
+            File html = outputFilesCreated.stream().filter(x -> "10x Run Summary".equals(x.getCategory())).findFirst().orElseThrow().getFile();
+
+            addMetrics(html.getParentFile(), model);
 
             File bam = model.getAlignmentData().getFile();
             if (!bam.exists())
