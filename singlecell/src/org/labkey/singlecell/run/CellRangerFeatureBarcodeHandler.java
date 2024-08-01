@@ -482,82 +482,80 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             Readset rs = readsets.get(0);
 
             File metrics = new File(so.getFile().getParentFile().getParentFile(), "metrics_summary.csv");
-            if (metrics.exists())
+            if (!metrics.exists())
             {
-                job.getLogger().debug("adding 10x metrics");
-                try (CSVReader reader = new CSVReader(Readers.getReader(metrics)))
+                throw new PipelineJobException("unable to find metrics file: " + metrics.getPath());
+            }
+
+            job.getLogger().debug("adding 10x metrics");
+            try (CSVReader reader = new CSVReader(Readers.getReader(metrics)))
+            {
+                String[] line;
+                String[] header = null;
+                String[] metricValues = null;
+
+                int i = 0;
+                while ((line = reader.readNext()) != null)
                 {
-                    String[] line;
-                    String[] header = null;
-                    String[] metricValues = null;
-
-                    int i = 0;
-                    while ((line = reader.readNext()) != null)
+                    if (i == 0)
                     {
-                        if (i == 0)
-                        {
-                            header = line;
-                        }
-                        else
-                        {
-                            metricValues = line;
-                            break;
-                        }
-
-                        i++;
+                        header = line;
+                    }
+                    else
+                    {
+                        metricValues = line;
+                        break;
                     }
 
-                    TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
-
-                    //NOTE: if this job errored and restarted, we may have duplicate records:
-                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), so.getReadset());
-                    filter.addCondition(FieldKey.fromString("dataid"), so.getDataId(), CompareType.EQUAL);
-                    filter.addCondition(FieldKey.fromString("category"), rs.getApplication(), CompareType.EQUAL);
-                    filter.addCondition(FieldKey.fromString("container"), job.getContainer().getId(), CompareType.EQUAL);
-                    TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), filter, null);
-                    if (ts.exists())
-                    {
-                        job.getLogger().info("Deleting existing QC metrics (probably from prior restarted job)");
-                        ts.getArrayList(Integer.class).forEach(rowid -> {
-                            Table.delete(ti, rowid);
-                        });
-                    }
-
-                    for (int j = 0; j < header.length; j++)
-                    {
-                        Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
-                        toInsert.put("container", job.getContainer().getId());
-                        toInsert.put("createdby", job.getUser().getUserId());
-                        toInsert.put("created", new Date());
-                        toInsert.put("readset", rs.getReadsetId());
-                        toInsert.put("dataid", so.getDataId());
-
-                        toInsert.put("category", "Cell Ranger");
-                        toInsert.put("metricname", header[j]);
-
-                        metricValues[j] = metricValues[j].replaceAll(",", "");
-                        Object val = metricValues[j];
-                        if (metricValues[j].contains("%"))
-                        {
-                            metricValues[j] = metricValues[j].replaceAll("%", "");
-                            Double d = ConvertHelper.convert(metricValues[j], Double.class);
-                            d = d / 100.0;
-                            val = d;
-                        }
-
-                        toInsert.put("metricvalue", val);
-
-                        Table.insert(job.getUser(), ti, toInsert);
-                    }
+                    i++;
                 }
-                catch (IOException e)
+
+                TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
+
+                //NOTE: if this job errored and restarted, we may have duplicate records:
+                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), so.getReadset());
+                filter.addCondition(FieldKey.fromString("dataid"), so.getDataId(), CompareType.EQUAL);
+                filter.addCondition(FieldKey.fromString("category"), rs.getApplication(), CompareType.EQUAL);
+                filter.addCondition(FieldKey.fromString("container"), job.getContainer().getId(), CompareType.EQUAL);
+                TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), filter, null);
+                if (ts.exists())
                 {
-                    throw new PipelineJobException(e);
+                    job.getLogger().info("Deleting existing QC metrics (probably from prior restarted job)");
+                    ts.getArrayList(Integer.class).forEach(rowid -> {
+                        Table.delete(ti, rowid);
+                    });
+                }
+
+                for (int j = 0; j < header.length; j++)
+                {
+                    Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
+                    toInsert.put("container", job.getContainer().getId());
+                    toInsert.put("createdby", job.getUser().getUserId());
+                    toInsert.put("created", new Date());
+                    toInsert.put("readset", rs.getReadsetId());
+                    toInsert.put("dataid", so.getDataId());
+
+                    toInsert.put("category", "Cell Ranger");
+                    toInsert.put("metricname", header[j]);
+
+                    metricValues[j] = metricValues[j].replaceAll(",", "");
+                    Object val = metricValues[j];
+                    if (metricValues[j].contains("%"))
+                    {
+                        metricValues[j] = metricValues[j].replaceAll("%", "");
+                        Double d = ConvertHelper.convert(metricValues[j], Double.class);
+                        d = d / 100.0;
+                        val = d;
+                    }
+
+                    toInsert.put("metricvalue", val);
+
+                    Table.insert(job.getUser(), ti, toInsert);
                 }
             }
-            else
+            catch (IOException e)
             {
-                job.getLogger().warn("unable to find metrics file: " + metrics.getPath());
+                throw new PipelineJobException(e);
             }
         }
     }
