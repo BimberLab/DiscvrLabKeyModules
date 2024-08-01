@@ -101,7 +101,8 @@ public class HaplotypeCallerHandler extends AbstractParameterizedOutputHandler<S
                 List<String> args = new ArrayList<>();
                 args.addAll(getClientCommandArgs(params));
 
-                wrapper.execute(so.getFile(), referenceGenome.getWorkingFastaFile(), outputFile, args);
+                boolean doReblock = params.optBoolean("doReblock", true);
+                wrapper.execute(so.getFile(), referenceGenome.getWorkingFastaFile(), outputFile, args, doReblock);
 
                 action.addOutput(outputFile, "gVCF File", false);
                 if (idxFile.exists())
