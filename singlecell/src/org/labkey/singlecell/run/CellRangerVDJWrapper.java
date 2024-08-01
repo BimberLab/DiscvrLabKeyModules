@@ -44,6 +44,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -382,88 +383,123 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             getWrapper().execute(args);
 
             File outdir = new File(outputDirectory, id);
-            outdir = new File(outdir, "multi");
             outdir = new File(outdir, "outs");
 
-            File abDir = new File(outdir, "vdj_t");
-            File gdDir = new File(outdir, "vdj_t_gd");
 
-            File csvAB = processOutputsForType(rs, referenceGenome, abDir, output, "alpha/beta");
-            File csvGD = processOutputsForType(rs, referenceGenome, gdDir, output, "gamma/delta");
+            File csvAB = processOutputsForType(id, rs, referenceGenome, outdir, output, "vdj_t");
+            File csvGD = processOutputsForType(id, rs, referenceGenome, outdir, output, "vdj_t_gd");
 
-            deleteSymlinks(localFqDir);
+            File combinedCSV = processAndMergeCSVs(csvAB, csvGD, getPipelineCtx().getLogger());
 
-            throw new PipelineJobException("This is under development!");
-            //return output;
-        }
-
-        private File processOutputsForType(Readset rs, ReferenceGenome referenceGenome, File outdir, AlignmentOutputImpl output, String chainType) throws PipelineJobException
-        {
-            File bam = new File(outdir, "all_contig.bam");
-            if (!bam.exists())
+            //NOTE: this folder has many unnecessary files and symlinks that get corrupted when we rename the main outputs
+            File directory = new File(outdir.getParentFile(), "SC_MULTI_CS");
+            if (directory.exists())
             {
-                throw new PipelineJobException("Unable to find file: " + bam.getPath());
+                //NOTE: this will have lots of symlinks, including corrupted ones, which java handles badly
+                new SimpleScriptWrapper(getPipelineCtx().getLogger()).execute(Arrays.asList("rm", "-Rf", directory.getPath()));
             }
-            output.setBAM(bam);
+            else
+            {
+                getPipelineCtx().getLogger().warn("Unable to find folder: " + directory.getPath());
+            }
 
-            //now do cleanup/rename:
             try
             {
-                String prefix = FileUtil.makeLegalName(rs.getName() + "_");
-                File outputHtml = new File(outdir, "web_summary.html");
+                File outputHtml = new File(outdir, "per_sample_outs/" + id + "/web_summary.html");
                 if (!outputHtml.exists())
                 {
                     throw new PipelineJobException("Unable to find file: " + outputHtml.getPath());
                 }
 
-                File outputHtmlRename = new File(outdir, prefix + outputHtml.getName());
+                File outputHtmlRename = new File(outputHtml.getParentFile(), FileUtil.makeLegalName(rs.getName() + "_") + outputHtml.getName());
                 if (outputHtmlRename.exists())
                 {
                     outputHtmlRename.delete();
                 }
                 FileUtils.moveFile(outputHtml, outputHtmlRename);
 
-                output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x VDJ Summary: " + chainType, "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
-
-                File outputVloupe = new File(outdir, "vloupe.vloupe");
-                File csv = new File(outdir, "all_contig_annotations.csv");
-                if (!outputVloupe.exists())
-                {
-                    //NOTE: if there were no A/B hits, the vLoupe isnt created, but all other outputs exist
-                    if (!csv.exists())
-                    {
-                        throw new PipelineJobException("Unable to find file: " + outputVloupe.getPath());
-                    }
-                }
-                else
-                {
-                    File outputVloupeRename = new File(outdir, prefix + outputVloupe.getName());
-                    if (outputVloupeRename.exists())
-                    {
-                        outputVloupeRename.delete();
-                    }
-                    FileUtils.moveFile(outputVloupe, outputVloupeRename);
-                    output.addSequenceOutput(outputVloupeRename, rs.getName() + " 10x VLoupe", "10x VLoupe", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
-                }
-
-                //NOTE: this folder has many unnecessary files and symlinks that get corrupted when we rename the main outputs
-                File directory = new File(outdir.getParentFile(), "SC_VDJ_ASSEMBLER_CS");
-                if (directory.exists())
-                {
-                    //NOTE: this will have lots of symlinks, including corrupted ones, which java handles badly
-                    new SimpleScriptWrapper(getPipelineCtx().getLogger()).execute(Arrays.asList("rm", "-Rf", directory.getPath()));
-                }
-                else
-                {
-                    getPipelineCtx().getLogger().warn("Unable to find folder: " + directory.getPath());
-                }
-
-                return csv;
+                output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x VDJ Summary", "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
             }
             catch (IOException e)
             {
                 throw new PipelineJobException(e);
             }
+
+            deleteSymlinks(localFqDir);
+
+            return output;
+        }
+
+        private File processOutputsForType(String sampleId, Readset rs, ReferenceGenome referenceGenome, File outdir, AlignmentOutputImpl output, String subdirName) throws PipelineJobException
+        {
+            boolean isPrimaryDir = "vdj_t".equals(subdirName);
+            String chainType = "vdj_t".equals(subdirName) ? "Alpha/Beta" : "Gamma/Delta";
+
+            File multiDir = new File(outdir, "multi/" + subdirName);
+            if (!multiDir.exists())
+            {
+                throw new PipelineJobException("Missing folder: " + multiDir.getPath());
+            }
+
+            File sampleDir = new File(outdir, "per_sample_outs/" + sampleId + "/" + subdirName);
+            if (!sampleDir.exists())
+            {
+                throw new PipelineJobException("Missing folder: " + sampleDir.getPath());
+            }
+
+            // For simplicity, consolidate all files:
+            for (File f : multiDir.listFiles())
+            {
+                try
+                {
+                    FileUtils.moveFile(f, new File(sampleDir, f.getName()));
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+
+            File bam = new File(sampleDir, "all_contig.bam");
+            if (!bam.exists())
+            {
+                throw new PipelineJobException("Unable to find file: " + bam.getPath());
+            }
+
+            if (isPrimaryDir)
+            {
+                output.setBAM(bam);
+            }
+            else
+            {
+                getPipelineCtx().getLogger().debug("Deleting BAM: " + bam.getPath());
+                bam.delete();
+                new File(bam.getPath() + ".bai").delete();
+            }
+
+            File allContigAnnotations = new File(sampleDir, "all_contig_annotations.csv");
+            if (!allContigAnnotations.exists())
+            {
+                throw new PipelineJobException("Missing file: " + allContigAnnotations.getPath());
+            }
+
+            File outputVloupe = new File(sampleDir, "vloupe.vloupe");
+            File csv = new File(sampleDir, "all_contig_annotations.csv");
+            if (!outputVloupe.exists())
+            {
+                //NOTE: if there were no A/B hits, the vLoupe isnt created, but all other outputs exist
+                if (!csv.exists())
+                {
+                    throw new PipelineJobException("Unable to find file: " + outputVloupe.getPath());
+                }
+            }
+            // NOTE: only tag the vloupe file for a/b:
+            else if (isPrimaryDir)
+            {
+                output.addSequenceOutput(outputVloupe, rs.getName() + " 10x VLoupe", "10x VLoupe", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
+            }
+
+            return csv;
         }
 
         @Override
@@ -603,6 +639,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             getPipelineCtx().getLogger().debug("adding 10x metrics");
 
             // TODO: improve
+            //File outputHtml = new File(outdir, "per_sample_outs/" + id + "/web_summary.html");
             File metrics = new File(model.getAlignmentFileObject().getParentFile(), "metrics_summary.csv");
             if (metrics.exists())
             {
@@ -740,5 +777,122 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
     protected File getExe()
     {
         return SequencePipelineService.get().getExeForPackage("CELLRANGERPATH", "cellranger");
+    }
+
+    private static File processAndMergeCSVs(File abCSV, File gdCSV, Logger log) throws PipelineJobException
+    {
+        File output = new File(abCSV.getParentFile(), "all_contig_annotations_combined.csv");
+
+        try (PrintWriter writer = PrintWriters.getPrintWriter(output))
+        {
+            processCSV(writer, true, abCSV, log, Arrays.asList("TRA", "TRB"));
+            processCSV(writer, false, gdCSV, log, Arrays.asList("TRD", "TRG"));
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        return output;
+    }
+
+    private static void processCSV(PrintWriter writer, boolean printHeader, File inputCsv, Logger log, List<String> acceptableChains) throws IOException
+    {
+        log.info("Processing CSV: " + inputCsv.getPath());
+        try (BufferedReader reader = Readers.getReader(inputCsv))
+        {
+            String line;
+            int chimericCallsRecovered = 0;
+
+            int lineIdx = 0;
+            while ((line = reader.readLine()) != null)
+            {
+                lineIdx++;
+                if (lineIdx == 1)
+                {
+                    if (printHeader)
+                    {
+                        writer.println(line);
+                    }
+
+                    continue;
+                }
+
+                //Infer correct chain from the V, J and C genes
+                String[] tokens = line.split(",", -1);  // -1 used to preserve trailing empty strings
+                List<String> chains = new ArrayList<>();
+                String vGeneChain = null;
+                String jGeneChain = null;
+                String cGeneChain = null;
+                for (int idx : new Integer[]{6,8,9})
+                {
+                    String val = StringUtils.trimToNull(tokens[idx]);
+                    if (val != null)
+                    {
+                        val = val.substring(0, 3);
+
+                        chains.add(val);
+                        if (idx == 6)
+                        {
+                            vGeneChain = val;
+                        }
+                        if (idx == 8)
+                        {
+                            jGeneChain = val;
+                        }
+                        else if (idx == 9)
+                        {
+                            cGeneChain = val;
+                        }
+                    }
+                }
+
+                Set<String> uniqueChains = new HashSet<>(chains);
+                String originalChain = StringUtils.trimToNull(tokens[5]);
+
+                // Recover TRDV/TRAJ/TRAC:
+                if (uniqueChains.size() > 1)
+                {
+                    if (cGeneChain != null)
+                    {
+                        uniqueChains.clear();
+                        uniqueChains.add(cGeneChain);
+                        chimericCallsRecovered++;
+                    }
+                    else if (uniqueChains.size() == 2)
+                    {
+                        if ("TRD".equals(vGeneChain) && "TRA".equals(jGeneChain))
+                        {
+                            uniqueChains.clear();
+                            chimericCallsRecovered++;
+                            uniqueChains.add(vGeneChain);
+                        }
+                        if ("TRA".equals(vGeneChain) && "TRD".equals(jGeneChain))
+                        {
+                            uniqueChains.clear();
+                            chimericCallsRecovered++;
+                            uniqueChains.add(vGeneChain);
+                        }
+                    }
+                }
+
+                if (uniqueChains.size() == 1)
+                {
+                    String chain = uniqueChains.iterator().next();
+                    tokens[5] = chain;
+                }
+                else
+                {
+                    log.error("Multiple chains detected [" + StringUtils.join(chains, ",")+ "], leaving original call alone: " + originalChain  + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
+                }
+
+                if (acceptableChains.contains(tokens[5]))
+                {
+                    writer.println(StringUtils.join(tokens, ","));
+                }
+            }
+
+            log.info("\tChimeric calls recovered: " + chimericCallsRecovered);
+        }
     }
 }
