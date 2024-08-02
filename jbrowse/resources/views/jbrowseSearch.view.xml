@@ -1,7 +1,7 @@
 <view xmlns="http://labkey.org/data/xml/view" title="JBrowse Search">
-    <permissions>
-        <permission name="read"/>
-    </permissions>
+    <permissionClasses>
+        <permissionClass name="org.labkey.api.security.permissions.ReadPermission"/>
+    </permissionClasses>
     <dependencies>
         <dependency path="gen/jbrowse2SearchWebpart.lib.xml"/>
         <dependency path="LDK.context"/>

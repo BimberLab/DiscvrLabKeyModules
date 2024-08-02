@@ -1,7 +1,4 @@
 <view xmlns="http://labkey.org/data/xml/view" title="Cluster Module">
-    <permissions>
-
-    </permissions>
     <dependencies>
         <dependency path="Ext4ClientApi" />
     </dependencies>
