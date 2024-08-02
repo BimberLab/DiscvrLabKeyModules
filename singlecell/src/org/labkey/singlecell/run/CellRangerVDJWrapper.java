@@ -167,6 +167,13 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                 {
                                     lineage = lineage.replace("DV", "/DV");
                                 }
+
+                                // NOTE: cellranger expects TRDV segment to start with TRDV, so re-order
+                                if ("TRD".equals(locus))
+                                {
+                                    String[] tokens = lineage.split("/");
+                                    lineage = "TR" + tokens[1] + "/" + tokens[0];
+                                }
                             }
 
                             StringBuilder header = new StringBuilder();
@@ -421,7 +428,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 }
                 FileUtils.moveFile(outputHtml, outputHtmlRename);
 
-                output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x VDJ Summary", "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
+                String versionString = "Version: " + getWrapper().getVersionString();
+                output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x VDJ Summary", "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), versionString);
             }
             catch (IOException e)
             {
@@ -903,6 +911,22 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             }
 
             log.info("\tChimeric calls recovered: " + chimericCallsRecovered);
+        }
+    }
+
+    public @Nullable String getVersionString()
+    {
+        try
+        {
+            String ret = executeWithOutput(Arrays.asList(getExe().getPath(), "--version"));
+
+            return ret.replaceAll("^cellranger ", "");
+        }
+        catch (PipelineJobException e)
+        {
+            getLogger().error("Unable to find cellRanger version");
+
+            return "Unknown";
         }
     }
 }

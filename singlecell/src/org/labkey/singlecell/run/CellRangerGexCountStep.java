@@ -124,8 +124,9 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--chemistry"), "chemistry", "Chemistry", "This is usually left blank, in which case cellranger will auto-detect. Example values are: SC3Pv1, SC3Pv2, SC3Pv3, SC5P-PE, SC5P-R2, or SC5P-R1", "textfield", new JSONObject(){{
 
                 }}, null),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--include-introns"), "includeIntrons", "Include Introns", "If checked, reads from introns will be included in the counts", "checkbox", new JSONObject(){{
-
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--include-introns"), "includeIntrons", "Include Introns", "If selected, reads from introns will be included in the counts", "ldk-simplecombo", new JSONObject(){{
+                    put("storeValues", "true;false");
+                    put("value", "false");
                 }}, null)
         );
 
@@ -147,10 +148,10 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
     @Override
     public String getAlignmentDescription()
     {
-        return getAlignDescription(getProvider(), getPipelineCtx(), getStepIdx(), true);
+        return getAlignDescription(getProvider(), getPipelineCtx(), getStepIdx(), true, getWrapper().getVersionString());
     }
 
-    protected static String getAlignDescription(PipelineStepProvider provider, PipelineContext ctx, int stepIdx, boolean addAligner)
+    protected static String getAlignDescription(PipelineStepProvider<?> provider, PipelineContext ctx, int stepIdx, boolean addAligner, String cellrangerVersion)
     {
         Integer gtfId = provider.getParameterByName("gtfFile").extractValue(ctx.getJob(), provider, stepIdx, Integer.class);
         File gtfFile = ctx.getSequenceSupport().getCachedData(gtfId);
@@ -174,7 +175,9 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
             lines.add("GTF: " + gtfFile.getName());
         }
 
-        return lines.isEmpty() ? null : StringUtils.join(lines, '\n');
+        lines.add("Version: " + cellrangerVersion);
+
+        return StringUtils.join(lines, '\n');
     }
 
     @Override
@@ -271,7 +274,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
             }
 
             List<String> args = new ArrayList<>();
-            args.add(getWrapper().getExe(true).getPath());
+            args.add(getWrapper().getExe().getPath());
             args.add("mkref");
             args.add("--fasta=" + referenceGenome.getWorkingFastaFile().getPath());
             args.add("--genes=" + gtfFile.getPath());
@@ -393,7 +396,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                 outputHtmlRename.delete();
             }
             FileUtils.moveFile(outputHtml, outputHtmlRename);
-            String description = getAlignDescription(getProvider(), getPipelineCtx(), getStepIdx(), false);
+            String description = getAlignDescription(getProvider(), getPipelineCtx(), getStepIdx(), false, getWrapper().getVersionString());
             output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x Count Summary", "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), description);
 
             File loupe = new File(outdir, "cloupe.cloupe");
