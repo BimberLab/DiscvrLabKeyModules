@@ -81,6 +81,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.create(INNER_ENRICHMENT_PRIMERS, "Inner Enrichment Primers", "An option comma-separated list of the inner primers used for TCR enrichment. These will be used for trimming.", "textarea", new JSONObject(){{
                         put("height", 100);
                         put("width", 400);
+                        put("allowBlank", false);
                     }}, null)
                 ), null, "https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger", true, false, false, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
         }
@@ -311,29 +312,31 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             File indexDir = AlignerIndexUtil.getIndexDir(referenceGenome, getIndexCachedDirName(getPipelineCtx().getJob()));
 
             String primers = StringUtils.trimToNull(getProvider().getParameterByName(INNER_ENRICHMENT_PRIMERS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null));
-            File primerFile = new File(outputDirectory, "primers.txt");
-            if (primers != null)
+            if (primers == null)
             {
-                primers = primers.replaceAll("\\s+", ",");
-                primers = primers.replaceAll(",+", ",");
-
-                try (PrintWriter writer = PrintWriters.getPrintWriter(primerFile))
-                {
-                    Arrays.stream(primers.split(",")).forEach(x -> {
-                        x = StringUtils.trimToNull(x);
-                        if (x != null)
-                        {
-                            writer.println(x);
-                        }
-                    });
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
-
-                output.addIntermediateFile(primerFile);
+                throw new PipelineJobException("Enrichment primers are required");
             }
+
+            File primerFile = new File(outputDirectory, "primers.txt");
+            primers = primers.replaceAll("\\s+", ",");
+            primers = primers.replaceAll(",+", ",");
+
+            try (PrintWriter writer = PrintWriters.getPrintWriter(primerFile))
+            {
+                Arrays.stream(primers.split(",")).forEach(x -> {
+                    x = StringUtils.trimToNull(x);
+                    if (x != null)
+                    {
+                        writer.println(x);
+                    }
+                });
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            output.addIntermediateFile(primerFile);
 
             Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
             if (maxThreads != null)
@@ -359,10 +362,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             {
                 writer.println("[vdj]");
                 writer.println("reference," + indexDir.getPath());
-                if (primers != null)
-                {
-                    writer.println("inner-enrichment-primers," + primerFile);
-                }
+                writer.println("inner-enrichment-primers," + primerFile);
                 writer.println("");
                 writer.println("[libraries]");
                 writer.println("fastq_id,fastqs,lanes,feature_types,subsample_rate");
