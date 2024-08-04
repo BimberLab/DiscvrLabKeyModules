@@ -326,6 +326,14 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 uncheckedValue: false,
                 checked: false,
                 xtype: 'checkbox'
+            },{
+                fieldLabel: 'Restore SRA Data If Needed',
+                helpPopup: 'If selected, any archived sequence data that contains an SRA accession will be re-downloaded to a temp location',
+                name: 'doSraDownloadIfNeeded',
+                inputValue: true,
+                uncheckedValue: false,
+                checked: true,
+                xtype: 'checkbox'
             }, this.getSaveTemplateCfg(),{
                 fieldLabel: 'Submit Jobs To Same Folder/Workbook As Readset?',
                 helpPopup: 'By default, the pipelines jobs and their outputs will be created in the workbook you selected. However, in certain cases, such as bulk submission of many jobs, it might be preferable to submit each job to the source folder/workbook for each input. Checking this box will enable this.',

@@ -18,6 +18,7 @@ package org.labkey.sequenceanalysis.pipeline;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.google.common.io.Files;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.ValidationStringency;
 import org.apache.commons.io.FileUtils;
@@ -68,6 +69,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
+import org.labkey.sequenceanalysis.run.RestoreSraDataHandler;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
 import org.labkey.sequenceanalysis.run.util.AddOrReplaceReadGroupsWrapper;
@@ -238,6 +240,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         try
         {
             SequenceReadsetImpl rs = getPipelineJob().getReadset();
+            restoreArchivedReadDataIfNeeded(rs);
             copyReferenceResources();
 
             //then we preprocess FASTQ files, if needed
@@ -1856,6 +1859,67 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             assertEquals(file2.getAbsoluteFile(), p2.second.getAbsoluteFile());
 
             file.delete();
+        }
+    }
+
+    private void restoreArchivedReadDataIfNeeded(Readset rs) throws PipelineJobException
+    {
+        for (ReadData rd : rs.getReadData())
+        {
+            if (! (rd instanceof ReadDataImpl rdi))
+            {
+                throw new PipelineJobException("Expected readdata to be a ReadDataImpl");
+            }
+
+            if (rd.isArchived())
+            {
+                getPipelineJob().getLogger().info("Restoring files for readdata: " + rd.getRowid() + " / " + rd.getSra_accession());
+                if (!getPipelineJob().shouldAllowArchivedReadsets())
+                {
+                    throw new PipelineJobException("This job is not configured to allow archived readsets!");
+                }
+
+                if (rd.getSra_accession() == null)
+                {
+                    throw new PipelineJobException("Missing SRA accession: " + rd.getRowid());
+                }
+
+                File outDir = new File(getHelper().getWorkingDirectory(), "cachedReadData");
+                getTaskFileManagerImpl().addIntermediateFile(outDir);
+
+                File doneFile = new File(outDir, rd.getSra_accession() + ".done");
+                RestoreSraDataHandler.FastqDumpWrapper sra = new RestoreSraDataHandler.FastqDumpWrapper(getJob().getLogger());
+                if (doneFile.exists())
+                {
+                    rdi.setFile(new File(outDir, rd.getSra_accession() + "_1.fastq"), 0);
+                    if (rd.getFileId2() != null)
+                    {
+                        rdi.setFile(new File(outDir, rd.getSra_accession() + "_2.fastq"), 1);
+                    }
+                }
+                else
+                {
+                    if (!outDir.exists())
+                    {
+                        outDir.mkdirs();
+                    }
+
+                    Pair<File, File> downloaded = sra.downloadSra(rd.getSra_accession(), outDir);
+                    rdi.setFile(downloaded.first, 0);
+                    rdi.setFile(downloaded.second, 1);
+
+                    try
+                    {
+                        Files.touch(doneFile);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+
+                rdi.setArchived(false);
+            }
         }
     }
 }
