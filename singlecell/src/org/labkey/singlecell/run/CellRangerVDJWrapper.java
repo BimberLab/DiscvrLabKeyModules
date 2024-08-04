@@ -175,7 +175,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                             {
                                 getPipelineCtx().getLogger().debug("Editing TRA/DV lineage: " + lineage);
                                 String[] tokens = lineage.split("/");
-                                lineage = "TR" + tokens[1] + "/" + tokens[0];
+                                lineage = "TR" + tokens[1] + "/" + tokens[0].replaceAll("^TR", "");
                                 getPipelineCtx().getLogger().debug("to: " + lineage);
                             }
 
@@ -824,6 +824,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         {
             String line;
             int chimericCallsRecovered = 0;
+            int restoredTRDVAV = 0;
 
             int lineIdx = 0;
             while ((line = reader.readLine()) != null)
@@ -841,6 +842,15 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
                 //Infer correct chain from the V, J and C genes
                 String[] tokens = line.split(",", -1);  // -1 used to preserve trailing empty strings
+
+                // Restore original value for TRD/TRA
+                if (tokens[6].contains("TRDV") && tokens[6].contains("/") && tokens[6].contains("AV"))
+                {
+                    restoredTRDVAV++;
+                    String[] split = tokens[6].split("/");
+                    tokens[6] = "TR" + split[1] + "/" + split[0].replaceAll("TR", "");
+                }
+
                 List<String> chains = new ArrayList<>();
                 String vGeneChain = null;
                 String jGeneChain = null;
@@ -914,6 +924,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             }
 
             log.info("\tChimeric calls recovered: " + chimericCallsRecovered);
+            log.info("\tTRDV/AV calls restored: " + restoredTRDVAV);
         }
     }
 
