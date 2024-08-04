@@ -359,7 +359,10 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             {
                 writer.println("[vdj]");
                 writer.println("reference," + indexDir.getPath());
-                writer.println("inner-enrichment-primers," + primerFile);
+                if (primers != null)
+                {
+                    writer.println("inner-enrichment-primers," + primerFile);
+                }
                 writer.println("");
                 writer.println("[libraries]");
                 writer.println("fastq_id,fastqs,lanes,feature_types,subsample_rate");
