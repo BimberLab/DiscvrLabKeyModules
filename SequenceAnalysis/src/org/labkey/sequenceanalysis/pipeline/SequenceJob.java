@@ -113,7 +113,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
     protected boolean shouldAllowArchivedReadsets()
     {
-        return ("true".equals(_params.get("doSraDownloadIfNeeded")));
+        return ("true".equals(_params.optString("doSraDownloadIfNeeded")));
     }
 
     public SequenceJob(String providerName, Container c, User u, @Nullable String jobName, PipeRoot pipeRoot, JSONObject params, TaskId taskPipelineId, String folderPrefix) throws IOException
