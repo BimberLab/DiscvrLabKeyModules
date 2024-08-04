@@ -159,6 +159,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                             // Special-case TRAVxx/DVxx lineages:
                             if (lineage.startsWith("TRA") && lineage.contains("DV") && !lineage.contains("/DV"))
                             {
+                                getPipelineCtx().getLogger().debug("Updating -DV to /DV in: " + lineage);
                                 if (lineage.contains("-DV"))
                                 {
                                     lineage = lineage.replace("-DV", "/DV");
@@ -167,13 +168,15 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                 {
                                     lineage = lineage.replace("DV", "/DV");
                                 }
+                            }
 
-                                // NOTE: cellranger expects TRDV segment to start with TRDV, so re-order
-                                if ("TRD".equals(locus))
-                                {
-                                    String[] tokens = lineage.split("/");
-                                    lineage = "TR" + tokens[1] + "/" + tokens[0];
-                                }
+                            // NOTE: cellranger expects TRDV segment to start with TRDV, so re-order
+                            if ("TRD".equals(locus) && lineage.startsWith("TRA"))
+                            {
+                                getPipelineCtx().getLogger().debug("Editing TRA/DV lineage: " + lineage);
+                                String[] tokens = lineage.split("/");
+                                lineage = "TR" + tokens[1] + "/" + tokens[0];
+                                getPipelineCtx().getLogger().debug("to: " + lineage);
                             }
 
                             StringBuilder header = new StringBuilder();
