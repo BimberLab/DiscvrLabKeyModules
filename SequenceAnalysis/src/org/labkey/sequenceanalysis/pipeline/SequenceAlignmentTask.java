@@ -294,6 +294,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
     private Map<ReadData, Pair<File, File>> performFastqPreprocessing(SequenceReadsetImpl rs) throws IOException, PipelineJobException
     {
+        getJob().setStatus(PipelineJob.TaskStatus.running, "Fastq Preprocessing");
+
         if (_resumer.isFastqPreprocessingDone())
         {
             getJob().getLogger().info("resuming FASTQ preprocessing from saved state");
@@ -1873,6 +1875,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
             if (rd.isArchived())
             {
+                getJob().setStatus(PipelineJob.TaskStatus.running, "Downloading from SRA");
                 getPipelineJob().getLogger().info("Restoring files for readdata: " + rd.getRowid() + " / " + rd.getSra_accession());
                 if (!getPipelineJob().shouldAllowArchivedReadsets())
                 {
