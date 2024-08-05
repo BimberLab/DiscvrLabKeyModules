@@ -10,7 +10,7 @@ interface ErrorBoundaryState {
     devMode: boolean | undefined,
 }
 
-export class ErrorBoundary extends React.PureComponent<{}, ErrorBoundaryState> {
+export class ErrorBoundary extends React.PureComponent<any, ErrorBoundaryState> {
     constructor(props) {
         super(props);
 

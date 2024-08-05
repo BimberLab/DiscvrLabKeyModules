@@ -49,6 +49,9 @@ public class FindMarkers extends AbstractCellMembraneStep
                     SeuratToolParameter.create("minDiffPct", "Min Diff Pct", "Only test genes that show a minimum difference in the fraction of detection between the two groups", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                     }}, 0.1, "minDiffPct", false),
+                    SeuratToolParameter.create("doPairwise", "Pairwise Tests", "If checked, the code will perform iterative pairwise tests instead of the 'group vs. the rest' pattern of FindAllMarkers", "checkbox", new JSONObject(){{
+
+                    }}, false),
                     getSeuratThreadsParam()
                 ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }

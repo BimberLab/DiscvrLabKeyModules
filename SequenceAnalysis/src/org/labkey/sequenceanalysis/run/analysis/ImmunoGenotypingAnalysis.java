@@ -54,7 +54,7 @@ import java.util.Map;
  */
 public class ImmunoGenotypingAnalysis extends AbstractCommandPipelineStep<ImmunoGenotypingWrapper> implements AnalysisStep
 {
-    public ImmunoGenotypingAnalysis(PipelineStepProvider provider, PipelineContext ctx)
+    public ImmunoGenotypingAnalysis(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new ImmunoGenotypingWrapper(ctx.getLogger()));
     }

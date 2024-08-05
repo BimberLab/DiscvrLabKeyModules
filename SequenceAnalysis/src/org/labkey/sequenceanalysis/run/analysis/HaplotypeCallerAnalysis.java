@@ -53,7 +53,10 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--dont-use-soft-clipped-bases"), "dontUseSoftClippedBases", "Don't Use Soft Clipped Bases", "If specified, we will not analyze soft clipped bases in the reads", "checkbox", null, false),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--max-alternate-alleles"), "maxAlternateAlleles", "Max Alternate Alleles", "Passed to --max-alternate-alleles", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
-                }}, 6)
+                }}, 6),
+                ToolParameterDescriptor.create("doReblock", "Do Reblock", "If checked, this will run Reblock GVCFs", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, true)
         );
     }
 
@@ -72,7 +75,8 @@ public class HaplotypeCallerAnalysis extends AbstractCommandPipelineStep<Haploty
         List<String> args = new ArrayList<>();
         args.addAll(getClientCommandArgs());
 
-        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, args);
+        boolean doReblock = getProvider().getParameterByName("doReblock").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
+        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, args, doReblock);
 
         output.addOutput(outputFile, "gVCF File");
         output.addSequenceOutput(outputFile, outputFile.getName(), "gVCF File", rs.getReadsetId(), null, referenceGenome.getGenomeId(), "GATK Version: " + getWrapper().getVersionString());

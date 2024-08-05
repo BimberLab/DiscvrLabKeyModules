@@ -1,8 +1,6 @@
 import { readConfObject } from '@jbrowse/core/configuration';
-import { PropTypes as CommonPropTypes } from '@jbrowse/core/util/types/mst';
 import { emphasize } from '@jbrowse/core/util/color';
 import { observer } from 'mobx-react';
-import ReactPropTypes from 'prop-types';
 import React from 'react';
 import { Feature } from '@jbrowse/core/util/simpleFeature';
 
@@ -66,31 +64,6 @@ function Diamond(props) {
         />
     </>
   )
-}
-
-Diamond.propTypes = {
-  feature: ReactPropTypes.shape({
-    id: ReactPropTypes.func.isRequired,
-    get: ReactPropTypes.func.isRequired,
-  }).isRequired,
-  region: CommonPropTypes.Region.isRequired,
-  bpPerPx: ReactPropTypes.number.isRequired,
-  featureLayout: ReactPropTypes.shape({
-    absolute: ReactPropTypes.shape({
-      top: ReactPropTypes.number.isRequired,
-      left: ReactPropTypes.number.isRequired,
-      width: ReactPropTypes.number.isRequired,
-      height: ReactPropTypes.number.isRequired,
-    }),
-  }).isRequired,
-  selected: ReactPropTypes.bool,
-  config: CommonPropTypes.ConfigSchema.isRequired,
-  reversed: ReactPropTypes.bool,
-}
-
-Diamond.defaultProps = {
-  selected: false,
-  reversed: false,
 }
 
 export default observer(Diamond)
