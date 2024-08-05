@@ -1894,10 +1894,10 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 RestoreSraDataHandler.FastqDumpWrapper sra = new RestoreSraDataHandler.FastqDumpWrapper(getJob().getLogger());
                 if (doneFile.exists())
                 {
-                    rdi.setFile(new File(outDir, rd.getSra_accession() + "_1.fastq"), 0);
+                    rdi.setFile(new File(outDir, rd.getSra_accession() + "_1.fastq"), 1);
                     if (rd.getFileId2() != null)
                     {
-                        rdi.setFile(new File(outDir, rd.getSra_accession() + "_2.fastq"), 1);
+                        rdi.setFile(new File(outDir, rd.getSra_accession() + "_2.fastq"), 2);
                     }
                 }
                 else
@@ -1908,8 +1908,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     }
 
                     Pair<File, File> downloaded = sra.downloadSra(rd.getSra_accession(), outDir);
-                    rdi.setFile(downloaded.first, 0);
-                    rdi.setFile(downloaded.second, 1);
+                    rdi.setFile(downloaded.first, 1);
+                    rdi.setFile(downloaded.second, 2);
 
                     try
                     {
