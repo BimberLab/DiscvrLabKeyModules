@@ -165,6 +165,10 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         }
 
         List<String> lines = new ArrayList<>();
+
+        String includeIntrons = provider.getParameterByName("includeIntrons").extractValue(ctx.getJob(), provider, stepIdx, String.class, "false");
+        lines.add("Include Introns: " + includeIntrons);
+
         if (addAligner)
         {
             lines.add("Aligner: " + provider.getName());

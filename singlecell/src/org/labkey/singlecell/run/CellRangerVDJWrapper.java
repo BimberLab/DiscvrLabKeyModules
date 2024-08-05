@@ -513,7 +513,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             // NOTE: only tag the vloupe file for a/b:
             else if (isPrimaryDir)
             {
-                output.addSequenceOutput(outputVloupe, rs.getName() + " 10x VLoupe", "10x VLoupe", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
+                String versionString = "Version: " + getWrapper().getVersionString();
+                output.addSequenceOutput(outputVloupe, rs.getName() + " 10x VLoupe", "10x VLoupe", rs.getRowId(), null, referenceGenome.getGenomeId(), versionString);
             }
 
             return csv;
