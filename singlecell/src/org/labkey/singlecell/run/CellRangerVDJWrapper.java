@@ -419,6 +419,9 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 getPipelineCtx().getLogger().warn("Unable to find folder: " + directory.getPath());
             }
 
+            output.addIntermediateFile(new File(outdir, "vdj_reference"));
+            output.addIntermediateFile(new File(outdir, "multi"));
+
             try
             {
                 File outputHtml = new File(outdir, "per_sample_outs/" + id + "/web_summary.html");
@@ -516,6 +519,19 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 String versionString = "Version: " + getWrapper().getVersionString();
                 output.addSequenceOutput(outputVloupe, rs.getName() + " 10x VLoupe", "10x VLoupe", rs.getRowId(), null, referenceGenome.getGenomeId(), versionString);
             }
+
+            output.addIntermediateFile(new File(sampleDir, "airr_rearrangement.tsv"));
+            output.addIntermediateFile(new File(sampleDir, "all_contig_annotations.bed"));
+            output.addIntermediateFile(new File(sampleDir, "all_contig_annotations.json"));
+            output.addIntermediateFile(new File(sampleDir, "cell_barcodes.json"));
+            output.addIntermediateFile(new File(sampleDir, "concat_ref.bam"));
+            output.addIntermediateFile(new File(sampleDir, "concat_ref.bam.bai"));
+            output.addIntermediateFile(new File(sampleDir, "concat_ref.fasta"));
+            output.addIntermediateFile(new File(sampleDir, "concat_ref.fasta.fai"));
+            output.addIntermediateFile(new File(sampleDir, "consensus.bam"));
+            output.addIntermediateFile(new File(sampleDir, "consensus.bam.bai"));
+            output.addIntermediateFile(new File(sampleDir, "donor_regions.fa"));
+            output.addIntermediateFile(new File(sampleDir, "vdj_contig_info.pb"));
 
             return csv;
         }
