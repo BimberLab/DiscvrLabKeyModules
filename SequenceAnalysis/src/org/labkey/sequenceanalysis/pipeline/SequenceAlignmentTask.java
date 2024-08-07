@@ -1888,7 +1888,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 }
 
                 File outDir = new File(getHelper().getWorkingDirectory(), "cachedReadData");
-                getTaskFileManagerImpl().addIntermediateFile(outDir);
+                getTaskFileManagerImpl().addDeferredIntermediateFile(outDir);
 
                 File doneFile = new File(outDir, rd.getSra_accession() + ".done");
                 RestoreSraDataHandler.FastqDumpWrapper sra = new RestoreSraDataHandler.FastqDumpWrapper(getJob().getLogger());
