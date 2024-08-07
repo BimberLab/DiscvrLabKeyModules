@@ -132,7 +132,14 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
 
                 if (dropAggregateBarcodes)
                 {
+                    // NOTE: this is the location in CellRanger <= 6.x
                     File aggregateCountFile = new File(existingCountMatrixUmiDir.getParentFile(), "antibody_analysis/aggregate_barcodes.csv");
+                    if (!aggregateCountFile.exists())
+                    {
+                        // This is the location for >= 7.x
+                        aggregateCountFile = new File(existingCountMatrixUmiDir.getParentFile(), "aggregate_barcodes.csv");
+                    }
+
                     if (!aggregateCountFile.exists())
                     {
                         throw new PipelineJobException("Unable to find aggregate count file: " + aggregateCountFile.getPath());
