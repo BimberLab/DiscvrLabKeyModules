@@ -103,6 +103,7 @@ abstract public class CellHashingService
         public boolean skipNormalizationQc = false;
         public Integer minCountPerCell = 5;
         public Double majorityConsensusThreshold = null;
+        public Double minAllowableDoubletRateFilter = null;
         public Double callerDisagreementThreshold = null;
         public List<CALLING_METHOD> methods = CALLING_METHOD.getDefaultConsensusMethods(); //Default to just executing the set used for default consensus calls, rather than additional ones
         public List<CALLING_METHOD> consensusMethods = null;
@@ -110,7 +111,7 @@ abstract public class CellHashingService
         public Integer cells = 0;
         public boolean keepMarkdown = false;
         public File h5File = null;
-        public boolean doTSNE = true;
+        public boolean doTSNE = false;
 
         private CellHashingParameters()
         {
@@ -124,6 +125,7 @@ abstract public class CellHashingService
             ret.skipNormalizationQc = step.getProvider().getParameterByName("skipNormalizationQc").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, false);
             ret.minCountPerCell = step.getProvider().getParameterByName("minCountPerCell").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Integer.class, 3);
             ret.majorityConsensusThreshold = step.getProvider().getParameterByName("majorityConsensusThreshold").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Double.class, null);
+            ret.minAllowableDoubletRateFilter = step.getProvider().getParameterByName("minAllowableDoubletRateFilter").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Double.class, null);
             ret.callerDisagreementThreshold = step.getProvider().getParameterByName("callerDisagreementThreshold").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Double.class, null);
             ret.doTSNE = step.getProvider().getParameterByName("doTSNE").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, null);
             ret.retainRawCountFile = step.getProvider().getParameterByName("retainRawCountFile").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, true);
@@ -166,6 +168,7 @@ abstract public class CellHashingService
             ret.skipNormalizationQc = params.optBoolean("skipNormalizationQc", false);
             ret.minCountPerCell = params.optInt("minCountPerCell", 3);
             ret.majorityConsensusThreshold = params.get("majorityConsensusThreshold") == null ? null : params.getDouble("majorityConsensusThreshold");
+            ret.minAllowableDoubletRateFilter = params.get("minAllowableDoubletRateFilter") == null ? null : params.getDouble("minAllowableDoubletRateFilter");
             ret.callerDisagreementThreshold = params.get("callerDisagreementThreshold") == null ? null : params.getDouble("callerDisagreementThreshold");
             ret.doTSNE = params.get("doTSNE") == null || params.getBoolean("doTSNE");
             ret.retainRawCountFile = params.optBoolean("retainRawCountFile", true);
