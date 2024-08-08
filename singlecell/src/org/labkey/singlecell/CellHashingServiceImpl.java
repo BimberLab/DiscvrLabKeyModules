@@ -1268,20 +1268,23 @@ public class CellHashingServiceImpl extends CellHashingService
             String doTSNE = parameters.doTSNE ? "TRUE" : "FALSE";
             String h5String = h5 == null ? "" : ", rawFeatureMatrixH5 = '/work/" + h5.getName() + "'";
             String consensusMethodString = consensusMethodNames.isEmpty() ? "" : ", methodsForConsensus = c('" + StringUtils.join(consensusMethodNames, "','") + "')";
-            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "'" + h5String + ", molInfoFile = '/work/" + molInfo.getName() +
-                    "', reportFile = '/work/" + htmlFile.getName() +
-                    "', callFile = '/work/" + callsFile.getName() +
-                    "', metricsFile = '/work/" + metricsFile.getName() +
-                    "', rawCountsExport = '/work/" + countFile.getName() +
-                    "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam +
-                    ", title = '" + parameters.getReportTitle() +
-                    "', skipNormalizationQc = " + skipNormalizationQcString +
-                    ", methods = c('" + StringUtils.join(methodNames, "','") + "')" + consensusMethodString +
+            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "'" + h5String +
+                    ", molInfoFile = '/work/" + molInfo.getName() + "'" +
+                    ", reportFile = '/work/" + htmlFile.getName() + "'" +
+                    ", callFile = '/work/" + callsFile.getName() + "'" +
+                    ", metricsFile = '/work/" + metricsFile.getName() + "'" +
+                    ", rawCountsExport = '/work/" + countFile.getName() + "'" +
+                    ", cellbarcodeWhitelist  = " + cellbarcodeWhitelist +
+                    ", barcodeWhitelist = " + allowableBarcodeParam +
+                    ", title = '" + parameters.getReportTitle() + "'" +
+                    ", skipNormalizationQc = " + skipNormalizationQcString +
+                    ", methods = c('" + StringUtils.join(methodNames, "','") + "')" +
+                    consensusMethodString +
                     ", keepMarkdown = " + keepMarkdown +
                     ", minCountPerCell = " + (parameters.minCountPerCell == null ? "NULL" : parameters.minCountPerCell) +
                     ", majorityConsensusThreshold = " + (parameters.majorityConsensusThreshold == null ? "NULL" : parameters.majorityConsensusThreshold) +
                     ", callerDisagreementThreshold = " + (parameters.callerDisagreementThreshold == null ? "NULL" : parameters.callerDisagreementThreshold) +
-                    (parameters.minAllowableDoubletRateFilter == null ? "" : "', minAllowableDoubletRateFilter = " + parameters.minAllowableDoubletRateFilter) +
+                    (parameters.minAllowableDoubletRateFilter == null ? "" : ", minAllowableDoubletRateFilter = " + parameters.minAllowableDoubletRateFilter) +
                     ", doTSNE = " + doTSNE + ")");
             writer.println("print('Rmarkdown complete')");
 
