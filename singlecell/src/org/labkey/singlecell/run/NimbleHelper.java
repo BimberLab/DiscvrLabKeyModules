@@ -339,7 +339,7 @@ public class NimbleHelper
             String alignTemplate = genome.getTemplate();
             if ("lenient".equals(alignTemplate))
             {
-                config.put("num_mismatches", 5);
+                config.put("num_mismatches", 2);
                 config.put("intersect_level", 0);
                 config.put("score_threshold", 45);
                 config.put("score_percent", 0.45);
