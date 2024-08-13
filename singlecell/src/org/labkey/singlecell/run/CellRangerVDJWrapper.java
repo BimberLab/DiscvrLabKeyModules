@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -843,7 +844,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         try (BufferedReader reader = Readers.getReader(inputCsv))
         {
             String line;
-            int chimericCallsRecovered = 0;
+            Map<String, Integer> chimericCallsRecovered = new HashMap<>();
             int restoredTRDVAV = 0;
 
             int lineIdx = 0;
@@ -904,24 +905,28 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 // Recover TRDV/TRAJ/TRAC:
                 if (uniqueChains.size() > 1)
                 {
+                    // Defer to the constant region, if known:
                     if (cGeneChain != null)
                     {
                         uniqueChains.clear();
                         uniqueChains.add(cGeneChain);
-                        chimericCallsRecovered++;
+                        String key = originalChain + "->" + cGeneChain + " (based on C-GENE)";
+                        chimericCallsRecovered.put(key, chimericCallsRecovered.getOrDefault(key, 0));
                     }
                     else if (uniqueChains.size() == 2)
                     {
                         if ("TRD".equals(vGeneChain) && "TRA".equals(jGeneChain))
                         {
                             uniqueChains.clear();
-                            chimericCallsRecovered++;
+                            String key = originalChain + "->" + vGeneChain + " (based on V-GENE)";
+                            chimericCallsRecovered.put(key, chimericCallsRecovered.getOrDefault(key, 0));
                             uniqueChains.add(vGeneChain);
                         }
                         if ("TRA".equals(vGeneChain) && "TRD".equals(jGeneChain))
                         {
                             uniqueChains.clear();
-                            chimericCallsRecovered++;
+                            String key = originalChain + "->" + vGeneChain + " (based on V-GENE)";
+                            chimericCallsRecovered.put(key, chimericCallsRecovered.getOrDefault(key, 0));
                             uniqueChains.add(vGeneChain);
                         }
                     }
@@ -934,7 +939,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 }
                 else
                 {
-                    log.error("Multiple chains detected [" + StringUtils.join(chains, ",")+ "], leaving original call alone: " + originalChain  + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
+                    log.info("Multiple chains detected [" + StringUtils.join(chains, ",")+ "], leaving original call alone: " + originalChain  + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
                 }
 
                 if (acceptableChains.contains(tokens[5]))
@@ -943,7 +948,15 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 }
             }
 
-            log.info("\tChimeric calls recovered: " + chimericCallsRecovered);
+            if (!chimericCallsRecovered.isEmpty())
+            {
+                log.info("\tChimeric calls recovered: ");
+                for (String key : chimericCallsRecovered.keySet())
+                {
+                    log.info("\t" + key + ": " + chimericCallsRecovered.get(key));
+                }
+            }
+
             log.info("\tTRDV/AV calls restored: " + restoredTRDVAV);
         }
     }
