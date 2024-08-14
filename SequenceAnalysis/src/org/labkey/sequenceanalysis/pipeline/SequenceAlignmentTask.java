@@ -1866,6 +1866,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
     private void restoreArchivedReadDataIfNeeded(Readset rs) throws PipelineJobException
     {
+        Set<String> sraIDs = new HashSet<>();
         for (ReadData rd : rs.getReadData())
         {
             if (! (rd instanceof ReadDataImpl rdi))
@@ -1886,11 +1887,29 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 {
                     throw new PipelineJobException("Missing SRA accession: " + rd.getRowid());
                 }
+                else if (sraIDs.contains(rd.getSra_accession()))
+                {
+                    getJob().getLogger().debug("Already encountered accession, skipping: " + rd.getSra_accession());
+                    if (rs instanceof SequenceReadsetImpl rsi)
+                    {
+                        // Remove the duplicate
+                        List<ReadDataImpl> rdl = new ArrayList<>(rsi.getReadDataImpl());
+                        rdl.remove(rd);
+                        rsi.setReadData(rdl);
+                    }
+                    else
+                    {
+                        throw new PipelineJobException("Expected readset to be SequenceReadsetImpl");
+                    }
+
+                    continue;
+                }
 
                 File outDir = new File(getHelper().getWorkingDirectory(), "cachedReadData");
                 getTaskFileManagerImpl().addDeferredIntermediateFile(outDir);
 
                 File doneFile = new File(outDir, rd.getSra_accession() + ".done");
+                sraIDs.add(rd.getSra_accession());
                 RestoreSraDataHandler.FastqDumpWrapper sra = new RestoreSraDataHandler.FastqDumpWrapper(getJob().getLogger());
                 if (doneFile.exists())
                 {
