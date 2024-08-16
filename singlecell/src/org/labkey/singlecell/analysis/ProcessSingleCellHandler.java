@@ -23,7 +23,10 @@ public class ProcessSingleCellHandler extends AbstractSingleCellHandler
     @Override
     public boolean canProcess(SequenceOutputFile f)
     {
-        return f.getFile() != null && LOUPE_TYPE.isType(f.getFile());
+        return f.getFile() != null && (
+                LOUPE_TYPE.isType(f.getFile()) ||
+                ("10x Run Summary".equals(f.getCategory()) && f.getName().contains("10x Count Summary"))
+        );
     }
 
     @Override
