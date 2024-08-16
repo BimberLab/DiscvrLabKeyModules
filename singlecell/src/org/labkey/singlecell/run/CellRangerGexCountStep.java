@@ -359,7 +359,8 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         File indexDir = AlignerIndexUtil.getIndexDir(referenceGenome, getIndexCachedDirName(getPipelineCtx().getJob()));
         args.add("--transcriptome=" + indexDir.getPath());
 
-        args.add("--create-bam=true");
+        boolean discardBam = getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        args.add("--create-bam=" + !discardBam);
 
         getWrapper().setWorkingDir(outputDirectory);
 
