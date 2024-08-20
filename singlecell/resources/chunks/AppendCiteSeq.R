@@ -20,7 +20,8 @@ for (datasetId in names(seuratObjects)) {
         if (dropAggregateBarcodes) {
             aggregateBarcodeFile <- paste0(matrixDir, ".aggregateCounts.csv")
             if (!file.exists(aggregateBarcodeFile)) {
-                stop(paste0('Unable to find file: ', aggregateBarcodeFile))
+                print(paste0('Unable to find file, skipping: ', aggregateBarcodeFile))
+                aggregateBarcodeFile <- NULL
             }
         }
 

@@ -142,23 +142,26 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
 
                     if (!aggregateCountFile.exists())
                     {
-                        throw new PipelineJobException("Unable to find aggregate count file: " + aggregateCountFile.getPath());
+                        ctx.getLogger().info("Unable to find aggregate count file, assuming there are none: " + aggregateCountFile.getPath());
                     }
-                    localAggregateCountFile = new File(ctx.getOutputDir(), localCopyUmiCountDir.getName() + ".aggregateCounts.csv");
-                    try
+                    else
                     {
-                        if (localAggregateCountFile.exists())
+                        localAggregateCountFile = new File(ctx.getOutputDir(), localCopyUmiCountDir.getName() + ".aggregateCounts.csv");
+                        try
                         {
-                            localAggregateCountFile.delete();
-                        }
+                            if (localAggregateCountFile.exists())
+                            {
+                                localAggregateCountFile.delete();
+                            }
 
-                        FileUtils.copyFile(aggregateCountFile, localAggregateCountFile);
+                            FileUtils.copyFile(aggregateCountFile, localAggregateCountFile);
+                        }
+                        catch (IOException e)
+                        {
+                            throw new PipelineJobException(e);
+                        }
+                        ctx.getFileManager().addIntermediateFile(localAggregateCountFile);
                     }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
-                    }
-                    ctx.getFileManager().addIntermediateFile(localAggregateCountFile);
                 }
 
                 File validAdt = CellHashingServiceImpl.get().getValidCiteSeqBarcodeMetadataFile(ctx.getSourceDirectory(), parentReadset.getReadsetId());
