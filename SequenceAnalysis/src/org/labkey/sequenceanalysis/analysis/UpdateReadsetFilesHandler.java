@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.analysis;
 
+import com.google.common.io.Files;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
@@ -111,6 +112,10 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
             {
                 getAndValidateHeaderForVcf(so, newRsName);
             }
+            else
+            {
+                throw new PipelineJobException("Unexpected file type: " + so.getFile().getPath());
+            }
 
             ctx.getSequenceSupport().cacheObject("readsetId", newRsName);
         }
@@ -207,6 +212,18 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
             String existingSample = header.getGenotypeSamples().get(0);
 
             File sampleNamesFile =  new File(ctx.getWorkingDirectory(), "sampleNames.txt");
+            if (!sampleNamesFile.exists())
+            {
+                try
+                {
+                    Files.touch(sampleNamesFile);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+
             try (PrintWriter writer = PrintWriters.getPrintWriter(sampleNamesFile, StandardOpenOption.APPEND))
             {
                 writer.println(newRsName);
@@ -243,6 +260,11 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
         {
             File tracker = new File(so.getFile().getParentFile(), "reheaderHistory.txt");
             boolean preExisting = tracker.exists();
+            if (!preExisting)
+            {
+                Files.touch(tracker);
+            }
+
             try (PrintWriter writer = PrintWriters.getPrintWriter(tracker, StandardOpenOption.APPEND))
             {
                 if (!preExisting)
