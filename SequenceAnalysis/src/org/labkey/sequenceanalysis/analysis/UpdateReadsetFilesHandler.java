@@ -23,6 +23,7 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.BcftoolsRunner;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -242,11 +243,19 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
             try
             {
                 File outputIdx = SequenceAnalysisService.get().ensureVcfIndex(outputVcf, ctx.getLogger(), false);
-                FileUtils.moveFile(outputVcf, so.getFile(), StandardCopyOption.REPLACE_EXISTING);
+                if (so.getFile().exists())
+                {
+                    so.getFile().delete();
+                }
+                FileUtils.moveFile(outputVcf, so.getFile());
 
                 FileType gz = new FileType(".gz");
                 File inputIndex = gz.isType(so.getFile()) ? new File(so.getFile().getPath() + ".tbi") : new File(so.getFile().getPath() + FileExtensions.TRIBBLE_INDEX);
-                FileUtils.moveFile(outputIdx, inputIndex, StandardCopyOption.REPLACE_EXISTING);
+                if (inputIndex.exists())
+                {
+                    inputIndex.delete();
+                }
+                FileUtils.moveFile(outputIdx, inputIndex);
 
                 addTracker(so, existingSample, newRsName);
             }
@@ -301,11 +310,17 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
                     throw new PipelineJobException("Expected header was not created: " + headerBam.getPath());
                 }
 
+                ReferenceGenome rg = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id());
+                if (rg == null)
+                {
+                    throw new PipelineJobException("Unable to find genome: " + so.getLibrary_id());
+                }
+
                 ctx.getFileManager().addIntermediateFile(headerBam);
                 ctx.getFileManager().addIntermediateFile(SequencePipelineService.get().getExpectedIndex(headerBam));
 
                 File output = new File(ctx.getWorkingDirectory(), so.getFile().getName());
-                new ReplaceSamHeaderWrapper(ctx.getLogger()).execute(so.getFile(), output, headerBam);
+                new ReplaceSamHeaderWrapper(ctx.getLogger()).execute(so.getFile(), output, headerBam, rg);
                 if (!output.exists())
                 {
                     throw new PipelineJobException("Missing file: " + output.getPath());
@@ -313,8 +328,18 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
 
                 File outputIdx = SequencePipelineService.get().ensureBamIndex(output, ctx.getLogger(), false);
 
-                FileUtils.moveFile(output, so.getFile(), StandardCopyOption.REPLACE_EXISTING);
-                FileUtils.moveFile(outputIdx, SequenceAnalysisService.get().getExpectedBamOrCramIndex(so.getFile()), StandardCopyOption.REPLACE_EXISTING);
+                if (so.getFile().exists())
+                {
+                    so.getFile().delete();
+                }
+                FileUtils.moveFile(output, so.getFile());
+
+                File inputIndex = SequenceAnalysisService.get().getExpectedBamOrCramIndex(so.getFile());
+                if (inputIndex.exists())
+                {
+                    inputIndex.delete();
+                }
+                FileUtils.moveFile(outputIdx, inputIndex);
 
                 addTracker(so, existingSample, newRsName);
             }
@@ -337,7 +362,7 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
                 return "ReplaceSamHeader";
             }
 
-            public void execute(File input, File output, File headerBam) throws PipelineJobException
+            public void execute(File input, File output, File headerBam, ReferenceGenome genome) throws PipelineJobException
             {
                 List<String> params = new ArrayList<>(getBaseArgs());
 
@@ -349,6 +374,9 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
 
                 params.add("--HEADER");
                 params.add(headerBam.getPath());
+
+                params.add("-R");
+                params.add(genome.getWorkingFastaFile().getPath());
 
                 execute(params);
             }
