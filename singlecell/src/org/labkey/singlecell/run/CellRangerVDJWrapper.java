@@ -473,7 +473,13 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             {
                 try
                 {
-                    FileUtils.moveFile(f, new File(sampleDir, f.getName()));
+                    File dest = new File(sampleDir, f.getName());
+                    if (dest.exists())
+                    {
+                        dest.delete();
+                    }
+
+                    FileUtils.moveFile(f, dest);
                 }
                 catch (IOException e)
                 {
@@ -911,7 +917,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         uniqueChains.clear();
                         uniqueChains.add(cGeneChain);
                         String key = originalChain + "->" + cGeneChain + " (based on C-GENE)";
-                        chimericCallsRecovered.put(key, chimericCallsRecovered.getOrDefault(key, 0));
+                        chimericCallsRecovered.put(key, chimericCallsRecovered.getOrDefault(key, 0) + 1);
                     }
                     else if (uniqueChains.size() == 2)
                     {
@@ -919,14 +925,14 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         {
                             uniqueChains.clear();
                             String key = originalChain + "->" + vGeneChain + " (based on V-GENE)";
-                            chimericCallsRecovered.put(key, chimericCallsRecovered.getOrDefault(key, 0));
+                            chimericCallsRecovered.put(key, chimericCallsRecovered.getOrDefault(key, 0) + 1);
                             uniqueChains.add(vGeneChain);
                         }
                         if ("TRA".equals(vGeneChain) && "TRD".equals(jGeneChain))
                         {
                             uniqueChains.clear();
                             String key = originalChain + "->" + vGeneChain + " (based on V-GENE)";
-                            chimericCallsRecovered.put(key, chimericCallsRecovered.getOrDefault(key, 0));
+                            chimericCallsRecovered.put(key, chimericCallsRecovered.getOrDefault(key, 0) + 1);
                             uniqueChains.add(vGeneChain);
                         }
                     }

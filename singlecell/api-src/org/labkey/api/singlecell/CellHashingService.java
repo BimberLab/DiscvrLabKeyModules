@@ -127,7 +127,7 @@ abstract public class CellHashingService
             ret.majorityConsensusThreshold = step.getProvider().getParameterByName("majorityConsensusThreshold").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Double.class, null);
             ret.minAllowableDoubletRateFilter = step.getProvider().getParameterByName("minAllowableDoubletRateFilter").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Double.class, null);
             ret.callerDisagreementThreshold = step.getProvider().getParameterByName("callerDisagreementThreshold").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Double.class, null);
-            ret.doTSNE = step.getProvider().getParameterByName("doTSNE").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, null);
+            ret.doTSNE = step.getProvider().getParameterByName("doTSNE").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, false);
             ret.retainRawCountFile = step.getProvider().getParameterByName("retainRawCountFile").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, true);
             ret.failIfUnexpectedHtosFound = step.getProvider().getParameterByName("failIfUnexpectedHtosFound").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, true);
             ret.htoReadset = htoReadset;
@@ -170,7 +170,7 @@ abstract public class CellHashingService
             ret.majorityConsensusThreshold = params.get("majorityConsensusThreshold") == null ? null : params.getDouble("majorityConsensusThreshold");
             ret.minAllowableDoubletRateFilter = params.get("minAllowableDoubletRateFilter") == null ? null : params.getDouble("minAllowableDoubletRateFilter");
             ret.callerDisagreementThreshold = params.get("callerDisagreementThreshold") == null ? null : params.getDouble("callerDisagreementThreshold");
-            ret.doTSNE = params.get("doTSNE") == null || params.getBoolean("doTSNE");
+            ret.doTSNE = params.get("doTSNE") == null || params.optBoolean("doTSNE", false);
             ret.retainRawCountFile = params.optBoolean("retainRawCountFile", true);
             ret.failIfUnexpectedHtosFound = params.optBoolean("failIfUnexpectedHtosFound", true);
             ret.htoReadset = htoReadset;
