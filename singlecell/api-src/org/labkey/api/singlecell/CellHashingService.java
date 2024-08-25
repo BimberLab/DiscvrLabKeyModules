@@ -170,7 +170,7 @@ abstract public class CellHashingService
             ret.majorityConsensusThreshold = params.get("majorityConsensusThreshold") == null ? null : params.getDouble("majorityConsensusThreshold");
             ret.minAllowableDoubletRateFilter = params.get("minAllowableDoubletRateFilter") == null ? null : params.getDouble("minAllowableDoubletRateFilter");
             ret.callerDisagreementThreshold = params.get("callerDisagreementThreshold") == null ? null : params.getDouble("callerDisagreementThreshold");
-            ret.doTSNE = params.get("doTSNE") == null || params.optBoolean("doTSNE", false);
+            ret.doTSNE = params.optBoolean("doTSNE", false);
             ret.retainRawCountFile = params.optBoolean("retainRawCountFile", true);
             ret.failIfUnexpectedHtosFound = params.optBoolean("failIfUnexpectedHtosFound", true);
             ret.htoReadset = htoReadset;
