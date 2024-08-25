@@ -1383,57 +1383,66 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             AlignmentStep.AlignmentOutput alignmentOutput = alignmentStep.performAlignment(rs, forwardFastqs, reverseFastqs, outputDirectory, referenceGenome, SequenceTaskHelper.getUnzippedBaseName(inputFiles.get(0).first.getName()) + "." + alignmentStep.getProvider().getName().toLowerCase(), String.valueOf(lowestReadDataId), platformUnit);
             getHelper().getFileManager().addStepOutputs(alignmentAction, alignmentOutput);
 
-            if (alignmentOutput.getBAM() == null || !alignmentOutput.getBAM().exists())
-            {
-                throw new PipelineJobException("Unable to find BAM file after alignment: " + alignmentOutput.getBAM());
-            }
             Date end = new Date();
             alignmentAction.setEndTime(end);
             getJob().getLogger().info(alignmentStep.getProvider().getLabel() + " Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
             actions.add(alignmentAction);
 
-            SequenceUtil.logFastqBamDifferences(getJob().getLogger(), alignmentOutput.getBAM());
-
-            ToolParameterDescriptor mergeParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.SUPPORT_MERGED_UNALIGNED);
-            boolean doMergeUnaligned = alignmentStep.getProvider().supportsMergeUnaligned() && mergeParam != null && mergeParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
-            if (doMergeUnaligned)
+            boolean discardBam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
+            if (discardBam && alignmentOutput.getBAM() == null)
             {
-                getJob().setStatus(PipelineJob.TaskStatus.running, "MERGING UNALIGNED READS INTO BAM" + msgSuffix);
-                getJob().getLogger().info("merging unaligned reads into BAM");
-                File idx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(alignmentOutput.getBAM());
-                if (idx.exists())
+                getJob().getLogger().info("The alignment did not produce a BAM, but discardBam was selected. BAM stats steps will be skipped.");
+            }
+            else
+            {
+                if (alignmentOutput.getBAM() == null || !alignmentOutput.getBAM().exists())
                 {
-                    getJob().getLogger().debug("deleting index: " + idx.getPath());
-                    idx.delete();
+                    throw new PipelineJobException("Unable to find BAM file after alignment: " + alignmentOutput.getBAM());
                 }
 
-                //merge unaligned reads and clean file
-                MergeBamAlignmentWrapper wrapper = new MergeBamAlignmentWrapper(getJob().getLogger());
-                wrapper.executeCommand(referenceGenome.getWorkingFastaFile(), alignmentOutput.getBAM(), inputFiles, null);
-                getHelper().getFileManager().addCommandsToAction(wrapper.getCommandsExecuted(), alignmentAction);
-            }
-            else
-            {
-                getJob().getLogger().info("skipping merge of unaligned reads on BAM");
-            }
+                SequenceUtil.logFastqBamDifferences(getJob().getLogger(), alignmentOutput.getBAM());
 
-            if (alignmentStep.doAddReadGroups())
-            {
-                getJob().setStatus(PipelineJob.TaskStatus.running, "ADDING READ GROUPS" + msgSuffix);
-                AddOrReplaceReadGroupsWrapper wrapper = new AddOrReplaceReadGroupsWrapper(getJob().getLogger());
-                wrapper.executeCommand(alignmentOutput.getBAM(), null, rs.getReadsetId().toString(), rs.getPlatform(), (platformUnit == null ? rs.getReadsetId().toString() : platformUnit), rs.getName().replaceAll(" ", "_"));
-                getHelper().getFileManager().addCommandsToAction(wrapper.getCommandsExecuted(), alignmentAction);
-            }
-            else
-            {
-                getJob().getLogger().info("skipping read group assignment");
-            }
+                ToolParameterDescriptor mergeParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.SUPPORT_MERGED_UNALIGNED);
+                boolean doMergeUnaligned = alignmentStep.getProvider().supportsMergeUnaligned() && mergeParam != null && mergeParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
+                if (doMergeUnaligned)
+                {
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "MERGING UNALIGNED READS INTO BAM" + msgSuffix);
+                    getJob().getLogger().info("merging unaligned reads into BAM");
+                    File idx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(alignmentOutput.getBAM());
+                    if (idx.exists())
+                    {
+                        getJob().getLogger().debug("deleting index: " + idx.getPath());
+                        idx.delete();
+                    }
 
-            //generate stats
-            getJob().setStatus(PipelineJob.TaskStatus.running, "Generating BAM Stats");
-            FlagStatRunner runner = new FlagStatRunner(getJob().getLogger());
-            runner.execute(alignmentOutput.getBAM());
-            getHelper().getFileManager().addCommandsToAction(runner.getCommandsExecuted(), alignmentAction);
+                    //merge unaligned reads and clean file
+                    MergeBamAlignmentWrapper wrapper = new MergeBamAlignmentWrapper(getJob().getLogger());
+                    wrapper.executeCommand(referenceGenome.getWorkingFastaFile(), alignmentOutput.getBAM(), inputFiles, null);
+                    getHelper().getFileManager().addCommandsToAction(wrapper.getCommandsExecuted(), alignmentAction);
+                }
+                else
+                {
+                    getJob().getLogger().info("skipping merge of unaligned reads on BAM");
+                }
+
+                if (alignmentStep.doAddReadGroups())
+                {
+                    getJob().setStatus(PipelineJob.TaskStatus.running, "ADDING READ GROUPS" + msgSuffix);
+                    AddOrReplaceReadGroupsWrapper wrapper = new AddOrReplaceReadGroupsWrapper(getJob().getLogger());
+                    wrapper.executeCommand(alignmentOutput.getBAM(), null, rs.getReadsetId().toString(), rs.getPlatform(), (platformUnit == null ? rs.getReadsetId().toString() : platformUnit), rs.getName().replaceAll(" ", "_"));
+                    getHelper().getFileManager().addCommandsToAction(wrapper.getCommandsExecuted(), alignmentAction);
+                }
+                else
+                {
+                    getJob().getLogger().info("skipping read group assignment");
+                }
+
+                //generate stats
+                getJob().setStatus(PipelineJob.TaskStatus.running, "Generating BAM Stats");
+                FlagStatRunner runner = new FlagStatRunner(getJob().getLogger());
+                runner.execute(alignmentOutput.getBAM());
+                getHelper().getFileManager().addCommandsToAction(runner.getCommandsExecuted(), alignmentAction);
+            }
 
             _resumer.setReadDataAlignmentDone(lowestReadDataId, actions, alignmentOutput.getBAM());
 

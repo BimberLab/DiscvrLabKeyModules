@@ -377,12 +377,15 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         File outdir = new File(outputDirectory, id);
         outdir = new File(outdir, "outs");
 
-        File bam = new File(outdir, "possorted_genome_bam.bam");
-        if (!bam.exists())
+        if (!discardBam)
         {
-            throw new PipelineJobException("Unable to find file: " + bam.getPath());
+            File bam = new File(outdir, "possorted_genome_bam.bam");
+            if (!bam.exists())
+            {
+                throw new PipelineJobException("Unable to find file: " + bam.getPath());
+            }
+            output.setBAM(bam);
         }
-        output.setBAM(bam);
 
         getWrapper().deleteSymlinks(getWrapper().getLocalFastqDir(outputDirectory));
 
