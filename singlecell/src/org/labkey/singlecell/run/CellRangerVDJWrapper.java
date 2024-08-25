@@ -394,6 +394,9 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 lockFile.delete();
             }
 
+            boolean discardBam = getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+            args.add("--create-bam=" + !discardBam);
+
             getWrapper().execute(args);
 
             File outdir = new File(outputDirectory, id);
@@ -454,7 +457,6 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         private File processOutputsForType(String sampleId, Readset rs, ReferenceGenome referenceGenome, File outdir, AlignmentOutputImpl output, String subdirName) throws PipelineJobException
         {
             boolean isPrimaryDir = "vdj_t".equals(subdirName);
-            String chainType = "vdj_t".equals(subdirName) ? "Alpha/Beta" : "Gamma/Delta";
 
             File multiDir = new File(outdir, "multi/" + subdirName);
             if (!multiDir.exists())
@@ -487,13 +489,14 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 }
             }
 
+            boolean discardBam = getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
             File bam = new File(sampleDir, "all_contig.bam");
-            if (!bam.exists())
+            if (!discardBam && !bam.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + bam.getPath());
             }
 
-            if (isPrimaryDir)
+            if (!discardBam && isPrimaryDir)
             {
                 output.setBAM(bam);
             }
