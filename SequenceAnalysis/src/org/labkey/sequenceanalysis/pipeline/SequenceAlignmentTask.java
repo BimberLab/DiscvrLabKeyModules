@@ -692,11 +692,13 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
             if (getHelper().getFileManager().performCleanupAfterEachStep())
             {
-                List<File> toRetain = Arrays.asList(bam, SequenceUtil.getExpectedIndex(bam));
+                List<File> toRetain = bam == null ? Collections.emptyList() : Arrays.asList(bam, SequenceUtil.getExpectedIndex(bam));
                 getTaskFileManagerImpl().deleteIntermediateFiles(toRetain);
             }
 
-            _resumer.setInitialAlignmentDone(bam, alignActions);
+            AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
+            boolean discardBam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
+            _resumer.setInitialAlignmentDone(bam, alignActions, discardBam);
         }
 
         //post-processing
@@ -1593,9 +1595,9 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             return _mergedBamFile != null;
         }
 
-        public void setInitialAlignmentDone(File mergedBamFile, List<RecordedAction> actions) throws PipelineJobException
+        public void setInitialAlignmentDone(File mergedBamFile, List<RecordedAction> actions, boolean allowNullBam) throws PipelineJobException
         {
-            if (mergedBamFile == null)
+            if (!allowNullBam && mergedBamFile == null)
             {
                 throw new PipelineJobException("BAM is null");
             }
