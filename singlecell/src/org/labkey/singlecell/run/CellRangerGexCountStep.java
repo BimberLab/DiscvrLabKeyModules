@@ -475,7 +475,16 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
     @Override
     public void complete(SequenceAnalysisJobSupport support, AnalysisModel model, Collection<SequenceOutputFile> outputFilesCreated) throws PipelineJobException
     {
-        File metrics = new File(model.getAlignmentFileObject().getParentFile(), "metrics_summary.csv");
+        SequenceOutputFile outputForData = outputFilesCreated.stream().filter(x -> LOUPE_CATEGORY.equals(x.getCategory())).findFirst().orElse(null);
+        if (outputForData == null)
+        {
+            outputForData = outputFilesCreated.stream().filter(x -> "10x Run Summary".equals(x.getCategory())).findFirst().orElseThrow();
+        }
+
+        File outsDir = outputForData.getFile().getParentFile();
+        Integer dataId = outputForData.getDataId();
+
+        File metrics = new File(outsDir, "metrics_summary.csv");
         if (metrics.exists())
         {
             getPipelineCtx().getLogger().debug("adding 10x metrics");
@@ -501,17 +510,12 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                     i++;
                 }
 
-                if (model.getAlignmentFile() == null)
-                {
-                    throw new PipelineJobException("model.getAlignmentFile() was null");
-                }
-
                 TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
 
                 //NOTE: if this job errored and restarted, we may have duplicate records:
                 SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), model.getReadset());
                 filter.addCondition(FieldKey.fromString("analysis_id"), model.getRowId(), CompareType.EQUAL);
-                filter.addCondition(FieldKey.fromString("dataid"), model.getAlignmentFile(), CompareType.EQUAL);
+                filter.addCondition(FieldKey.fromString("dataid"), dataId, CompareType.EQUAL);
                 filter.addCondition(FieldKey.fromString("category"), "Cell Ranger", CompareType.EQUAL);
                 filter.addCondition(FieldKey.fromString("container"), getPipelineCtx().getJob().getContainer().getId(), CompareType.EQUAL);
                 TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), filter, null);
@@ -531,7 +535,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                     toInsert.put("created", new Date());
                     toInsert.put("readset", model.getReadset());
                     toInsert.put("analysis_id", model.getRowId());
-                    toInsert.put("dataid", model.getAlignmentFile());
+                    toInsert.put("dataid", dataId);
 
                     toInsert.put("category", "Cell Ranger");
                     toInsert.put("metricname", header[j]);
@@ -591,99 +595,6 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
 
                 Table.insert(getPipelineCtx().getJob().getUser(), singlecellDatasets, toInsert);
             }
-        }
-    }
-
-    private void addMetrics(File outDir, AnalysisModel model) throws PipelineJobException
-    {
-        getPipelineCtx().getLogger().debug("adding 10x metrics");
-
-        File metrics = new File(outDir, "metrics_summary.csv");
-        if (!metrics.exists())
-        {
-            throw new PipelineJobException("Unable to find file: " + metrics.getPath());
-        }
-
-        if (model.getAlignmentFile() == null)
-        {
-            throw new PipelineJobException("model.getAlignmentFile() was null");
-        }
-
-        try (CSVReader reader = new CSVReader(Readers.getReader(metrics)))
-        {
-            String[] line;
-            List<String[]> metricValues = new ArrayList<>();
-
-            int i = 0;
-            while ((line = reader.readNext()) != null)
-            {
-                i++;
-                if (i == 1)
-                {
-                    continue;
-                }
-
-                metricValues.add(line);
-            }
-
-            int totalAdded = 0;
-            TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
-
-            //NOTE: if this job errored and restarted, we may have duplicate records:
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), model.getReadset());
-            filter.addCondition(FieldKey.fromString("analysis_id"), model.getRowId(), CompareType.EQUAL);
-            filter.addCondition(FieldKey.fromString("dataid"), model.getAlignmentFile(), CompareType.EQUAL);
-            filter.addCondition(FieldKey.fromString("category"), "Cell Ranger VDJ", CompareType.EQUAL);
-            filter.addCondition(FieldKey.fromString("container"), getPipelineCtx().getJob().getContainer().getId(), CompareType.EQUAL);
-            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), filter, null);
-            if (ts.exists())
-            {
-                getPipelineCtx().getLogger().info("Deleting existing QC metrics (probably from prior restarted job)");
-                ts.getArrayList(Integer.class).forEach(rowid -> {
-                    Table.delete(ti, rowid);
-                });
-            }
-
-            for (String[] row : metricValues)
-            {
-                //TODO
-                if ("Fastq ID".equals(row[2]) || "Physical library ID".equals(row[2]))
-                {
-                    continue;
-                }
-
-                Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
-                toInsert.put("container", getPipelineCtx().getJob().getContainer().getId());
-                toInsert.put("createdby", getPipelineCtx().getJob().getUser().getUserId());
-                toInsert.put("created", new Date());
-                toInsert.put("readset", model.getReadset());
-                toInsert.put("analysis_id", model.getRowId());
-                toInsert.put("dataid", model.getAlignmentFile());
-
-                toInsert.put("category", "Cell Ranger");
-                toInsert.put("metricname", row[4]);
-
-                row[5] = row[5].replaceAll(",", ""); //remove commas
-                Object val = row[5];
-                if (row[5].contains("%"))
-                {
-                    row[5] = row[5].replaceAll("%", "");
-                    Double d = ConvertHelper.convert(row[5], Double.class);
-                    d = d / 100.0;
-                    val = d;
-                }
-
-                toInsert.put("metricvalue", val);
-
-                Table.insert(getPipelineCtx().getJob().getUser(), ti, toInsert);
-                totalAdded++;
-            }
-
-            getPipelineCtx().getLogger().info("total metrics added: " + totalAdded);
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
         }
     }
 }

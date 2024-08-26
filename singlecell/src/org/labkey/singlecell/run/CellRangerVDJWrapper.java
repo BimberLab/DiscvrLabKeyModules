@@ -70,6 +70,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
     }
 
     public static final String INNER_ENRICHMENT_PRIMERS = "innerEnrichmentPrimers";
+    public static final String VLOUPE_CATEGORY = "10x VLoupe";
 
     public static class VDJProvider extends AbstractAlignmentStepProvider<AlignmentStep>
     {
@@ -527,7 +528,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             else if (isPrimaryDir)
             {
                 String versionString = "Version: " + getWrapper().getVersionString();
-                output.addSequenceOutput(outputVloupe, rs.getName() + " 10x VLoupe", "10x VLoupe", rs.getRowId(), null, referenceGenome.getGenomeId(), versionString);
+                output.addSequenceOutput(outputVloupe, rs.getName() + " 10x VLoupe", VLOUPE_CATEGORY, rs.getRowId(), null, referenceGenome.getGenomeId(), versionString);
             }
 
             output.addIntermediateFile(new File(sampleDir, "airr_rearrangement.tsv"));
@@ -678,7 +679,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             }
         }
 
-        public void addMetrics(File outDir, AnalysisModel model) throws PipelineJobException
+        public void addMetrics(File outDir, AnalysisModel model, int dataId) throws PipelineJobException
         {
             getPipelineCtx().getLogger().debug("adding 10x metrics");
 
@@ -686,11 +687,6 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             if (!metrics.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + metrics.getPath());
-            }
-
-            if (model.getAlignmentFile() == null)
-            {
-                throw new PipelineJobException("model.getAlignmentFile() was null");
             }
 
             try (CSVReader reader = new CSVReader(Readers.getReader(metrics)))
@@ -716,7 +712,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 //NOTE: if this job errored and restarted, we may have duplicate records:
                 SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), model.getReadset());
                 filter.addCondition(FieldKey.fromString("analysis_id"), model.getRowId(), CompareType.EQUAL);
-                filter.addCondition(FieldKey.fromString("dataid"), model.getAlignmentFile(), CompareType.EQUAL);
+                filter.addCondition(FieldKey.fromString("dataid"), dataId, CompareType.EQUAL);
                 filter.addCondition(FieldKey.fromString("category"), "Cell Ranger VDJ", CompareType.EQUAL);
                 filter.addCondition(FieldKey.fromString("container"), getPipelineCtx().getJob().getContainer().getId(), CompareType.EQUAL);
                 TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), filter, null);
@@ -741,7 +737,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                     toInsert.put("created", new Date());
                     toInsert.put("readset", model.getReadset());
                     toInsert.put("analysis_id", model.getRowId());
-                    toInsert.put("dataid", model.getAlignmentFile());
+                    toInsert.put("dataid", dataId);
 
                     toInsert.put("category", "Cell Ranger VDJ");
 
@@ -784,15 +780,16 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 throw new PipelineJobException("Expected sequence outputs to be created");
             }
 
-            File html = outputFilesCreated.stream().filter(x -> "10x Run Summary".equals(x.getCategory())).findFirst().orElseThrow().getFile();
-
-            addMetrics(html.getParentFile(), model);
-
-            File bam = model.getAlignmentData().getFile();
-            if (!bam.exists())
+            SequenceOutputFile outputForData = outputFilesCreated.stream().filter(x -> VLOUPE_CATEGORY.equals(x.getCategory())).findFirst().orElse(null);
+            if (outputForData == null)
             {
-                getPipelineCtx().getLogger().warn("BAM not found, expected: " + bam.getPath());
+                outputForData = outputFilesCreated.stream().filter(x -> "10x Run Summary".equals(x.getCategory())).findFirst().orElseThrow();
             }
+
+            File outsDir = outputForData.getFile().getParentFile();
+            Integer dataId = outputForData.getDataId();
+
+            addMetrics(outsDir, model, dataId);
         }
 
         private static final Pattern FILE_PATTERN = Pattern.compile("^(.+?)(_S[0-9]+){0,1}_L(.+?)_(R){0,1}([0-9])(_[0-9]+){0,1}(.*?)(\\.f(ast){0,1}q)(\\.gz)?$");
