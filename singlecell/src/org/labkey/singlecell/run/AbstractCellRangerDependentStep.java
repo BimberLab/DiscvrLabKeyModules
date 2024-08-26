@@ -18,7 +18,7 @@ import java.util.List;
 
 public class AbstractCellRangerDependentStep extends CellRangerGexCountStep
 {
-    public AbstractCellRangerDependentStep(AlignmentStepProvider provider, PipelineContext ctx, CellRangerWrapper wrapper)
+    public AbstractCellRangerDependentStep(AlignmentStepProvider<?> provider, PipelineContext ctx, CellRangerWrapper wrapper)
     {
         super(provider, ctx, wrapper);
     }

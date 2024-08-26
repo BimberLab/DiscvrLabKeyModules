@@ -365,7 +365,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             getJob().getLogger().info("no analyses were selected");
         }
 
-        File bam = ExperimentService.get().getExpData(analysisModel.getAlignmentFile()).getFile();
+        File bam = analysisModel.getAlignmentFile() == null ? null : ExperimentService.get().getExpData(analysisModel.getAlignmentFile()).getFile();
         if (bam == null)
         {
             getJob().getLogger().error("unable to find BAM, skipping");
