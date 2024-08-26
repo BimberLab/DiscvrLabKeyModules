@@ -380,8 +380,15 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         File bam = analysisModel.getAlignmentFile() == null ? null : ExperimentService.get().getExpData(analysisModel.getAlignmentFile()).getFile();
         if (bam == null)
         {
-            getJob().getLogger().error("unable to find BAM, skipping");
-            return;
+            if (discardBam)
+            {
+                getJob().getLogger().info("unable to find BAM, skipping");
+                return;
+            }
+            else
+            {
+                throw new PipelineJobException("Unable to find BAM");
+            }
         }
 
         File refDB = ExperimentService.get().getExpData(analysisModel.getReferenceLibrary()).getFile();
