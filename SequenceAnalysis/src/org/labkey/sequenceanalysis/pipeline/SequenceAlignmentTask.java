@@ -675,6 +675,9 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
     private void alignSet(Readset rs, String basename, Map<ReadData, Pair<File, File>> files, ReferenceGenome referenceGenome) throws IOException, PipelineJobException
     {
+        AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
+        boolean discardBam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
+
         File bam;
         if (_resumer.isInitialAlignmentDone())
         {
@@ -696,9 +699,24 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 getTaskFileManagerImpl().deleteIntermediateFiles(toRetain);
             }
 
-            AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
-            boolean discardBam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
             _resumer.setInitialAlignmentDone(bam, alignActions, discardBam);
+        }
+
+        // This is a special case where the alignment does not actually generate a permanent BAM
+        if (bam == null && discardBam)
+        {
+            if (!SequencePipelineService.get().getSteps(getJob(), BamProcessingStep.class).isEmpty())
+            {
+                throw new PipelineJobException("No BAM was created, but post-procesing steps were selected!");
+            }
+
+            if (!SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class).isEmpty())
+            {
+                throw new PipelineJobException("No BAM was created, but analysis steps were selected!");
+            }
+
+            getJob().getLogger().info("No BAM was created, but discard BAM was selected, so skipping all downstream steps");
+            return;
         }
 
         //post-processing
@@ -787,7 +805,6 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         //always end with coordinate sorted
         getJob().setStatus(PipelineJob.TaskStatus.running, "SORTING BAM");
-        AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
         if (_resumer.isBamSortDone())
         {
             getJob().getLogger().info("BAM sort already performed, resuming");
