@@ -365,6 +365,18 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             getJob().getLogger().info("no analyses were selected");
         }
 
+        getJob().getLogger().info("creating analysis record");
+        TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
+        if (analysisModel.getRowId() == null)
+        {
+            analysisModel = Table.insert(getJob().getUser(), ti, analysisModel);
+            getJob().getLogger().info("created analysis: " + analysisModel.getRowId());
+        }
+        else
+        {
+            getJob().getLogger().info("re-using existing analysis: " + analysisModel.getRowId());
+        }
+
         File bam = analysisModel.getAlignmentFile() == null ? null : ExperimentService.get().getExpData(analysisModel.getAlignmentFile()).getFile();
         if (bam == null)
         {
@@ -377,18 +389,6 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         {
             getJob().getLogger().error("unable to find reference fasta, skipping");
             return;
-        }
-
-        getJob().getLogger().info("creating analysis record for BAM: " + bam.getName());
-        TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
-        if (analysisModel.getRowId() == null)
-        {
-            analysisModel = Table.insert(getJob().getUser(), ti, analysisModel);
-            getJob().getLogger().info("created analysis: " + analysisModel.getRowId());
-        }
-        else
-        {
-            getJob().getLogger().info("re-using existing analysis: " + analysisModel.getRowId());
         }
 
         if (!discardBam)

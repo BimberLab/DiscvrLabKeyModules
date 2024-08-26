@@ -488,6 +488,11 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
             throw new PipelineJobException("Unable to find dataId for output file");
         }
 
+        if (model.getRowId() == null)
+        {
+            throw new PipelineJobException("Unable to find rowId for analysis");
+        }
+
         File metrics = new File(outsDir, "metrics_summary.csv");
         if (metrics.exists())
         {
