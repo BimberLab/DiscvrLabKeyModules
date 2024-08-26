@@ -36,7 +36,6 @@ public class AbstractCellRangerDependentStep extends CellRangerGexCountStep
         File localBam = new File(outputDirectory, basename + ".cellranger.bam");
         File localBamIdx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(localBam);
 
-
         String idParam = StringUtils.trimToNull(getProvider().getParameterByName("id").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
         File cellrangerOutdir = new File(outputDirectory, CellRangerWrapper.getId(idParam, rs));
 

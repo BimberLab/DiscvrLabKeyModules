@@ -319,6 +319,18 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         return true;
     }
 
+    private boolean shouldDiscardBam()
+    {
+        return !_alwaysRetainBam &&  getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+    }
+
+    private boolean _alwaysRetainBam = false;
+
+    public void setAlwaysRetainBam(boolean alwaysRetainBam)
+    {
+        _alwaysRetainBam = alwaysRetainBam;
+    }
+
     @Override
     public AlignmentOutput performAlignment(Readset rs, List<File> inputFastqs1, @Nullable List<File> inputFastqs2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
     {
@@ -359,8 +371,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         File indexDir = AlignerIndexUtil.getIndexDir(referenceGenome, getIndexCachedDirName(getPipelineCtx().getJob()));
         args.add("--transcriptome=" + indexDir.getPath());
 
-        boolean discardBam = getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
-        args.add("--create-bam=" + !discardBam);
+        args.add("--create-bam=" + !shouldDiscardBam());
 
         getWrapper().setWorkingDir(outputDirectory);
 
@@ -377,7 +388,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         File outdir = new File(outputDirectory, id);
         outdir = new File(outdir, "outs");
 
-        if (!discardBam)
+        if (!shouldDiscardBam())
         {
             File bam = new File(outdir, "possorted_genome_bam.bam");
             if (!bam.exists())
