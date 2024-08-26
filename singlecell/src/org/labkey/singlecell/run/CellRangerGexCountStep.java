@@ -483,6 +483,10 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
 
         File outsDir = outputForData.getFile().getParentFile();
         Integer dataId = outputForData.getDataId();
+        if (dataId == null)
+        {
+            throw new PipelineJobException("Unable to find dataId for output file");
+        }
 
         File metrics = new File(outsDir, "metrics_summary.csv");
         if (metrics.exists())

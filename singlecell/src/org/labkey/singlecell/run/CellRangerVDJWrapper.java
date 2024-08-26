@@ -788,6 +788,10 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
             File outsDir = outputForData.getFile().getParentFile();
             Integer dataId = outputForData.getDataId();
+            if (dataId == null)
+            {
+                throw new PipelineJobException("Unable to find dataId for output file");
+            }
 
             addMetrics(outsDir, model, dataId);
         }
