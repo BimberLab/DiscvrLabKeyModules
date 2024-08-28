@@ -132,26 +132,36 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
 
                 if (dropAggregateBarcodes)
                 {
+                    // NOTE: this is the location in CellRanger <= 6.x
                     File aggregateCountFile = new File(existingCountMatrixUmiDir.getParentFile(), "antibody_analysis/aggregate_barcodes.csv");
                     if (!aggregateCountFile.exists())
                     {
-                        throw new PipelineJobException("Unable to find aggregate count file: " + aggregateCountFile.getPath());
+                        // This is the location for >= 7.x
+                        aggregateCountFile = new File(existingCountMatrixUmiDir.getParentFile(), "aggregate_barcodes.csv");
                     }
-                    localAggregateCountFile = new File(ctx.getOutputDir(), localCopyUmiCountDir.getName() + ".aggregateCounts.csv");
-                    try
-                    {
-                        if (localAggregateCountFile.exists())
-                        {
-                            localAggregateCountFile.delete();
-                        }
 
-                        FileUtils.copyFile(aggregateCountFile, localAggregateCountFile);
-                    }
-                    catch (IOException e)
+                    if (!aggregateCountFile.exists())
                     {
-                        throw new PipelineJobException(e);
+                        ctx.getLogger().info("Unable to find aggregate count file, assuming there are none: " + aggregateCountFile.getPath());
                     }
-                    ctx.getFileManager().addIntermediateFile(localAggregateCountFile);
+                    else
+                    {
+                        localAggregateCountFile = new File(ctx.getOutputDir(), localCopyUmiCountDir.getName() + ".aggregateCounts.csv");
+                        try
+                        {
+                            if (localAggregateCountFile.exists())
+                            {
+                                localAggregateCountFile.delete();
+                            }
+
+                            FileUtils.copyFile(aggregateCountFile, localAggregateCountFile);
+                        }
+                        catch (IOException e)
+                        {
+                            throw new PipelineJobException(e);
+                        }
+                        ctx.getFileManager().addIntermediateFile(localAggregateCountFile);
+                    }
                 }
 
                 File validAdt = CellHashingServiceImpl.get().getValidCiteSeqBarcodeMetadataFile(ctx.getSourceDirectory(), parentReadset.getReadsetId());

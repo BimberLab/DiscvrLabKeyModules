@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -32,9 +33,9 @@ public class CellRangerWrapper extends AbstractCommandWrapper
         super(logger);
     }
 
-    protected File getExe(boolean use31)
+    protected File getExe()
     {
-        return SequencePipelineService.get().getExeForPackage("CELLRANGERPATH", "cellranger" + (use31 ? "-31" : ""));
+        return SequencePipelineService.get().getExeForPackage("CELLRANGERPATH", "cellranger");
     }
 
     public static Set<File> getRawDataDirs(File outputDir, boolean filteredOnly, boolean includeAnalysis)
@@ -75,7 +76,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
     public List<String> prepareCountArgs(AlignmentOutputImpl output, String id, File outputDirectory, Readset rs, List<Pair<File, File>> inputFastqPairs, List<String> extraArgs, boolean writeFastqArgs) throws PipelineJobException
     {
         List<String> args = new ArrayList<>();
-        args.add(getExe(false).getPath());
+        args.add(getExe().getPath());
         args.add("count");
 
         args.add("--id=" + id);
@@ -258,5 +259,21 @@ public class CellRangerWrapper extends AbstractCommandWrapper
         id = id.replaceAll("[^a-zA-z0-9_\\-]", "_");
 
         return id;
+    }
+
+    public @Nullable String getVersionString()
+    {
+        try
+        {
+            String ret = executeWithOutput(Arrays.asList(getExe().getPath(), "--version"));
+
+            return ret.replaceAll("^cellranger ", "");
+        }
+        catch (PipelineJobException e)
+        {
+            getLogger().error("Unable to find cellRanger version");
+
+            return "Unknown";
+        }
     }
 }

@@ -309,7 +309,11 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                 }
                 FileUtils.moveFile(outputHtml, outputHtmlRename);
 
-                String description = ctx.getParams().optBoolean("useGEX", false) ? "HTO and GEX Counts" : null;
+                String description = "Version: " + wrapper.getVersionString();
+                if (ctx.getParams().optBoolean("useGEX", false))
+                {
+                    description = description + "\n" + "HTO and GEX Counts";
+                };
                 output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x " + rs.getApplication() + " Summary", "10x Run Summary", rs.getRowId(), null, null, description);
 
                 File rawCounts = new File(outsdir, "raw_feature_bc_matrix/matrix.mtx.gz");
@@ -366,7 +370,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
 
                 CellRangerWrapper wrapper = new CellRangerWrapper(ctx.getLogger());
                 List<String> args = new ArrayList<>();
-                args.add(wrapper.getExe(true).getPath());
+                args.add(wrapper.getExe().getPath());
                 args.add("mkref");
                 args.add("--fasta=" + fasta.getPath());
                 args.add("--genes=" + gtf.getPath());

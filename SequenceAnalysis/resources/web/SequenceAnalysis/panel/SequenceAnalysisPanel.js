@@ -142,7 +142,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
             containerPath: this.queryContainer,
             schemaName: 'sequenceanalysis',
             queryName: 'readdata',
-            columns: 'rowid,readset,readset/name,container,container/displayName,container/path,fileid1,fileid1/name,fileid1/fileexists,fileid2,fileid2/name,fileid2/fileexists',
+            columns: 'rowid,readset,readset/name,container,container/displayName,container/path,fileid1,fileid1/name,fileid1/fileexists,fileid2,fileid2/name,fileid2/fileexists,sra_accession',
             metadata: {
                 queryContainerPath: {
                     createIfDoesNotExist: true,
@@ -160,11 +160,17 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 load: function (store) {
                     var errors = [];
                     var errorNames = [];
+                    var archived = [];
                     store.each(function(rec){
                         if (rec.get('fileid1')){
                             if (!rec.get('fileid1/fileexists')){
-                                errors.push(rec);
-                                errorNames.push(rec.get('readset/name'));
+                                if (!rec.get('sra_accession')) {
+                                    errors.push(rec);
+                                    errorNames.push(rec.get('readset/name'));
+                                }
+                                else {
+                                    archived.push(rec.get('readset/name'))
+                                }
                             }
                             else {
                                 this.fileIds.push(rec.get('fileid1'));
@@ -178,8 +184,13 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
 
                         if (rec.get('fileid2')){
                             if (!rec.get('fileid2/fileexists')){
-                                errors.push(rec);
-                                errorNames.push(rec.get('name'))
+                                if (!rec.get('sra_accession')) {
+                                    errors.push(rec);
+                                    errorNames.push(rec.get('name'))
+                                }
+                                else {
+                                    archived.push(rec.get('name'));
+                                }
                             }
                             else {
                                 this.fileIds.push(rec.get('fileid2'));
@@ -188,7 +199,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                         }
                     }, this);
 
-                    this.onStoreLoad(errorNames);
+                    this.onStoreLoad(errorNames, archived);
 
                     var target = this.down('#readsetCount');
                     if (target) {
@@ -201,12 +212,17 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
 
     storesLoaded: 0,
     errorNames: [],
+    archivedNames: [],
 
-    onStoreLoad: function(errorNames){
+    onStoreLoad: function(errorNames, archivedNames){
         this.storesLoaded++;
         if (errorNames){
             this.errorNames = this.errorNames.concat(errorNames);
             this.errorNames = Ext4.unique(this.errorNames);
+        }
+
+        if (archivedNames) {
+            this.archivedNames = Ext4.unique(this.archivedNames.concat(archivedNames));
         }
         if (this.storesLoaded === 2){
             this.afterStoreLoad();
@@ -225,7 +241,10 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
         dv.refresh();
 
         if (this.errorNames.length){
-            alert('The follow readsets lack an input file and will be skipped: ' + this.errorNames.join(', '));
+            alert('The following readsets lack an input file and will be skipped: ' + this.errorNames.join(', '));
+        }
+        else if (this.archivedNames.length) {
+            Ext4.Msg.alert('Warning', 'One or more readsets contains SRA archived data. Please choose the option to auto-download these data');
         }
     },
 
@@ -325,6 +344,14 @@ Ext4.define('SequenceAnalysis.panel.SequenceAnalysisPanel', {
                 inputValue: true,
                 uncheckedValue: false,
                 checked: false,
+                xtype: 'checkbox'
+            },{
+                fieldLabel: 'Restore SRA Data If Needed',
+                helpPopup: 'If selected, any archived sequence data that contains an SRA accession will be re-downloaded to a temp location',
+                name: 'doSraDownloadIfNeeded',
+                inputValue: true,
+                uncheckedValue: false,
+                checked: true,
                 xtype: 'checkbox'
             }, this.getSaveTemplateCfg(),{
                 fieldLabel: 'Submit Jobs To Same Folder/Workbook As Readset?',

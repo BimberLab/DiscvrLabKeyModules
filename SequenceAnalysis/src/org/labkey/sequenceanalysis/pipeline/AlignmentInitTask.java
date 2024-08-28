@@ -5,6 +5,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.pipeline.WorkDirectoryTask;
+import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractSequenceTaskFactory;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
@@ -106,7 +107,15 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
 
         if (getPipelineJob().getReadset().hasArchivedData())
         {
-            throw new PipelineJobException("The input readset has archived read data and cannot be used for new alignments");
+            if (!getPipelineJob().shouldAllowArchivedReadsets())
+            {
+                throw new PipelineJobException("The input readset has archived read data and cannot be used for new alignments");
+            }
+
+            if (getPipelineJob().getReadset().getReadData().stream().filter(ReadData::isArchived).filter(rd -> rd.getSra_accession() == null).count() > 1)
+            {
+                throw new PipelineJobException("The input readset has archived readsets that lack SRA accessions");
+            }
         }
 
         getHelper().cacheExpDatasForParams();

@@ -413,34 +413,4 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
             assertEquals(intervalMap, intervalMap2);
         }
     }
-
-    public File getLocationForCachedInputs(WorkDirectory wd, boolean createIfDoesntExist)
-    {
-        File ret;
-
-        String localDir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("LOCAL_DATA_CACHE_DIR");
-        if (localDir == null)
-        {
-            localDir = StringUtils.trimToNull(System.getenv("LOCAL_DATA_CACHE_DIR"));
-        }
-
-        if (localDir == null)
-        {
-            ret = new File(wd.getDir(), "cachedData");
-        }
-        else
-        {
-            String guid = getParentGUID() == null ? getJobGUID() : getParentGUID();
-            ret = new File(localDir, guid);
-
-            getLogger().debug("Using local directory to cache data: " + ret.getPath());
-        }
-
-        if (createIfDoesntExist && !ret.exists())
-        {
-            ret.mkdirs();
-        }
-
-        return ret;
-    }
 }

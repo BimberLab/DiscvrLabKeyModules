@@ -124,8 +124,9 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--chemistry"), "chemistry", "Chemistry", "This is usually left blank, in which case cellranger will auto-detect. Example values are: SC3Pv1, SC3Pv2, SC3Pv3, SC5P-PE, SC5P-R2, or SC5P-R1", "textfield", new JSONObject(){{
 
                 }}, null),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--include-introns"), "includeIntrons", "Include Introns", "If checked, reads from introns will be included in the counts", "checkbox", new JSONObject(){{
-
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--include-introns"), "includeIntrons", "Include Introns", "If selected, reads from introns will be included in the counts", "ldk-simplecombo", new JSONObject(){{
+                    put("storeValues", "true;false");
+                    put("value", "false");
                 }}, null)
         );
 
@@ -147,10 +148,10 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
     @Override
     public String getAlignmentDescription()
     {
-        return getAlignDescription(getProvider(), getPipelineCtx(), getStepIdx(), true);
+        return getAlignDescription(getProvider(), getPipelineCtx(), getStepIdx(), true, getWrapper().getVersionString());
     }
 
-    protected static String getAlignDescription(PipelineStepProvider provider, PipelineContext ctx, int stepIdx, boolean addAligner)
+    protected static String getAlignDescription(PipelineStepProvider<?> provider, PipelineContext ctx, int stepIdx, boolean addAligner, String cellrangerVersion)
     {
         Integer gtfId = provider.getParameterByName("gtfFile").extractValue(ctx.getJob(), provider, stepIdx, Integer.class);
         File gtfFile = ctx.getSequenceSupport().getCachedData(gtfId);
@@ -164,6 +165,10 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         }
 
         List<String> lines = new ArrayList<>();
+
+        String includeIntrons = provider.getParameterByName("includeIntrons").extractValue(ctx.getJob(), provider, stepIdx, String.class, "false");
+        lines.add("Include Introns: " + includeIntrons);
+
         if (addAligner)
         {
             lines.add("Aligner: " + provider.getName());
@@ -174,7 +179,9 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
             lines.add("GTF: " + gtfFile.getName());
         }
 
-        return lines.isEmpty() ? null : StringUtils.join(lines, '\n');
+        lines.add("Version: " + cellrangerVersion);
+
+        return StringUtils.join(lines, '\n');
     }
 
     @Override
@@ -271,7 +278,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
             }
 
             List<String> args = new ArrayList<>();
-            args.add(getWrapper().getExe(true).getPath());
+            args.add(getWrapper().getExe().getPath());
             args.add("mkref");
             args.add("--fasta=" + referenceGenome.getWorkingFastaFile().getPath());
             args.add("--genes=" + gtfFile.getPath());
@@ -310,6 +317,18 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
     public boolean canAlignMultiplePairsAtOnce()
     {
         return true;
+    }
+
+    private boolean shouldDiscardBam()
+    {
+        return !_alwaysRetainBam &&  getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+    }
+
+    private boolean _alwaysRetainBam = false;
+
+    public void setAlwaysRetainBam(boolean alwaysRetainBam)
+    {
+        _alwaysRetainBam = alwaysRetainBam;
     }
 
     @Override
@@ -352,7 +371,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         File indexDir = AlignerIndexUtil.getIndexDir(referenceGenome, getIndexCachedDirName(getPipelineCtx().getJob()));
         args.add("--transcriptome=" + indexDir.getPath());
 
-        args.add("--create-bam=true");
+        args.add("--create-bam=" + !shouldDiscardBam());
 
         getWrapper().setWorkingDir(outputDirectory);
 
@@ -369,12 +388,15 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         File outdir = new File(outputDirectory, id);
         outdir = new File(outdir, "outs");
 
-        File bam = new File(outdir, "possorted_genome_bam.bam");
-        if (!bam.exists())
+        if (!shouldDiscardBam())
         {
-            throw new PipelineJobException("Unable to find file: " + bam.getPath());
+            File bam = new File(outdir, "possorted_genome_bam.bam");
+            if (!bam.exists())
+            {
+                throw new PipelineJobException("Unable to find file: " + bam.getPath());
+            }
+            output.setBAM(bam);
         }
-        output.setBAM(bam);
 
         getWrapper().deleteSymlinks(getWrapper().getLocalFastqDir(outputDirectory));
 
@@ -393,7 +415,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                 outputHtmlRename.delete();
             }
             FileUtils.moveFile(outputHtml, outputHtmlRename);
-            String description = getAlignDescription(getProvider(), getPipelineCtx(), getStepIdx(), false);
+            String description = getAlignDescription(getProvider(), getPipelineCtx(), getStepIdx(), false, getWrapper().getVersionString());
             output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x Count Summary", "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), description);
 
             File loupe = new File(outdir, "cloupe.cloupe");
@@ -453,7 +475,25 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
     @Override
     public void complete(SequenceAnalysisJobSupport support, AnalysisModel model, Collection<SequenceOutputFile> outputFilesCreated) throws PipelineJobException
     {
-        File metrics = new File(model.getAlignmentFileObject().getParentFile(), "metrics_summary.csv");
+        SequenceOutputFile outputForData = outputFilesCreated.stream().filter(x -> LOUPE_CATEGORY.equals(x.getCategory())).findFirst().orElse(null);
+        if (outputForData == null)
+        {
+            outputForData = outputFilesCreated.stream().filter(x -> "10x Run Summary".equals(x.getCategory())).findFirst().orElseThrow();
+        }
+
+        File outsDir = outputForData.getFile().getParentFile();
+        Integer dataId = outputForData.getDataId();
+        if (dataId == null)
+        {
+            throw new PipelineJobException("Unable to find dataId for output file");
+        }
+
+        if (model.getRowId() == null)
+        {
+            throw new PipelineJobException("Unable to find rowId for analysis");
+        }
+
+        File metrics = new File(outsDir, "metrics_summary.csv");
         if (metrics.exists())
         {
             getPipelineCtx().getLogger().debug("adding 10x metrics");
@@ -479,17 +519,12 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                     i++;
                 }
 
-                if (model.getAlignmentFile() == null)
-                {
-                    throw new PipelineJobException("model.getAlignmentFile() was null");
-                }
-
                 TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
 
                 //NOTE: if this job errored and restarted, we may have duplicate records:
                 SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), model.getReadset());
                 filter.addCondition(FieldKey.fromString("analysis_id"), model.getRowId(), CompareType.EQUAL);
-                filter.addCondition(FieldKey.fromString("dataid"), model.getAlignmentFile(), CompareType.EQUAL);
+                filter.addCondition(FieldKey.fromString("dataid"), dataId, CompareType.EQUAL);
                 filter.addCondition(FieldKey.fromString("category"), "Cell Ranger", CompareType.EQUAL);
                 filter.addCondition(FieldKey.fromString("container"), getPipelineCtx().getJob().getContainer().getId(), CompareType.EQUAL);
                 TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), filter, null);
@@ -509,7 +544,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                     toInsert.put("created", new Date());
                     toInsert.put("readset", model.getReadset());
                     toInsert.put("analysis_id", model.getRowId());
-                    toInsert.put("dataid", model.getAlignmentFile());
+                    toInsert.put("dataid", dataId);
 
                     toInsert.put("category", "Cell Ranger");
                     toInsert.put("metricname", header[j]);
@@ -569,99 +604,6 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
 
                 Table.insert(getPipelineCtx().getJob().getUser(), singlecellDatasets, toInsert);
             }
-        }
-    }
-
-    private void addMetrics(File outDir, AnalysisModel model) throws PipelineJobException
-    {
-        getPipelineCtx().getLogger().debug("adding 10x metrics");
-
-        File metrics = new File(outDir, "metrics_summary.csv");
-        if (!metrics.exists())
-        {
-            throw new PipelineJobException("Unable to find file: " + metrics.getPath());
-        }
-
-        if (model.getAlignmentFile() == null)
-        {
-            throw new PipelineJobException("model.getAlignmentFile() was null");
-        }
-
-        try (CSVReader reader = new CSVReader(Readers.getReader(metrics)))
-        {
-            String[] line;
-            List<String[]> metricValues = new ArrayList<>();
-
-            int i = 0;
-            while ((line = reader.readNext()) != null)
-            {
-                i++;
-                if (i == 1)
-                {
-                    continue;
-                }
-
-                metricValues.add(line);
-            }
-
-            int totalAdded = 0;
-            TableInfo ti = DbSchema.get("sequenceanalysis", DbSchemaType.Module).getTable("quality_metrics");
-
-            //NOTE: if this job errored and restarted, we may have duplicate records:
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), model.getReadset());
-            filter.addCondition(FieldKey.fromString("analysis_id"), model.getRowId(), CompareType.EQUAL);
-            filter.addCondition(FieldKey.fromString("dataid"), model.getAlignmentFile(), CompareType.EQUAL);
-            filter.addCondition(FieldKey.fromString("category"), "Cell Ranger VDJ", CompareType.EQUAL);
-            filter.addCondition(FieldKey.fromString("container"), getPipelineCtx().getJob().getContainer().getId(), CompareType.EQUAL);
-            TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), filter, null);
-            if (ts.exists())
-            {
-                getPipelineCtx().getLogger().info("Deleting existing QC metrics (probably from prior restarted job)");
-                ts.getArrayList(Integer.class).forEach(rowid -> {
-                    Table.delete(ti, rowid);
-                });
-            }
-
-            for (String[] row : metricValues)
-            {
-                //TODO
-                if ("Fastq ID".equals(row[2]) || "Physical library ID".equals(row[2]))
-                {
-                    continue;
-                }
-
-                Map<String, Object> toInsert = new CaseInsensitiveHashMap<>();
-                toInsert.put("container", getPipelineCtx().getJob().getContainer().getId());
-                toInsert.put("createdby", getPipelineCtx().getJob().getUser().getUserId());
-                toInsert.put("created", new Date());
-                toInsert.put("readset", model.getReadset());
-                toInsert.put("analysis_id", model.getRowId());
-                toInsert.put("dataid", model.getAlignmentFile());
-
-                toInsert.put("category", "Cell Ranger");
-                toInsert.put("metricname", row[4]);
-
-                row[5] = row[5].replaceAll(",", ""); //remove commas
-                Object val = row[5];
-                if (row[5].contains("%"))
-                {
-                    row[5] = row[5].replaceAll("%", "");
-                    Double d = ConvertHelper.convert(row[5], Double.class);
-                    d = d / 100.0;
-                    val = d;
-                }
-
-                toInsert.put("metricvalue", val);
-
-                Table.insert(getPipelineCtx().getJob().getUser(), ti, toInsert);
-                totalAdded++;
-            }
-
-            getPipelineCtx().getLogger().info("total metrics added: " + totalAdded);
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
         }
     }
 }

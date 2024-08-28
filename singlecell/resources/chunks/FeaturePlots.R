@@ -8,19 +8,19 @@ for (datasetId in names(seuratObjects)) {
         }
 
         tryCatch({
-            P1 <- Seurat::FeaturePlot(seuratObj, features = c(field), reduction = 'tsne', min.cutoff = 'q05', max.cutoff = 'q95')
-            P2 <- Seurat::FeaturePlot(seuratObj, features = c(field), reduction = 'umap', min.cutoff = 'q05', max.cutoff = 'q95')
-
-            if ('wnn.umap' %in% names(seuratObj@reductions)) {
-                P3 <- Seurat::FeaturePlot(seuratObj, features = c(field), reduction = 'wnn.umap', min.cutoff = 'q05', max.cutoff = 'q95')
-                P1 <- P1 | P2 | P3
-            } else {
-                P1 <- P1 | P2
+            reductions <- intersect(c('tsne', 'umap', 'wnn.umap'), names(seuratObj@reductions))
+            if (length(reductions) == 0) {
+                stop('No reductions found to plot')
             }
 
-            P1 <- P1 + patchwork::plot_annotation(title = field) + patchwork::plot_layout(guides = "collect")
+            plotList <- list()
+            i <- 0
+            for (reduction in reductions) {
+                i <- i + 1
+                plotList[[i]] <- Seurat::FeaturePlot(seuratObj, features = c(field), reduction = reduction, min.cutoff = 'q05', max.cutoff = 'q95')
+            }
 
-            print(P1)
+            print(patchwork::wrap_plots(plotList, ncol = length(reductions)) + patchwork::plot_annotation(title = field) + patchwork::plot_layout(guides = "collect"))
         }, error = function(e){
             print(paste0('Error running FeaturePlots for: ', datasetId))
             print(conditionMessage(e))
