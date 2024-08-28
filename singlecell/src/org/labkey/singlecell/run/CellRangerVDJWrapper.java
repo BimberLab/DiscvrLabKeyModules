@@ -395,9 +395,6 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 lockFile.delete();
             }
 
-            boolean discardBam = getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
-            args.add("--create-bam=" + !discardBam);
-
             getWrapper().execute(args);
 
             File outdir = new File(outputDirectory, id);
@@ -490,14 +487,13 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 }
             }
 
-            boolean discardBam = getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
             File bam = new File(sampleDir, "all_contig.bam");
-            if (!discardBam && !bam.exists())
+            if (!bam.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + bam.getPath());
             }
 
-            if (!discardBam && isPrimaryDir)
+            if (isPrimaryDir)
             {
                 output.setBAM(bam);
             }
