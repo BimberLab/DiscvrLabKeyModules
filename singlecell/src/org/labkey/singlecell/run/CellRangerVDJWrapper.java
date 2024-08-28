@@ -53,6 +53,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +70,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
     }
 
     public static final String INNER_ENRICHMENT_PRIMERS = "innerEnrichmentPrimers";
+    public static final String VLOUPE_CATEGORY = "10x VLoupe";
 
     public static class VDJProvider extends AbstractAlignmentStepProvider<AlignmentStep>
     {
@@ -81,6 +83,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                     ToolParameterDescriptor.create(INNER_ENRICHMENT_PRIMERS, "Inner Enrichment Primers", "An option comma-separated list of the inner primers used for TCR enrichment. These will be used for trimming.", "textarea", new JSONObject(){{
                         put("height", 100);
                         put("width", 400);
+                        put("allowBlank", false);
                     }}, null)
                 ), null, "https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger", true, false, false, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
         }
@@ -159,6 +162,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                             // Special-case TRAVxx/DVxx lineages:
                             if (lineage.startsWith("TRA") && lineage.contains("DV") && !lineage.contains("/DV"))
                             {
+                                getPipelineCtx().getLogger().debug("Updating -DV to /DV in: " + lineage);
                                 if (lineage.contains("-DV"))
                                 {
                                     lineage = lineage.replace("-DV", "/DV");
@@ -167,6 +171,15 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                                 {
                                     lineage = lineage.replace("DV", "/DV");
                                 }
+                            }
+
+                            // NOTE: cellranger expects TRDV segment to start with TRDV, so re-order
+                            if ("TRD".equals(locus) && lineage.startsWith("TRA"))
+                            {
+                                getPipelineCtx().getLogger().debug("Editing TRA/DV lineage: " + lineage);
+                                String[] tokens = lineage.split("/");
+                                lineage = "TR" + tokens[1] + "/" + tokens[0].replaceAll("^TR", "");
+                                getPipelineCtx().getLogger().debug("to: " + lineage);
                             }
 
                             StringBuilder header = new StringBuilder();
@@ -301,29 +314,31 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             File indexDir = AlignerIndexUtil.getIndexDir(referenceGenome, getIndexCachedDirName(getPipelineCtx().getJob()));
 
             String primers = StringUtils.trimToNull(getProvider().getParameterByName(INNER_ENRICHMENT_PRIMERS).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class, null));
-            File primerFile = new File(outputDirectory, "primers.txt");
-            if (primers != null)
+            if (primers == null)
             {
-                primers = primers.replaceAll("\\s+", ",");
-                primers = primers.replaceAll(",+", ",");
-
-                try (PrintWriter writer = PrintWriters.getPrintWriter(primerFile))
-                {
-                    Arrays.stream(primers.split(",")).forEach(x -> {
-                        x = StringUtils.trimToNull(x);
-                        if (x != null)
-                        {
-                            writer.println(x);
-                        }
-                    });
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
-                }
-
-                output.addIntermediateFile(primerFile);
+                throw new PipelineJobException("Enrichment primers are required");
             }
+
+            File primerFile = new File(outputDirectory, "primers.txt");
+            primers = primers.replaceAll("\\s+", ",");
+            primers = primers.replaceAll(",+", ",");
+
+            try (PrintWriter writer = PrintWriters.getPrintWriter(primerFile))
+            {
+                Arrays.stream(primers.split(",")).forEach(x -> {
+                    x = StringUtils.trimToNull(x);
+                    if (x != null)
+                    {
+                        writer.println(x);
+                    }
+                });
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            output.addIntermediateFile(primerFile);
 
             Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
             if (maxThreads != null)
@@ -406,6 +421,9 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 getPipelineCtx().getLogger().warn("Unable to find folder: " + directory.getPath());
             }
 
+            output.addIntermediateFile(new File(outdir, "vdj_reference"));
+            output.addIntermediateFile(new File(outdir, "multi"));
+
             try
             {
                 File outputHtml = new File(outdir, "per_sample_outs/" + id + "/web_summary.html");
@@ -421,7 +439,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 }
                 FileUtils.moveFile(outputHtml, outputHtmlRename);
 
-                output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x VDJ Summary", "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
+                String versionString = "Version: " + getWrapper().getVersionString();
+                output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x VDJ Summary", "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), versionString);
             }
             catch (IOException e)
             {
@@ -436,7 +455,6 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         private File processOutputsForType(String sampleId, Readset rs, ReferenceGenome referenceGenome, File outdir, AlignmentOutputImpl output, String subdirName) throws PipelineJobException
         {
             boolean isPrimaryDir = "vdj_t".equals(subdirName);
-            String chainType = "vdj_t".equals(subdirName) ? "Alpha/Beta" : "Gamma/Delta";
 
             File multiDir = new File(outdir, "multi/" + subdirName);
             if (!multiDir.exists())
@@ -455,7 +473,13 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             {
                 try
                 {
-                    FileUtils.moveFile(f, new File(sampleDir, f.getName()));
+                    File dest = new File(sampleDir, f.getName());
+                    if (dest.exists())
+                    {
+                        dest.delete();
+                    }
+
+                    FileUtils.moveFile(f, dest);
                 }
                 catch (IOException e)
                 {
@@ -499,8 +523,22 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             // NOTE: only tag the vloupe file for a/b:
             else if (isPrimaryDir)
             {
-                output.addSequenceOutput(outputVloupe, rs.getName() + " 10x VLoupe", "10x VLoupe", rs.getRowId(), null, referenceGenome.getGenomeId(), null);
+                String versionString = "Version: " + getWrapper().getVersionString();
+                output.addSequenceOutput(outputVloupe, rs.getName() + " 10x VLoupe", VLOUPE_CATEGORY, rs.getRowId(), null, referenceGenome.getGenomeId(), versionString);
             }
+
+            output.addIntermediateFile(new File(sampleDir, "airr_rearrangement.tsv"));
+            output.addIntermediateFile(new File(sampleDir, "all_contig_annotations.bed"));
+            output.addIntermediateFile(new File(sampleDir, "all_contig_annotations.json"));
+            output.addIntermediateFile(new File(sampleDir, "cell_barcodes.json"));
+            output.addIntermediateFile(new File(sampleDir, "concat_ref.bam"));
+            output.addIntermediateFile(new File(sampleDir, "concat_ref.bam.bai"));
+            output.addIntermediateFile(new File(sampleDir, "concat_ref.fasta"));
+            output.addIntermediateFile(new File(sampleDir, "concat_ref.fasta.fai"));
+            output.addIntermediateFile(new File(sampleDir, "consensus.bam"));
+            output.addIntermediateFile(new File(sampleDir, "consensus.bam.bai"));
+            output.addIntermediateFile(new File(sampleDir, "donor_regions.fa"));
+            output.addIntermediateFile(new File(sampleDir, "vdj_contig_info.pb"));
 
             return csv;
         }
@@ -637,7 +675,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             }
         }
 
-        public void addMetrics(File outDir, AnalysisModel model) throws PipelineJobException
+        public void addMetrics(File outDir, AnalysisModel model, int dataId) throws PipelineJobException
         {
             getPipelineCtx().getLogger().debug("adding 10x metrics");
 
@@ -645,11 +683,6 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             if (!metrics.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + metrics.getPath());
-            }
-
-            if (model.getAlignmentFile() == null)
-            {
-                throw new PipelineJobException("model.getAlignmentFile() was null");
             }
 
             try (CSVReader reader = new CSVReader(Readers.getReader(metrics)))
@@ -675,7 +708,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 //NOTE: if this job errored and restarted, we may have duplicate records:
                 SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), model.getReadset());
                 filter.addCondition(FieldKey.fromString("analysis_id"), model.getRowId(), CompareType.EQUAL);
-                filter.addCondition(FieldKey.fromString("dataid"), model.getAlignmentFile(), CompareType.EQUAL);
+                filter.addCondition(FieldKey.fromString("dataid"), dataId, CompareType.EQUAL);
                 filter.addCondition(FieldKey.fromString("category"), "Cell Ranger VDJ", CompareType.EQUAL);
                 filter.addCondition(FieldKey.fromString("container"), getPipelineCtx().getJob().getContainer().getId(), CompareType.EQUAL);
                 TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), filter, null);
@@ -700,7 +733,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                     toInsert.put("created", new Date());
                     toInsert.put("readset", model.getReadset());
                     toInsert.put("analysis_id", model.getRowId());
-                    toInsert.put("dataid", model.getAlignmentFile());
+                    toInsert.put("dataid", dataId);
 
                     toInsert.put("category", "Cell Ranger VDJ");
 
@@ -743,15 +776,20 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 throw new PipelineJobException("Expected sequence outputs to be created");
             }
 
-            File html = outputFilesCreated.stream().filter(x -> "10x Run Summary".equals(x.getCategory())).findFirst().orElseThrow().getFile();
-
-            addMetrics(html.getParentFile(), model);
-
-            File bam = model.getAlignmentData().getFile();
-            if (!bam.exists())
+            SequenceOutputFile outputForData = outputFilesCreated.stream().filter(x -> VLOUPE_CATEGORY.equals(x.getCategory())).findFirst().orElse(null);
+            if (outputForData == null)
             {
-                getPipelineCtx().getLogger().warn("BAM not found, expected: " + bam.getPath());
+                outputForData = outputFilesCreated.stream().filter(x -> "10x Run Summary".equals(x.getCategory())).findFirst().orElseThrow();
             }
+
+            File outsDir = outputForData.getFile().getParentFile();
+            Integer dataId = outputForData.getDataId();
+            if (dataId == null)
+            {
+                throw new PipelineJobException("Unable to find dataId for output file");
+            }
+
+            addMetrics(outsDir, model, dataId);
         }
 
         private static final Pattern FILE_PATTERN = Pattern.compile("^(.+?)(_S[0-9]+){0,1}_L(.+?)_(R){0,1}([0-9])(_[0-9]+){0,1}(.*?)(\\.f(ast){0,1}q)(\\.gz)?$");
@@ -812,7 +850,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         try (BufferedReader reader = Readers.getReader(inputCsv))
         {
             String line;
-            int chimericCallsRecovered = 0;
+            Map<String, Integer> chimericCallsRecovered = new HashMap<>();
+            int restoredTRDVAV = 0;
 
             int lineIdx = 0;
             while ((line = reader.readLine()) != null)
@@ -830,6 +869,15 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
                 //Infer correct chain from the V, J and C genes
                 String[] tokens = line.split(",", -1);  // -1 used to preserve trailing empty strings
+
+                // Restore original value for TRD/TRA
+                if (tokens[6].contains("TRDV") && tokens[6].contains("/") && tokens[6].contains("AV"))
+                {
+                    restoredTRDVAV++;
+                    String[] split = tokens[6].split("/");
+                    tokens[6] = "TR" + split[1] + "/" + split[0].replaceAll("TR", "");
+                }
+
                 List<String> chains = new ArrayList<>();
                 String vGeneChain = null;
                 String jGeneChain = null;
@@ -863,24 +911,28 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 // Recover TRDV/TRAJ/TRAC:
                 if (uniqueChains.size() > 1)
                 {
+                    // Defer to the constant region, if known:
                     if (cGeneChain != null)
                     {
                         uniqueChains.clear();
                         uniqueChains.add(cGeneChain);
-                        chimericCallsRecovered++;
+                        String key = originalChain + "->" + cGeneChain + " (based on C-GENE)";
+                        chimericCallsRecovered.put(key, chimericCallsRecovered.getOrDefault(key, 0) + 1);
                     }
                     else if (uniqueChains.size() == 2)
                     {
                         if ("TRD".equals(vGeneChain) && "TRA".equals(jGeneChain))
                         {
                             uniqueChains.clear();
-                            chimericCallsRecovered++;
+                            String key = originalChain + "->" + vGeneChain + " (based on V-GENE)";
+                            chimericCallsRecovered.put(key, chimericCallsRecovered.getOrDefault(key, 0) + 1);
                             uniqueChains.add(vGeneChain);
                         }
                         if ("TRA".equals(vGeneChain) && "TRD".equals(jGeneChain))
                         {
                             uniqueChains.clear();
-                            chimericCallsRecovered++;
+                            String key = originalChain + "->" + vGeneChain + " (based on V-GENE)";
+                            chimericCallsRecovered.put(key, chimericCallsRecovered.getOrDefault(key, 0) + 1);
                             uniqueChains.add(vGeneChain);
                         }
                     }
@@ -893,7 +945,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 }
                 else
                 {
-                    log.error("Multiple chains detected [" + StringUtils.join(chains, ",")+ "], leaving original call alone: " + originalChain  + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
+                    log.info("Multiple chains detected [" + StringUtils.join(chains, ",")+ "], leaving original call alone: " + originalChain  + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
                 }
 
                 if (acceptableChains.contains(tokens[5]))
@@ -902,7 +954,32 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 }
             }
 
-            log.info("\tChimeric calls recovered: " + chimericCallsRecovered);
+            if (!chimericCallsRecovered.isEmpty())
+            {
+                log.info("\tChimeric calls recovered: ");
+                for (String key : chimericCallsRecovered.keySet())
+                {
+                    log.info("\t" + key + ": " + chimericCallsRecovered.get(key));
+                }
+            }
+
+            log.info("\tTRDV/AV calls restored: " + restoredTRDVAV);
+        }
+    }
+
+    public @Nullable String getVersionString()
+    {
+        try
+        {
+            String ret = executeWithOutput(Arrays.asList(getExe().getPath(), "--version"));
+
+            return ret.replaceAll("^cellranger ", "");
+        }
+        catch (PipelineJobException e)
+        {
+            getLogger().error("Unable to find cellRanger version");
+
+            return "Unknown";
         }
     }
 }

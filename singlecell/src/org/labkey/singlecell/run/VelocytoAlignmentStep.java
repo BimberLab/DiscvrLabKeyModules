@@ -67,6 +67,9 @@ public class VelocytoAlignmentStep extends AbstractCellRangerDependentStep
     public AlignmentOutput performAlignment(Readset rs, List<File> inputFastqs1, @Nullable List<File> inputFastqs2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
     {
         AlignmentOutputImpl output = new AlignmentOutputImpl();
+
+        setAlwaysRetainBam(true);
+
         File localBam = runCellRanger(output, rs, inputFastqs1, inputFastqs2, outputDirectory, referenceGenome, basename, readGroupId, platformUnit);
 
         File gtf = getPipelineCtx().getSequenceSupport().getCachedData(getProvider().getParameterByName("gtfFile").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class));

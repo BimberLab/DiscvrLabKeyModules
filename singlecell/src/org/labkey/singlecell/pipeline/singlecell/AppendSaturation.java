@@ -65,6 +65,11 @@ public class AppendSaturation extends AbstractCellMembraneStep
             {
                 if (!LOUPE_TYPE.isType(so.getFile()))
                 {
+                    if (!so.getFile().getName().endsWith("seurat.rds"))
+                    {
+                        throw new PipelineJobException("Unexpected file type: " + so.getFile().getPath());
+                    }
+
                     File meta = new File(so.getFile().getPath().replaceAll(".seurat.rds", ".cellBarcodes.csv"));
                     if (!meta.exists())
                     {

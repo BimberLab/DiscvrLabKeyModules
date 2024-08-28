@@ -94,7 +94,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
                 FastqToSamWrapper fq = new FastqToSamWrapper(getLogger());
                 fq.setOutputDir(alignedBam.getParentFile());
                 fq.setStringency(ValidationStringency.SILENT);
-                File unmappedReadsBam = fq.execute(pair.getKey(), pair.getValue(), SAMFileHeader.SortOrder.queryname, rg);
+                File unmappedReadsBam = fq.execute(pair.getKey(), pair.getValue(), SAMFileHeader.SortOrder.unsorted, rg);
                 if (!unmappedReadsBam.exists())
                 {
                     throw new PipelineJobException("BAM file not created, expected: " + unmappedReadsBam.getPath());
@@ -120,8 +120,6 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
 
             params.add("--UNMAPPED_BAM");
             params.add(finalUnmappedReadsBam.getPath());
-
-            //TODO: bisulfiteSequence
 
             params.add("--REFERENCE_SEQUENCE");
             params.add(refFasta.getPath());

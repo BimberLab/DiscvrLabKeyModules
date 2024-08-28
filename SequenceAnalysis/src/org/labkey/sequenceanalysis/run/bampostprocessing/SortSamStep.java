@@ -25,7 +25,7 @@ import java.io.IOException;
  */
 public class SortSamStep extends AbstractCommandPipelineStep<SortSamWrapper> implements BamProcessingStep
 {
-    public SortSamStep(PipelineStepProvider provider, PipelineContext ctx)
+    public SortSamStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new SortSamWrapper(ctx.getLogger()));
     }

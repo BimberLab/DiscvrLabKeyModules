@@ -964,8 +964,13 @@ public class CellHashingServiceImpl extends CellHashingService
                 put("maxValue", 1);
                 put("decimalPrecision", 2);
             }}, 0.2),
+            ToolParameterDescriptor.create("minAllowableDoubletRateFilter", "Min Allowable Doublet Rate Filter", "This applies to filtering algorithms based on their doublet rate. Typically, any algorithm with a high doublet rate (based on the theoretical rate) is discarded. This sets a minimum to the threshold used for triaging an algorithm", "ldk-numberfield", new JSONObject(){{
+                put("minValue", 0);
+                put("maxValue", 1);
+                put("decimalPrecision", 2);
+            }}, 0.2),
             ToolParameterDescriptor.create("skipNormalizationQc", "Skip Normalization QC", null, "checkbox", null, true),
-            ToolParameterDescriptor.create("doTSNE", "Do tSNE", "If true, tSNE will be performed as part of QC", "checkbox", null, true),
+            ToolParameterDescriptor.create("doTSNE", "Do tSNE", "If true, tSNE will be performed as part of QC", "checkbox", null, false),
             ToolParameterDescriptor.create("retainRawCountFile", "Retain Raw Counts File", null, "checkbox", null, false),
             ToolParameterDescriptor.create("failIfUnexpectedHtosFound", "Fail If Unexpected HTOs Found", "If checked and if there are any HTOs (testing all known HTOs) with counts above the HTOs expected in this experiment, then an error will be thrown", "checkbox", new JSONObject(){{
                 put("checked", true);
@@ -1263,7 +1268,24 @@ public class CellHashingServiceImpl extends CellHashingService
             String doTSNE = parameters.doTSNE ? "TRUE" : "FALSE";
             String h5String = h5 == null ? "" : ", rawFeatureMatrixH5 = '/work/" + h5.getName() + "'";
             String consensusMethodString = consensusMethodNames.isEmpty() ? "" : ", methodsForConsensus = c('" + StringUtils.join(consensusMethodNames, "','") + "')";
-            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "'" + h5String + ", molInfoFile = '/work/" + molInfo.getName() + "', reportFile = '/work/" + htmlFile.getName() + "', callFile = '/work/" + callsFile.getName() + "', metricsFile = '/work/" + metricsFile.getName() + "', rawCountsExport = '/work/" + countFile.getName() + "', cellbarcodeWhitelist  = " + cellbarcodeWhitelist + ", barcodeWhitelist = " + allowableBarcodeParam + ", title = '" + parameters.getReportTitle() + "', skipNormalizationQc = " + skipNormalizationQcString + ", methods = c('" + StringUtils.join(methodNames, "','") + "')" + consensusMethodString + ", keepMarkdown = " + keepMarkdown + ", minCountPerCell = " + (parameters.minCountPerCell == null ? "NULL" : parameters.minCountPerCell) + ", majorityConsensusThreshold = " + (parameters.majorityConsensusThreshold == null ? "NULL" : parameters.majorityConsensusThreshold) + ", callerDisagreementThreshold = " + (parameters.callerDisagreementThreshold == null ? "NULL" : parameters.callerDisagreementThreshold) + ", doTSNE = " + doTSNE + ")");
+            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "'" + h5String +
+                    ", molInfoFile = '/work/" + molInfo.getName() + "'" +
+                    ", reportFile = '/work/" + htmlFile.getName() + "'" +
+                    ", callFile = '/work/" + callsFile.getName() + "'" +
+                    ", metricsFile = '/work/" + metricsFile.getName() + "'" +
+                    ", rawCountsExport = '/work/" + countFile.getName() + "'" +
+                    ", cellbarcodeWhitelist  = " + cellbarcodeWhitelist +
+                    ", barcodeWhitelist = " + allowableBarcodeParam +
+                    ", title = '" + parameters.getReportTitle() + "'" +
+                    ", skipNormalizationQc = " + skipNormalizationQcString +
+                    ", methods = c('" + StringUtils.join(methodNames, "','") + "')" +
+                    consensusMethodString +
+                    ", keepMarkdown = " + keepMarkdown +
+                    ", minCountPerCell = " + (parameters.minCountPerCell == null ? "NULL" : parameters.minCountPerCell) +
+                    ", majorityConsensusThreshold = " + (parameters.majorityConsensusThreshold == null ? "NULL" : parameters.majorityConsensusThreshold) +
+                    ", callerDisagreementThreshold = " + (parameters.callerDisagreementThreshold == null ? "NULL" : parameters.callerDisagreementThreshold) +
+                    (parameters.minAllowableDoubletRateFilter == null ? "" : ", minAllowableDoubletRateFilter = " + parameters.minAllowableDoubletRateFilter) +
+                    ", doTSNE = " + doTSNE + ")");
             writer.println("print('Rmarkdown complete')");
 
         }

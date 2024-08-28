@@ -365,21 +365,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             getJob().getLogger().info("no analyses were selected");
         }
 
-        File bam = ExperimentService.get().getExpData(analysisModel.getAlignmentFile()).getFile();
-        if (bam == null)
-        {
-            getJob().getLogger().error("unable to find BAM, skipping");
-            return;
-        }
-
-        File refDB = ExperimentService.get().getExpData(analysisModel.getReferenceLibrary()).getFile();
-        if (refDB == null)
-        {
-            getJob().getLogger().error("unable to find reference fasta, skipping");
-            return;
-        }
-
-        getJob().getLogger().info("creating analysis record for BAM: " + bam.getName());
+        getJob().getLogger().info("creating analysis record");
         TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
         if (analysisModel.getRowId() == null)
         {
@@ -389,6 +375,27 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         else
         {
             getJob().getLogger().info("re-using existing analysis: " + analysisModel.getRowId());
+        }
+
+        File bam = analysisModel.getAlignmentFile() == null ? null : ExperimentService.get().getExpData(analysisModel.getAlignmentFile()).getFile();
+        if (bam == null)
+        {
+            if (discardBam)
+            {
+                getJob().getLogger().info("unable to find BAM, skipping");
+                return;
+            }
+            else
+            {
+                throw new PipelineJobException("Unable to find BAM");
+            }
+        }
+
+        File refDB = ExperimentService.get().getExpData(analysisModel.getReferenceLibrary()).getFile();
+        if (refDB == null)
+        {
+            getJob().getLogger().error("unable to find reference fasta, skipping");
+            return;
         }
 
         if (!discardBam)

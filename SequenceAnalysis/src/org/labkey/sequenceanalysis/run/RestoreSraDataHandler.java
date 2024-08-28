@@ -512,8 +512,11 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
             {
                 getLogger().info("Deleting extra files: ");
                 files.forEach(f -> {
-                    getLogger().info(f.getName());
-                    f.delete();
+                    if (f.exists())
+                    {
+                        getLogger().info(f.getName());
+                        f.delete();
+                    }
                 });
             }
 

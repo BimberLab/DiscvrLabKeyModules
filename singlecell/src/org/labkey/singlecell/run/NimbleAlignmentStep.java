@@ -67,6 +67,10 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
     public AlignmentOutput performAlignment(Readset rs, List<File> inputFastqs1, @Nullable List<File> inputFastqs2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
     {
         AlignmentOutputImpl output = new AlignmentOutputImpl();
+
+        // We need to ensure we keep the BAM for post-processing:
+        setAlwaysRetainBam(true);
+
         File localBam = runCellRanger(output, rs, inputFastqs1, inputFastqs2, outputDirectory, referenceGenome, basename, readGroupId, platformUnit);
 
         File crDir = new File(localBam.getPath().replace(".nimble.cellranger.bam", ""));

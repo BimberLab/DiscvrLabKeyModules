@@ -203,6 +203,8 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
             title: 'Add Steps',
             border: false,
             width: 800,
+            autoScroll: true,
+            maxHeight: '90%',
             items: items,
             buttons: [{
                 text: 'Done',

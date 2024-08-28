@@ -28,6 +28,7 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.TaskFactory;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.TaskPipeline;
+import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.pipeline.file.AbstractFileAnalysisJob;
 import org.labkey.api.pipeline.file.FileAnalysisJobSupport;
 import org.labkey.api.reader.Readers;
@@ -112,7 +113,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
     protected boolean shouldAllowArchivedReadsets()
     {
-        return false;
+        return ("true".equals(_params.optString("doSraDownloadIfNeeded")));
     }
 
     public SequenceJob(String providerName, Container c, User u, @Nullable String jobName, PipeRoot pipeRoot, JSONObject params, TaskId taskPipelineId, String folderPrefix) throws IOException
@@ -609,5 +610,35 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
             SequenceJob deserializedJob = (SequenceJob)readFromFile(testFile);
             assertNull("Support not null after deserialize", deserializedJob._support);
         }
+    }
+
+    public File getLocationForCachedInputs(WorkDirectory wd, boolean createIfDoesntExist)
+    {
+        File ret;
+
+        String localDir = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("LOCAL_DATA_CACHE_DIR");
+        if (localDir == null)
+        {
+            localDir = StringUtils.trimToNull(System.getenv("LOCAL_DATA_CACHE_DIR"));
+        }
+
+        if (localDir == null)
+        {
+            ret = new File(wd.getDir(), "cachedData");
+        }
+        else
+        {
+            String guid = getParentGUID() == null ? getJobGUID() : getParentGUID();
+            ret = new File(localDir, guid);
+
+            getLogger().debug("Using local directory to cache data: " + ret.getPath());
+        }
+
+        if (createIfDoesntExist && !ret.exists())
+        {
+            ret.mkdirs();
+        }
+
+        return ret;
     }
 }
