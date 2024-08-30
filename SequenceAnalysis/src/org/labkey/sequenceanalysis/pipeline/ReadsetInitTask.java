@@ -505,10 +505,10 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
             {
                 Map<String, File> existingFileNames = new HashMap<>();
                 preexistingReadData.forEach(rd -> {
-                    existingFileNames.put(rd.getFile1().getName(), rd.getFile1());
+                    existingFileNames.put(rd.getFile1(true).getName(), rd.getFile1(true));
                     if (rd.getFile2() != null)
                     {
-                        existingFileNames.put(rd.getFile2().getName(), rd.getFile2());
+                        existingFileNames.put(rd.getFile2(true).getName(), rd.getFile2(true));
                     }
                 });
 
