@@ -218,7 +218,9 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
             for (SequenceReadsetImpl rs : readsets)
             {
                 getJob().getLogger().debug("caching readset: " + rs.getName() + " with " + rs.getReadData().size() + " files");
-                getPipelineJob().getSequenceSupport().cacheReadset(rs);
+
+                // NOTE: allow archived data
+                getPipelineJob().getSequenceSupport().cacheReadset(rs, true);
             }
         }
         catch (IOException e)

@@ -626,7 +626,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
                     if (rd.isEmpty())
                     {
-                        getJob().getLogger().warn("no file groups found ofr rs: " + rs.getName() + " with fileGroupId: " + rs.getFileSetName());
+                        getJob().getLogger().warn("no file groups found for readset: " + rs.getName() + " with fileGroupId: " + rs.getFileSetName());
                     }
 
                     rs.setReadData(rd);
