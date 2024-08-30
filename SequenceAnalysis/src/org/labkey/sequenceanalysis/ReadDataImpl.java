@@ -284,13 +284,16 @@ public class ReadDataImpl implements ReadData
                 ret = d.getFile();
             }
 
-            if (ret != null && !ret.exists())
+            if (!isArchived() && ret != null && !ret.exists())
             {
                 throw new IllegalArgumentException("File does not exist: " + ret.getPath());
             }
         }
 
-        _cachedFiles.put(fileIdx, ret);
+        if (!isArchived())
+        {
+            _cachedFiles.put(fileIdx, ret);
+        }
 
         return ret;
     }
