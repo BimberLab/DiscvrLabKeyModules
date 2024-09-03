@@ -1,6 +1,0 @@
-<customView xmlns="http://labkey.org/data/xml/queryCustomView" canOverride="true">
-    <sorts>
-        <sort column="isComplete" descending="false"/>
-        <sort column="sortPlateId"/>
-    </sorts>
-</customView>

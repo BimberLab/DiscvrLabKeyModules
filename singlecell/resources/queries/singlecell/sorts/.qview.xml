@@ -17,7 +17,6 @@
         <column name="comment" />
         <column name="status" />
         <column name="workbook" />
-        <column name="processingRequested" />
     </columns>
     <sorts>
         <sort column="plateId" descending="false"/>
