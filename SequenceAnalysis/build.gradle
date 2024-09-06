@@ -185,19 +185,15 @@ if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null &
             })
             task.destinationDir = configDir
 
-            if (BuildUtils.useEmbeddedTomcat(project)) {
-                rootProject.allprojects {
-                    task.mustRunAfter tasks.withType(DoThenSetup)
-                }
+            rootProject.allprojects {
+                task.mustRunAfter tasks.withType(DoThenSetup)
             }
     }
     testProject.tasks.named("startTomcat").configure {
         dependsOn(createPipelineConfigTask)
-        if (BuildUtils.useEmbeddedTomcat(project)) {
-            it.doFirst {
-                new File(new File(BuildUtils.getEmbeddedConfigPath(project)), "application.properties")
-                        << "\ncontext.pipelineConfig=${configDir.getAbsolutePath().replace("\\", "\\\\")}"
-            }
+        it.doFirst {
+            new File(new File(BuildUtils.getEmbeddedConfigPath(project)), "application.properties")
+                    << "\ncontext.pipelineConfig=${configDir.getAbsolutePath().replace("\\", "\\\\")}"
         }
     }
 }
