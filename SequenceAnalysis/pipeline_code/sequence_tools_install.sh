@@ -457,12 +457,12 @@ then
     rm -Rf $LKTOOLS_DIR/samtools
     rm -Rf $LKTOOLS_DIR/bcftools
 
-    wget $WGET_OPTS https://github.com/samtools/samtools/releases/download/1.16.1/samtools-1.16.1.tar.bz2
-    bunzip2 samtools-1.16.1.tar.bz2
-    tar -xf samtools-1.16.1.tar
+    wget $WGET_OPTS https://github.com/samtools/samtools/releases/download/1.20/samtools-1.20.tar.bz2
+    bunzip2 samtools-1.20.tar.bz2
+    tar -xf samtools-1.20.tar
     echo "Compressing TAR"
-    bzip2 samtools-1.16.1.tar
-    cd samtools-1.16.1
+    bzip2 samtools-1.20.tar
+    cd samtools-1.20
     ./configure
     make
     install ./samtools ${LKTOOLS_DIR}/samtools
@@ -519,13 +519,13 @@ then
     rm -Rf $LKTOOLS_DIR/tabix
     rm -Rf $LKTOOLS_DIR/bgzip
 
-    wget $WGET_OPTS https://github.com/samtools/htslib/releases/download/1.16/htslib-1.16.tar.bz2
-    bunzip2 htslib-1.16.tar.bz2
-    tar -xf htslib-1.16.tar
+    wget $WGET_OPTS https://github.com/samtools/htslib/releases/download/1.20/htslib-1.20.tar.bz2
+    bunzip2 htslib-1.20.tar.bz2
+    tar -xf htslib-1.20.tar
     echo "Compressing TAR"
-    bzip2 htslib-1.16.tar
-    chmod 755 htslib-1.16
-    cd htslib-1.16
+    bzip2 htslib-1.20.tar
+    chmod 755 htslib-1.20
+    cd htslib-1.20
     ./configure
     make
 
