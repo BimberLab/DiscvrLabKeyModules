@@ -6,6 +6,7 @@ import {
     getGridNumericOperators,
     GridCellParams,
     GridColDef,
+    GridColType,
     GridComparatorFn,
     GridFilterItem,
     GridFilterOperator
@@ -506,7 +507,7 @@ export class FieldModel {
         return this.label ?? this.name
     }
 
-    getMuiType(): string {
+    getMuiType(): GridColType {
         let muiFieldType;
 
         switch (this.type) {

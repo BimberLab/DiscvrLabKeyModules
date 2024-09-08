@@ -10,7 +10,7 @@ import { TabixIndexedFile } from '@gmod/tabix'
 import VcfParser from '@gmod/vcf'
 import { VcfFeature } from '@jbrowse/plugin-variants';
 
-export default class extends BaseFeatureDataAdapter {
+export default class VcfTabixAdapter extends BaseFeatureDataAdapter {
   private configured?: Promise<{
     vcf: TabixIndexedFile
     parser: VcfParser
@@ -28,8 +28,7 @@ export default class extends BaseFeatureDataAdapter {
       filehandle,
       csiFilehandle: isCSI ? openLocation(location, pm) : undefined,
       tbiFilehandle: !isCSI ? openLocation(location, pm) : undefined,
-      chunkCacheSize: 50 * 2 ** 20,
-      chunkSizeLimit: 1000000000,
+      chunkCacheSize: 50 * 2 ** 20
     })
 
     const header = await vcf.getHeader()
