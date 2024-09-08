@@ -710,8 +710,8 @@ export const multiModalOperator = (operator: GridFilterOperator) => {
             return innerFilterFn;
         }
 
-        return (params: GridCellParams) => {
-            let cellValue = parseCellValue(params.value)
+        return (value) => {
+            let cellValue = parseCellValue(value)
 
             switch(filterItem.operator) {
                 case "!=":

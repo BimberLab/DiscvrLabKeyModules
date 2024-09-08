@@ -1431,8 +1431,8 @@ public class JBrowseTest extends BaseWebDriverTest
         // Test filtering
         waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
 
-        waitAndClick(Locator.tagWithClass("select", "MuiNativeSelect-select").notHidden().withChild(Locator.tagWithText("option", "Chromosome")));
-        waitAndClick(Locator.tagWithAttributeContaining("option", "value", "ref"));
+        waitAndClick(Locator.tagWithClass("div", "MuiSelect-select").notHidden().withText("Chromosome"));
+        waitAndClick(Locator.tagWithAttributeContaining("li", "data-value", "ref"));
 
         Locator valueSelector = Locator.tagWithAttributeContaining("input", "placeholder", "Filter value");
         waitAndClick(valueSelector);
@@ -1570,8 +1570,8 @@ public class JBrowseTest extends BaseWebDriverTest
         // Test filtering AF with wrapped comparators
         waitAndClick(Locator.tagWithAttributeContaining("button", "aria-label", "Show filters"));
 
-        waitAndClick(Locator.tagWithClass("select", "MuiNativeSelect-select").notHidden().withChild(Locator.tagWithText("option", "Chromosome")));
-        waitAndClick(Locator.tagWithAttributeContaining("option", "value", "AF"));
+        waitAndClick(Locator.tagWithClass("div", "MuiSelect-select").notHidden().withText("Chromosome"));
+        waitAndClick(Locator.tagWithAttributeContaining("li", "data-value", "AF"));
 
         Locator valueSelector = Locator.tagWithAttributeContaining("input", "placeholder", "Filter value");
         waitAndClick(valueSelector);
