@@ -341,8 +341,9 @@ public class NimbleHelper
             {
                 config.put("num_mismatches", 5);
                 config.put("intersect_level", 0);
+                // NOTE: score_percent should almost always supersede this value
                 config.put("score_threshold", 45);
-                config.put("score_percent", 0.45);
+                config.put("score_percent", 0.75);
                 config.put("score_filter", 25);
                 //discard_multiple_matches: false
                 //discard_multi_hits: ?
