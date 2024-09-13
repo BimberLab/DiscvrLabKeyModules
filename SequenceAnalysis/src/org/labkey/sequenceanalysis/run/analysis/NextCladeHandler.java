@@ -95,11 +95,11 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         }
 
         @Override
-        public void complete(PipelineJob job, List<SequenceOutputFile> inputFiles, List<SequenceOutputFile> outputsCreated, SequenceAnalysisJobSupport support) throws PipelineJobException
+        public void complete(JobContext ctx, List<SequenceOutputFile> inputFiles, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
         {
             Map<Integer, SequenceOutputFile> readsetToInput = inputFiles.stream().collect(Collectors.toMap(SequenceOutputFile::getReadset, x -> x));
 
-            job.getLogger().info("Parsing NextClade JSON:");
+            ctx.getJob().getLogger().info("Parsing NextClade JSON:");
             for (SequenceOutputFile so : outputsCreated)
             {
                 if (!NEXTCLADE_JSON.equals(so.getCategory()))
@@ -118,7 +118,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
                     throw new PipelineJobException("Unable to find parent for output: " + so.getRowid());
                 }
 
-                processAndImportNextCladeAa(job, so.getFile(), parent.getAnalysis_id(), so.getLibrary_id(), so.getDataId(), so.getReadset(), parent.getFile(), true);
+                processAndImportNextCladeAa(ctx.getJob(), so.getFile(), parent.getAnalysis_id(), so.getLibrary_id(), so.getDataId(), so.getReadset(), parent.getFile(), true);
             }
         }
 
