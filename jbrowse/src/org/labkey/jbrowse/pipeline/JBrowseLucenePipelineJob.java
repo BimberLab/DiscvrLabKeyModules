@@ -18,6 +18,7 @@ import org.labkey.api.pipeline.TaskPipeline;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.DISCVRSeqRunner;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
@@ -58,7 +59,7 @@ public class JBrowseLucenePipelineJob extends PipelineJob
         _infoFields = infoFields;
         _allowLenientLuceneProcessing = allowLenientLuceneProcessing;
 
-        setLogFile(AssayFileWriter.findUniqueFileName("jbrowse-lucene" + new GUID() + ".log", JBrowseManager.get().getBaseDir(c, true).toPath()));
+        setLogFile(AssayFileWriter.findUniqueFileName("jbrowse-lucene" + new GUID() + ".log", JBrowseManager.get().getBaseDir(c, true)));
     }
 
     public static class JBrowseLucenePipelineProvider extends PipelineProvider
@@ -262,6 +263,6 @@ public class JBrowseLucenePipelineJob extends PipelineJob
 
     public static File getFieldListFile(File indexDir)
     {
-        return new File(indexDir, "fieldList.txt");
+        return FileUtil.appendName(indexDir, "fieldList.txt");
     }
 }

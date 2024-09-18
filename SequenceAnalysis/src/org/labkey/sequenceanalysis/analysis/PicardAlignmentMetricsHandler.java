@@ -171,7 +171,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                     File outputDir = ((SequenceOutputHandlerJob)job).getWebserverDir(false);
                     List<File> metricsFiles = new ArrayList<>();
 
-                    File mf = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".summary.metrics");
+                    File mf = FileUtil.appendName(outputDir, FileUtil.getBaseName(o.getFile()) + ".summary.metrics");
                     if (mf.exists())
                     {
                         metricsFiles.add(mf);
@@ -181,7 +181,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                         throw new PipelineJobException("Missing file: " + mf.getPath());
                     }
 
-                    File mf2 = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics");
+                    File mf2 = FileUtil.appendName(outputDir, FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics");
                     if (mf2.exists())
                     {
                         metricsFiles.add(mf2);
@@ -199,7 +199,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                         }
                     }
 
-                    File mf3 = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".wgs.metrics");
+                    File mf3 = FileUtil.appendName(outputDir, FileUtil.getBaseName(o.getFile()) + ".wgs.metrics");
                     if (mf3.exists())
                     {
                         metricsFiles.add(mf3);
@@ -209,7 +209,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                         throw new PipelineJobException("Missing file: " + mf3.getPath());
                     }
 
-                    File mf4 = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".wgsNonZero.metrics");
+                    File mf4 = FileUtil.appendName(outputDir, FileUtil.getBaseName(o.getFile()) + ".wgsNonZero.metrics");
                     if (mf4.exists())
                     {
                         metricsFiles.add(mf4);
@@ -284,7 +284,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                 {
                     job.getLogger().info("calculating summary metrics");
                     job.setStatus(PipelineJob.TaskStatus.running, "CALCULATING SUMMARY METRICS");
-                    File metricsFile = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".summary.metrics");
+                    File metricsFile = FileUtil.appendName(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".summary.metrics");
                     AlignmentSummaryMetricsWrapper wrapper = new AlignmentSummaryMetricsWrapper(job.getLogger());
                     wrapper.executeCommand(o.getFile(), ctx.getSequenceSupport().getCachedGenome(o.getLibrary_id()).getWorkingFastaFile(), metricsFile);
                 }
@@ -293,7 +293,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                 {
                     job.getLogger().info("calculating wgs metrics");
                     job.setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS");
-                    File wgsMetricsFile = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".wgs.metrics");
+                    File wgsMetricsFile = FileUtil.appendName(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".wgs.metrics");
                     CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(job.getLogger());
                     wgsWrapper.executeCommand(o.getFile(), wgsMetricsFile, ctx.getSequenceSupport().getCachedGenome(o.getLibrary_id()).getWorkingFastaFile());
                 }
@@ -302,7 +302,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                 {
                     job.getLogger().info("calculating wgs metrics over non zero positions");
                     job.setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS");
-                    File wgsMetricsFile = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".wgsNonZero.metrics");
+                    File wgsMetricsFile = FileUtil.appendName(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".wgsNonZero.metrics");
                     CollectWgsMetricsWithNonZeroCoverageWrapper wgsWrapper = new CollectWgsMetricsWithNonZeroCoverageWrapper(job.getLogger());
                     wgsWrapper.executeCommand(o.getFile(), wgsMetricsFile, ctx.getSequenceSupport().getCachedGenome(o.getLibrary_id()).getWorkingFastaFile());
                 }
@@ -311,8 +311,8 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                 {
                     job.getLogger().info("calculating insert size metrics");
                     job.setStatus(PipelineJob.TaskStatus.running, "CALCULATING INSERT SIZE METRICS");
-                    File metricsFile = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics");
-                    File metricsHistogram = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics.pdf");
+                    File metricsFile = FileUtil.appendName(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics");
+                    File metricsHistogram = FileUtil.appendName(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".insertsize.metrics.pdf");
                     CollectInsertSizeMetricsWrapper wrapper = new CollectInsertSizeMetricsWrapper(job.getLogger());
                     wrapper.executeCommand(o.getFile(), metricsFile, metricsHistogram, ctx.getSequenceSupport().getCachedGenome(o.getLibrary_id()).getWorkingFastaFile());
                 }
@@ -323,7 +323,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                     job.setStatus(PipelineJob.TaskStatus.running, "RUNNING MARKDUPLICATES");
                     MarkDuplicatesWrapper wrapper = new MarkDuplicatesWrapper(job.getLogger());
                     File metricsFile = wrapper.getMetricsFile(o.getFile());
-                    File tempBam = new File(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".markDuplicates.bam");
+                    File tempBam = FileUtil.appendName(ctx.getOutputDir(), FileUtil.getBaseName(o.getFile()) + ".markDuplicates.bam");
                     ctx.getFileManager().addIntermediateFile(tempBam);
                     ctx.getFileManager().addIntermediateFile(SequenceUtil.getExpectedIndex(tempBam));
 

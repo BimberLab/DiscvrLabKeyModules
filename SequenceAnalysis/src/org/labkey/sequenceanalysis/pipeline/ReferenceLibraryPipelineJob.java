@@ -2,12 +2,14 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.vfs2.FileObject;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.files.virtual.AuthorizedFileSystem;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
@@ -107,7 +109,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
 
     public File getSerializedLibraryMembersFile()
     {
-        return new File(getDataDirectory(), FileUtil.getBaseName(getLogFile()) + ".json");
+        return FileUtil.appendName(getDataDirectory(), FileUtil.getBaseName(getLogFile()) + ".json");
     }
 
     //for recreating an existing library
@@ -193,7 +195,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     }
 
     @Override
-    protected File createLocalDirectory(PipeRoot pipeRoot)
+    protected FileObject createLocalDirectory(PipeRoot pipeRoot)
     {
         if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
         {
@@ -211,7 +213,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
             outputDir.mkdirs();
         }
 
-        return outputDir;
+        return AuthorizedFileSystem.create(outputDir,true,true).getRoot();
     }
 
     @Override

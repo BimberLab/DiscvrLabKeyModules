@@ -17,6 +17,7 @@
 package org.labkey.blast;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.vfs2.FileObject;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.labkey.api.action.AbstractFileUploadAction;
@@ -215,8 +216,8 @@ public class BLASTController extends SpringActionController
             AssayFileWriter writer = new AssayFileWriter();
             try
             {
-                File targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                return AssayFileWriter.findUniqueFileName(filename, targetDirectory);
+                FileObject targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
+                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).getPath().toFile();
             }
             catch (ExperimentException e)
             {
@@ -263,14 +264,14 @@ public class BLASTController extends SpringActionController
                     AssayFileWriter writer = new AssayFileWriter();
                     try
                     {
-                        File targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                        File input = AssayFileWriter.findUniqueFileName("blast", targetDirectory);
-                        input.createNewFile();
-                        try (PrintWriter fw = PrintWriters.getPrintWriter(input))
+                        FileObject targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
+                        FileObject input = AssayFileWriter.findUniqueFileName("blast", targetDirectory);
+                        input.createFile();
+                        try (PrintWriter fw = PrintWriters.getPrintWriter(input.getContent().getOutputStream()))
                         {
                             fw.write(form.getQuery());
                         }
-                        inputFiles.add(input);
+                        inputFiles.add(input.getPath().toFile());
                     }
                     catch (ExperimentException e)
                     {
