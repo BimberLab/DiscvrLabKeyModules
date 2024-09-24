@@ -776,20 +776,26 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 throw new PipelineJobException("Expected sequence outputs to be created");
             }
 
+            File folderWithMetricFile;
             SequenceOutputFile outputForData = outputFilesCreated.stream().filter(x -> VLOUPE_CATEGORY.equals(x.getCategory())).findFirst().orElse(null);
             if (outputForData == null)
             {
                 outputForData = outputFilesCreated.stream().filter(x -> "10x Run Summary".equals(x.getCategory())).findFirst().orElseThrow();
+                folderWithMetricFile = outputForData.getFile().getParentFile();
+            }
+            else
+            {
+                // The metric file is one level above the vloupe, but in the same folder as HTML
+                folderWithMetricFile = outputForData.getFile().getParentFile().getParentFile();
             }
 
-            File outsDir = outputForData.getFile().getParentFile();
             Integer dataId = outputForData.getDataId();
             if (dataId == null)
             {
                 throw new PipelineJobException("Unable to find dataId for output file");
             }
 
-            addMetrics(outsDir, model, dataId);
+            addMetrics(folderWithMetricFile, model, dataId);
         }
 
         private static final Pattern FILE_PATTERN = Pattern.compile("^(.+?)(_S[0-9]+){0,1}_L(.+?)_(R){0,1}([0-9])(_[0-9]+){0,1}(.*?)(\\.f(ast){0,1}q)(\\.gz)?$");

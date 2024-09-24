@@ -161,7 +161,7 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
         }
 
         @Override
-        public void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated, SequenceAnalysisJobSupport support) throws PipelineJobException
+        public void complete(JobContext ctx, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
         {
             List<Map<String, Object>> toUpdate = new ArrayList<>();
             List<Map<String, Object>> oldKeys = inputs.stream().map(x -> {
@@ -175,11 +175,11 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
                 File cram = new File(so.getFile().getParentFile(), FileUtil.getBaseName(so.getFile()) + ".cram");
                 checkCramAndIndex(so);
 
-                job.getLogger().info("Updating ExpData record with new filepath: " + cram.getPath());
+                ctx.getJob().getLogger().info("Updating ExpData record with new filepath: " + cram.getPath());
                 ExpData d = so.getExpData();
                 d.setDataFileURI(cram.toURI());
                 d.setName(cram.getName());
-                d.save(job.getUser());
+                d.save(ctx.getJob().getUser());
 
                 if (so.getName().contains(".bam"))
                 {
@@ -194,8 +194,8 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
 
             try
             {
-                Container target = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
-                QueryService.get().getUserSchema(job.getUser(), target, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES).getUpdateService().updateRows(job.getUser(), target, toUpdate, oldKeys, null, null);
+                Container target = ctx.getJob().getContainer().isWorkbook() ? ctx.getJob().getContainer().getParent() : ctx.getJob().getContainer();
+                QueryService.get().getUserSchema(ctx.getJob().getUser(), target, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES).getUpdateService().updateRows(ctx.getJob().getUser(), target, toUpdate, oldKeys, null, null);
             }
             catch (QueryUpdateServiceException | InvalidKeyException | BatchValidationException | SQLException e)
             {

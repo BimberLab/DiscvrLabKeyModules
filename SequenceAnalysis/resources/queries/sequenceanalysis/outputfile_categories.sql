@@ -9,19 +9,19 @@ FROM sequenceanalysis.outputfiles
 
 UNION ALL
 
-SELECT 'VCF File'
+SELECT 'VCF File' as category
 
 UNION ALL
 
-SELECT 'BAM File'
+SELECT 'BAM File' as category
 
 UNION ALL
 
-SELECT 'BED File'
+SELECT 'BED File' as category
 
 UNION ALL
 
-SELECT 'gVCF File'
+SELECT 'gVCF File' as category
 
 ) t
 

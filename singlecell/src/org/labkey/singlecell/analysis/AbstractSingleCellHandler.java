@@ -271,29 +271,36 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
         }
 
         @Override
-        public void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated, SequenceAnalysisJobSupport support) throws PipelineJobException
+        public void complete(JobContext ctx, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
         {
             for (SequenceOutputFile so : outputsCreated)
             {
                 if ("Seurat Cell Hashing Calls".equals(so.getCategory()))
                 {
-                    job.getLogger().info("Adding metrics for output: " + so.getName());
-                    CellHashingService.get().processMetrics(so, job, true);
+                    ctx.getJob().getLogger().info("Adding metrics for output: " + so.getName());
+                    CellHashingService.get().processMetrics(so, ctx.getJob(), true);
                 }
 
                 if (SEURAT_PROTOTYPE.equals(so.getCategory()))
                 {
                     //NOTE: upstream we enforce one dataset per job, so we can safely assume this is the only dataset here:
-                    File metricFile = new File(job.getLogFile().getParentFile(), "seurat.metrics.txt");
+                    File metricFile = new File(ctx.getJob().getLogFile().getParentFile(), "seurat.metrics.txt");
                     if (metricFile.exists())
                     {
-                        processMetrics(so, job, metricFile);
+                        processMetrics(so, ctx.getJob(), metricFile);
                     }
                     else
                     {
-                        job.getLogger().info("Metrics file not found, skipping");
+                        ctx.getJob().getLogger().info("Metrics file not found, skipping");
                     }
                 }
+            }
+
+            List<PipelineStepCtx<SingleCellStep>> steps = SequencePipelineService.get().getSteps(ctx.getJob(), SingleCellStep.class);
+            for (PipelineStepCtx<SingleCellStep> stepCtx : steps)
+            {
+                SingleCellStep step = stepCtx.getProvider().create(ctx);
+                step.complete(ctx, inputs, outputsCreated);
             }
         }
 

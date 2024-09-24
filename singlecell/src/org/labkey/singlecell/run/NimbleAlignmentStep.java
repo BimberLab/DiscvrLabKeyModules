@@ -28,7 +28,7 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
     public static final String ALIGN_OUTPUT = "alignmentOutput";
     public static final String STRANDEDNESS = "strandedness";
 
-    public NimbleAlignmentStep(AlignmentStepProvider provider, PipelineContext ctx, CellRangerWrapper wrapper)
+    public NimbleAlignmentStep(AlignmentStepProvider<?> provider, PipelineContext ctx, CellRangerWrapper wrapper)
     {
         super(provider, ctx, wrapper);
     }
