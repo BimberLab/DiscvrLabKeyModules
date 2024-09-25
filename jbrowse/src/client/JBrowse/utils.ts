@@ -6,6 +6,7 @@ import {
     getGridNumericOperators,
     GridCellParams,
     GridColDef,
+    GridColType,
     GridComparatorFn,
     GridFilterItem,
     GridFilterOperator
@@ -506,7 +507,7 @@ export class FieldModel {
         return this.label ?? this.name
     }
 
-    getMuiType(): string {
+    getMuiType(): GridColType {
         let muiFieldType;
 
         switch (this.type) {
@@ -709,8 +710,8 @@ export const multiModalOperator = (operator: GridFilterOperator) => {
             return innerFilterFn;
         }
 
-        return (params: GridCellParams) => {
-            let cellValue = parseCellValue(params.value)
+        return (value) => {
+            let cellValue = parseCellValue(value)
 
             switch(filterItem.operator) {
                 case "!=":

@@ -722,14 +722,14 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         }
 
         @Override
-        public void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated, SequenceAnalysisJobSupport support) throws PipelineJobException
+        public void complete(JobContext ctx, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
         {
-            SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(job), getPipelineJob(job).getDataDirectory());
-            List<PipelineStepCtx<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(job, VariantProcessingStep.class);
+            SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(ctx.getJob()), getPipelineJob(ctx.getJob()).getDataDirectory());
+            List<PipelineStepCtx<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(ctx.getJob(), VariantProcessingStep.class);
             for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
             {
                 VariantProcessingStep step = stepCtx.getProvider().create(taskHelper);
-                step.complete(job, inputs, outputsCreated, support);
+                step.complete(ctx.getJob(), inputs, outputsCreated, ctx.getSequenceSupport());
             }
         }
     }

@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.SamtoolsIndexer;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
 import org.labkey.sequenceanalysis.pipeline.ReblockGvcfHandler;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -56,6 +57,13 @@ public class HaplotypeCallerWrapper extends AbstractGatk4Wrapper
         if (options != null)
         {
             args.addAll(options);
+        }
+
+        Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
+        if (maxThreads != null)
+        {
+            args.add("--native-pair-hmm-threads");
+            args.add(maxThreads.toString());
         }
 
         args.add("-ERC");

@@ -126,9 +126,9 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
         }
 
         @Override
-        public void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated, SequenceAnalysisJobSupport support) throws PipelineJobException
+        public void complete(JobContext ctx, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
         {
-            if (!(job instanceof SequenceOutputHandlerJob shj))
+            if (!(ctx.getJob() instanceof SequenceOutputHandlerJob shj))
             {
                 throw new IllegalStateException("Expected job to be a SequenceOutputHandlerJob");
             }
@@ -144,10 +144,10 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                 Integer analysisId = o.getAnalysis_id();
                 if (analysisId == null)
                 {
-                    job.getLogger().warn("no analysis Id for file, attempting to find this job: " + o.getName());
-                    PipelineStatusFile sf = PipelineService.get().getStatusFile(job.getJobGUID());
+                    ctx.getJob().getLogger().warn("no analysis Id for file, attempting to find this job: " + o.getName());
+                    PipelineStatusFile sf = PipelineService.get().getStatusFile(ctx.getJob().getJobGUID());
 
-                    TableSelector ts = new TableSelector(QueryService.get().getUserSchema(job.getUser(), job.getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_ANALYSES), PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("runid/JobId"), sf.getRowId()), null);
+                    TableSelector ts = new TableSelector(QueryService.get().getUserSchema(ctx.getJob().getUser(), ctx.getJob().getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_ANALYSES), PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("runid/JobId"), sf.getRowId()), null);
                     if (ts.exists())
                     {
                         analysisId = ts.getObject(Integer.class);
@@ -160,15 +160,15 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
 
                 if (o.getLibrary_id() == null)
                 {
-                    job.getLogger().warn("no genome associated with file: " + o.getName());
+                    ctx.getJob().getLogger().warn("no genome associated with file: " + o.getName());
                     continue;
                 }
 
-                AnalysisModel m = AnalysisModelImpl.getFromDb(analysisId, job.getUser());
+                AnalysisModel m = AnalysisModelImpl.getFromDb(analysisId, ctx.getJob().getUser());
                 if (m != null)
                 {
-                    job.getLogger().warn("processing analysis: " + m.getRowId());
-                    File outputDir = ((SequenceOutputHandlerJob)job).getWebserverDir(false);
+                    ctx.getJob().getLogger().warn("processing analysis: " + m.getRowId());
+                    File outputDir = ((SequenceOutputHandlerJob)ctx.getJob()).getWebserverDir(false);
                     List<File> metricsFiles = new ArrayList<>();
 
                     File mf = new File(outputDir, FileUtil.getBaseName(o.getFile()) + ".summary.metrics");
@@ -191,7 +191,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                         // This output is only created for paired data:
                         if (o.getReadset() != null)
                         {
-                            Readset rs = SequenceAnalysisService.get().getReadset(o.getReadset(), job.getUser());
+                            Readset rs = SequenceAnalysisService.get().getReadset(o.getReadset(), ctx.getJob().getUser());
                             if (rs.getReadData().stream().filter(rd -> rd.getFileId2() != null).count() > 0)
                             {
                                 throw new PipelineJobException("Missing file: " + mf2.getPath());
@@ -219,7 +219,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                         throw new PipelineJobException("Missing file: " + mf4.getPath());
                     }
 
-                    File mf5 = new MarkDuplicatesWrapper(job.getLogger()).getMetricsFile(o.getFile());
+                    File mf5 = new MarkDuplicatesWrapper(ctx.getJob().getLogger()).getMetricsFile(o.getFile());
                     if (mf5.exists())
                     {
                         metricsFiles.add(mf5);
@@ -232,23 +232,23 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                     TableInfo ti = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
                     for (File f : metricsFiles)
                     {
-                        List<Map<String, Object>> lines = PicardMetricsUtil.processFile(f, job.getLogger());
+                        List<Map<String, Object>> lines = PicardMetricsUtil.processFile(f, ctx.getJob().getLogger());
                         for (Map<String, Object> row : lines)
                         {
                             row.put("container", o.getContainer());
-                            row.put("createdby", job.getUser().getUserId());
+                            row.put("createdby", ctx.getJob().getUser().getUserId());
                             row.put("created", new Date());
                             row.put("readset", m.getReadset());
                             row.put("analysis_id", m.getRowId());
                             row.put("dataid", m.getAlignmentFile());
 
-                            Table.insert(job.getUser(), ti, row);
+                            Table.insert(ctx.getJob().getUser(), ti, row);
                         }
                     }
                 }
                 else
                 {
-                    job.getLogger().warn("Analysis Id " + o.getAnalysis_id() + " not found for file: " + o.getName());
+                    ctx.getJob().getLogger().warn("Analysis Id " + o.getAnalysis_id() + " not found for file: " + o.getName());
                 }
             }
         }

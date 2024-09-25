@@ -150,7 +150,9 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         }
 
         //run final handler
-        getPipelineJob().getHandler().getProcessor().complete(getPipelineJob(), getPipelineJob().getFiles(), outputsCreated, getPipelineJob().getSequenceSupport());
+        TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), getPipelineJob().getAnalysisDirectory(), null);
+        JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), getPipelineJob().getAnalysisDirectory(), manager, null);
+        getPipelineJob().getHandler().getProcessor().complete(ctx, getPipelineJob().getFiles(), outputsCreated);
 
         File xml = getPipelineJob().getSerializedOutputFilesFile();
         if (xml.exists())

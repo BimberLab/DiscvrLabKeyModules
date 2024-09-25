@@ -129,7 +129,7 @@ public class ReblockGvcfHandler extends AbstractParameterizedOutputHandler<Seque
         }
 
         @Override
-        public void complete(PipelineJob job, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated, SequenceAnalysisJobSupport support) throws PipelineJobException
+        public void complete(JobContext ctx, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
         {
             List<Map<String, Object>> toUpdate = new ArrayList<>();
             List<Map<String, Object>> oldKeys = inputs.stream().map(x -> {
@@ -146,11 +146,11 @@ public class ReblockGvcfHandler extends AbstractParameterizedOutputHandler<Seque
                     throw new PipelineJobException("Unable to find file: " + reblocked.getPath());
                 }
 
-                job.getLogger().info("Updating ExpData record with new filepath: " + reblocked.getPath());
+                ctx.getJob().getLogger().info("Updating ExpData record with new filepath: " + reblocked.getPath());
                 ExpData d = so.getExpData();
                 d.setDataFileURI(reblocked.toURI());
                 d.setName(reblocked.getName());
-                d.save(job.getUser());
+                d.save(ctx.getJob().getUser());
 
                 if (so.getName().contains(".g.vcf.gz"))
                 {
@@ -165,8 +165,8 @@ public class ReblockGvcfHandler extends AbstractParameterizedOutputHandler<Seque
 
             try
             {
-                Container target = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
-                QueryService.get().getUserSchema(job.getUser(), target, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES).getUpdateService().updateRows(job.getUser(), target, toUpdate, oldKeys, null, null);
+                Container target = ctx.getJob().getContainer().isWorkbook() ? ctx.getJob().getContainer().getParent() : ctx.getJob().getContainer();
+                QueryService.get().getUserSchema(ctx.getJob().getUser(), target, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES).getUpdateService().updateRows(ctx.getJob().getUser(), target, toUpdate, oldKeys, null, null);
             }
             catch (QueryUpdateServiceException | InvalidKeyException | BatchValidationException | SQLException e)
             {

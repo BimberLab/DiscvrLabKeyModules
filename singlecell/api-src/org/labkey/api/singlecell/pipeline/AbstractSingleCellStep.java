@@ -24,6 +24,11 @@ public interface AbstractSingleCellStep extends PipelineStep
 
     }
 
+    default void complete(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputFiles, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
+    {
+
+    }
+
     default boolean createsSeuratObjects()
     {
         return true;

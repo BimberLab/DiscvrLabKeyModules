@@ -3,6 +3,11 @@ package org.labkey.singlecell.pipeline.singlecell;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.query.BatchValidationException;
+import org.labkey.api.query.InvalidKeyException;
+import org.labkey.api.query.QueryService;
+import org.labkey.api.query.QueryUpdateService;
+import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
@@ -10,16 +15,16 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
-import org.labkey.api.util.FileUtil;
-import org.labkey.api.writer.PrintWriters;
-import org.labkey.singlecell.analysis.AbstractSingleCellHandler;
+import org.labkey.singlecell.SingleCellSchema;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.Files;
+import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 
 import static org.labkey.singlecell.analysis.AbstractSingleCellHandler.SEURAT_PROTOTYPE;
 
@@ -142,5 +147,34 @@ public class UpdateSeuratPrototype extends AbstractRDiscvrStep
         }
 
         return output;
+    }
+
+    @Override
+    public void complete(SequenceOutputHandler.JobContext ctx, List<SequenceOutputFile> inputFiles, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
+    {
+        if (inputFiles.size() != 1)
+        {
+            throw new PipelineJobException("Expected a single input file");
+        }
+
+        SequenceOutputFile so = inputFiles.get(0);
+        if (so.getDescription() == null)
+        {
+            so.setDescription("Prototype Updated");
+        }
+        else
+        {
+            so.setDescription(so.getDescription() + "\nPrototype Updated");
+        }
+
+        try
+        {
+            QueryUpdateService us = QueryService.get().getUserSchema(ctx.getJob().getUser(), so.getContainerObj(), SingleCellSchema.SEQUENCE_SCHEMA_NAME).getTable("outputfiles").getUpdateService();
+            us.updateRows(ctx.getJob().getUser(), so.getContainerObj(), Collections.singletonList(Map.of("rowid", so.getRowid(), "description", so.getDescription())), Collections.singletonList(Map.of("rowid", so.getRowid())), new BatchValidationException(), null, null);
+        }
+        catch (SQLException | BatchValidationException | QueryUpdateServiceException | InvalidKeyException e)
+        {
+            throw new PipelineJobException(e);
+        }
     }
 }
