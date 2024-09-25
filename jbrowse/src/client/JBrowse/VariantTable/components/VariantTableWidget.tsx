@@ -8,7 +8,7 @@ import ScopedCssBaseline from '@mui/material/ScopedCssBaseline';
 import {
   DataGrid,
   GridColDef,
-  GridColumnVisibilityModel,
+  GridColumnVisibilityModel, GridFilterPanel,
   GridPaginationModel,
   GridRenderCellParams,
   GridToolbar
@@ -352,10 +352,22 @@ const VariantTableWidget = observer(props => {
   }
 
   const gridElement = (
+    // NOTE: the filterPanel/sx override is added to fix an issue where the grid column filter value input doesn't align with the field and operator inputs
     <DataGrid
         columns={[...gridColumns, actionsCol]}
         rows={features.map((rawFeature, id) => rawFeatureToRow(rawFeature, id, gridColumns, trackId))}
-        slots={{ toolbar: GridToolbar }}
+        slots={{ toolbar: GridToolbar, filterPanel: GridFilterPanel }}
+        slotProps={{
+          filterPanel: {
+            filterFormProps: {
+              valueInputProps: {
+                sx: {
+                  marginTop: 0
+                }
+              }
+            }
+          }
+        }}
         pageSizeOptions={[10,25,50,100]}
         paginationModel={ pageSizeModel }
         onPaginationModelChange= {(newModel) => setPageSizeModel(newModel)}
