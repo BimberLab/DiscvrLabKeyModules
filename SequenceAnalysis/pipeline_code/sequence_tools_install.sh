@@ -312,30 +312,6 @@ fi
 
 
 #
-# RNA-SeQC
-#
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Install RNA-SeQC"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/RNA-SeQC.jar || ! -z $FORCE_REINSTALL ]];
-then
-    echo "Cleaning up previous installs"
-    rm -Rf RNA-SeQC*
-    rm -Rf $LKTOOLS_DIR/RNA-SeQC.jar
-
-    wget $WGET_OPTS https://data.broadinstitute.org/cancer/cga/tools/rnaseqc/RNA-SeQC_v1.1.8.jar
-
-    install ./RNA-SeQC_v1.1.8.jar $LKTOOLS_DIR/RNA-SeQC.jar
-else
-    echo "Already installed"
-fi
-
-
-#
 #mosaik
 #
 echo ""
