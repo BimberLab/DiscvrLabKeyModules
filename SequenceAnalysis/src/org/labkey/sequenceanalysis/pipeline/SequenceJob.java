@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import htsjdk.samtools.util.IOUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.vfs2.FileObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -45,6 +44,7 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
+import org.labkey.vfs.FileLike;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -68,8 +68,8 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     private Integer _experimentRunRowId;
     private String _jobName;
     private String _description;
-    private FileObject _webserverJobDir;
-    private FileObject _parentWebserverJobDir;
+    private FileLike _webserverJobDir;
+    private FileLike _parentWebserverJobDir;
     private String _folderPrefix;
     private List<File> _inputFiles;
     private List<SequenceOutputFile> _outputsToCreate = new ArrayList<>();
@@ -96,10 +96,10 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         _description = parentJob._description;
         _support = parentJob.getSequenceSupport();
         _parentWebserverJobDir = parentJob._webserverJobDir;
-        _webserverJobDir = parentJob._webserverJobDir.resolveFile(subdirectory);
+        _webserverJobDir = parentJob._webserverJobDir.resolveChild(subdirectory);
         if (!_webserverJobDir.exists())
         {
-            _webserverJobDir.createFolder();
+            _webserverJobDir.mkdir();
         }
 
         _folderPrefix = parentJob._folderPrefix;
@@ -158,7 +158,8 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
     private Path _getLogFile()
     {
-        return AssayFileWriter.findUniqueFileName((FileUtil.makeLegalName(_jobName) + ".log"), getDataDirectoryFileObject()).getPath();
+        var file = AssayFileWriter.findUniqueFileName((FileUtil.makeLegalName(_jobName) + ".log"), getDataDirectoryFileObject());
+        return file.toNioPathForWrite();
     }
 
     @Override
@@ -188,19 +189,19 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         _description = description;
     }
 
-    protected FileObject createLocalDirectory(PipeRoot pipeRoot) throws IOException
+    protected FileLike createLocalDirectory(PipeRoot pipeRoot) throws IOException
     {
-        FileObject webserverOutDir = pipeRoot.getRootFileObject().resolveFile(_folderPrefix + "Pipeline");
+        FileLike webserverOutDir = pipeRoot.getRootFileLike().resolveChild(_folderPrefix + "Pipeline");
         if (!webserverOutDir.exists())
         {
-            webserverOutDir.createFolder();
+            webserverOutDir.mkdir();
         }
 
         String folderName = FileUtil.makeLegalName(StringUtils.capitalize(_folderPrefix) + "_" + FileUtil.getTimestamp());
         webserverOutDir = AssayFileWriter.findUniqueFileName(folderName, webserverOutDir);
         if (!webserverOutDir.exists())
         {
-            webserverOutDir.createFolder();
+            webserverOutDir.mkdir();
         }
 
         return webserverOutDir;
@@ -302,7 +303,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     @Override
     public String getBaseName()
     {
-        return _webserverJobDir.getName().getBaseName();
+        return _webserverJobDir.getName();
     }
 
     @Override
@@ -314,23 +315,25 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     @Override
     public File getDataDirectory()
     {
-        return _webserverJobDir.getPath().toFile();
+        return _webserverJobDir.toNioPathForWrite().toFile();
     }
 
-    public FileObject getDataDirectoryFileObject()
+    public FileLike getDataDirectoryFileObject()
     {
         return _webserverJobDir;
     }
 
     public File getWebserverDir(boolean forceParent)
     {
-        return forceParent && isSplitJob() ? _parentWebserverJobDir.getPath().toFile() : _webserverJobDir.getPath().toFile();
+        return forceParent && isSplitJob() ?
+                _parentWebserverJobDir.toNioPathForWrite().toFile() :
+                _webserverJobDir.toNioPathForWrite().toFile();
     }
 
     @Override
     public File getAnalysisDirectory()
     {
-        return _webserverJobDir.getPath().toFile();
+        return _webserverJobDir.toNioPathForWrite().toFile();
     }
 
     @Override
@@ -362,14 +365,14 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     public File getParametersFile()
     {
         var dir = _parentWebserverJobDir == null ? _webserverJobDir : _parentWebserverJobDir;
-        return FileUtil.appendName(dir.getPath().toFile(),_folderPrefix + ".json");
+        return FileUtil.appendName(dir.toNioPathForWrite().toFile(),_folderPrefix + ".json");
     }
 
     @Nullable
     @Override
     public File getJobInfoFile()
     {
-        return FileUtil.appendName(_webserverJobDir.getPath().toFile(), FileUtil.makeLegalName(_jobName) + ".job.json");
+        return FileUtil.appendName(_webserverJobDir.toNioPathForWrite().toFile(), FileUtil.makeLegalName(_jobName) + ".job.json");
     }
 
     @Override

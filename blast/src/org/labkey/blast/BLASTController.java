@@ -17,7 +17,6 @@
 package org.labkey.blast;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.vfs2.FileObject;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.labkey.api.action.AbstractFileUploadAction;
@@ -59,6 +58,7 @@ import org.labkey.api.view.NavTree;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.blast.model.BlastJob;
 import org.labkey.blast.pipeline.BlastDatabasePipelineJob;
+import org.labkey.vfs.FileLike;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -216,8 +216,8 @@ public class BLASTController extends SpringActionController
             AssayFileWriter writer = new AssayFileWriter();
             try
             {
-                FileObject targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).getPath().toFile();
+                FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
+                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
             }
             catch (ExperimentException e)
             {
@@ -264,14 +264,14 @@ public class BLASTController extends SpringActionController
                     AssayFileWriter writer = new AssayFileWriter();
                     try
                     {
-                        FileObject targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                        FileObject input = AssayFileWriter.findUniqueFileName("blast", targetDirectory);
+                        FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
+                        FileLike input = AssayFileWriter.findUniqueFileName("blast", targetDirectory);
                         input.createFile();
-                        try (PrintWriter fw = PrintWriters.getPrintWriter(input.getContent().getOutputStream()))
+                        try (PrintWriter fw = PrintWriters.getPrintWriter(input.openOutputStream()))
                         {
                             fw.write(form.getQuery());
                         }
-                        inputFiles.add(input.getPath().toFile());
+                        inputFiles.add(input.toNioPathForRead().toFile());
                     }
                     catch (ExperimentException e)
                     {

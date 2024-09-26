@@ -23,7 +23,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.vfs2.FileObject;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.nbio.core.sequence.DNASequence;
@@ -168,6 +167,7 @@ import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.util.ChainFileValidator;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
+import org.labkey.vfs.FileLike;
 import org.springframework.beans.PropertyValues;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
@@ -2555,8 +2555,8 @@ public class SequenceAnalysisController extends SpringActionController
 
             try
             {
-                FileObject targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer(), "sequenceOutputs");
-                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).getPath().toFile();
+                FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer(), "sequenceOutputs");
+                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
             }
             catch (ExperimentException e)
             {
@@ -2688,8 +2688,8 @@ public class SequenceAnalysisController extends SpringActionController
 
             try
             {
-                FileObject targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).getPath().toFile();
+                FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
+                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
             }
             catch (ExperimentException e)
             {
@@ -2853,8 +2853,8 @@ public class SequenceAnalysisController extends SpringActionController
 
             try
             {
-                FileObject targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).getPath().toFile();
+                FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
+                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
             }
             catch (ExperimentException e)
             {
@@ -3643,7 +3643,7 @@ public class SequenceAnalysisController extends SpringActionController
                         }
                     }
 
-                    File dict = new File(data.getFile().getParentFile(), FileUtil.getBaseName(data.getFile()) + ".dict");
+                    File dict = FileUtil.appendName(data.getFile().getParentFile(), FileUtil.getBaseName(data.getFile()) + ".dict");
                     if (dict.exists())
                     {
                         files.add(dict);
@@ -4142,10 +4142,10 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
-            FileObject targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer(), "sequenceOutputs");
+            FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer(), "sequenceOutputs");
             if (!targetDirectory.exists())
             {
-                targetDirectory.createFolder();
+                targetDirectory.mkdir();
             }
 
             if (form.getRecords() != null)
@@ -4196,12 +4196,12 @@ public class SequenceAnalysisController extends SpringActionController
 
                 for (File file : toCreate.keySet())
                 {
-                    FileObject target = AssayFileWriter.findUniqueFileName(file.getName(), targetDirectory);
-                    FileUtils.moveFile(file, target.getPath().toFile());
+                    FileLike target = AssayFileWriter.findUniqueFileName(file.getName(), targetDirectory);
+                    FileUtils.moveFile(file, target.toNioPathForWrite().toFile());
 
                     ExpData data = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"));
                     data.setName(file.getName());
-                    data.setDataFileURI(target.getURI());
+                    data.setDataFileURI(target.toURI());
                     data.save(getUser());
 
                     Map<String, Object> params = toCreate.get(file);
@@ -4236,18 +4236,18 @@ public class SequenceAnalysisController extends SpringActionController
                             }
 
                             _log.info("moving associated file: " + idx.getPath() + ", to: " + idxTargetName);
-                            FileObject idxTarget = targetDirectory.resolveFile(idxTargetName);
+                            FileLike idxTarget = targetDirectory.resolveChild(idxTargetName);
                             if (idxTarget.exists())
                             {
                                 _log.error("target already exists, skipping: " + idxTargetName);
                             }
                             else
                             {
-                                FileUtils.moveFile(idx, idxTarget.getPath().toFile());
+                                FileUtils.moveFile(idx, idxTarget.toNioPathForWrite().toFile());
 
                                 ExpData idxData = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"));
-                                idxData.setName(idxTarget.getName().getBaseName());
-                                idxData.setDataFileURI(idxTarget.getURI());
+                                idxData.setName(idxTarget.getName());
+                                idxData.setDataFileURI(idxTarget.toURI());
                                 idxData.save(getUser());
                             }
                         }
