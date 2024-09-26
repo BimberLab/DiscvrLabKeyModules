@@ -2,7 +2,7 @@ import { observer } from 'mobx-react';
 import {
     DataGrid,
     GridColDef,
-    GridColumnVisibilityModel,
+    GridColumnVisibilityModel, GridFilterPanel,
     GridPaginationModel,
     GridRenderCellParams,
     GridSortDirection,
@@ -420,13 +420,26 @@ const VariantTableWidget = observer(props => {
         }
     }
 
+    // NOTE: the filterPanel/sx override is added to fix an issue where the grid column filter value input doesn't align with the field and operator inputs
     const gridElement = (
         <DataGrid
             columns={[...columns, actionsCol]}
             rows={features}
             density="comfortable"
             slots={{
-                toolbar: ToolbarWithProps
+                toolbar: ToolbarWithProps,
+                filterPanel: GridFilterPanel
+            }}
+            slotProps={{
+                filterPanel: {
+                    filterFormProps: {
+                        valueInputProps: {
+                            sx: {
+                                marginTop: 0
+                            }
+                        }
+                    }
+                }
             }}
             columnVisibilityModel={columnVisibilityModel}
             pageSizeOptions={[10,25,50,100]}
