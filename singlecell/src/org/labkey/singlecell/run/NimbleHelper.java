@@ -245,6 +245,8 @@ public class NimbleHelper
         List<NimbleGenome> genomes = getGenomes();
         List<File> jsons = new ArrayList<>();
 
+        String nimbleVersion = getVersion(output);
+
         for (NimbleGenome genome : genomes)
         {
             File genomeCsv = getGenomeCsv(genome.getGenomeId());
@@ -280,7 +282,12 @@ public class NimbleHelper
                 throw new PipelineJobException("Unable to find file: " + results.getPath());
             }
 
-            String description = genome.getScorePercent() > 0 ? "score_percent: " + genome.getScorePercent() : null;
+            String description = "Nimble version: " + nimbleVersion;
+            if (genome.getScorePercent() > 0)
+            {
+                description += "\nscore_percent: " + genome.getScorePercent();
+            }
+
             output.addSequenceOutput(results, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), description);
 
             File outputBam = new File(results.getPath().replaceAll("results." + genome.genomeId + ".txt.gz", "nimbleAlignment." + genome.genomeId + ".bam"));
@@ -341,8 +348,9 @@ public class NimbleHelper
             {
                 config.put("num_mismatches", 5);
                 config.put("intersect_level", 0);
+                // NOTE: score_percent should almost always supersede this value
                 config.put("score_threshold", 45);
-                config.put("score_percent", 0.45);
+                config.put("score_percent", 0.75);
                 config.put("score_filter", 25);
                 //discard_multiple_matches: false
                 //discard_multi_hits: ?
@@ -686,5 +694,35 @@ public class NimbleHelper
         {
             return numMismatches;
         }
+    }
+
+    private String getVersion(PipelineStepOutput output) throws PipelineJobException
+    {
+        List<String> nimbleArgs = new ArrayList<>();
+        nimbleArgs.add("/bin/bash");
+        nimbleArgs.add("-c");
+        nimbleArgs.add("python3 -m nimble -v > /work/nimbleVersion.txt");
+
+        runUsingDocker(nimbleArgs, output, null);
+
+        File outFile = new File(getPipelineCtx().getWorkingDirectory(), "nimbleVersion.txt");
+        if (!outFile.exists())
+        {
+            throw new PipelineJobException("Unable to find file: " + outFile.getPath());
+        }
+
+        String ret;
+        try (BufferedReader reader = Readers.getReader(outFile))
+        {
+            ret = reader.readLine();
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        outFile.delete();
+
+        return ret;
     }
 }

@@ -9,7 +9,7 @@ import java.util.Collection;
 
 abstract public class AbstractRiraStep extends AbstractSingleCellPipelineStep
 {
-    public static String CONTAINER_NAME = "ghcr.io/bimberlabinternal/rira:latest";
+    public static String CONTAINER_NAME = "ghcr.io/bimberlab/rira:latest";
 
     public AbstractRiraStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {

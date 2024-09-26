@@ -118,6 +118,13 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
 
             return ret;
         }
+        else if (SequenceAnalysisSchema.TABLE_INSTRUMENT_RUNS.equalsIgnoreCase(name))
+        {
+            TableInfo ret = super.createWrappedTable(name, sourceTable, cf);
+            LDKService.get().applyNaturalSort((AbstractTableInfo)ret, "name");
+
+            return ret;
+        }
         else if (SequenceAnalysisSchema.TABLE_ANALYSES.equalsIgnoreCase(name))
         {
             return createAnalysesTable(sourceTable, cf);

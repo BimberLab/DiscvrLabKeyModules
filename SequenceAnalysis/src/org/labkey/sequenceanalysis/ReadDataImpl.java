@@ -201,18 +201,28 @@ public class ReadDataImpl implements ReadData
         _modifiedBy = modifiedBy;
     }
 
+    public File getFile1(boolean allowArchived)
+    {
+        return getFile(1, _fileId1, allowArchived);
+    }
+
     @Override
     @Transient
     public File getFile1()
     {
-        return getFile(1, _fileId1);
+        return getFile1(false);
     }
 
     @Override
     @Transient
     public File getFile2()
     {
-        return getFile(2, _fileId2);
+        return getFile2(false);
+    }
+
+    public File getFile2(boolean allowArchived)
+    {
+        return getFile(2, _fileId2, false);
     }
 
     public void setFile(File f, int fileIdx)
@@ -248,9 +258,9 @@ public class ReadDataImpl implements ReadData
     }
 
     @Transient
-    private File getFile(int fileIdx, Integer fileId)
+    private File getFile(int fileIdx, Integer fileId, boolean allowArchived)
     {
-        if (isArchived())
+        if (isArchived() && !allowArchived)
         {
             return null;
         }
@@ -274,13 +284,16 @@ public class ReadDataImpl implements ReadData
                 ret = d.getFile();
             }
 
-            if (ret != null && !ret.exists())
+            if (!isArchived() && ret != null && !ret.exists())
             {
                 throw new IllegalArgumentException("File does not exist: " + ret.getPath());
             }
         }
 
-        _cachedFiles.put(fileIdx, ret);
+        if (!isArchived())
+        {
+            _cachedFiles.put(fileIdx, ret);
+        }
 
         return ret;
     }

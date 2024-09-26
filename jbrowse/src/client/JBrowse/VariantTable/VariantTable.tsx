@@ -14,6 +14,7 @@ import LoadingIndicator from './components/LoadingIndicator';
 import JBrowseFilterPanel from '../Browser/components/JBrowseFilterPanel';
 import { ErrorBoundary } from '../VariantSearch/components/ErrorBoundary';
 import { Assembly } from '@jbrowse/core/assemblyManager/assembly';
+import { Theme } from 'react-select';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession];
 
@@ -34,7 +35,7 @@ function VariantTable() {
 
     const [session, setSession] = useState(null);
     const [state, setState] = useState(null);
-    const [theme, setTheme] = useState(null);
+    const [theme, setTheme] = useState<Partial<Theme>>(null);
     const [view, setView] = useState(null);
     const [parsedLocString, setParsedLocString] = useState(null)
     const [pluginManager, setPluginManager] = useState(null);

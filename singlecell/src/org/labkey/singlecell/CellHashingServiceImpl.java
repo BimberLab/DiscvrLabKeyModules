@@ -627,6 +627,12 @@ public class CellHashingServiceImpl extends CellHashingService
         String outputBasename = parameters.getBasename() + "." + parameters.type.name();
         File callsFile = getExpectedCallsFile(ctx.getOutputDir(), outputBasename);
         File doneFile = new File(callsFile.getPath() + ".done");
+        if (doneFile.exists() & parameters.doNotAllowResume)
+        {
+            ctx.getLogger().debug("doneFile exists, but doNotAllowResume was selected");
+            doneFile.delete();
+        }
+
         if (!doneFile.exists())
         {
             callsFile = generateCellHashingCalls(rawCountMatrixDir, ctx.getOutputDir(), outputBasename, ctx.getLogger(), ctx.getSourceDirectory(), parameters);

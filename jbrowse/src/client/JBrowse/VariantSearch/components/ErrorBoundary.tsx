@@ -5,12 +5,12 @@ import ErrorPage from './ErrorPage';
 
 interface ErrorBoundaryState {
     error: Error | undefined;
-    errorInfo: ErrorInfo | undefined;
+    errorInfo?: ErrorInfo | undefined;
     stackTrace: string | undefined;
-    devMode: boolean | undefined,
+    devMode?: boolean | undefined,
 }
 
-export class ErrorBoundary extends React.PureComponent<any, ErrorBoundaryState> {
+export class ErrorBoundary extends React.Component<any, ErrorBoundaryState> {
     constructor(props) {
         super(props);
 
@@ -30,14 +30,15 @@ export class ErrorBoundary extends React.PureComponent<any, ErrorBoundaryState> 
         this.setState(() => ({
             error,
             errorInfo,
-            stackTrace: error?.stack ? error.stack : undefined,
+            stackTrace: error?.stack ? error.stack : undefined
         }));
 
         if (Mothership) {
             // process stack trace against available source maps
             Mothership.processStackTrace(error, stackTrace => {
                 this.setState(state => ({
-                    stackTrace: stackTrace || state.stackTrace,
+                    error: error,
+                    stackTrace: stackTrace || state.stackTrace
                 }));
             });
 

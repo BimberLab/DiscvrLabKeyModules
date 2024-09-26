@@ -26,6 +26,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QueryUpdateServiceException;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.ReadData;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -271,7 +272,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
         @Override
         public void complete(PipelineJob job, List<Readset> readsets, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
         {
-            Readset rs = readsets.get(0);
+            Readset rs = SequenceAnalysisService.get().getReadset(readsets.get(0).getRowId(), job.getUser());
             List<Map<String, Object>> rows = new ArrayList<>();
 
             for (ReadData rd : rs.getReadData())
@@ -341,6 +342,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                 TableInfo ti = QueryService.get().getUserSchema(job.getUser(), target, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
                 try
                 {
+                    job.getLogger().debug("Updating ReadData: " + rows.size());
                     ti.getUpdateService().updateRows(job.getUser(), target, rows, rows, null, null);
                 }
                 catch (InvalidKeyException | BatchValidationException | QueryUpdateServiceException | SQLException e)
