@@ -161,6 +161,7 @@ public class OrphanFilePipelineJob extends PipelineJob
             knownExpDatas.addAll(new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_READ_DATA, null), PageFlowUtil.set("fileid2"),null, null).getArrayList(Integer.class));
             knownExpDatas.addAll(new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES, null), PageFlowUtil.set("alignmentfile"),null, null).getArrayList(Integer.class));
             knownExpDatas.addAll(new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES, null), PageFlowUtil.set("dataId"),null, null).getArrayList(Integer.class));
+            knownExpDatas.remove(null);
             knownExpDatas = Collections.unmodifiableSet(knownExpDatas);
             //messages.add("## total registered sequence ExpData: " + knownExpDatas.size());
 
