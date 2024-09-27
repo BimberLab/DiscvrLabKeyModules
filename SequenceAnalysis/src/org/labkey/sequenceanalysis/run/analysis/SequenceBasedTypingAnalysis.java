@@ -311,6 +311,8 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             //write output as TSV
             agg.writeTable(getSBTSummaryFile(outputDir, inputBam));
 
+            output.addSequenceOutput(getSBTSummaryFile(outputDir, inputBam), "SBT Results: " + inputBam.getName(), "SBT Results", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+
             //optionally output FASTQ of unmapped reads
             Double exportThreshold = getProvider().getParameterByName(EXPORT_UNMAPPED).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class);
             if (exportThreshold != null)
