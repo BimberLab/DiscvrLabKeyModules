@@ -240,7 +240,7 @@ public class OrphanFilePipelineJob extends PipelineJob
                     writer.println("set -e");
                     writer.println("set -x");
                     writer.println("");
-                    probableDeletes.forEach(f -> writer.println("rm -Rf " + f.getPath()));
+                    probableDeletes.forEach(f -> writer.println("rm -Rf '" + f.getPath() + "'"));
                 }
                 catch (IOException e)
                 {
