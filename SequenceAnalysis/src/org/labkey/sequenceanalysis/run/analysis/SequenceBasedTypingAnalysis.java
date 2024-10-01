@@ -271,16 +271,17 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             BamIterator bi = new BamIterator(inputBam, referenceGenome.getWorkingFastaFile(), getPipelineCtx().getLogger());
 
             List<AlignmentAggregator> aggregators = new ArrayList<>();
+            File workDir = new File(getPipelineCtx().getSourceDirectory(), FileUtil.getBaseName(inputBam));
+            File sbtOutputLog = new File(workDir, FileUtil.getBaseName(inputBam) + ".sbt.txt.gz");
+
             SequenceBasedTypingAlignmentAggregator agg = new SequenceBasedTypingAlignmentAggregator(getPipelineCtx().getLogger(), referenceGenome.getWorkingFastaFile(), avgBaseQualityAggregator, toolParams);
             if (getProvider().getParameterByName("writeLog").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
             {
-                File workDir = new File(getPipelineCtx().getSourceDirectory(), FileUtil.getBaseName(inputBam));
                 if (!workDir.exists())
                 {
                     workDir.mkdirs();
                 }
-                File outputLog = new File(workDir, FileUtil.getBaseName(inputBam) + ".sbt.txt.gz");
-                agg.setOutputLog(outputLog);
+                agg.setOutputLog(sbtOutputLog);
             }
 
             File lineageMapFile = new File(getPipelineCtx().getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
@@ -311,7 +312,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             //write output as TSV
             agg.writeTable(getSBTSummaryFile(outputDir, inputBam));
 
-            output.addSequenceOutput(getSBTSummaryFile(outputDir, inputBam), "SBT Results: " + inputBam.getName(), "SBT Results", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+            output.addSequenceOutput(sbtOutputLog, "SBT Results: " + inputBam.getName(), "SBT Results", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
 
             //optionally output FASTQ of unmapped reads
             Double exportThreshold = getProvider().getParameterByName(EXPORT_UNMAPPED).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class);
