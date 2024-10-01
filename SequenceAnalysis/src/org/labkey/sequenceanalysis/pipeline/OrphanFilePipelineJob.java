@@ -3,7 +3,7 @@ package org.labkey.sequenceanalysis.pipeline;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.labkey.api.data.ColumnInfo;
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -48,7 +48,6 @@ import java.net.URISyntaxException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -91,7 +90,7 @@ public class OrphanFilePipelineJob extends PipelineJob
     }
 
     @Override
-    public TaskPipeline getTaskPipeline()
+    public TaskPipeline<?> getTaskPipeline()
     {
         return PipelineJobService.get().getTaskPipeline(new TaskId(OrphanFilePipelineJob.class));
     }
@@ -129,7 +128,7 @@ public class OrphanFilePipelineJob extends PipelineJob
             }
 
             @Override
-            public PipelineJob.Task createTask(PipelineJob job)
+            public PipelineJob.Task<?> createTask(PipelineJob job)
             {
                 return new Task(this, job);
             }
@@ -142,7 +141,7 @@ public class OrphanFilePipelineJob extends PipelineJob
         }
 
         @Override
-        public RecordedActionSet run() throws PipelineJobException
+        public @NotNull RecordedActionSet run() throws PipelineJobException
         {
             getJob().getLogger().info("## The following sections list any files or pipeline jobs that appear to be orphans, not connected to any imported readsets or sequence outputs:");
 
@@ -165,7 +164,23 @@ public class OrphanFilePipelineJob extends PipelineJob
             knownExpDatas = Collections.unmodifiableSet(knownExpDatas);
             //messages.add("## total registered sequence ExpData: " + knownExpDatas.size());
 
-            getOrphanFilesForContainer(getJob().getContainer(), getJob().getUser(), orphanFiles, orphanIndexes, orphanJobs, messages, probableDeletes, knownJobPaths, knownExpDatas);
+            // Build map of URL/ExpData for all data, to cover cross-container files
+            Map<URI, Set<Integer>> knownDataMap = new HashMap<>();
+            for (Integer d : knownExpDatas)
+            {
+                ExpData ed = ExperimentService.get().getExpData(d);
+                if (ed != null)
+                {
+                    if (!knownDataMap.containsKey(ed.getDataFileURI()))
+                    {
+                        knownDataMap.put(ed.getDataFileURI(), new HashSet<>());
+                    }
+
+                    knownDataMap.get(ed.getDataFileURI()).add(d);
+                }
+            }
+
+            getOrphanFilesForContainer(getJob().getContainer(), getJob().getUser(), orphanFiles, orphanIndexes, orphanJobs, messages, probableDeletes, knownJobPaths, knownExpDatas, knownDataMap);
             probableDeletes.addAll(orphanIndexes);
 
             if (!orphanFiles.isEmpty())
@@ -286,7 +301,7 @@ public class OrphanFilePipelineJob extends PipelineJob
             return knownJobPaths;
         }
 
-        private Map<URI, Set<Integer>> getDataMapForContainer(Container c)
+        private Map<URI, Set<Integer>> getDataMapForContainer(Container c, Map<URI, Set<Integer>> knownExpDataMap)
         {
             SimpleFilter dataFilter = new SimpleFilter(FieldKey.fromString("container"), c.getId());
             TableInfo dataTable = ExperimentService.get().getTinfoData();
@@ -320,10 +335,21 @@ public class OrphanFilePipelineJob extends PipelineJob
             });
             //messages.add("## total ExpData paths: " + dataMap.size());
 
+            // append additional datas:
+            for (URI u : knownExpDataMap.keySet())
+            {
+                if (!dataMap.containsKey(u))
+                {
+                    dataMap.put(u, new HashSet<>());
+                }
+
+                dataMap.get(u).addAll(knownExpDataMap.get(u));
+            }
+
             return dataMap;
         }
 
-        public void getOrphanFilesForContainer(Container c, User u, Set<File> orphanFiles, Set<File> orphanIndexes, Set<PipelineStatusFile> orphanJobs, List<String> messages, Set<File> probableDeletes, Set<File> knownSequenceJobPaths, Set<Integer> knownExpDatas)
+        public void getOrphanFilesForContainer(Container c, User u, Set<File> orphanFiles, Set<File> orphanIndexes, Set<PipelineStatusFile> orphanJobs, List<String> messages, Set<File> probableDeletes, Set<File> knownSequenceJobPaths, Set<Integer> knownExpDatas, Map<URI, Set<Integer>> knownExpDataMap)
         {
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
             if (root == null)
@@ -338,7 +364,7 @@ public class OrphanFilePipelineJob extends PipelineJob
 
             messages.add("## processing container: " + c.getPath());
 
-            Map<URI, Set<Integer>> dataMap = getDataMapForContainer(c);
+            Map<URI, Set<Integer>> dataMap = getDataMapForContainer(c, knownExpDataMap);
 
             Container parent = c.isWorkbook() ? c.getParent() : c;
             TableInfo jobsTableParent = PipelineService.get().getJobsTable(u, parent);
@@ -438,7 +464,7 @@ public class OrphanFilePipelineJob extends PipelineJob
             {
                 if (child.isWorkbook())
                 {
-                    getOrphanFilesForContainer(child, u, orphanFiles, orphanIndexes, orphanJobs, messages, probableDeletes, knownSequenceJobPaths, knownExpDatas);
+                    getOrphanFilesForContainer(child, u, orphanFiles, orphanIndexes, orphanJobs, messages, probableDeletes, knownSequenceJobPaths, knownExpDatas, knownExpDataMap);
                 }
             }
         }
