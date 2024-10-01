@@ -544,7 +544,7 @@ public class OrphanFilePipelineJob extends PipelineJob
                 {
                     if (f.getName().endsWith(".gdb"))
                     {
-                        if (!knownExpDatas.contains(new File(f, "__tiledb_workspace.tdb").toURI()))
+                        if (!dataMap.containsKey(new File(f, "__tiledb_workspace.tdb").toURI()))
                         {
                             orphanSequenceFiles.add(f);
                         }
