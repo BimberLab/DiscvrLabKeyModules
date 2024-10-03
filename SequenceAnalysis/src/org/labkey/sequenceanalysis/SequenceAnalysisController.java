@@ -19,6 +19,8 @@ import htsjdk.samtools.SAMException;
 import htsjdk.tribble.TribbleException;
 import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
@@ -59,6 +61,7 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.data.DataRegionSelection;
 import org.labkey.api.data.PropertyManager;
+import org.labkey.api.data.PropertyManager.WritablePropertyMap;
 import org.labkey.api.data.Results;
 import org.labkey.api.data.ResultsImpl;
 import org.labkey.api.data.SQLFragment;
@@ -173,8 +176,6 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.ServletRequestParameterPropertyValues;
 import org.springframework.web.servlet.ModelAndView;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -4971,7 +4972,7 @@ public class SequenceAnalysisController extends SpringActionController
         public ApiResponse execute(SetSequenceImportDefaultsForm form, BindException errors) throws Exception
         {
             Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
-            PropertyManager.PropertyMap configMap = PropertyManager.getWritableProperties(target, CONFIG_PROPERTY_DOMAIN_IMPORT, true);
+            WritablePropertyMap configMap = PropertyManager.getWritableProperties(target, CONFIG_PROPERTY_DOMAIN_IMPORT, true);
             configMap.put(INPUT_FILE_TREATMENT, form.getInputFileTreatment());
 
             configMap.save();

@@ -3,6 +3,7 @@ package org.labkey.openldapsync.ldap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.ldap.model.exception.LdapException;
 import org.labkey.api.data.PropertyManager;
+import org.labkey.api.data.PropertyManager.WritablePropertyMap;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.security.ValidEmail;
@@ -112,13 +113,13 @@ public class LdapSettings
             }
         }
 
-        PropertyManager.PropertyMap writableProps = PropertyManager.getWritableProperties(PROPERTY_CATEGORY, true);
+        WritablePropertyMap writableProps = PropertyManager.getWritableProperties(PROPERTY_CATEGORY, true);
         writableProps.clear();
 
         writableProps.putAll(props);
         writableProps.save();
 
-        PropertyManager.PropertyMap encryptedWritableProps = PropertyManager.getEncryptedStore().getWritableProperties(PROPERTY_CATEGORY_ENCRYPTED, true);
+        WritablePropertyMap encryptedWritableProps = PropertyManager.getEncryptedStore().getWritableProperties(PROPERTY_CATEGORY_ENCRYPTED, true);
         encryptedWritableProps.clear();
 
         encryptedWritableProps.putAll(encryptedProps);

@@ -16,6 +16,7 @@
 
 package org.labkey.singlecell;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -37,6 +38,7 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.ContainerType;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.PropertyManager;
+import org.labkey.api.data.PropertyManager.WritablePropertyMap;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -66,7 +68,6 @@ import org.labkey.singlecell.run.CellRangerWrapper;
 import org.springframework.validation.BindException;
 import org.springframework.web.servlet.ModelAndView;
 
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -522,7 +523,7 @@ public class SingleCellController extends SpringActionController
         public ApiResponse execute(SetSequenceImportDefaultsForm form, BindException errors) throws Exception
         {
             Container target = getContainer().isWorkbook() ? getContainer().getParent() : getContainer();
-            PropertyManager.PropertyMap configMap = PropertyManager.getWritableProperties(target, CONFIG_PROPERTY_DOMAIN_IMPORT, true);
+            WritablePropertyMap configMap = PropertyManager.getWritableProperties(target, CONFIG_PROPERTY_DOMAIN_IMPORT, true);
             configMap.put(REQUIRE_ASSAY_TYPE, Boolean.valueOf(form.isRequireAssayType()).toString());
             configMap.put(COMBINE_HASHING_CITE, Boolean.valueOf(form.isCombineHashingCite()).toString());
 
