@@ -2016,22 +2016,22 @@ public class SequenceAnalysisController extends SpringActionController
                 }
                 else if (o.has("relPath") || o.has("fileName"))
                 {
-                    File f;
+                    FileLike f;
                     if (o.opt("relPath") == null)
                     {
                         if (path != null)
                         {
-                            f = pr.resolvePath(path);
-                            f = FileUtil.appendName(f, o.getString("fileName"));
+                            f = pr.resolvePathToFileLike(path);
+                            f = f.resolveFile(Path.parse(o.getString("fileName")));
                         }
                         else
                         {
-                            f = pr.resolvePath(o.getString("fileName"));
+                            f = pr.resolvePathToFileLike(o.getString("fileName"));
                         }
                     }
                     else
                     {
-                        f = pr.resolvePath(o.getString("relPath"));
+                        f = pr.resolvePathToFileLike(o.getString("relPath"));
                     }
 
                     if (f == null || !f.exists())
@@ -2039,7 +2039,7 @@ public class SequenceAnalysisController extends SpringActionController
                         throw new PipelineValidationException("Unknown file: " + o.getString("relPath") + " / " + o.getString("fileName"));
                     }
 
-                    ret.add(f);
+                    ret.add(f.toNioPathForRead().toFile());
                 }
                 else if (o.opt("filePath") != null)
                 {
