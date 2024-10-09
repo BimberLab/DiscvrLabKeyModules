@@ -8,7 +8,6 @@
  */
 Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
     extend: 'Ext.form.Panel',
-    // TODO: align to top of window
     alias: 'widget.sequenceanalysis-analysissectionpanel',
     singleTool: false,
     allowDuplicateSteps: false,
@@ -196,8 +195,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
             });
         }
 
-        // TODO: alignment
-        var win = Ext4.create('Ext.window.Window', {
+        Ext4.create('Ext.window.Window', {
             modal: true,
             ownerPanel: this,
             bodyStyle: 'padding: 5px;',
@@ -221,8 +219,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
                     }
                 }
             }
-        });
-        win.show(btn);
+        }).show(btn);
     },
 
     getDescriptionButton: function(cfg){
