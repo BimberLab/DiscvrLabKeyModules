@@ -5,6 +5,8 @@ import htsjdk.samtools.SAMFormatException;
 import htsjdk.samtools.SAMReadGroupRecord;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.SAMRecordIterator;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.samtools.SAMSequenceRecord;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
@@ -660,5 +662,46 @@ public class SequenceUtil
     public static String getLegalReadGroupName(String rsName)
     {
         return rsName.replaceAll(" ", "_");
+    }
+
+    public static List<Interval> validateAndParseIntervals(String[] intervals, SAMSequenceDictionary dict) throws PipelineJobException
+    {
+        List<Interval> ret = new ArrayList<>();
+        for (String i : intervals)
+        {
+            String contig;
+            //NOTE: the contig name can contain hyphen..
+            String[] tokens = i.split(":");
+            if (tokens.length > 2)
+            {
+                throw new PipelineJobException("Invalid interval: " + i);
+            }
+
+            if (tokens.length == 2)
+            {
+                String[] coords = tokens[1].split("-");
+                if (coords.length != 2)
+                {
+                    throw new PipelineJobException("Invalid interval: " + i);
+                }
+
+                int start = Integer.parseInt(coords[0]);
+                int end = Integer.parseInt(coords[1]);
+
+                ret.add(new Interval(tokens[0], start, end));
+            }
+            else
+            {
+                SAMSequenceRecord rec = dict.getSequence(tokens[0]);
+                if (rec == null)
+                {
+                    throw new PipelineJobException("Unable to find sequence: " + tokens[0]);
+                }
+
+                ret.add(new Interval(tokens[0], 1, rec.getSequenceLength()));
+            }
+        }
+
+        return ret;
     }
 }
