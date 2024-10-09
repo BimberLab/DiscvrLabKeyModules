@@ -23,6 +23,7 @@ import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.PropertyManager;
+import org.labkey.api.data.PropertyManager.WritablePropertyMap;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -45,7 +46,6 @@ import org.labkey.blast.pipeline.BlastPipelineJob;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
 import java.util.Map;
@@ -70,7 +70,7 @@ public class BLASTManager
 
     public void saveSettings(Map<String, String> props) throws IllegalArgumentException
     {
-        PropertyManager.PropertyMap configMap = PropertyManager.getWritableProperties(BLASTManager.CONFIG_PROPERTY_DOMAIN, true);
+        WritablePropertyMap configMap = PropertyManager.getWritableProperties(BLASTManager.CONFIG_PROPERTY_DOMAIN, true);
 
         //validate bin dir
         String binDir = StringUtils.trimToNull(props.get(BLAST_BIN_DIR));
