@@ -116,7 +116,7 @@ public class DepthOfCoverageHandler extends AbstractParameterizedOutputHandler<S
             if (intervalString != null)
             {
                 String[] intervals = intervalString.split(";");
-                validateIntervals(intervals);
+                SequenceUtil.validateAndParseIntervals(intervals, rg.extractDictionary());
                 for (String i : intervals)
                 {
                     extraArgs.add("-L");
@@ -223,27 +223,6 @@ public class DepthOfCoverageHandler extends AbstractParameterizedOutputHandler<S
             }
 
             ctx.getFileManager().addSequenceOutput(so);
-        }
-    }
-
-    public static void validateIntervals(String[] intervals) throws PipelineJobException
-    {
-        for (String i : intervals)
-        {
-            //NOTE: the contig name can contain hyphen..
-            String[] tokens = i.split(":");
-            if (tokens.length > 2)
-            {
-                throw new PipelineJobException("Invalid interval: " + i);
-            }
-            else if (tokens.length == 2)
-            {
-                String[] coords = tokens[1].split("-");
-                if (coords.length != 2)
-                {
-                    throw new PipelineJobException("Invalid interval: " + i);
-                }
-            }
         }
     }
 }

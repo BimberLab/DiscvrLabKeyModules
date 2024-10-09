@@ -211,7 +211,14 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
                 handler: function(btn){
                     btn.up('window').close();
                 }
-            }]
+            }],
+            listeners: {
+                show: function(win){
+                    if (win.getHeight() > Ext4.getBody().getHeight()) {
+                        win.alignTo(Ext4.getBody(), 't-t?');
+                    }
+                }
+            }
         }).show(btn);
     },
 

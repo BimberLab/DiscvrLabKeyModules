@@ -37,6 +37,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.util.ScatterGatherUtils;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -163,6 +164,22 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
             int jobSize = (int)Math.ceil(totalSize / (double)numJobs);
             getLogger().info("Creating " + numJobs + " jobs with approximate size: " + jobSize + " bp.");
             ret = ScatterGatherUtils.divideGenome(dict, jobSize, true, -1, false);
+        }
+        else if (_scatterGatherMethod == VariantProcessingStep.ScatterGatherMethod.specificInternals)
+        {
+            try
+            {
+                String intervalsRaw = StringUtils.trimToNull(getParameterJson().getString("scatterGather.specificIntervals"));
+                String[] intervals = intervalsRaw.split(";");
+                List<Interval> values = SequenceUtil.validateAndParseIntervals(intervals, dict);
+
+                ret = new LinkedHashMap<>();
+                ret.put("Job1", values);
+            }
+            catch (PipelineJobException e)
+            {
+                throw new IllegalArgumentException(e);
+            }
         }
         else
         {

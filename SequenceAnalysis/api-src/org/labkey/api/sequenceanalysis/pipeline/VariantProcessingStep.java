@@ -51,7 +51,8 @@ public interface VariantProcessingStep extends PipelineStep
         none(false),
         contig(false),
         chunked(true),
-        fixedJobs(false);
+        fixedJobs(false),
+        specificInternals(false);
 
         private final boolean _mayRequireSort;
 

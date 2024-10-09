@@ -87,6 +87,17 @@ Ext4.define('SequenceAnalysis.panel.VariantScatterGatherPanel', {
                                 value: 10
                             });
                         }
+                        else if (val === 'specificIntervals') {
+                            toAdd.push({
+                                xtype: 'sequenceanalysis-intervalfield',
+                                labelWidth: this.labelWidth,
+                                name: 'scatterGather.specificIntervals',
+                                label: 'Intervals to Process',
+                                helpPopup: 'The intervals to process. They should be in the form: chr01:102-20394',
+                                allowBlank: false,
+                                defaultValue: null
+                            });
+                        }
 
                         if (toAdd.length) {
                             panel.add(toAdd);

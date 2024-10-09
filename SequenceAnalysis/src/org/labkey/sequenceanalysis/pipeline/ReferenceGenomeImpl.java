@@ -1,6 +1,8 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import htsjdk.samtools.SAMSequenceDictionary;
+import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -108,6 +110,13 @@ public class ReferenceGenomeImpl implements ReferenceGenome
     public File getSequenceDictionary()
     {
         return getWorkingFastaFile() == null ? null : new File(FileUtil.getBaseName(getWorkingFastaFile().getPath()) + ".dict");
+    }
+
+    @JsonIgnore
+    @Override
+    public SAMSequenceDictionary extractDictionary()
+    {
+        return getSequenceDictionary() == null ? null : SAMSequenceDictionaryExtractor.extractDictionary(getSequenceDictionary().toPath());
     }
 
     @Override

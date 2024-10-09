@@ -976,6 +976,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 put("decimalPrecision", 2);
             }}, 0.2),
             ToolParameterDescriptor.create("skipNormalizationQc", "Skip Normalization QC", null, "checkbox", null, true),
+            ToolParameterDescriptor.create("doNotAllowResume", "Do Not Allow Resume", "If checked, on resume the job will repeat hashing scoring, rather than allowing resume from a saved state", "checkbox", null, false),
             ToolParameterDescriptor.create("doTSNE", "Do tSNE", "If true, tSNE will be performed as part of QC", "checkbox", null, false),
             ToolParameterDescriptor.create("retainRawCountFile", "Retain Raw Counts File", null, "checkbox", null, false),
             ToolParameterDescriptor.create("failIfUnexpectedHtosFound", "Fail If Unexpected HTOs Found", "If checked and if there are any HTOs (testing all known HTOs) with counts above the HTOs expected in this experiment, then an error will be thrown", "checkbox", new JSONObject(){{
