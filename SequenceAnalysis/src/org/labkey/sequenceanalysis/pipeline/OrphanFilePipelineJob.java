@@ -161,6 +161,7 @@ public class OrphanFilePipelineJob extends PipelineJob
             knownExpDatas.addAll(new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_READ_DATA, null), PageFlowUtil.set("fileid2"),null, null).getArrayList(Integer.class));
             knownExpDatas.addAll(new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_ANALYSES, null), PageFlowUtil.set("alignmentfile"),null, null).getArrayList(Integer.class));
             knownExpDatas.addAll(new TableSelector(us.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES, null), PageFlowUtil.set("dataId"),null, null).getArrayList(Integer.class));
+            knownExpDatas.remove(null);
             knownExpDatas = Collections.unmodifiableSet(knownExpDatas);
             //messages.add("## total registered sequence ExpData: " + knownExpDatas.size());
 
@@ -239,7 +240,7 @@ public class OrphanFilePipelineJob extends PipelineJob
                     writer.println("set -e");
                     writer.println("set -x");
                     writer.println("");
-                    probableDeletes.forEach(f -> writer.println("rm -Rf " + f.getPath()));
+                    probableDeletes.forEach(f -> writer.println("rm -Rf '" + f.getPath() + "'"));
                 }
                 catch (IOException e)
                 {
@@ -541,6 +542,14 @@ public class OrphanFilePipelineJob extends PipelineJob
 
                 if (f.isDirectory())
                 {
+                    if (f.getName().endsWith(".gdb"))
+                    {
+                        if (!dataMap.containsKey(new File(f, "__tiledb_workspace.tdb").toURI()))
+                        {
+                            orphanSequenceFiles.add(f);
+                        }
+                    }
+
                     getOrphanFilesForDirectory(knownExpDatas, dataMap, f, orphanSequenceFiles, orphanIndexes);
                 }
                 else

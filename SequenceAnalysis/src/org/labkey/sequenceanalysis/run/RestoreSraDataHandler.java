@@ -384,7 +384,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     File expectedFile2 = rd.getFileId2() == null ? null : ctx.getSequenceSupport().getCachedData(rd.getFileId2());
 
                     FastqDumpWrapper wrapper = new FastqDumpWrapper(ctx.getLogger());
-                    Pair<File, File> files = wrapper.downloadSra(accession, ctx.getOutputDir());
+                    Pair<File, File> files = wrapper.downloadSra(accession, ctx.getOutputDir(), rd.isPairedEnd());
 
                     long lines1 = SequenceUtil.getLineCount(files.first) / 4;
                     ctx.getJob().getLogger().debug("Reads in " + files.first.getName() + ": " + lines1);
@@ -459,7 +459,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
             super(logger);
         }
 
-        public Pair<File, File> downloadSra(String dataset, File outDir) throws PipelineJobException
+        public Pair<File, File> downloadSra(String dataset, File outDir, boolean expectPaired) throws PipelineJobException
         {
             List<String> args = new ArrayList<>();
             args.add(getExe().getPath());
@@ -491,7 +491,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
 
             List<File> files = new ArrayList<>(Arrays.asList(Objects.requireNonNull(outDir.listFiles((dir, name) -> name.startsWith(dataset)))));
 
-            File file1 = new File(outDir, dataset + "_1.fastq");
+            File file1 = new File(outDir, dataset + (expectPaired ? "_1" : "") + ".fastq");
             if (!file1.exists())
             {
                 throw new PipelineJobException("Missing file: " + file1.getPath());
@@ -500,7 +500,12 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
             files.remove(file1);
 
             File file2 = new File(outDir, dataset + "_2.fastq");
-            if (!file2.exists())
+            if (expectPaired & !file2.exists())
+            {
+                throw new PipelineJobException("Missing file: " + file2.getPath());
+            }
+
+            if (!expectPaired)
             {
                 file2 = null;
             }

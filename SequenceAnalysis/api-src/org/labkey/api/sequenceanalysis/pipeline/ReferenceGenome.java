@@ -15,6 +15,7 @@
  */
 package org.labkey.api.sequenceanalysis.pipeline;
 
+import htsjdk.samtools.SAMSequenceDictionary;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -86,6 +87,8 @@ public interface ReferenceGenome extends Serializable
      * @return The path of the .dict file expected to be associated with this genome.  Will be based on the workingFasta file
      */
     File getSequenceDictionary();
+
+    SAMSequenceDictionary extractDictionary();
 
     /**
      * @return True if this is a genome not defined in the main database, such as a job using an ad hoc FASTA file or genome based on querying the NT records

@@ -61,4 +61,6 @@ public interface ReadData extends Serializable
     String getSra_accession();
 
     boolean isArchived();
+
+    boolean isPairedEnd();
 }

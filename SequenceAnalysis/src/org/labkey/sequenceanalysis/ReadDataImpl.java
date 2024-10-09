@@ -307,10 +307,11 @@ public class ReadDataImpl implements ReadData
         }
     }
 
+    @Override
     @Transient
     public boolean isPairedEnd()
     {
-        return getFile2() != null;
+        return getFileId2() != null;
     }
 
     @Override
