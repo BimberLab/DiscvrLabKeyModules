@@ -22,6 +22,8 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.model.ReferenceLibraryMember;
+import org.labkey.vfs.FileLike;
+import org.labkey.vfs.FileSystemLike;
 
 import java.io.File;
 import java.io.IOException;
@@ -107,7 +109,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
 
     public File getSerializedLibraryMembersFile()
     {
-        return new File(getDataDirectory(), FileUtil.getBaseName(getLogFile()) + ".json");
+        return FileUtil.appendName(getDataDirectory(), FileUtil.getBaseName(getLogFile()) + ".json");
     }
 
     //for recreating an existing library
@@ -193,7 +195,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
     }
 
     @Override
-    protected File createLocalDirectory(PipeRoot pipeRoot)
+    protected FileLike createLocalDirectory(PipeRoot pipeRoot)
     {
         if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
         {
@@ -211,7 +213,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
             outputDir.mkdirs();
         }
 
-        return outputDir;
+        return new FileSystemLike.Builder(outputDir).tempDir().root();
     }
 
     @Override

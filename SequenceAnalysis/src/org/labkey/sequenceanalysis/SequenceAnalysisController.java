@@ -170,6 +170,7 @@ import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.util.ChainFileValidator;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
+import org.labkey.vfs.FileLike;
 import org.springframework.beans.PropertyValues;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
@@ -2016,22 +2017,22 @@ public class SequenceAnalysisController extends SpringActionController
                 }
                 else if (o.has("relPath") || o.has("fileName"))
                 {
-                    File f;
+                    FileLike f;
                     if (o.opt("relPath") == null)
                     {
                         if (path != null)
                         {
-                            f = pr.resolvePath(path);
-                            f = new File(f, o.getString("fileName"));
+                            f = pr.resolvePathToFileLike(path);
+                            f = f.resolveFile(Path.parse(o.getString("fileName")));
                         }
                         else
                         {
-                            f = pr.resolvePath(o.getString("fileName"));
+                            f = pr.resolvePathToFileLike(o.getString("fileName"));
                         }
                     }
                     else
                     {
-                        f = pr.resolvePath(o.getString("relPath"));
+                        f = pr.resolvePathToFileLike(o.getString("relPath"));
                     }
 
                     if (f == null || !f.exists())
@@ -2039,7 +2040,7 @@ public class SequenceAnalysisController extends SpringActionController
                         throw new PipelineValidationException("Unknown file: " + o.getString("relPath") + " / " + o.getString("fileName"));
                     }
 
-                    ret.add(f);
+                    ret.add(f.toNioPathForRead().toFile());
                 }
                 else if (o.opt("filePath") != null)
                 {
@@ -2555,8 +2556,8 @@ public class SequenceAnalysisController extends SpringActionController
 
             try
             {
-                File targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer(), "sequenceOutputs");
-                return AssayFileWriter.findUniqueFileName(filename, targetDirectory);
+                FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer(), "sequenceOutputs");
+                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
             }
             catch (ExperimentException e)
             {
@@ -2688,8 +2689,8 @@ public class SequenceAnalysisController extends SpringActionController
 
             try
             {
-                File targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                return AssayFileWriter.findUniqueFileName(filename, targetDirectory);
+                FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
+                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
             }
             catch (ExperimentException e)
             {
@@ -2853,8 +2854,8 @@ public class SequenceAnalysisController extends SpringActionController
 
             try
             {
-                File targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                return AssayFileWriter.findUniqueFileName(filename, targetDirectory);
+                FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
+                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
             }
             catch (ExperimentException e)
             {
@@ -3643,7 +3644,7 @@ public class SequenceAnalysisController extends SpringActionController
                         }
                     }
 
-                    File dict = new File(data.getFile().getParentFile(), FileUtil.getBaseName(data.getFile()) + ".dict");
+                    File dict = FileUtil.appendName(data.getFile().getParentFile(), FileUtil.getBaseName(data.getFile()) + ".dict");
                     if (dict.exists())
                     {
                         files.add(dict);
@@ -4142,10 +4143,10 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
-            File targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer(), "sequenceOutputs");
+            FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer(), "sequenceOutputs");
             if (!targetDirectory.exists())
             {
-                targetDirectory.mkdirs();
+                targetDirectory.mkdir();
             }
 
             if (form.getRecords() != null)
@@ -4155,7 +4156,7 @@ public class SequenceAnalysisController extends SpringActionController
                 Map<File, Map<String, Object>> toCreate = new HashMap<>();
                 for (JSONObject o : JsonUtil.toJSONObjectList(arr))
                 {
-                    File file = new File(dirData, o.getString("fileName"));
+                    File file = FileUtil.appendName(dirData, o.getString("fileName"));
                     if (!file.exists())
                     {
                         errors.reject(ERROR_MSG, "Unknown file: " + file.getPath());
@@ -4196,8 +4197,8 @@ public class SequenceAnalysisController extends SpringActionController
 
                 for (File file : toCreate.keySet())
                 {
-                    File target = AssayFileWriter.findUniqueFileName(file.getName(), targetDirectory);
-                    FileUtils.moveFile(file, target);
+                    FileLike target = AssayFileWriter.findUniqueFileName(file.getName(), targetDirectory);
+                    FileUtils.moveFile(file, target.toNioPathForWrite().toFile());
 
                     ExpData data = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"));
                     data.setName(file.getName());
@@ -4236,14 +4237,14 @@ public class SequenceAnalysisController extends SpringActionController
                             }
 
                             _log.info("moving associated file: " + idx.getPath() + ", to: " + idxTargetName);
-                            File idxTarget = new File(targetDirectory, idxTargetName);
+                            FileLike idxTarget = targetDirectory.resolveChild(idxTargetName);
                             if (idxTarget.exists())
                             {
                                 _log.error("target already exists, skipping: " + idxTargetName);
                             }
                             else
                             {
-                                FileUtils.moveFile(idx, idxTarget);
+                                FileUtils.moveFile(idx, idxTarget.toNioPathForWrite().toFile());
 
                                 ExpData idxData = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"));
                                 idxData.setName(idxTarget.getName());
