@@ -37,7 +37,7 @@ public class RunConga extends AbstractRDiscvrStep
                     }}, "conga"),
                     SeuratToolParameter.create("fieldToIterate", "Field to Iterate", "If provided, in addition to running CoNGA for the entire dataset, it will iterate the values of this field, subset the data by this value, and run CoNGA on that subset. The resulting metadata will be saved with the field name pattern: {congaMetadataPrefix}{FieldValue}", "textfield", new JSONObject(){{
 
-                    }}, "SubjectId", "fieldToIterate", true),
+                    }}, null, "fieldToIterate", true),
                     SeuratToolParameter.create("assayName", "Assay Name", "The name of the assay holding the GEX data", "textfield", new JSONObject(){{
 
                     }}, "RNA"),
