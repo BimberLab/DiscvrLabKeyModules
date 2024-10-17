@@ -302,6 +302,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new MendelianViolationReportStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SummarizeGenotypeQualityStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new BcftoolsFillTagsStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new BcftoolsSetGtStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SVAnnotateStep.Provider());
 
         //handlers
