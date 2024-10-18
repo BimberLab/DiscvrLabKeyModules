@@ -23,26 +23,26 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class BcftoolsSetGtStep extends AbstractCommandPipelineStep<BcftoolsRunner> implements VariantProcessingStep
+public class BcftoolsFixploidyStep extends AbstractCommandPipelineStep<BcftoolsRunner> implements VariantProcessingStep
 {
-    public BcftoolsSetGtStep(PipelineStepProvider<?> provider, PipelineContext ctx)
+    public BcftoolsFixploidyStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new BcftoolsRunner(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<BcftoolsSetGtStep> implements SupportsScatterGather
+    public static class Provider extends AbstractVariantProcessingStepProvider<BcftoolsFixploidyStep> implements SupportsScatterGather
     {
         public Provider()
         {
-            super("BcftoolsSetGtStep", "Bcftools Set GT", "bcftools", "Can be used to convert single dot ('.') genotypes to './.' for compatibility with more tools.", Arrays.asList(
+            super("BcftoolsFixploidyStep", "Bcftools Fixploidy", "bcftools", "Can be used to convert single dot ('.') genotypes to './.' for compatibility with some tools.", Arrays.asList(
 
             ), null, null);
         }
 
         @Override
-        public BcftoolsSetGtStep create(PipelineContext ctx)
+        public BcftoolsFixploidyStep create(PipelineContext ctx)
         {
-            return new BcftoolsSetGtStep(this, ctx);
+            return new BcftoolsFixploidyStep(this, ctx);
         }
     }
 
@@ -53,7 +53,7 @@ public class BcftoolsSetGtStep extends AbstractCommandPipelineStep<BcftoolsRunne
 
         List<String> options = new ArrayList<>();
         options.add(BcftoolsRunner.getBcfToolsPath().getPath());
-        options.add("+setGT");
+        options.add("+fixploidy");
 
         options.add(inputVCF.getPath());
 
@@ -78,12 +78,6 @@ public class BcftoolsSetGtStep extends AbstractCommandPipelineStep<BcftoolsRunne
         options.add(outputVcf.getPath());
 
         options.add("--");
-
-        options.add("-t");
-        options.add(".");
-
-        options.add("-n");
-        options.add("./.");
 
         BcftoolsRunner wrapper = getWrapper();
 
