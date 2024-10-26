@@ -124,10 +124,10 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--chemistry"), "chemistry", "Chemistry", "This is usually left blank, in which case cellranger will auto-detect. Example values are: SC3Pv1, SC3Pv2, SC3Pv3, SC5P-PE, SC5P-R2, or SC5P-R1", "textfield", new JSONObject(){{
 
                 }}, null),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--include-introns"), "includeIntrons", "Include Introns", "If selected, reads from introns will be included in the counts", "ldk-simplecombo", new JSONObject(){{
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--include-introns"), "includeIntrons", "Include Introns", "If selected, reads from introns will be included in the counts", "ldk-simplecombo", new JSONObject(){{
                     put("storeValues", "true;false");
-                    put("value", "false");
-                }}, null)
+                    put("value", "true");
+                }}, "true")
         );
 
         if (additionalParams != null)
