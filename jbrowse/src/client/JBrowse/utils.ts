@@ -80,7 +80,7 @@ export function passesSampleFilters(feature, sampleIDs){
 }
 
 export function isVariant(gt) {
-    return !(gt === "./." || gt === ".|." || gt === "0/0" || gt === "0|0")
+    return !(gt === "./." || gt === ".|." || gt === '.' || gt === "0/0" || gt === "0|0")
 }
 
 

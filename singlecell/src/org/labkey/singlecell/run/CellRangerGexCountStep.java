@@ -31,6 +31,7 @@ import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
@@ -321,6 +322,12 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
 
     private boolean shouldDiscardBam()
     {
+        // NOTE: if downstream analyses are selected, always keep BAM
+        if (!SequencePipelineService.get().getSteps(getPipelineCtx().getJob(), AnalysisStep.class).isEmpty())
+        {
+            return false;
+        }
+
         return !_alwaysRetainBam &&  getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
     }
 
