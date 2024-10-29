@@ -31,6 +31,7 @@ import org.labkey.api.sequenceanalysis.pipeline.AlignerIndexUtil;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
@@ -124,10 +125,10 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--chemistry"), "chemistry", "Chemistry", "This is usually left blank, in which case cellranger will auto-detect. Example values are: SC3Pv1, SC3Pv2, SC3Pv3, SC5P-PE, SC5P-R2, or SC5P-R1", "textfield", new JSONObject(){{
 
                 }}, null),
-                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--include-introns"), "includeIntrons", "Include Introns", "If selected, reads from introns will be included in the counts", "ldk-simplecombo", new JSONObject(){{
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--include-introns"), "includeIntrons", "Include Introns", "If selected, reads from introns will be included in the counts", "ldk-simplecombo", new JSONObject(){{
                     put("storeValues", "true;false");
-                    put("value", "false");
-                }}, null)
+                    put("value", "true");
+                }}, "true")
         );
 
         if (additionalParams != null)
@@ -321,6 +322,12 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
 
     private boolean shouldDiscardBam()
     {
+        // NOTE: if downstream analyses are selected, always keep BAM
+        if (!SequencePipelineService.get().getSteps(getPipelineCtx().getJob(), AnalysisStep.class).isEmpty())
+        {
+            return false;
+        }
+
         return !_alwaysRetainBam &&  getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
     }
 

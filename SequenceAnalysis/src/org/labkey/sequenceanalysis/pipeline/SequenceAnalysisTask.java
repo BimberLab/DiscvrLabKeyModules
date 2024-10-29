@@ -107,7 +107,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         }
 
         @Override
-        public PipelineJob.Task createTask(PipelineJob job)
+        public PipelineJob.Task<?> createTask(PipelineJob job)
         {
             SequenceAnalysisTask task = new SequenceAnalysisTask(this, job);
             setJoin(true);
@@ -202,7 +202,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
             //find BAM
             List<? extends ExpData> datas = run.getInputDatas(SequenceAlignmentTask.FINAL_BAM_ROLE, ExpProtocol.ApplicationType.ExperimentRunOutput);
-            if (datas.size() > 0)
+            if (!datas.isEmpty())
             {
                 boolean found = false;
                 for (ExpData d : datas)
@@ -261,7 +261,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
             else
             {
                 List<? extends ExpData> fastaDatas = run.getInputDatas(IndexOutputImpl.REFERENCE_DB_FASTA, null);
-                if (fastaDatas.size() > 0)
+                if (!fastaDatas.isEmpty())
                 {
                     for (ExpData d : fastaDatas)
                     {
@@ -289,7 +289,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
 
             //input FASTQs
             datas = run.getInputDatas(SequenceTaskHelper.FASTQ_DATA_INPUT_NAME, ExpProtocol.ApplicationType.ProtocolApplication);
-            if (datas.size() > 0)
+            if (!datas.isEmpty())
             {
                 for (ExpData d : datas)
                 {

@@ -214,7 +214,7 @@ Ext4.define('SequenceAnalysis.panel.AnalysisSectionPanel', {
             }],
             listeners: {
                 show: function(win){
-                    if (win.getHeight() > Ext4.getBody().getHeight()) {
+                    if (win.getHeight() > window.visualViewport.height) {
                         win.alignTo(Ext4.getBody(), 't-t?');
                     }
                 }

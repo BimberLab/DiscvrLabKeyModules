@@ -15,6 +15,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
+import org.labkey.singlecell.CellHashingServiceImpl;
 import org.labkey.singlecell.SingleCellSchema;
 
 import java.io.File;
@@ -140,6 +141,24 @@ public class UpdateSeuratPrototype extends AbstractRDiscvrStep
             }
 
             FileUtils.moveFile(wrapper.getFile(), toReplace);
+
+            // Also metadata:
+            File meta = CellHashingServiceImpl.get().getMetaTableFromSeurat(wrapper.getFile());
+            File metaOrig = CellHashingServiceImpl.get().getMetaTableFromSeurat(toReplace);
+            if (metaOrig.exists())
+            {
+                metaOrig.delete();
+            }
+            FileUtils.moveFile(meta, metaOrig);
+
+            // Also cellbarcodes:
+            File cellbarcodes = CellHashingServiceImpl.get().getCellBarcodesFromSeurat(wrapper.getFile());
+            File cellbarcodesOrig = CellHashingServiceImpl.get().getCellBarcodesFromSeurat(toReplace);
+            if (cellbarcodesOrig.exists())
+            {
+                cellbarcodesOrig.delete();
+            }
+            FileUtils.moveFile(cellbarcodes, cellbarcodesOrig);
         }
         catch (IOException e)
         {

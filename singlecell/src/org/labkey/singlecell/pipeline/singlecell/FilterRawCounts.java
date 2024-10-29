@@ -25,13 +25,13 @@ public class FilterRawCounts extends AbstractCellMembraneStep
                     }}, 0, "nCount_RNA.low", false),
                     SeuratToolParameter.create("nCountRnaHigh", "Max UMI Count", "Cells with UMI counts above this value will be discarded", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 20000, "nCount_RNA.high", false),
+                    }}, 30000, "nCount_RNA.high", false),
                     SeuratToolParameter.create("nCountFeatureLow", "Min Feature Count", "Cells with unique feature totals below this value will be discarded", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 200, "nFeature.low", false),
+                    }}, 150, "nFeature.low", false),
                     SeuratToolParameter.create("nCountFeatureHigh", "Max Feature Count", "Cells with unique feature totals above this value will be discarded", "ldk-integerfield", new JSONObject(){{
                         put("minValue", 0);
-                    }}, 5000, "nFeature.high", false),
+                    }}, 7500, "nFeature.high", false),
                     SeuratToolParameter.create("pMitoLow", "Min Percent Mito", "Cells percent mitochondrial genes below this value will be discarded", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("maxValue", 1);
