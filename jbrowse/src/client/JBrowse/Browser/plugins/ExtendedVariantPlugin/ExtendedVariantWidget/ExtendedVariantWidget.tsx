@@ -208,7 +208,7 @@ export default jbrowse => {
                 const gt = samples[sample]["GT"]
                 for (let genotype of gt){
                     const nc = "No Call"
-                    if (genotype === "./." || genotype === ".|."){
+                    if (genotype === "./." || genotype === ".|." || genotype === '.'){
                         gtCounts[nc] = gtCounts[nc] ? gtCounts[nc] + 1 : 1
                         gtTotal = gtTotal + 1
                     }

@@ -1573,7 +1573,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public File getMetaTableFromSeurat(File seuratObj, boolean throwIfNotFound)
     {
-        File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds$", "seurat.meta.txt"));
+        File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds$", "seurat.meta.txt.gz"));
         if (throwIfNotFound && !barcodes.exists())
         {
             throw new IllegalArgumentException("Unable to find expected metadata file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());

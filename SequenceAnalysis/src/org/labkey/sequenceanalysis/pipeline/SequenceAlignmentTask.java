@@ -707,7 +707,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         {
             if (!SequencePipelineService.get().getSteps(getJob(), BamProcessingStep.class).isEmpty())
             {
-                throw new PipelineJobException("No BAM was created, but post-procesing steps were selected!");
+                throw new PipelineJobException("No BAM was created, but post-processing steps were selected!");
             }
 
             if (!SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class).isEmpty())

@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.util;
 
+import com.google.common.io.Files;
 import htsjdk.samtools.SAMFileHeader;
 import htsjdk.samtools.SAMFormatException;
 import htsjdk.samtools.SAMReadGroupRecord;
@@ -514,13 +515,23 @@ public class SequenceUtil
                 writer.write("} | bgzip -f" + (compressionLevel == null ? "" : " --compress-level 9") + (threads == null ? "" : " --threads " + threads) + " > '" + outputGzip.getPath() + "'\n");
             }
 
-            SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
-            wrapper.execute(Arrays.asList("/bin/bash", bashTmp.getPath()));
-
-            if (sortAfterMerge)
+            File mergeDone = new File(outputGzip.getParentFile(), "merge.done");
+            if (mergeDone.exists())
             {
-                log.debug("sorting VCF");
-                sortROD(outputGzip, log, 2);
+                log.debug("Merge done file exists, will not repeat merge");
+            }
+            else
+            {
+                SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
+                wrapper.execute(Arrays.asList("/bin/bash", bashTmp.getPath()));
+
+                if (sortAfterMerge)
+                {
+                    log.debug("sorting VCF");
+                    sortROD(outputGzip, log, 2);
+                }
+
+                Files.touch(mergeDone);
             }
 
             SequenceAnalysisService.get().ensureVcfIndex(outputGzip, log);
@@ -539,6 +550,8 @@ public class SequenceUtil
             {
                 headerIdx.delete();
             }
+
+            mergeDone.delete();
         }
         catch (IOException e)
         {
