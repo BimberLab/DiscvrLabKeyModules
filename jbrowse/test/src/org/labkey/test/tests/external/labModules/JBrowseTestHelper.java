@@ -167,8 +167,8 @@ public class JBrowseTestHelper
 
     public static long getTotalVariantFeatures(BaseWebDriverTest test)
     {
-        final int winWidth = test.executeScript("return window.outerWidth", Integer.class);
-        final int winHeight = test.executeScript("return window.outerHeight", Integer.class);
+        final Long winWidth = test.executeScript("return window.outerWidth", Long.class);
+        final Long winHeight = test.executeScript("return window.outerHeight", Long.class);
         final Locator l = Locator.tagWithAttribute("svg", "data-testid", "svgfeatures").append(Locator.tag("polygon"));
         try
         {
@@ -185,7 +185,7 @@ public class JBrowseTestHelper
         }
     }
 
-    private static long doVariantCount(BaseWebDriverTest test, Locator l, int winWidth, int winHeight)
+    private static long doVariantCount(BaseWebDriverTest test, Locator l, long winWidth, long winHeight)
     {
         return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).map(WebElement::getRect).distinct().filter(
                 // This is designed to limit to just elements within the viewport:
