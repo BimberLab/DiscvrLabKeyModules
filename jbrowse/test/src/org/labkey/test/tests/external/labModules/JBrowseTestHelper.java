@@ -166,8 +166,8 @@ public class JBrowseTestHelper
 
     public static long getTotalVariantFeatures(BaseWebDriverTest test)
     {
-        final int winWidth = test.executeScript("window.outerWidth", Integer.class);
-        final int winHeight = test.executeScript("window.outerHeight", Integer.class);
+        final int winWidth = test.executeScript("return window.outerWidth", Integer.class);
+        final int winHeight = test.executeScript("return window.outerHeight", Integer.class);
         Locator l = Locator.tagWithAttribute("svg", "data-testid", "svgfeatures").append(Locator.tag("polygon"));
         try
         {
