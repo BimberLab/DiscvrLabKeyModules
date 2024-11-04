@@ -166,12 +166,14 @@ public class JBrowseTestHelper
 
     public static long getTotalVariantFeatures(BaseWebDriverTest test)
     {
+        final int winWidth = test.executeScript("window.outerWidth", Integer.class);
+        final int winHeight = test.executeScript("window.outerHeight", Integer.class);
         Locator l = Locator.tagWithAttribute("svg", "data-testid", "svgfeatures").append(Locator.tag("polygon"));
         try
         {
             // NOTE: JBrowse renders features using multiple blocks per track, and these tracks can redundantly render identical features on top of one another.
             // Counting unique locations is indirect, but should result in unique features
-            return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).map(WebElement::getLocation).distinct().count();
+            return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).map(WebElement::getRect).distinct().filter(rec -> rec.x > 0 & (rec.x + rec.width) <= winWidth & rec.y > 0 & (rec.y + rec.height) <= winHeight).count();
         }
         catch (StaleElementReferenceException e)
         {
