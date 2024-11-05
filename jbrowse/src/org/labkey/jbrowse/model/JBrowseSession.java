@@ -29,6 +29,7 @@ import org.labkey.jbrowse.JBrowseManager;
 import org.labkey.jbrowse.JBrowseSchema;
 
 import java.io.File;
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -361,12 +362,12 @@ public class JBrowseSession
     public static JSONObject getIndexedFastaAdapter(ReferenceGenome rg)
     {
         ExpData d = ExperimentService.get().getExpData(rg.getFastaExpDataId());
-        String url = d.getWebDavURL(FileContentService.PathType.full);
+        URI url = d.getWebDavURL(FileContentService.PathType.full);
 
         JSONObject ret = new JSONObject();
         ret.put("type", "IndexedFastaAdapter");
         ret.put("fastaLocation", new JSONObject(){{
-            put("uri", url);
+            put("uri", url.toString());
         }});
         ret.put("faiLocation", new JSONObject(){{
             put("uri", url + ".fai");
@@ -378,7 +379,7 @@ public class JBrowseSession
     public static JSONObject getBgZippedIndexedFastaAdapter(ReferenceGenome rg)
     {
         ExpData d = ExperimentService.get().getExpData(rg.getFastaExpDataId());
-        String url = d.getWebDavURL(FileContentService.PathType.full);
+        URI url = d.getWebDavURL(FileContentService.PathType.full);
 
         JSONObject ret = new JSONObject();
         ret.put("type", "BgzipFastaAdapter");

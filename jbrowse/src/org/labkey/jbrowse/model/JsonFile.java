@@ -50,6 +50,7 @@ import org.labkey.api.util.GUID;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
+import org.labkey.api.util.UnexpectedException;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.jbrowse.JBrowseLuceneSearch;
 import org.labkey.jbrowse.JBrowseManager;
@@ -59,6 +60,8 @@ import org.labkey.sequenceanalysis.run.util.TabixRunner;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -512,7 +515,7 @@ public class JsonFile
             put(JBrowseSession.getAssemblyName(rg));
         }});
 
-        String url = targetFile.getWebDavURL(FileContentService.PathType.full);
+        URI url = targetFile.getWebDavURL(FileContentService.PathType.full);
         if (url == null)
         {
             log.info("Unable to create WebDav URL for JBrowse resource with path: " + targetFile.getFile());
@@ -522,7 +525,7 @@ public class JsonFile
         ret.put("adapter", new JSONObject(){{
             put("type", "ExtendedVariantAdapter");
             put("vcfGzLocation", new JSONObject(){{
-                put("uri", url);
+                put("uri", url.toString());
             }});
 
             put("index", new JSONObject(){{
@@ -596,7 +599,7 @@ public class JsonFile
             put(JBrowseSession.getAssemblyName(rg));
         }});
 
-        String url = targetFile.getWebDavURL(FileContentService.PathType.full);
+        URI url = targetFile.getWebDavURL(FileContentService.PathType.full);
         if (url == null)
         {
             log.info("Unable to create WebDav URL for JBrowse resource with path: " + targetFile.getFile());
@@ -612,7 +615,7 @@ public class JsonFile
                 put("type", type);
                 put("bamLocation", new JSONObject()
                 {{
-                    put("uri", url);
+                    put("uri", url.toString());
                 }});
 
                 put("index", new JSONObject()
@@ -667,7 +670,7 @@ public class JsonFile
             put(getCategory());
         }});
 
-        String url = targetFile.getWebDavURL(FileContentService.PathType.full);
+        URI url = targetFile.getWebDavURL(FileContentService.PathType.full);
         if (url == null)
         {
             log.info("Unable to create WebDav URL for JBrowse resource with path: " + targetFile.getFile());
@@ -677,7 +680,7 @@ public class JsonFile
         ret.put("adapter", new JSONObject(){{
             put("type", "BigWigAdapter");
             put("bigWigLocation", new JSONObject(){{
-                put("uri", url);
+                put("uri", url.toString());
                 put("locationType", "UriLocation");
             }});
         }});
@@ -747,7 +750,7 @@ public class JsonFile
 
         // if not gzipped, we need to process it:
         File gzipped = prepareResource(u, log, true, false);
-        final String url;
+        final URI url;
         if (!getExpData().getFile().equals(gzipped))
         {
             url = getWebDavURL(gzipped);
@@ -1192,7 +1195,7 @@ public class JsonFile
         return ret;
     }
 
-    private String getWebDavURL(File input)
+    private URI getWebDavURL(File input)
     {
         java.nio.file.Path path = input.toPath();
         if (getContainerObj() == null)
@@ -1221,7 +1224,14 @@ public class JsonFile
                 relPath = Path.parse(FilenameUtils.separatorsToUnix(relPath)).toString();
             }
 
-            return AppProps.getInstance().getBaseServerUrl() + root.getWebdavURL() + relPath;
+            try
+            {
+                return new URI(AppProps.getInstance().getBaseServerUrl() + root.getWebdavURL() + relPath);
+            }
+            catch (URISyntaxException e)
+            {
+                throw UnexpectedException.wrap(e);
+            }
         }
 
         return null;
