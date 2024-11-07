@@ -361,7 +361,7 @@ public class NimbleHelper
                 config.put("num_mismatches", 0);
                 config.put("intersect_level", 0);
                 // NOTE: this allows a small amount of mismatched ends:
-                config.put("score_percent", 0.90);
+                config.put("score_percent", 0.99);
                 config.put("score_threshold", 45);
                 config.put("score_filter", 25);
             }
