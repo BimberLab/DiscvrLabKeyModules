@@ -131,18 +131,18 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
                 Set<String> distinctLibraries = rgs.stream().map(SAMReadGroupRecord::getLibrary).collect(Collectors.toSet());
                 if (distinctLibraries.size() > 1)
                 {
-                    throw new PipelineJobException("File has more than one library in read group(s), found: " + distinctLibraries.stream().collect(Collectors.joining(", ")));
+                    throw new PipelineJobException("File has more than one library in read group(s), found: " + String.join(", ", distinctLibraries));
                 }
 
                 Set<String> distinctSamples = rgs.stream().map(SAMReadGroupRecord::getSample).collect(Collectors.toSet());
                 if (distinctSamples.size() > 1)
                 {
-                    throw new PipelineJobException("File has more than one sample in read group(s), found: " + distinctSamples.stream().collect(Collectors.joining(", ")));
+                    throw new PipelineJobException("File has more than one sample in read group(s), found: " + String.join(", ", distinctSamples));
                 }
 
                 if (
-                        distinctLibraries.stream().filter(x -> !x.equals(newRsName)).count() == 0L &&
-                        distinctSamples.stream().filter(x -> !x.equals(newRsName)).count() == 0L
+                        distinctLibraries.stream().allMatch(x -> x.equals(newRsName)) &&
+                        distinctSamples.stream().allMatch(x -> x.equals(newRsName))
                 )
                 {
                     throw new PipelineJobException("Sample and library names match in read group(s), aborting");
