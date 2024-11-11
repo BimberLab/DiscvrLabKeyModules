@@ -711,10 +711,15 @@ public class NimbleHelper
             throw new PipelineJobException("Unable to find file: " + outFile.getPath());
         }
 
-        String ret;
-        try (BufferedReader reader = Readers.getReader(outFile))
+        String ret = null;
+        try
         {
-            ret = reader.readLine();
+            ret = StringUtils.trimToNull(Files.readString(outFile.toPath()));
+            if (ret == null)
+            {
+                throw new PipelineJobException("nimble -v did not output version");
+            }
+            ret = ret.replaceAll("nimble", "").replaceAll("[\\r\\n]+", "");
         }
         catch (IOException e)
         {
