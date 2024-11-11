@@ -290,6 +290,13 @@ public class NimbleHelper
 
             output.addSequenceOutput(results, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), description);
 
+            File reportHtml = getReportHtmlFileFromResults(results);
+            if (!reportHtml.exists())
+            {
+                throw new PipelineJobException("Unable to find file: " + reportHtml.getPath());
+            }
+            output.addSequenceOutput(results, basename + ": nimble report", "Nimble Report", rs.getRowId(), null, genome.getGenomeId(), description);
+
             File outputBam = new File(results.getPath().replaceAll("results." + genome.genomeId + ".txt.gz", "nimbleAlignment." + genome.genomeId + ".bam"));
             if (outputBam.exists())
             {
@@ -497,9 +504,40 @@ public class NimbleHelper
             }
 
             resultMap.put(genome, reportResultsGz);
+
+            // Also run nimble plot. Always re-run since this is fast:
+            List<String> plotArgs = new ArrayList<>();
+            plotArgs.add("python3");
+            plotArgs.add("-m");
+            plotArgs.add("nimble");
+
+            plotArgs.add("plot");
+            plotArgs.add("--input_file");
+            plotArgs.add("/work/" + reportResultsGz.getName());
+
+            File plotResultsHtml = getReportHtmlFileFromResults(reportResultsGz);
+            if (reportResultsGz.exists())
+            {
+                plotResultsHtml.delete();
+            }
+
+            plotArgs.add("--output_file");
+            plotArgs.add("/work/" + plotResultsHtml.getName());
+
+            runUsingDocker(plotArgs, output, null);
+
+            if (!plotResultsHtml.exists())
+            {
+                throw new PipelineJobException("Missing file: " + plotResultsHtml.getPath());
+            }
         }
 
         return resultMap;
+    }
+
+    private File getReportHtmlFileFromResults(File reportResultsGz)
+    {
+        return new File(reportResultsGz.getPath().replaceAll("txt.gz$", "html$"));
     }
 
     private File getNimbleDoneFile(File parentDir, String resumeString)
