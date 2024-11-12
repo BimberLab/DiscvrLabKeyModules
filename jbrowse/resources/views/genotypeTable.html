@@ -5,6 +5,24 @@
         var start = LABKEY.ActionURL.getParameter("start");
         var stop = LABKEY.ActionURL.getParameter("stop");
 
+        if (!start || !stop) {
+            alert('Must provide a start and stop!')
+            return
+        }
+
+        if (isNaN(start)) {
+            start = String(start).replaceAll(',', '')
+        }
+
+        if (isNaN(stop)) {
+            stop = String(stop).replaceAll(',', '')
+        }
+
+        if (isNaN(start) || isNaN(stop)) {
+            alert('Start and stop must be integers!')
+            return
+        }
+
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('jbrowse', 'getGenotypes', null),
             method: 'POST',
