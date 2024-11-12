@@ -535,9 +535,9 @@ public class NimbleHelper
         return resultMap;
     }
 
-    private File getReportHtmlFileFromResults(File reportResultsGz)
+    private File getReportHtmlFileFromResults(File reportResults)
     {
-        return new File(reportResultsGz.getPath().replaceAll("txt.gz$", "html$"));
+        return new File(reportResults.getPath().replaceAll("txt(.gz)*$", "html"));
     }
 
     private File getNimbleDoneFile(File parentDir, String resumeString)

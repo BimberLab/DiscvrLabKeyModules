@@ -32,10 +32,6 @@ public class AppendNimble extends AbstractRDiscvrStep
                     {{
                         put("allowBlank", false);
                     }}, null),
-                    SeuratToolParameter.create("retainAmbiguousFeatures", "Retain Ambiguous Features", "If checked, features hitting more than one reference will be retained", "checkbox", new JSONObject()
-                    {{
-                        put("check", false);
-                    }}, false, null, true),
                     SeuratToolParameter.create("ensureSamplesShareAllGenomes", "Ensure Samples Share All Genomes", "If checked, the job will fail unless nimble data is found for each requested genome for all samples", "checkbox", new JSONObject()
                     {{
                         put("check", true);
@@ -76,7 +72,7 @@ public class AppendNimble extends AbstractRDiscvrStep
         for (int i = 0; i < json.length(); i++)
         {
             JSONArray arr = json.getJSONArray(i);
-            if (arr.length() != 2)
+            if (arr.length() != 3)
             {
                 throw new PipelineJobException("Unexpected value: " + json.getString(i));
             }
@@ -84,6 +80,23 @@ public class AppendNimble extends AbstractRDiscvrStep
             int genomeId = arr.getInt(0);
             String targetAssay = arr.getString(1);
             ret.bodyLines.add("\t" + delim + "'" + genomeId + "' = '" + targetAssay + "'");
+            delim = ",";
+        }
+        ret.bodyLines.add(")");
+
+        ret.bodyLines.add("nimbleGenomeAmbiguousPreference <- list(");
+        delim = "";
+        for (int i = 0; i < json.length(); i++)
+        {
+            JSONArray arr = json.getJSONArray(i);
+            if (arr.length() != 3)
+            {
+                throw new PipelineJobException("Unexpected value: " + json.getString(i));
+            }
+
+            int genomeId = arr.getInt(0);
+            boolean retainAmbiguousFeatures = arr.getBoolean(2);
+            ret.bodyLines.add("\t" + delim + "'" + genomeId + "' = " + (retainAmbiguousFeatures ? "TRUE" : "FALSE"));
             delim = ",";
         }
         ret.bodyLines.add(")");
