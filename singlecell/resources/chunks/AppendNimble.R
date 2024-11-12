@@ -16,8 +16,8 @@ for (datasetId in names(seuratObjects)) {
   seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
   for (genomeId in names(nimbleGenomes)) {
-    retainAmbiguousFeatures <- !nimbleGenomeAmbiguousPreference[[genomeId]]
-    seuratObj <- Rdiscvr::DownloadAndAppendNimble(seuratObject = seuratObj, allowableGenomes = genomeId, ensureSamplesShareAllGenomes = ensureSamplesShareAllGenomes, targetAssayName = nimbleGenomes[[genomeId]], enforceUniqueFeatureNames = TRUE, dropAmbiguousFeatures = !retainAmbiguousFeatures, maxLibrarySizeRatio = maxLibrarySizeRatio)
+    maxAmbiguityAllowed <- !nimbleGenomeAmbiguousPreference[[genomeId]]
+    seuratObj <- Rdiscvr::DownloadAndAppendNimble(seuratObject = seuratObj, allowableGenomes = genomeId, ensureSamplesShareAllGenomes = ensureSamplesShareAllGenomes, targetAssayName = nimbleGenomes[[genomeId]], enforceUniqueFeatureNames = TRUE, maxAmbiguityAllowed = maxAmbiguityAllowed, maxLibrarySizeRatio = maxLibrarySizeRatio)
   }
 
   saveData(seuratObj, datasetId)

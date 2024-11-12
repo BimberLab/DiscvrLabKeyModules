@@ -32,6 +32,10 @@ public class AppendNimble extends AbstractRDiscvrStep
                     {{
                         put("allowBlank", false);
                     }}, null),
+                    SeuratToolParameter.create("maxAmbiguityAllowed", "Max Ambiguity Allowed", "If provided, ambiguous features with more than this number of values will be discarded (e.g. if maxAmbiguityAllowed=2, then the feature Feat1,Feat2,Feat3 would be discared, but not Feat1,Feat3. This can be overridden per genome.", "ldk-integerfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                    }}, 0, null, true),
                     SeuratToolParameter.create("ensureSamplesShareAllGenomes", "Ensure Samples Share All Genomes", "If checked, the job will fail unless nimble data is found for each requested genome for all samples", "checkbox", new JSONObject()
                     {{
                         put("check", true);
@@ -84,6 +88,8 @@ public class AppendNimble extends AbstractRDiscvrStep
         }
         ret.bodyLines.add(")");
 
+        Integer maxAmbiguityAllowed = getProvider().getParameterByName("maxAmbiguityAllowed").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
+
         ret.bodyLines.add("nimbleGenomeAmbiguousPreference <- list(");
         delim = "";
         for (int i = 0; i < json.length(); i++)
@@ -95,8 +101,13 @@ public class AppendNimble extends AbstractRDiscvrStep
             }
 
             int genomeId = arr.getInt(0);
-            boolean retainAmbiguousFeatures = arr.getBoolean(2);
-            ret.bodyLines.add("\t" + delim + "'" + genomeId + "' = " + (retainAmbiguousFeatures ? "TRUE" : "FALSE"));
+            Integer maxAmbiguityAllowed2 = arr.get(2) == null ? null : arr.getInt(2);
+            if (maxAmbiguityAllowed2 == null)
+            {
+                maxAmbiguityAllowed2 = maxAmbiguityAllowed;
+            }
+
+            ret.bodyLines.add("\t" + delim + "'" + genomeId + "' = " + (maxAmbiguityAllowed2 == null ? "Inf" : maxAmbiguityAllowed2));
             delim = ",";
         }
         ret.bodyLines.add(")");

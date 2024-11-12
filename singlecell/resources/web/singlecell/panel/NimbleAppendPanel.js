@@ -40,7 +40,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 				},LABKEY.ext4.GRIDBUTTONS.DELETERECORD()],
 				store: {
 					type: 'array',
-					fields: ['genomeId', 'targetAssay','retainAmbiguousFeatures']
+					fields: ['genomeId', 'targetAssay','maxAmbiguityAllowed']
 				},
 				columns: [{
 					dataIndex: 'genomeId',
@@ -69,12 +69,13 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 						allowBlank: false
 					}
 				},{
-					dataIndex: 'retainAmbiguousFeatures',
+					dataIndex: 'maxAmbiguityAllowed',
 					width: 175,
-					header: 'Retain Ambiguous Features?',
+					header: 'Max Ambiguity Allowed',
 					editor: {
-						xtype: 'checkbox',
-						allowBlank: false
+						xtype: 'ldk-integerfield',
+						allowBlank: true,
+						minValue: 0
 					}
 				}]
 			}]
@@ -86,7 +87,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 	getValue: function(){
 		var ret = [];
 		this.down('ldk-gridpanel').store.each(function(r, i) {
-			ret.push([r.data.genomeId, r.data.targetAssay, !!r.data.retainAmbiguousFeatures]);
+			ret.push([r.data.genomeId, r.data.targetAssay, r.data.maxAmbiguityAllowed ?? '']);
 		}, this);
 
 		return Ext4.isEmpty(ret) ? null : JSON.stringify(ret);
@@ -122,7 +123,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 				var rec = grid.store.createModel({
 					genomeId: row[0],
 					targetAssay: row[1],
-					retainAmbiguousFeatures: !!row[2]
+					maxAmbiguityAllowed: row[2]
 				});
 				grid.store.add(rec);
 			}, this);
