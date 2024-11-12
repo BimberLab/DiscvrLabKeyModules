@@ -107,11 +107,11 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
 
             if (SequenceUtil.FILETYPE.bamOrCram.getFileType().isType(so.getFile()))
             {
-                getAndValidateHeaderForBam(so, newRsName);
+                getAndValidateHeaderForBam(so, newRsName, ctx.getLogger());
             }
             else if (SequenceUtil.FILETYPE.gvcf.getFileType().isType(so.getFile()) | SequenceUtil.FILETYPE.vcf.getFileType().isType(so.getFile()))
             {
-                getAndValidateHeaderForVcf(so, newRsName);
+                getAndValidateHeaderForVcf(so, newRsName, ctx.getLogger());
             }
             else
             {
@@ -121,7 +121,7 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
             ctx.getSequenceSupport().cacheObject("readsetId", newRsName);
         }
 
-        private SAMFileHeader getAndValidateHeaderForBam(SequenceOutputFile so, String newRsName) throws PipelineJobException
+        private SAMFileHeader getAndValidateHeaderForBam(SequenceOutputFile so, String newRsName, Logger log) throws PipelineJobException
         {
             SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault();
             try (SamReader reader = samReaderFactory.open(so.getFile()))
@@ -148,6 +148,8 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
                     throw new PipelineJobException("Sample and library names match in read group(s), aborting");
                 }
 
+                log.info("Readset name and header do not match: " + newRsName + " / " + distinctLibraries.stream().distinct().collect(Collectors.joining()));
+
                 return header;
             }
             catch (IOException e)
@@ -156,7 +158,7 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
             }
         }
 
-        private VCFHeader getAndValidateHeaderForVcf(SequenceOutputFile so, String newRsName) throws PipelineJobException
+        private VCFHeader getAndValidateHeaderForVcf(SequenceOutputFile so, String newRsName, Logger log) throws PipelineJobException
         {
             try (VCFReader reader = new VCFFileReader(so.getFile()))
             {
@@ -172,6 +174,8 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
                 {
                     throw new PipelineJobException("Sample names match, aborting");
                 }
+
+                log.info("Readset name and header do not match: " + newRsName + " / " + existingSample);
 
                 return header;
             }
@@ -209,7 +213,7 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
 
         private void reheaderVcf(SequenceOutputFile so, JobContext ctx, String newRsName) throws PipelineJobException
         {
-            VCFHeader header = getAndValidateHeaderForVcf(so, newRsName);
+            VCFHeader header = getAndValidateHeaderForVcf(so, newRsName, ctx.getLogger());
             String existingSample = header.getGenotypeSamples().get(0);
 
             File sampleNamesFile =  new File(ctx.getWorkingDirectory(), "sampleNames.txt");
@@ -289,7 +293,7 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
         {
             try
             {
-                SAMFileHeader header = getAndValidateHeaderForBam(so, newRsName);
+                SAMFileHeader header = getAndValidateHeaderForBam(so, newRsName, ctx.getLogger());
 
                 List<SAMReadGroupRecord> rgs = header.getReadGroups();
                 String existingSample = rgs.get(0).getSample();
