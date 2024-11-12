@@ -737,9 +737,7 @@ public class NimbleHelper
     private String getVersion(PipelineStepOutput output) throws PipelineJobException
     {
         List<String> nimbleArgs = new ArrayList<>();
-        nimbleArgs.add("/bin/bash");
-        nimbleArgs.add("-c");
-        nimbleArgs.add("python3 -m nimble -v > /work/nimbleVersion.txt");
+        nimbleArgs.add("/bin/bash -c 'python3 -m nimble -v' > /work/nimbleVersion.txt");
 
         runUsingDocker(nimbleArgs, output, null);
 
