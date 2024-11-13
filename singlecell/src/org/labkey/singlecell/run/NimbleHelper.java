@@ -505,7 +505,7 @@ public class NimbleHelper
 
             resultMap.put(genome, reportResultsGz);
 
-            if (SequencePipelineService.get().hasMinLineCount(reportResultsGz, 2))
+            if (SequencePipelineService.get().hasMinLineCount(alignResultsGz, 2))
             {
                 // Also run nimble plot. Always re-run since this is fast:
                 List<String> plotArgs = new ArrayList<>();
@@ -515,7 +515,7 @@ public class NimbleHelper
 
                 plotArgs.add("plot");
                 plotArgs.add("--input_file");
-                plotArgs.add("/work/" + reportResultsGz.getName());
+                plotArgs.add("/work/" + alignResultsGz.getName());
 
                 File plotResultsHtml = getReportHtmlFileFromResults(reportResultsGz);
                 if (reportResultsGz.exists())
