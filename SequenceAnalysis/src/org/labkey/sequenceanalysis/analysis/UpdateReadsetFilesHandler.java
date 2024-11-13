@@ -13,6 +13,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFReader;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -36,7 +37,6 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -148,7 +148,7 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
                     throw new PipelineJobException("Sample and library names match in read group(s), aborting");
                 }
 
-                log.info("Readset name and header do not match: " + newRsName + " / " + distinctLibraries.stream().distinct().collect(Collectors.joining()));
+                log.info("Readset name and header do not match: " + newRsName + " / existing library: " + distinctLibraries.stream().distinct().collect(Collectors.joining()) + ", existing sample: " + distinctSamples.stream().distinct().collect(Collectors.joining()));
 
                 return header;
             }
@@ -261,7 +261,7 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
                 }
                 FileUtils.moveFile(outputIdx, inputIndex);
 
-                addTracker(so, existingSample, newRsName);
+                addTracker(so, existingSample, newRsName, null);
             }
             catch (IOException e)
             {
@@ -269,7 +269,7 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
             }
         }
 
-        private void addTracker(SequenceOutputFile so, String existingSample, String newRsName) throws IOException
+        private void addTracker(SequenceOutputFile so, String existingSample, String newRsName, @Nullable String existingLibrary) throws IOException
         {
             File tracker = new File(so.getFile().getParentFile(), "reheaderHistory.txt");
             boolean preExisting = tracker.exists();
@@ -282,10 +282,10 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
             {
                 if (!preExisting)
                 {
-                    writer.println("OriginalSample\tNewSample");
+                    writer.println("OriginalSample\tNewSample\tOriginalLibrary");
                 }
 
-                writer.println(existingSample + "\t" + newRsName);
+                writer.println(existingSample + "\t" + newRsName + "\t" + (existingLibrary == null ? "N/A" : existingLibrary));
             }
         }
 
@@ -345,7 +345,7 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
                 }
                 FileUtils.moveFile(outputIdx, inputIndex);
 
-                addTracker(so, existingSample, newRsName);
+                addTracker(so, existingSample, newRsName, existingLibrary);
             }
             catch (IOException e)
             {
