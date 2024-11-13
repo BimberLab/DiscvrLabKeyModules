@@ -204,7 +204,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
     @Override
     public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
     {
-        File expectedTxt = getSBTSummaryFile(outDir, inputBam);
+        File expectedTxt = getSBTSummaryFile(outDir, inputBam, false);
         if (expectedTxt.exists())
         {
             getPipelineCtx().getLogger().info("Processing SBT output: " + expectedTxt.getPath());
@@ -310,9 +310,10 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             getPipelineCtx().getLogger().info("Inspection complete");
 
             //write output as TSV
-            agg.writeTable(getSBTSummaryFile(outputDir, inputBam));
+            agg.writeTable(getSBTSummaryFile(outputDir, inputBam, false));
 
-            output.addSequenceOutput(sbtOutputLog, "SBT Results: " + inputBam.getName(), "SBT Results", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+            // This will be gzipped later:
+            output.addSequenceOutput(getSBTSummaryFile(outputDir, inputBam, true), "SBT Results: " + inputBam.getName(), "SBT Results", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
 
             //optionally output FASTQ of unmapped reads
             Double exportThreshold = getProvider().getParameterByName(EXPORT_UNMAPPED).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class);
@@ -375,9 +376,9 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
         }
     }
 
-    protected File getSBTSummaryFile(File outputDir, File bam)
+    protected File getSBTSummaryFile(File outputDir, File bam, boolean doGzip)
     {
-        return new File(outputDir, FileUtil.getBaseName(bam) + ".sbt_hits.txt");
+        return new File(outputDir, FileUtil.getBaseName(bam) + ".sbt_hits.txt" + (doGzip ? ".gz": ""));
     }
 
     public static class AlignmentGroupCompare
