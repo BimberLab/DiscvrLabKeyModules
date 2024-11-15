@@ -17,24 +17,19 @@ package org.labkey.sequenceanalysis.run.analysis;
 
 import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
-import htsjdk.samtools.SAMFormatException;
 import htsjdk.samtools.SAMRecord;
-import htsjdk.samtools.SAMRecordIterator;
-import htsjdk.samtools.SamReader;
-import htsjdk.samtools.SamReaderFactory;
-import htsjdk.samtools.ValidationStringency;
 import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import htsjdk.samtools.fastq.FastqWriterFactory;
 import htsjdk.samtools.reference.IndexedFastaSequenceFile;
 import htsjdk.samtools.reference.ReferenceSequence;
+import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SimpleFilter;
@@ -46,12 +41,9 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
-import org.labkey.api.util.FileType;
 import org.labkey.api.util.Pair;
-import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
-import org.labkey.sequenceanalysis.api.picard.CigarPositionIterable;
 import org.labkey.sequenceanalysis.run.alignment.FastqCollapser;
 import org.labkey.sequenceanalysis.run.util.FlashWrapper;
 import org.labkey.sequenceanalysis.run.util.NTSnp;
@@ -59,16 +51,9 @@ import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -81,7 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * User: bimber
@@ -303,22 +287,9 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                 ;
     }
 
-    public OutputStream getLogOutputStream(File outputLog) throws IOException
-    {
-        FileType gz = new FileType(".gz");
-        if (gz.isType(outputLog))
-        {
-            return new GZIPOutputStream(new FileOutputStream(outputLog));
-        }
-        else
-        {
-            return new FileOutputStream(outputLog);
-        }
-    }
-
     public Map<String, HitSet> getAlignmentSummary(File outputLog) throws IOException, PipelineJobException
     {
-        try (CSVWriter writer = outputLog == null ? null : new CSVWriter(new BufferedWriter(new OutputStreamWriter(getLogOutputStream(outputLog), StandardCharsets.UTF_8)), '\t', CSVWriter.NO_QUOTE_CHARACTER))
+        try (CSVWriter writer = outputLog == null ? null : new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(outputLog), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
             //these are stage-1 filters, filtering on the read-pair level
             Map<String, HitSet> totals = doFilterStage1(writer);
@@ -899,7 +870,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
         return stage4Totals;
     }
 
-    private class HitSet
+    private static class HitSet
     {
         public Set<String> readNames = new HashSet<>();
         public Set<String> refNames = new TreeSet<>();
@@ -1047,7 +1018,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
 
     public static void processSBTSummary(User u, Container c, AnalysisModel model, File output, File refFasta, Logger log) throws PipelineJobException
     {
-        try (CSVReader reader = new CSVReader(new BufferedReader(new InputStreamReader(new FileInputStream(output), StandardCharsets.UTF_8)), '\t', CSVWriter.DEFAULT_QUOTE_CHARACTER))
+        try (CSVReader reader = new CSVReader(IOUtil.openFileForBufferedUtf8Reading(output), '\t', CSVWriter.DEFAULT_QUOTE_CHARACTER))
         {
             try (DbScope.Transaction transaction = ExperimentService.get().ensureTransaction())
             {
@@ -1117,7 +1088,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
 
     public void writeTable(File output) throws PipelineJobException
     {
-        try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), '\t'))
+        try (CSVWriter writer = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(output), '\t'))
         {
             Map<String, HitSet> map = writeSummary();
 
@@ -1326,7 +1297,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
 
             //rename reads to make it easier to combine later
             File renamed = new File(outDir, basename + ".collapsed.tmp.fasta");
-            try (BufferedReader reader = Readers.getReader(collapsed);PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(renamed), StringUtilsLabKey.DEFAULT_CHARSET))))
+            try (BufferedReader reader = Readers.getReader(collapsed);PrintWriter writer = new PrintWriter(IOUtil.openFileForBufferedUtf8Writing(renamed)))
             {
                 String line;
                 while ((line = reader.readLine()) != null)

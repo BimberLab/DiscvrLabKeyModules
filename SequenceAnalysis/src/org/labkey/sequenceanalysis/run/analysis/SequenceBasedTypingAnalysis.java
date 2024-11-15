@@ -204,18 +204,12 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
     @Override
     public Output performAnalysisPerSampleLocal(AnalysisModel model, File inputBam, File referenceFasta, File outDir) throws PipelineJobException
     {
-        File expectedTxt = getSBTSummaryFile(outDir, inputBam, false);
+        File expectedTxt = getSBTSummaryFile(outDir, inputBam);
         if (expectedTxt.exists())
         {
             getPipelineCtx().getLogger().info("Processing SBT output: " + expectedTxt.getPath());
 
             SequenceBasedTypingAlignmentAggregator.processSBTSummary(getPipelineCtx().getJob().getUser(), getPipelineCtx().getJob().getContainer(), model, expectedTxt, referenceFasta, getPipelineCtx().getLogger());
-
-            File compressed = Compress.compressGzip(expectedTxt);
-            if (compressed.exists() && expectedTxt.exists())
-            {
-                expectedTxt.delete();
-            }
 
             // Perform second pass to collapse groups:
             new AlignmentGroupCompare(model.getAnalysisId(), getPipelineCtx().getJob().getContainer(), getPipelineCtx().getJob().getUser()).collapseGroups(getPipelineCtx().getLogger(), getPipelineCtx().getJob().getUser());
@@ -310,10 +304,10 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             getPipelineCtx().getLogger().info("Inspection complete");
 
             //write output as TSV
-            agg.writeTable(getSBTSummaryFile(outputDir, inputBam, false));
+            agg.writeTable(getSBTSummaryFile(outputDir, inputBam));
 
             // This will be gzipped later:
-            output.addSequenceOutput(getSBTSummaryFile(outputDir, inputBam, true), "SBT Results: " + inputBam.getName(), "SBT Results", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+            output.addSequenceOutput(getSBTSummaryFile(outputDir, inputBam), "SBT Results: " + inputBam.getName(), "SBT Results", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
 
             //optionally output FASTQ of unmapped reads
             Double exportThreshold = getProvider().getParameterByName(EXPORT_UNMAPPED).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class);
@@ -376,9 +370,9 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
         }
     }
 
-    protected File getSBTSummaryFile(File outputDir, File bam, boolean doGzip)
+    protected File getSBTSummaryFile(File outputDir, File bam)
     {
-        return new File(outputDir, FileUtil.getBaseName(bam) + ".sbt_hits.txt" + (doGzip ? ".gz": ""));
+        return new File(outputDir, FileUtil.getBaseName(bam) + ".sbt_hits.txt.gz");
     }
 
     public static class AlignmentGroupCompare
