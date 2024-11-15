@@ -26,6 +26,7 @@ import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
@@ -235,7 +236,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
                 for (SequenceOutputFile so : inputFiles)
                 {
                     PangolinHandler.PANGO_MODE pangoMode = PangolinHandler.PANGO_MODE.valueOf(ctx.getParams().optString(PangolinHandler.PANGO_MODE.class.getSimpleName(), PANGO_MODE.both.name()));
-                    Map<String, String> pangolinData = runPangolin(ctx.getWorkingDirectory(), so.getFile(), ctx.getFileManager(), ctx.getLogger(), pangoMode);
+                    Map<String, String> pangolinData = runPangolin(ctx.getWorkingDirectory(), so.getFile(), ctx.getFileManager(), ctx.getLogger(), pangoMode, ctx);
                     List<String> vals = new ArrayList<>();
                     vals.add(String.valueOf(so.getRowid()));
                     for (String key : PANGO_FIELDS)
@@ -263,7 +264,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         return new File(consensusFasta.getParentFile(), FileUtil.getBaseName(consensusFasta) + "." + mode.name() + ".pangolin.csv");
     }
 
-    private static File runUsingDocker(File outputDir, Logger log, File consensusFasta, PipelineOutputTracker tracker, List<String> extraArgs) throws PipelineJobException
+    private static File runUsingDocker(File outputDir, Logger log, File consensusFasta, PipelineOutputTracker tracker, List<String> extraArgs, PipelineContext ctx) throws PipelineJobException
     {
         if (!consensusFasta.getParentFile().equals(outputDir))
         {
@@ -307,6 +308,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
 
             String extraArgString = extraArgs == null ? "" : " " + StringUtils.join(extraArgs, " ");
             writer.println("\t-v \"${WD}:/work\" \\");
+            ctx.getDockerVolumes().forEach(writer::println);
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
@@ -335,7 +337,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         return output;
     }
 
-    public static Map<String, String> runPangolin(File workDir, File consensusFasta, PipelineOutputTracker tracker, Logger log, PANGO_MODE pangoMode) throws PipelineJobException
+    public static Map<String, String> runPangolin(File workDir, File consensusFasta, PipelineOutputTracker tracker, Logger log, PANGO_MODE pangoMode, PipelineContext ctx) throws PipelineJobException
     {
         List<PANGO_MODE> modes = PANGO_MODE.getModes(pangoMode);
 
@@ -344,7 +346,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
         for (PANGO_MODE mode : modes)
         {
             List<String> extraArgs = mode == PANGO_MODE.usher ? Collections.singletonList("--usher") : null;
-            File output = runUsingDocker(workDir, log, consensusFasta, tracker, extraArgs);
+            File output = runUsingDocker(workDir, log, consensusFasta, tracker, extraArgs, ctx);
 
             try
             {

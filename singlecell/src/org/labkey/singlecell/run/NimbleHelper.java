@@ -602,6 +602,7 @@ public class NimbleHelper
                 writer.println("\t--memory='" + maxRam + "g' \\");
             }
 
+            getPipelineCtx().getDockerVolumes().forEach(writer::println);
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
             writer.println("\t-u $UID \\");

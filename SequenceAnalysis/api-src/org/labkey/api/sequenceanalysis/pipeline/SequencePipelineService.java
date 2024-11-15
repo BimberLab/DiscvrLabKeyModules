@@ -19,6 +19,7 @@ package org.labkey.api.sequenceanalysis.pipeline;
 import htsjdk.samtools.SAMFileHeader;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.Container;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
@@ -26,6 +27,7 @@ import org.labkey.api.sequenceanalysis.run.CommandWrapper;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -97,6 +99,8 @@ abstract public class SequencePipelineService
      * will be used. Otherwise this defaults to 'docker'
      */
     abstract public String getDockerCommand();
+
+    abstract public Collection<String> getDockerVolumes(Container c);
 
     abstract public List<File> getSequenceJobInputFiles(PipelineJob job);
 

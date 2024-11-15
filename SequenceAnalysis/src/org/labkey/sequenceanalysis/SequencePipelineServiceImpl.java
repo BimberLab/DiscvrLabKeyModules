@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
+import org.labkey.api.data.Container;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
@@ -43,6 +44,7 @@ import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -455,6 +457,29 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         }
 
         return "docker";
+    }
+
+    @Override
+    public Collection<String> getDockerVolumes(Container c)
+    {
+        if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
+        {
+            throw new IllegalArgumentException("SequencePipelineService.getDockerVolumes() should only be called from the webserver!");
+        }
+
+        Set<String> volumeLines = new HashSet<>();
+        for (JobResourceSettings settings : SequencePipelineServiceImpl.get().getResourceSettings())
+        {
+            if (settings.isAvailable(c))
+            {
+                for (String volume : settings.getDockerVolumes(c))
+                {
+                    volumeLines.add("-v '" + volume + "':'" + volume + "'");
+                }
+            }
+        }
+
+        return volumeLines;
     }
 
     @Override

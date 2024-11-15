@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.writer.PrintWriters;
@@ -17,12 +18,14 @@ import java.util.List;
 public class DockerWrapper extends AbstractCommandWrapper
 {
     private final String _containerName;
+    private final PipelineContext _ctx;
     private File _tmpDir = null;
 
-    public DockerWrapper(String containerName, Logger log)
+    public DockerWrapper(String containerName, Logger log, PipelineContext ctx)
     {
         super(log);
         _containerName = containerName;
+        _ctx = ctx;
     }
 
     public void setTmpDir(File tmpDir)
@@ -49,6 +52,7 @@ public class DockerWrapper extends AbstractCommandWrapper
             writer.println("sudo $DOCKER run --rm=true \\");
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
+            _ctx.getDockerVolumes().forEach(writer::println);
             if (_tmpDir != null)
             {
                 writer.println("\t-v \"" + _tmpDir.getPath() + ":/tmp\" \\");

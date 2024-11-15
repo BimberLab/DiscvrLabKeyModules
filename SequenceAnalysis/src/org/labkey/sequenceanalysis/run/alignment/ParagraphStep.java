@@ -42,7 +42,10 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 ToolParameterDescriptor.createExpDataParam("svVCF", "Input VCF", "This is the DataId of the VCF containing the SVs to genotype", "ldk-expdatafield", new JSONObject()
                 {{
                     put("allowBlank", false);
-                }}, null)
+                }}, null),
+                ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, false)
         ));
     }
 
@@ -170,7 +173,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 }
                 ctx.getFileManager().addIntermediateFile(coverageFile);
 
-                DockerWrapper dockerWrapper = new DockerWrapper("ghcr.io/bimberlabinternal/paragraph:latest", ctx.getLogger());
+                DockerWrapper dockerWrapper = new DockerWrapper("ghcr.io/bimberlabinternal/paragraph:latest", ctx.getLogger(), ctx);
                 List<String> paragraphArgs = new ArrayList<>();
                 paragraphArgs.add("/opt/paragraph/bin/multigrmpy.py");
 

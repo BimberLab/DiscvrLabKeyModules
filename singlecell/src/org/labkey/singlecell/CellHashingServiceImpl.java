@@ -31,6 +31,7 @@ import org.labkey.api.reader.Readers;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
@@ -635,7 +636,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
         if (!doneFile.exists())
         {
-            callsFile = generateCellHashingCalls(rawCountMatrixDir, ctx.getOutputDir(), outputBasename, ctx.getLogger(), ctx.getSourceDirectory(), parameters);
+            callsFile = generateCellHashingCalls(rawCountMatrixDir, ctx.getOutputDir(), outputBasename, ctx.getLogger(), ctx.getSourceDirectory(), parameters, ctx);
 
             try
             {
@@ -1195,7 +1196,7 @@ public class CellHashingServiceImpl extends CellHashingService
         return new File(citeSeqCountOutDir.getParentFile(), "molecule_info.h5");
     }
 
-    public File generateCellHashingCalls(File citeSeqCountOutDir, File outputDir, String basename, Logger log, File localPipelineDir, CellHashingService.CellHashingParameters parameters) throws PipelineJobException
+    public File generateCellHashingCalls(File citeSeqCountOutDir, File outputDir, String basename, Logger log, File localPipelineDir, CellHashingService.CellHashingParameters parameters, PipelineContext ctx) throws PipelineJobException
     {
         log.debug("generating final calls from folder: " + citeSeqCountOutDir.getPath());
 
@@ -1325,6 +1326,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
             writer.println("\t-e CELLHASHR_DEBUG=1 \\");
             writer.println("\t-v \"${WD}:/work\" \\");
+            ctx.getDockerVolumes().forEach(writer::println);
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");

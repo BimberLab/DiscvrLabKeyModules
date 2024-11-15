@@ -2,6 +2,7 @@ package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.labkey.api.data.Container;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -12,4 +13,6 @@ public interface JobResourceSettings
     boolean isAvailable(Container c);
 
     List<ToolParameterDescriptor> getParams();
+
+    Collection<String> getDockerVolumes(Container c);
 }

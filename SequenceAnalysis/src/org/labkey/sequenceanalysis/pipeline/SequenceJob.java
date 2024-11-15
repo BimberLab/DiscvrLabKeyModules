@@ -36,6 +36,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputTracker;
+import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
@@ -73,6 +74,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     private List<File> _inputFiles;
     private List<SequenceOutputFile> _outputsToCreate = new ArrayList<>();
     private PipeRoot _folderFileRoot;
+    private Collection<String> _dockerVolumes;
 
     transient private JSONObject _params;
 
@@ -104,6 +106,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         _folderPrefix = parentJob._folderPrefix;
         _inputFiles = parentJob._inputFiles;
         _folderFileRoot = parentJob._folderFileRoot;
+        _dockerVolumes = parentJob._dockerVolumes;
 
         _params = parentJob.getParameterJson();
 
@@ -133,6 +136,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         writeParameters(params);
 
         _folderFileRoot = c.isWorkbook() ? PipelineService.get().findPipelineRoot(c.getParent()) : pipeRoot;
+        _dockerVolumes = SequencePipelineService.get().getDockerVolumes(c);
 
         setLogFile(_getLogFile());
         writeSupportToDisk();
@@ -180,6 +184,16 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     public void setFolderFileRoot(PipeRoot folderFileRoot)
     {
         _folderFileRoot = folderFileRoot;
+    }
+
+    public Collection<String> getDockerVolumes()
+    {
+        return Collections.unmodifiableCollection(_dockerVolumes);
+    }
+
+    public void setDockerVolumes(Collection<String> dockerVolumes)
+    {
+        _dockerVolumes = dockerVolumes;
     }
 
     public void setDescription(String description)
