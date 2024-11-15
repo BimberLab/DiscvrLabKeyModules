@@ -293,9 +293,15 @@ public class NimbleHelper
             File reportHtml = getReportHtmlFileFromResults(results);
             if (!reportHtml.exists())
             {
-                throw new PipelineJobException("Unable to find file: " + reportHtml.getPath());
+                if (SequencePipelineService.get().hasMinLineCount(results, 2))
+                {
+                    throw new PipelineJobException("Unable to find file: " + reportHtml.getPath());
+                }
             }
-            output.addSequenceOutput(results, basename + ": nimble report", "Nimble Report", rs.getRowId(), null, genome.getGenomeId(), description);
+            else
+            {
+                output.addSequenceOutput(results, basename + ": nimble report", "Nimble Report", rs.getRowId(), null, genome.getGenomeId(), description);
+            }
 
             File outputBam = new File(results.getPath().replaceAll("results." + genome.genomeId + ".txt.gz", "nimbleAlignment." + genome.genomeId + ".bam"));
             if (outputBam.exists())
