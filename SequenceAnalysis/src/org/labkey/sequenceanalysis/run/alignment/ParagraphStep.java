@@ -18,6 +18,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.DockerWrapper;
+import org.labkey.api.sequenceanalysis.run.SelectVariantsWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
@@ -43,6 +44,9 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 {{
                     put("allowBlank", false);
                 }}, null),
+                ToolParameterDescriptor.create("doBndSubset", "Remove BNDs", "If the reference VCF contains BNDs, selecting this option will cause the job to remove them prior to paragraph", "checkbox", new JSONObject(){{
+                    put("checked", true);
+                }}, false),
                 ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
                     put("checked", true);
                 }}, false)
@@ -104,6 +108,32 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
             else if (!svVcf.exists())
             {
                 throw new PipelineJobException("Missing file: " + svVcf.getPath());
+            }
+
+            boolean doBndSubset = ctx.getParams().optBoolean("doBndSubset", false);
+            if (doBndSubset)
+            {
+                File vcfNoBnd = new File(ctx.getOutputDir(), SequenceAnalysisService.get().getUnzippedBaseName(svVcf.getName()) + "nobnd.vcf.gz");
+                File vcfNoBndIdx = new File(vcfNoBnd.getPath() + ".tbi");
+                if (vcfNoBndIdx.exists())
+                {
+                    ctx.getLogger().debug("Index exists, will no repeat BND subset");
+                }
+                else
+                {
+                    SelectVariantsWrapper svw = new SelectVariantsWrapper(ctx.getLogger());
+                    List<String> selectArgs = new ArrayList<>();
+                    selectArgs.add("-select");
+                    selectArgs.add("SVTYPE != 'BND'");
+                    selectArgs.add("--exclude-filtered");
+                    selectArgs.add("--exclude-non-variants");
+
+                    svw.execute(ctx.getSequenceSupport().getCachedGenome(inputFiles.get(0).getLibrary_id()).getWorkingFastaFile(), svVcf, vcfNoBnd, selectArgs);
+
+                    ctx.getFileManager().addIntermediateFile(vcfNoBnd);
+                    ctx.getFileManager().addIntermediateFile(vcfNoBndIdx);
+                    svVcf = vcfNoBnd;
+                }
             }
 
             Integer threads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
