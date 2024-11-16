@@ -288,7 +288,7 @@ public class NimbleHelper
                 description += "\nscore_percent: " + genome.getScorePercent();
             }
 
-            output.addSequenceOutput(results, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), description);
+            output.addSequenceOutput(results, basename + ": nimble align", "Nimble Results", rs.getRowId(), null, genome.getGenomeId(), description);
 
             File reportHtml = getReportHtmlFileFromResults(results);
             if (!reportHtml.exists())
@@ -300,17 +300,7 @@ public class NimbleHelper
             }
             else
             {
-                output.addSequenceOutput(results, basename + ": nimble report", "Nimble Report", rs.getRowId(), null, genome.getGenomeId(), description);
-            }
-
-            File outputBam = new File(results.getPath().replaceAll("results." + genome.genomeId + ".txt.gz", "nimbleAlignment." + genome.genomeId + ".bam"));
-            if (outputBam.exists())
-            {
-                output.addSequenceOutput(outputBam, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), description);
-            }
-            else
-            {
-                getPipelineCtx().getLogger().debug("BAM not found: " + outputBam.getPath());
+                output.addSequenceOutput(reportHtml, basename + ": nimble report", "Nimble Report", rs.getRowId(), null, genome.getGenomeId(), description);
             }
         }
     }
