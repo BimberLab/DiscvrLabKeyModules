@@ -291,7 +291,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 writer.println("sudo $DOCKER run --rm=true \\");
                 writer.println("\t-v \"${WD}:/work\" \\");
                 writer.println("\t-v \"${HOME}:/homeDir\" \\");
-                ctx.getDockerVolumes().forEach(writer::println);
+                ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
                 writer.println("\t -w /work \\");
                 if (!StringUtils.isEmpty(System.getenv("TMPDIR")))
                 {

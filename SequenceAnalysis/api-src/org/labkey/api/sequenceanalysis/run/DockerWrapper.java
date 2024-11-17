@@ -52,7 +52,7 @@ public class DockerWrapper extends AbstractCommandWrapper
             writer.println("sudo $DOCKER run --rm=true \\");
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
-            _ctx.getDockerVolumes().forEach(writer::println);
+            _ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
             if (_tmpDir != null)
             {
                 writer.println("\t-v \"" + _tmpDir.getPath() + ":/tmp\" \\");

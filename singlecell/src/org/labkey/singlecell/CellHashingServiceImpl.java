@@ -1326,7 +1326,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
             writer.println("\t-e CELLHASHR_DEBUG=1 \\");
             writer.println("\t-v \"${WD}:/work\" \\");
-            ctx.getDockerVolumes().forEach(writer::println);
+            ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");

@@ -184,7 +184,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             }
 
             writer.println("\t-v \"${WD}:/work\" \\");
-            ctx.getDockerVolumes().forEach(writer::println);
+            ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
