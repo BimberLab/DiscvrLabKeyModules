@@ -188,7 +188,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
     public Collection<String> getDockerVolumes()
     {
-        return Collections.unmodifiableCollection(_dockerVolumes);
+        return _dockerVolumes == null ? Collections.emptySet() : Collections.unmodifiableCollection(_dockerVolumes);
     }
 
     public void setDockerVolumes(Collection<String> dockerVolumes)
