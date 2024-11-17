@@ -158,7 +158,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
 
         getWrapper().setOutputDir(outputDir);
         getWrapper().setWorkingDir(outputDir);
-        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, retainVcf, output, binVersion, args);
+        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, retainVcf, output, binVersion, args, getPipelineCtx());
 
         output.addOutput(outputFile, "gVCF File");
         output.addSequenceOutput(outputFile, outputFile.getName(), "DeepVariant gVCF File", rs.getReadsetId(), null, referenceGenome.getGenomeId(), "DeepVariant Version: " + binVersion);
@@ -220,7 +220,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             }
         }
 
-        public void execute(File inputBam, File refFasta, File outputGvcf, boolean retainVcf, PipelineOutputTracker tracker, String binVersion, List<String> extraArgs) throws PipelineJobException
+        public void execute(File inputBam, File refFasta, File outputGvcf, boolean retainVcf, PipelineOutputTracker tracker, String binVersion, List<String> extraArgs, PipelineContext ctx) throws PipelineJobException
         {
             File workDir = outputGvcf.getParentFile();
             File outputVcf = new File(outputGvcf.getPath().replaceAll(".g.vcf", ".vcf"));
@@ -270,6 +270,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
                 writer.println("sudo $DOCKER run --rm=true \\");
                 writer.println("\t-v \"${WD}:/work\" \\");
                 writer.println("\t-v \"${HOME}:/homeDir\" \\");
+                ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
                 if (!StringUtils.isEmpty(System.getenv("TMPDIR")))
                 {
                     writer.println("\t-v \"${TMPDIR}:/tmp\" \\");

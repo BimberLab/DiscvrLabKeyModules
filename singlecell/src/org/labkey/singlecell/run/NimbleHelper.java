@@ -288,16 +288,19 @@ public class NimbleHelper
                 description += "\nscore_percent: " + genome.getScorePercent();
             }
 
-            output.addSequenceOutput(results, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), description);
+            output.addSequenceOutput(results, basename + ": nimble align", "Nimble Results", rs.getRowId(), null, genome.getGenomeId(), description);
 
-            File outputBam = new File(results.getPath().replaceAll("results." + genome.genomeId + ".txt.gz", "nimbleAlignment." + genome.genomeId + ".bam"));
-            if (outputBam.exists())
+            File reportHtml = getReportHtmlFileFromResults(results);
+            if (!reportHtml.exists())
             {
-                output.addSequenceOutput(outputBam, basename + ": nimble align", "Nimble Alignment", rs.getRowId(), null, genome.getGenomeId(), description);
+                if (SequencePipelineService.get().hasMinLineCount(results, 2))
+                {
+                    throw new PipelineJobException("Unable to find file: " + reportHtml.getPath());
+                }
             }
             else
             {
-                getPipelineCtx().getLogger().debug("BAM not found: " + outputBam.getPath());
+                output.addSequenceOutput(reportHtml, basename + ": nimble report", "Nimble Report", rs.getRowId(), null, genome.getGenomeId(), description);
             }
         }
     }
@@ -361,7 +364,7 @@ public class NimbleHelper
                 config.put("num_mismatches", 0);
                 config.put("intersect_level", 0);
                 // NOTE: this allows a small amount of mismatched ends:
-                config.put("score_percent", 0.90);
+                config.put("score_percent", 0.99);
                 config.put("score_threshold", 45);
                 config.put("score_filter", 25);
             }
@@ -497,9 +500,47 @@ public class NimbleHelper
             }
 
             resultMap.put(genome, reportResultsGz);
+
+            if (SequencePipelineService.get().hasMinLineCount(alignResultsGz, 2))
+            {
+                // Also run nimble plot. Always re-run since this is fast:
+                List<String> plotArgs = new ArrayList<>();
+                plotArgs.add("python3");
+                plotArgs.add("-m");
+                plotArgs.add("nimble");
+
+                plotArgs.add("plot");
+                plotArgs.add("--input_file");
+                plotArgs.add("/work/" + alignResultsGz.getName());
+
+                File plotResultsHtml = getReportHtmlFileFromResults(reportResultsGz);
+                if (reportResultsGz.exists())
+                {
+                    plotResultsHtml.delete();
+                }
+
+                plotArgs.add("--output_file");
+                plotArgs.add("/work/" + plotResultsHtml.getName());
+
+                runUsingDocker(plotArgs, output, null);
+
+                if (!plotResultsHtml.exists())
+                {
+                    throw new PipelineJobException("Missing file: " + plotResultsHtml.getPath());
+                }
+            }
+            else
+            {
+                getPipelineCtx().getLogger().info("Only single line found in results, skipping nimble plot");
+            }
         }
 
         return resultMap;
+    }
+
+    private File getReportHtmlFileFromResults(File reportResults)
+    {
+        return new File(reportResults.getPath().replaceAll("txt(.gz)*$", "html"));
     }
 
     private File getNimbleDoneFile(File parentDir, String resumeString)
@@ -551,6 +592,7 @@ public class NimbleHelper
                 writer.println("\t--memory='" + maxRam + "g' \\");
             }
 
+            getPipelineCtx().getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
             writer.println("\t-u $UID \\");
@@ -699,9 +741,7 @@ public class NimbleHelper
     private String getVersion(PipelineStepOutput output) throws PipelineJobException
     {
         List<String> nimbleArgs = new ArrayList<>();
-        nimbleArgs.add("/bin/bash");
-        nimbleArgs.add("-c");
-        nimbleArgs.add("python3 -m nimble -v > /work/nimbleVersion.txt");
+        nimbleArgs.add("/bin/bash -c 'python3 -m nimble -v' > /work/nimbleVersion.txt");
 
         runUsingDocker(nimbleArgs, output, null);
 
@@ -711,10 +751,15 @@ public class NimbleHelper
             throw new PipelineJobException("Unable to find file: " + outFile.getPath());
         }
 
-        String ret;
-        try (BufferedReader reader = Readers.getReader(outFile))
+        String ret = null;
+        try
         {
-            ret = reader.readLine();
+            ret = StringUtils.trimToNull(Files.readString(outFile.toPath()));
+            if (ret == null)
+            {
+                throw new PipelineJobException("nimble -v did not output version");
+            }
+            ret = ret.replaceAll("nimble", "").replaceAll("[\\r\\n]+", "");
         }
         catch (IOException e)
         {

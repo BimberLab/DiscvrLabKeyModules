@@ -299,7 +299,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         },
 
         hto: function(val, panel){
-            if (val === 'N/A' || val === 'NA') {
+            if (val === 'N/A' || val === 'NA' || val === 'N') {
                 return null;
             }
 

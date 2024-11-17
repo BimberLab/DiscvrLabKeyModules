@@ -14,6 +14,7 @@ import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 
 /**
@@ -127,5 +128,10 @@ public class JobContextImpl implements SequenceOutputHandler.MutableJobContext
     public LinkedHashSet<RecordedAction> getActions()
     {
         return _actions;
+    }
+
+    public Collection<String> getDockerVolumes()
+    {
+        return _job.getDockerVolumes();
     }
 }

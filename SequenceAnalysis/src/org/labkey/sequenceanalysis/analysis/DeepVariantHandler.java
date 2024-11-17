@@ -125,7 +125,7 @@ public class DeepVariantHandler extends AbstractParameterizedOutputHandler<Seque
             }
 
             boolean retainVcf = ctx.getParams().optBoolean("retainVcf", false);
-            wrapper.execute(so.getFile(), referenceGenome.getWorkingFastaFile(), outputFile, retainVcf, ctx.getFileManager(), binVersion, args);
+            wrapper.execute(so.getFile(), referenceGenome.getWorkingFastaFile(), outputFile, retainVcf, ctx.getFileManager(), binVersion, args, ctx);
 
             action.addOutput(outputFile, "gVCF File", false);
 
