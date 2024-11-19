@@ -41,7 +41,7 @@ public class RepeatNimbleReportHandler extends AbstractParameterizedOutputHandle
 {
     public RepeatNimbleReportHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Convert To Cram", "This will convert a BAM file to CRAM, replacing the original", null, Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Re-run Nimble Report", "This will re-run nimble report and nimble plot for the selected run", null, Arrays.asList(
                         ToolParameterDescriptor.create("replaceOriginal", "Replace Original File", "If selected, the input BAM will be deleted and the database record will be switched to use this filepath.", "checkbox", new JSONObject(){{
                             put("checked", true);
                         }}, true),
