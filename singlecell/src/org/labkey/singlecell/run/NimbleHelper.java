@@ -671,17 +671,22 @@ public class NimbleHelper
 
     private File ensureLocalCopy(File input, PipelineStepOutput output) throws PipelineJobException
     {
+        return ensureLocalCopy(input, output, getPipelineCtx());
+    }
+
+    public static File ensureLocalCopy(File input, PipelineStepOutput output, PipelineContext ctx) throws PipelineJobException
+    {
         try
         {
-            if (getPipelineCtx().getWorkingDirectory().equals(input.getParentFile()))
+            if (ctx.getWorkingDirectory().equals(input.getParentFile()))
             {
                 return input;
             }
 
-            File local = new File(getPipelineCtx().getWorkingDirectory(), input.getName());
+            File local = new File(ctx.getWorkingDirectory(), input.getName());
             if (!local.exists())
             {
-                getPipelineCtx().getLogger().debug("Copying file locally: " + input.getPath());
+                ctx.getLogger().debug("Copying file locally: " + input.getPath());
                 FileUtils.copyFile(input, local);
             }
 
