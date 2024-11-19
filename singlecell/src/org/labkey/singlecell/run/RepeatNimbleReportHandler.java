@@ -95,6 +95,11 @@ public class RepeatNimbleReportHandler extends AbstractParameterizedOutputHandle
 
         }
 
+        private File getAlignmentResults(File reportResults)
+        {
+            return new File(reportResults.getParentFile(), reportResults.getName().replaceAll("reportResults", "alignResults") + ".gz");
+        }
+
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
@@ -103,7 +108,7 @@ public class RepeatNimbleReportHandler extends AbstractParameterizedOutputHandle
             for (SequenceOutputFile so : inputFiles)
             {
                 // This is the prior report results:
-                File alignmentFile = new File(so.getFile().getParentFile(), so.getFile().getName().replaceAll("reportResults", "alignResults"));
+                File alignmentFile = getAlignmentResults(so.getFile());
                 if (!alignmentFile.exists())
                 {
                     throw new PipelineJobException("Unable to find file: " + alignmentFile.getPath());
