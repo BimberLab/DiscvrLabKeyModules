@@ -124,11 +124,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                     SelectVariantsWrapper svw = new SelectVariantsWrapper(ctx.getLogger());
                     List<String> selectArgs = new ArrayList<>();
                     selectArgs.add("-select");
-                    selectArgs.add("SVTYPE != 'BND'");
-                    selectArgs.add("-select");
-                    selectArgs.add("!(vc.hasAttribute('SVTYPE') && vc.getAttribute('SVTYPE') == 'INS' && vc.hasSymbolicAlleles() && !vc.hasAttribute('SEQ'))");
-                    selectArgs.add("-select");
-                    selectArgs.add("POS > 150");
+                    selectArgs.add("SVTYPE != 'BND' && POS > 150 && !(vc.hasAttribute('SVTYPE') && vc.getAttribute('SVTYPE') == 'INS' && vc.hasSymbolicAlleles() && !vc.hasAttribute('SEQ'))");
                     selectArgs.add("--exclude-filtered");
                     selectArgs.add("--exclude-filtered");
                     selectArgs.add("--sites-only-vcf-output");

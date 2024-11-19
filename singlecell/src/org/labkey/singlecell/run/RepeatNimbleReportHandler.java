@@ -52,12 +52,12 @@ public class RepeatNimbleReportHandler extends AbstractParameterizedOutputHandle
         );
     }
 
-    private static final FileType _nimbleResultsGz = new FileType(".txt.gz", FileType.gzSupportLevel.NO_GZ);
+    private static final FileType _nimbleResultsGz = new FileType(".txt", FileType.gzSupportLevel.SUPPORT_GZ);
 
     @Override
     public boolean canProcess(SequenceOutputFile o)
     {
-        return o.getFile() != null && o.getFile().exists() && o.getFile().getName().startsWith("reportResults") && _nimbleResultsGz.isType(o.getFile());
+        return o.getFile() != null && o.getFile().exists() && o.getFile().getName().startsWith("reportResults.") && _nimbleResultsGz.isType(o.getFile());
     }
 
     @Override
