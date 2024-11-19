@@ -41,10 +41,7 @@ public class RepeatNimbleReportHandler extends AbstractParameterizedOutputHandle
 {
     public RepeatNimbleReportHandler()
     {
-        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Re-run Nimble Report", "This will re-run nimble report and nimble plot for the selected run", null, Arrays.asList(
-                        ToolParameterDescriptor.create("replaceOriginal", "Replace Original File", "If selected, the input BAM will be deleted and the database record will be switched to use this filepath.", "checkbox", new JSONObject(){{
-                            put("checked", true);
-                        }}, true),
+        super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Re-run Nimble Report", "This will re-run nimble report and nimble plot for the selected run and replace the original files in-place.", null, Arrays.asList(
                         ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
                             put("checked", true);
                         }}, true)
