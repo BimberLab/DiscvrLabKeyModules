@@ -1,9 +1,8 @@
 package org.labkey.singlecell.run;
 
-import org.apache.commons.text.similarity.SimilarityScoreFrom;
+import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
-import org.labkey.api.data.ContainerType;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -31,6 +30,7 @@ import org.labkey.singlecell.SingleCellModule;
 import org.labkey.singlecell.SingleCellSchema;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -126,6 +126,32 @@ public class RepeatNimbleReportHandler extends AbstractParameterizedOutputHandle
                 if (!htmlFile.exists())
                 {
                     throw new PipelineJobException("Unable to find file: " + htmlFile.getPath());
+                }
+
+                // Replace the originals:
+                try
+                {
+                    File targetHtml = new File(so.getFile().getParentFile(), htmlFile.getName());
+                    if (targetHtml.exists())
+                    {
+                        targetHtml.delete();
+                    }
+                    FileUtils.moveFile(htmlFile, targetHtml);
+
+                    File targetReport = new File(so.getFile().getParentFile(), reportFile.getName());
+                    if (targetReport.exists())
+                    {
+                        targetReport.delete();
+                    }
+                    else
+                    {
+                        ctx.getLogger().error("Expected report file to exist: " + targetReport.getPath());
+                    }
+                    FileUtils.moveFile(reportFile, targetReport);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
                 }
             }
 
