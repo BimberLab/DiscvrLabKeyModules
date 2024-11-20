@@ -45,10 +45,10 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                     put("allowBlank", false);
                 }}, null),
                 ToolParameterDescriptor.create("doBndSubset", "Remove BNDs", "If the reference VCF contains BNDs, selecting this option will cause the job to remove them prior to paragraph", "checkbox", new JSONObject(){{
-                    put("checked", true);
+                    put("checked", false);
                 }}, false),
                 ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
-                    put("checked", true);
+                    put("checked", false);
                 }}, false)
         ));
     }
@@ -113,20 +113,21 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
             boolean doBndSubset = ctx.getParams().optBoolean("doBndSubset", false);
             if (doBndSubset)
             {
-                File vcfNoBnd = new File(ctx.getOutputDir(), SequenceAnalysisService.get().getUnzippedBaseName(svVcf.getName()) + "nobnd.vcf.gz");
+                File vcfNoBnd = new File(ctx.getOutputDir(), SequenceAnalysisService.get().getUnzippedBaseName(svVcf.getName()) + "pgSubset.vcf.gz");
                 File vcfNoBndIdx = new File(vcfNoBnd.getPath() + ".tbi");
                 if (vcfNoBndIdx.exists())
                 {
-                    ctx.getLogger().debug("Index exists, will no repeat BND subset");
+                    ctx.getLogger().debug("Index exists, will no repeat VCF subset");
                 }
                 else
                 {
                     SelectVariantsWrapper svw = new SelectVariantsWrapper(ctx.getLogger());
                     List<String> selectArgs = new ArrayList<>();
                     selectArgs.add("-select");
-                    selectArgs.add("SVTYPE != 'BND'");
+                    selectArgs.add("SVTYPE != 'BND' && POS > 150 && !(vc.hasAttribute('SVTYPE') && vc.getAttribute('SVTYPE') == 'INS' && vc.hasSymbolicAlleles() && !vc.hasAttribute('SEQ'))");
                     selectArgs.add("--exclude-filtered");
-                    selectArgs.add("--exclude-non-variants");
+                    selectArgs.add("--exclude-filtered");
+                    selectArgs.add("--sites-only-vcf-output");
 
                     svw.execute(ctx.getSequenceSupport().getCachedGenome(inputFiles.get(0).getLibrary_id()).getWorkingFastaFile(), svVcf, vcfNoBnd, selectArgs);
 
@@ -173,7 +174,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 try (PrintWriter writer = PrintWriters.getPrintWriter(coverageFile); SamReader reader = SamReaderFactory.makeDefault().open(so.getFile()))
                 {
                     SAMFileHeader header = reader.getFileHeader();
-                    if (header.getReadGroups().size() == 0)
+                    if (header.getReadGroups().isEmpty())
                     {
                         throw new PipelineJobException("No read groups found in input BAM");
                     }
