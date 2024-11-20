@@ -109,6 +109,7 @@ import org.labkey.singlecell.run.CellRangerGexCountStep;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
 import org.labkey.singlecell.run.NimbleAlignmentStep;
 import org.labkey.singlecell.run.NimbleAnalysis;
+import org.labkey.singlecell.run.RepeatNimbleReportHandler;
 import org.labkey.singlecell.run.VelocytoAlignmentStep;
 import org.labkey.singlecell.run.VelocytoAnalysisStep;
 
@@ -221,6 +222,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new CellRangerRawDataHandler());
         SequenceAnalysisService.get().registerFileHandler(new ProcessSingleCellHandler());
         SequenceAnalysisService.get().registerFileHandler(new ProcessSeuratObjectHandler());
+        SequenceAnalysisService.get().registerFileHandler(new RepeatNimbleReportHandler());
 
         //Single-cell:
         SequencePipelineService.get().registerPipelineStep(new AppendCiteSeq.Provider());

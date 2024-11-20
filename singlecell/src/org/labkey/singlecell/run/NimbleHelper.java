@@ -53,6 +53,8 @@ public class NimbleHelper
     private final PipelineStepProvider<?> _provider;
     private final int _stepIdx;
 
+    public static final String NIMBLE_REPORT_CATEGORY = "Nimble Report";
+
     public NimbleHelper(PipelineContext ctx, PipelineStepProvider<?> provider, int stepIdx)
     {
         _ctx = ctx;
@@ -300,7 +302,7 @@ public class NimbleHelper
             }
             else
             {
-                output.addSequenceOutput(reportHtml, basename + ": nimble report", "Nimble Report", rs.getRowId(), null, genome.getGenomeId(), description);
+                output.addSequenceOutput(reportHtml, basename + ": nimble report", NIMBLE_REPORT_CATEGORY, rs.getRowId(), null, genome.getGenomeId(), description);
             }
         }
     }
@@ -474,76 +476,82 @@ public class NimbleHelper
             }
 
             // Now run nimble report. Always re-run since this is fast:
-            List<String> reportArgs = new ArrayList<>();
-            reportArgs.add("python3");
-            reportArgs.add("-m");
-            reportArgs.add("nimble");
-
-            reportArgs.add("report");
-            reportArgs.add("-i");
-            reportArgs.add("/work/" + alignResultsGz.getName());
-
-            File reportResultsGz = new File(getPipelineCtx().getWorkingDirectory(), "reportResults." + genome.genomeId + ".txt");
-            if (reportResultsGz.exists())
-            {
-                reportResultsGz.delete();
-            }
-
-            reportArgs.add("-o");
-            reportArgs.add("/work/" + reportResultsGz.getName());
-
-            runUsingDocker(reportArgs, output, null);
-
-            if (!reportResultsGz.exists())
-            {
-                throw new PipelineJobException("Missing file: " + reportResultsGz.getPath());
-            }
-
+            File reportResultsGz =  runNimbleReport(alignResultsGz, genome.genomeId, output, getPipelineCtx());
             resultMap.put(genome, reportResultsGz);
-
-            if (SequencePipelineService.get().hasMinLineCount(alignResultsGz, 2))
-            {
-                // Also run nimble plot. Always re-run since this is fast:
-                List<String> plotArgs = new ArrayList<>();
-                plotArgs.add("python3");
-                plotArgs.add("-m");
-                plotArgs.add("nimble");
-
-                plotArgs.add("plot");
-                plotArgs.add("--input_file");
-                plotArgs.add("/work/" + alignResultsGz.getName());
-
-                File plotResultsHtml = getReportHtmlFileFromResults(reportResultsGz);
-                if (reportResultsGz.exists())
-                {
-                    plotResultsHtml.delete();
-                }
-
-                plotArgs.add("--output_file");
-                plotArgs.add("/work/" + plotResultsHtml.getName());
-
-                runUsingDocker(plotArgs, output, null);
-
-                if (!plotResultsHtml.exists())
-                {
-                    throw new PipelineJobException("Missing file: " + plotResultsHtml.getPath());
-                }
-            }
-            else
-            {
-                getPipelineCtx().getLogger().info("Only single line found in results, skipping nimble plot");
-            }
         }
 
         return resultMap;
     }
 
-    private File getReportHtmlFileFromResults(File reportResults)
+    public static File runNimbleReport(File alignResultsGz, int genomeId, PipelineStepOutput output, PipelineContext ctx) throws PipelineJobException
+    {
+        List<String> reportArgs = new ArrayList<>();
+        reportArgs.add("python3");
+        reportArgs.add("-m");
+        reportArgs.add("nimble");
+
+        reportArgs.add("report");
+        reportArgs.add("-i");
+        reportArgs.add("/work/" + alignResultsGz.getName());
+
+        File reportResultsGz = new File(ctx.getWorkingDirectory(), "reportResults." + genomeId + ".txt");
+        if (reportResultsGz.exists())
+        {
+            reportResultsGz.delete();
+        }
+
+        reportArgs.add("-o");
+        reportArgs.add("/work/" + reportResultsGz.getName());
+
+        runUsingDocker(reportArgs, output, null, ctx);
+
+        if (!reportResultsGz.exists())
+        {
+            throw new PipelineJobException("Missing file: " + reportResultsGz.getPath());
+        }
+
+        if (SequencePipelineService.get().hasMinLineCount(alignResultsGz, 2))
+        {
+            // Also run nimble plot. Always re-run since this is fast:
+            List<String> plotArgs = new ArrayList<>();
+            plotArgs.add("python3");
+            plotArgs.add("-m");
+            plotArgs.add("nimble");
+
+            plotArgs.add("plot");
+            plotArgs.add("--input_file");
+            plotArgs.add("/work/" + alignResultsGz.getName());
+
+            File plotResultsHtml = getReportHtmlFileFromResults(reportResultsGz);
+            if (plotResultsHtml.exists())
+            {
+                plotResultsHtml.delete();
+            }
+
+            plotArgs.add("--output_file");
+            plotArgs.add("/work/" + plotResultsHtml.getName());
+
+            runUsingDocker(plotArgs, output, null, ctx);
+
+            if (!plotResultsHtml.exists())
+            {
+                throw new PipelineJobException("Missing file: " + plotResultsHtml.getPath());
+            }
+        }
+        else
+        {
+            ctx.getLogger().info("Only single line found in results, skipping nimble plot");
+        }
+
+        return reportResultsGz;
+    }
+
+    public static File getReportHtmlFileFromResults(File reportResults)
     {
         return new File(reportResults.getPath().replaceAll("txt(.gz)*$", "html"));
     }
 
-    private File getNimbleDoneFile(File parentDir, String resumeString)
+    private static File getNimbleDoneFile(File parentDir, String resumeString)
     {
         return new File(parentDir, "nimble." + resumeString + ".done");
     }
@@ -552,13 +560,18 @@ public class NimbleHelper
 
     private boolean runUsingDocker(List<String> nimbleArgs, PipelineStepOutput output, @Nullable String resumeString) throws PipelineJobException
     {
-        File localBashScript = new File(getPipelineCtx().getWorkingDirectory(), "docker.sh");
-        File dockerBashScript = new File(getPipelineCtx().getWorkingDirectory(), "dockerRun.sh");
+        return runUsingDocker(nimbleArgs, output, resumeString, getPipelineCtx());
+    }
+
+    private static boolean runUsingDocker(List<String> nimbleArgs, PipelineStepOutput output, @Nullable String resumeString, PipelineContext ctx) throws PipelineJobException
+    {
+        File localBashScript = new File(ctx.getWorkingDirectory(), "docker.sh");
+        File dockerBashScript = new File(ctx.getWorkingDirectory(), "dockerRun.sh");
         output.addIntermediateFile(localBashScript);
         output.addIntermediateFile(dockerBashScript);
 
         // Create temp folder:
-        File tmpDir = new File(getPipelineCtx().getWorkingDirectory(), "tmpDir");
+        File tmpDir = new File(ctx.getWorkingDirectory(), "tmpDir");
         if (tmpDir.exists())
         {
             try
@@ -592,7 +605,7 @@ public class NimbleHelper
                 writer.println("\t--memory='" + maxRam + "g' \\");
             }
 
-            getPipelineCtx().getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
+            ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
             writer.println("\t-u $UID \\");
@@ -623,22 +636,22 @@ public class NimbleHelper
         File doneFile = null;
         if (resumeString != null)
         {
-            doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), resumeString);
+            doneFile = getNimbleDoneFile(ctx.getWorkingDirectory(), resumeString);
             output.addIntermediateFile(doneFile);
 
             if (doneFile.exists())
             {
-                getPipelineCtx().getLogger().info("Nimble already completed, resuming: " + resumeString);
+                ctx.getLogger().info("Nimble already completed, resuming: " + resumeString);
                 return false;
             }
             else
             {
-                getPipelineCtx().getLogger().debug("done file not found: " + doneFile.getPath());
+                ctx.getLogger().debug("done file not found: " + doneFile.getPath());
             }
         }
 
-        SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(getPipelineCtx().getLogger());
-        rWrapper.setWorkingDir(getPipelineCtx().getWorkingDirectory());
+        SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(ctx.getLogger());
+        rWrapper.setWorkingDir(ctx.getWorkingDirectory());
         rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
 
         if (doneFile != null)
@@ -658,17 +671,22 @@ public class NimbleHelper
 
     private File ensureLocalCopy(File input, PipelineStepOutput output) throws PipelineJobException
     {
+        return ensureLocalCopy(input, output, getPipelineCtx());
+    }
+
+    public static File ensureLocalCopy(File input, PipelineStepOutput output, PipelineContext ctx) throws PipelineJobException
+    {
         try
         {
-            if (getPipelineCtx().getWorkingDirectory().equals(input.getParentFile()))
+            if (ctx.getWorkingDirectory().equals(input.getParentFile()))
             {
                 return input;
             }
 
-            File local = new File(getPipelineCtx().getWorkingDirectory(), input.getName());
+            File local = new File(ctx.getWorkingDirectory(), input.getName());
             if (!local.exists())
             {
-                getPipelineCtx().getLogger().debug("Copying file locally: " + input.getPath());
+                ctx.getLogger().debug("Copying file locally: " + input.getPath());
                 FileUtils.copyFile(input, local);
             }
 
