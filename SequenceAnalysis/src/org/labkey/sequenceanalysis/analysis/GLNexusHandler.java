@@ -191,7 +191,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 {
                     ctx.getLogger().debug("Running GLNexus for contig: " + r.getSequenceName());
                     ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Processing: " + r.getSequenceName());
-                    new GLNexusWrapper(ctx.getLogger()).execute(inputVcfs, contigVcf, ctx.getFileManager(), binVersion, configType, r);
+                    new GLNexusWrapper(ctx.getLogger()).execute(inputVcfs, contigVcf, ctx.getFileManager(), binVersion, configType, r, ctx);
                     vcfs.add(contigVcf);
                     try
                     {
@@ -261,7 +261,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
             }
         }
 
-        public void execute(List<File> inputGvcfs, File outputVcf, PipelineOutputTracker tracker, String binVersion, String configType, SAMSequenceRecord rec) throws PipelineJobException
+        public void execute(List<File> inputGvcfs, File outputVcf, PipelineOutputTracker tracker, String binVersion, String configType, SAMSequenceRecord rec, JobContext ctx) throws PipelineJobException
         {
             File workDir = outputVcf.getParentFile();
             tracker.addIntermediateFile(outputVcf);
@@ -291,6 +291,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 writer.println("sudo $DOCKER run --rm=true \\");
                 writer.println("\t-v \"${WD}:/work\" \\");
                 writer.println("\t-v \"${HOME}:/homeDir\" \\");
+                ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
                 writer.println("\t -w /work \\");
                 if (!StringUtils.isEmpty(System.getenv("TMPDIR")))
                 {

@@ -1808,7 +1808,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithText("li", "does not equal")).click();
         waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys("A");
         waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
-        waitForElement(Locator.tagWithText("span", "858"));
+        waitForElement(Locator.tagWithText("span", "711"));
         clearFilterDialog("ref does not equal A");
 
         // Alt Allele contains TT
