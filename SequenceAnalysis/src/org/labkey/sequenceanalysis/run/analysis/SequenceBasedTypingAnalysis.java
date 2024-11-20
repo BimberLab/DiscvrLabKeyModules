@@ -211,12 +211,6 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
 
             SequenceBasedTypingAlignmentAggregator.processSBTSummary(getPipelineCtx().getJob().getUser(), getPipelineCtx().getJob().getContainer(), model, expectedTxt, referenceFasta, getPipelineCtx().getLogger());
 
-            File compressed = Compress.compressGzip(expectedTxt);
-            if (compressed.exists() && expectedTxt.exists())
-            {
-                expectedTxt.delete();
-            }
-
             // Perform second pass to collapse groups:
             new AlignmentGroupCompare(model.getAnalysisId(), getPipelineCtx().getJob().getContainer(), getPipelineCtx().getJob().getUser()).collapseGroups(getPipelineCtx().getLogger(), getPipelineCtx().getJob().getUser());
         }
@@ -312,7 +306,8 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             //write output as TSV
             agg.writeTable(getSBTSummaryFile(outputDir, inputBam));
 
-            output.addSequenceOutput(sbtOutputLog, "SBT Results: " + inputBam.getName(), "SBT Results", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+            // This will be gzipped later:
+            output.addSequenceOutput(getSBTSummaryFile(outputDir, inputBam), "SBT Results: " + inputBam.getName(), "SBT Results", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
 
             //optionally output FASTQ of unmapped reads
             Double exportThreshold = getProvider().getParameterByName(EXPORT_UNMAPPED).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class);
@@ -377,7 +372,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
 
     protected File getSBTSummaryFile(File outputDir, File bam)
     {
-        return new File(outputDir, FileUtil.getBaseName(bam) + ".sbt_hits.txt");
+        return new File(outputDir, FileUtil.getBaseName(bam) + ".sbt_hits.txt.gz");
     }
 
     public static class AlignmentGroupCompare

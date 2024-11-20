@@ -515,7 +515,7 @@ public class SequenceUtil
                 writer.write("} | bgzip -f" + (compressionLevel == null ? "" : " --compress-level 9") + (threads == null ? "" : " --threads " + threads) + " > '" + outputGzip.getPath() + "'\n");
             }
 
-            File mergeDone = new File(outputGzip.getParentFile(), "merge.done");
+            File mergeDone = new File(outputGzip.getPath() + ".merge.done");
             if (mergeDone.exists())
             {
                 log.debug("Merge done file exists, will not repeat merge");

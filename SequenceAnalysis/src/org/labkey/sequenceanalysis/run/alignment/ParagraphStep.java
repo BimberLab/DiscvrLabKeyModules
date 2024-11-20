@@ -18,6 +18,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.DockerWrapper;
+import org.labkey.api.sequenceanalysis.run.SelectVariantsWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
@@ -42,7 +43,13 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 ToolParameterDescriptor.createExpDataParam("svVCF", "Input VCF", "This is the DataId of the VCF containing the SVs to genotype", "ldk-expdatafield", new JSONObject()
                 {{
                     put("allowBlank", false);
-                }}, null)
+                }}, null),
+                ToolParameterDescriptor.create("doBndSubset", "Remove BNDs", "If the reference VCF contains BNDs, selecting this option will cause the job to remove them prior to paragraph", "checkbox", new JSONObject(){{
+                    put("checked", false);
+                }}, false),
+                ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
+                    put("checked", false);
+                }}, false)
         ));
     }
 
@@ -103,6 +110,33 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 throw new PipelineJobException("Missing file: " + svVcf.getPath());
             }
 
+            boolean doBndSubset = ctx.getParams().optBoolean("doBndSubset", false);
+            if (doBndSubset)
+            {
+                File vcfNoBnd = new File(ctx.getOutputDir(), SequenceAnalysisService.get().getUnzippedBaseName(svVcf.getName()) + "pgSubset.vcf.gz");
+                File vcfNoBndIdx = new File(vcfNoBnd.getPath() + ".tbi");
+                if (vcfNoBndIdx.exists())
+                {
+                    ctx.getLogger().debug("Index exists, will no repeat VCF subset");
+                }
+                else
+                {
+                    SelectVariantsWrapper svw = new SelectVariantsWrapper(ctx.getLogger());
+                    List<String> selectArgs = new ArrayList<>();
+                    selectArgs.add("-select");
+                    selectArgs.add("SVTYPE != 'BND' && POS > 150 && !(vc.hasAttribute('SVTYPE') && vc.getAttribute('SVTYPE') == 'INS' && vc.hasSymbolicAlleles() && !vc.hasAttribute('SEQ'))");
+                    selectArgs.add("--exclude-filtered");
+                    selectArgs.add("--exclude-filtered");
+                    selectArgs.add("--sites-only-vcf-output");
+
+                    svw.execute(ctx.getSequenceSupport().getCachedGenome(inputFiles.get(0).getLibrary_id()).getWorkingFastaFile(), svVcf, vcfNoBnd, selectArgs);
+
+                    ctx.getFileManager().addIntermediateFile(vcfNoBnd);
+                    ctx.getFileManager().addIntermediateFile(vcfNoBndIdx);
+                    svVcf = vcfNoBnd;
+                }
+            }
+
             Integer threads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
             for (SequenceOutputFile so : inputFiles)
             {
@@ -140,7 +174,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 try (PrintWriter writer = PrintWriters.getPrintWriter(coverageFile); SamReader reader = SamReaderFactory.makeDefault().open(so.getFile()))
                 {
                     SAMFileHeader header = reader.getFileHeader();
-                    if (header.getReadGroups().size() == 0)
+                    if (header.getReadGroups().isEmpty())
                     {
                         throw new PipelineJobException("No read groups found in input BAM");
                     }
@@ -170,7 +204,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 }
                 ctx.getFileManager().addIntermediateFile(coverageFile);
 
-                DockerWrapper dockerWrapper = new DockerWrapper("ghcr.io/bimberlabinternal/paragraph:latest", ctx.getLogger());
+                DockerWrapper dockerWrapper = new DockerWrapper("ghcr.io/bimberlabinternal/paragraph:latest", ctx.getLogger(), ctx);
                 List<String> paragraphArgs = new ArrayList<>();
                 paragraphArgs.add("/opt/paragraph/bin/multigrmpy.py");
 

@@ -26,6 +26,7 @@ import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
@@ -127,7 +128,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         {
             for (SequenceOutputFile so : inputFiles)
             {
-                File nextCladeJson = runNextClade(so.getFile(), ctx.getLogger(), ctx.getFileManager(), ctx.getWorkingDirectory());
+                File nextCladeJson = runNextClade(so.getFile(), ctx.getLogger(), ctx.getFileManager(), ctx.getWorkingDirectory(), ctx);
                 ctx.getFileManager().addSequenceOutput(nextCladeJson, "Nextclade: " + so.getName(), NEXTCLADE_JSON, so.getReadset(), null, so.getLibrary_id(), null);
             }
         }
@@ -138,7 +139,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         return new File(outputDir, FileUtil.getBaseName(consensusFasta) + ".json");
     }
 
-    public static File runNextClade(File consensusFasta, Logger log, PipelineOutputTracker tracker, File outputDir) throws PipelineJobException
+    public static File runNextClade(File consensusFasta, Logger log, PipelineOutputTracker tracker, File outputDir, PipelineContext ctx) throws PipelineJobException
     {
         if (!consensusFasta.getParentFile().equals(outputDir))
         {
@@ -183,6 +184,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             }
 
             writer.println("\t-v \"${WD}:/work\" \\");
+            ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");

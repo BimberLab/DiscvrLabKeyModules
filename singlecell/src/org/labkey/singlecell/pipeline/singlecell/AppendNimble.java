@@ -32,10 +32,10 @@ public class AppendNimble extends AbstractRDiscvrStep
                     {{
                         put("allowBlank", false);
                     }}, null),
-                    SeuratToolParameter.create("retainAmbiguousFeatures", "Retain Ambiguous Features", "If checked, features hitting more than one reference will be retained", "checkbox", new JSONObject()
+                    SeuratToolParameter.create("maxAmbiguityAllowed", "Max Ambiguity Allowed", "If provided, ambiguous features with more than this number of values will be discarded (e.g. if maxAmbiguityAllowed=2, then the feature Feat1,Feat2,Feat3 would be discared, but not Feat1,Feat3. This can be overridden per genome.", "ldk-integerfield", new JSONObject()
                     {{
-                        put("check", false);
-                    }}, false, null, true),
+                        put("minValue", 0);
+                    }}, 0, null, true),
                     SeuratToolParameter.create("ensureSamplesShareAllGenomes", "Ensure Samples Share All Genomes", "If checked, the job will fail unless nimble data is found for each requested genome for all samples", "checkbox", new JSONObject()
                     {{
                         put("check", true);
@@ -76,7 +76,7 @@ public class AppendNimble extends AbstractRDiscvrStep
         for (int i = 0; i < json.length(); i++)
         {
             JSONArray arr = json.getJSONArray(i);
-            if (arr.length() != 2)
+            if (arr.length() != 3)
             {
                 throw new PipelineJobException("Unexpected value: " + json.getString(i));
             }
@@ -84,6 +84,30 @@ public class AppendNimble extends AbstractRDiscvrStep
             int genomeId = arr.getInt(0);
             String targetAssay = arr.getString(1);
             ret.bodyLines.add("\t" + delim + "'" + genomeId + "' = '" + targetAssay + "'");
+            delim = ",";
+        }
+        ret.bodyLines.add(")");
+
+        Integer maxAmbiguityAllowed = getProvider().getParameterByName("maxAmbiguityAllowed").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
+
+        ret.bodyLines.add("nimbleGenomeAmbiguousPreference <- list(");
+        delim = "";
+        for (int i = 0; i < json.length(); i++)
+        {
+            JSONArray arr = json.getJSONArray(i);
+            if (arr.length() != 3)
+            {
+                throw new PipelineJobException("Unexpected value: " + json.getString(i));
+            }
+
+            int genomeId = arr.getInt(0);
+            Integer maxAmbiguityAllowed2 = arr.get(2) == null ? null : arr.getInt(2);
+            if (maxAmbiguityAllowed2 == null)
+            {
+                maxAmbiguityAllowed2 = maxAmbiguityAllowed;
+            }
+
+            ret.bodyLines.add("\t" + delim + "'" + genomeId + "' = " + (maxAmbiguityAllowed2 == null ? "Inf" : maxAmbiguityAllowed2));
             delim = ",";
         }
         ret.bodyLines.add(")");
