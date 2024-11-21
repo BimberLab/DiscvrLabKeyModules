@@ -52,6 +52,9 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 }}, false),
                 ToolParameterDescriptor.create("debug", "Debug Logging", "If checked, --debug will be passed to paragraph to increase logging", "checkbox", new JSONObject(){{
                     put("checked", false);
+                }}, false),
+                ToolParameterDescriptor.create("retrieveReferenceSeq", "Retrieve Reference Sequence", "If checked, --debug will be passed to paragraph to increase logging", "checkbox", new JSONObject(){{
+                    put("checked", false);
                 }}, false)
         ));
     }
@@ -218,6 +221,24 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 paragraphArgs.add("-o");
                 paragraphArgs.add("/work/" + paragraphOutDir.getName());
 
+                File scratchDir = new File(ctx.getOutputDir(), "pgScratch");
+                if (scratchDir.exists())
+                {
+                    try
+                    {
+                        FileUtils.deleteDirectory(scratchDir);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+
+                paragraphArgs.add("--scratch-dir");
+                paragraphArgs.add(scratchDir.getPath());
+
+                ctx.getFileManager().addIntermediateFile(scratchDir);
+
                 paragraphArgs.add("-i");
                 dockerWrapper.ensureLocalCopy(svVcf, ctx.getWorkingDirectory(), ctx.getFileManager());
                 dockerWrapper.ensureLocalCopy(new File(svVcf.getPath() + ".tbi"), ctx.getWorkingDirectory(), ctx.getFileManager());
@@ -241,9 +262,10 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 dockerWrapper.ensureLocalCopy(new File(genomeFasta.getPath() + ".fai"), ctx.getWorkingDirectory(), ctx.getFileManager());
                 paragraphArgs.add("/work/" + genomeFasta.getName());
 
-                paragraphArgs.add("--scratch-dir");
-                paragraphArgs.add("/tmp");
-                dockerWrapper.setTmpDir(new File(SequencePipelineService.get().getJavaTempDir()));
+                if (ctx.getParams().optBoolean("retrieveReferenceSeq", false))
+                {
+                    paragraphArgs.add("--retrieve-reference-sequence");
+                }
 
                 if (threads != null)
                 {
