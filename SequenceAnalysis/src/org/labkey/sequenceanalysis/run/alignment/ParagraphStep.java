@@ -223,6 +223,8 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 paragraphArgs.add("-m");
                 paragraphArgs.add("/work/" + coverageFile.getName());
 
+                paragraphArgs.add("--verbose");
+
                 paragraphArgs.add("-r");
                 File genomeFasta = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id()).getWorkingFastaFile();
                 dockerWrapper.ensureLocalCopy(genomeFasta, ctx.getWorkingDirectory(), ctx.getFileManager());
