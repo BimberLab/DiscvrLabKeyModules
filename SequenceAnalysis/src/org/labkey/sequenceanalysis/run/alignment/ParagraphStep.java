@@ -44,10 +44,13 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 {{
                     put("allowBlank", false);
                 }}, null),
-                ToolParameterDescriptor.create("doBndSubset", "Remove BNDs", "If the reference VCF contains BNDs, selecting this option will cause the job to remove them prior to paragraph", "checkbox", new JSONObject(){{
+                ToolParameterDescriptor.create("doBndSubset", "Filter Input VCF", "If selected, prior to running SelectVariants will be run to remove BNDs sites with POS<150 and symbolic INS without ALT sequence", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false),
                 ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
+                    put("checked", false);
+                }}, false),
+                ToolParameterDescriptor.create("debug", "Debug Logging", "If checked, --debug will be passed to paragraph to increase logging", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false)
         ));
@@ -223,7 +226,14 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 paragraphArgs.add("-m");
                 paragraphArgs.add("/work/" + coverageFile.getName());
 
-                paragraphArgs.add("--verbose");
+                if (ctx.getParams().optBoolean("debug", false))
+                {
+                    paragraphArgs.add("--debug");
+                }
+                else
+                {
+                    paragraphArgs.add("--verbose");
+                }
 
                 paragraphArgs.add("-r");
                 File genomeFasta = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id()).getWorkingFastaFile();
