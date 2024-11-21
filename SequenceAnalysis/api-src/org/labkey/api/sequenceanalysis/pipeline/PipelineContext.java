@@ -16,11 +16,11 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.WorkDirectory;
 
 import java.io.File;
+import java.util.Collection;
 
 /**
  * User: bimber
@@ -51,4 +51,6 @@ public interface PipelineContext
      * This is the directory where the source files were located.  In the situation where this is a split job, forceParent=true will return the parent job's sourceDirectory.  This can be important if files are written here prior to split.
      */
     File getSourceDirectory(boolean forceParent);
+
+    Collection<String> getDockerVolumes();
 }

@@ -10,7 +10,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 	initComponent: function(){
 		Ext4.apply(this, {
 			style: 'padding: 10px;margins: 5px;',
-            minWidth: 650,
+            minWidth: 850,
 			border: true,
 			items: [{
 				html: 'This step will query nimble results for the selected genome(s). It will then append these results to the seurat object on the target assay.',
@@ -20,7 +20,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 			},{
 				xtype: 'ldk-gridpanel',
 				clicksToEdit: 1,
-				width: 600,
+				width: 775,
 				tbar: [{
 					text: 'Add',
 					handler: function(btn){
@@ -40,7 +40,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 				},LABKEY.ext4.GRIDBUTTONS.DELETERECORD()],
 				store: {
 					type: 'array',
-					fields: ['genomeId', 'targetAssay']
+					fields: ['genomeId', 'targetAssay','maxAmbiguityAllowed']
 				},
 				columns: [{
 					dataIndex: 'genomeId',
@@ -68,6 +68,15 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 						xtype: 'textfield',
 						allowBlank: false
 					}
+				},{
+					dataIndex: 'maxAmbiguityAllowed',
+					width: 175,
+					header: 'Max Ambiguity Allowed',
+					editor: {
+						xtype: 'ldk-integerfield',
+						allowBlank: true,
+						minValue: 0
+					}
 				}]
 			}]
 		});
@@ -78,7 +87,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 	getValue: function(){
 		var ret = [];
 		this.down('ldk-gridpanel').store.each(function(r, i) {
-			ret.push([r.data.genomeId, r.data.targetAssay]);
+			ret.push([r.data.genomeId, r.data.targetAssay, r.data.maxAmbiguityAllowed ?? '']);
 		}, this);
 
 		return Ext4.isEmpty(ret) ? null : JSON.stringify(ret);
@@ -113,7 +122,8 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 			Ext4.Array.forEach(val, function(row){
 				var rec = grid.store.createModel({
 					genomeId: row[0],
-					targetAssay: row[1]
+					targetAssay: row[1],
+					maxAmbiguityAllowed: row[2]
 				});
 				grid.store.add(rec);
 			}, this);

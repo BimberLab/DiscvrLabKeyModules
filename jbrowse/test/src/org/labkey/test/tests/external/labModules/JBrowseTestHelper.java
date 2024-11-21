@@ -6,6 +6,7 @@ import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.WebDriverWrapper;
+import org.labkey.test.categories.Base;
 import org.labkey.test.components.ext4.Window;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
@@ -166,19 +167,29 @@ public class JBrowseTestHelper
 
     public static long getTotalVariantFeatures(BaseWebDriverTest test)
     {
-        Locator l = Locator.tagWithAttribute("svg", "data-testid", "svgfeatures").append(Locator.tag("polygon"));
+        final Long winWidth = test.executeScript("return window.outerWidth", Long.class);
+        final Long winHeight = test.executeScript("return window.outerHeight", Long.class);
+        final Locator l = Locator.tagWithAttribute("svg", "data-testid", "svgfeatures").append(Locator.tag("polygon"));
         try
         {
             // NOTE: JBrowse renders features using multiple blocks per track, and these tracks can redundantly render identical features on top of one another.
             // Counting unique locations is indirect, but should result in unique features
-            return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).map(WebElement::getLocation).distinct().count();
+            return doVariantCount(test, l, winWidth, winHeight);
         }
         catch (StaleElementReferenceException e)
         {
             test.log("Stale elements, retrying");
             WebDriverWrapper.sleep(5000);
 
-            return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).map(WebElement::getLocation).distinct().count();
+            return doVariantCount(test, l, winWidth, winHeight);
         }
+    }
+
+    private static long doVariantCount(BaseWebDriverTest test, Locator l, long winWidth, long winHeight)
+    {
+        return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).map(WebElement::getRect).distinct().filter(
+                // This is designed to limit to just elements within the viewport:
+                rec -> rec.x > 0 & rec.x <= winWidth & rec.y > 0 & rec.y <= winHeight
+        ).count();
     }
 }

@@ -146,17 +146,48 @@ if [[ ! -e ${LKTOOLS_DIR}/bwa || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
     rm -Rf bwa-0.*
+    rm -Rf bwa.zip
+    rm -Rf v0.7.18*
     rm -Rf $LKTOOLS_DIR/bwa
 
-    wget $WGET_OPTS -O bwa.zip https://github.com/lh3/bwa/zipball/master/
-    unzip bwa.zip
-    DIRNAME=`ls | grep lh3-bwa`
-    cd $DIRNAME
+    wget $WGET_OPTS https://github.com/lh3/bwa/archive/refs/tags/v0.7.18.tar.gz
+    tar -xf v0.7.18.tar.gz
+
+    cd bwa-0.7.18
     make
     install bwa $LKTOOLS_DIR/
 else
     echo "Already installed"
 fi
+
+
+#
+# bwa-mem2
+#
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install BWA-mem2"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/bwa-mem2 || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf bwa-mem2*
+    rm -Rf $LKTOOLS_DIR/bwa-mem2*
+
+    wget $WGET_OPTS https://github.com/bwa-mem2/bwa-mem2/releases/download/v2.2.1/bwa-mem2-2.2.1_x64-linux.tar.bz2
+    bunzip2 bwa-mem2-2.2.1_x64-linux.tar.bz2
+    tar -xf bwa-mem2-2.2.1_x64-linux.tar
+
+    # NOTE: all executables are needed:
+    install bwa-mem2-2.2.1_x64-linux/bwa-mem2* $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi
+
+
 
 #
 # gffread
@@ -274,10 +305,10 @@ then
     rm -Rf gatk-4*
     rm -Rf $LKTOOLS_DIR/GenomeAnalysisTK4.jar
 
-    wget $WGET_OPTS https://github.com/broadinstitute/gatk/releases/download/4.4.0.0/gatk-4.4.0.0.zip
-    unzip gatk-4.4.0.0.zip
+    wget $WGET_OPTS https://github.com/broadinstitute/gatk/releases/download/4.6.1.0/gatk-4.6.1.0.zip
+    unzip gatk-4.6.1.0.zip
 
-    cp ./gatk-4.4.0.0/gatk-package-4.4.0.0-local.jar $LKTOOLS_DIR/GenomeAnalysisTK4.jar
+    cp ./gatk-4.6.1.0/gatk-package-4.6.1.0-local.jar $LKTOOLS_DIR/GenomeAnalysisTK4.jar
 else
     echo "Already installed"
 fi
@@ -298,14 +329,13 @@ then
     echo "Cleaning up previous installs"
     rm -Rf STAR_2.*
     rm -Rf $LKTOOLS_DIR/STAR
+    rm -Rf $LKTOOLS_DIR/STARlong
 
-    wget $WGET_OPTS https://github.com/alexdobin/STAR/archive/2.7.10b.tar.gz
-    gunzip 2.7.10b.tar.gz
-    tar -xf 2.7.10b.tar
-    gzip 2.7.10b.tar
+    wget $WGET_OPTS https://github.com/alexdobin/STAR/releases/download/2.7.11b/STAR_2.7.11b.zip
+    unzip STAR_2.7.11b.zip
 
-    install ./STAR-2.7.10b/bin/Linux_x86_64_static/STAR $LKTOOLS_DIR/STAR
-    install ./STAR-2.7.10b/bin/Linux_x86_64_static/STARlong $LKTOOLS_DIR/STARlong
+    install ./STAR_2.7.11b/Linux_x86_64/STAR $LKTOOLS_DIR/STAR
+    install ./STAR_2.7.11b/Linux_x86_64/STARlong $LKTOOLS_DIR/STARlong
 else
     echo "Already installed"
 fi
@@ -433,12 +463,13 @@ then
     rm -Rf $LKTOOLS_DIR/samtools
     rm -Rf $LKTOOLS_DIR/bcftools
 
-    wget $WGET_OPTS https://github.com/samtools/samtools/releases/download/1.20/samtools-1.20.tar.bz2
-    bunzip2 samtools-1.20.tar.bz2
-    tar -xf samtools-1.20.tar
+    ST_VERSION=1.21
+    wget $WGET_OPTS https://github.com/samtools/samtools/releases/download/${ST_VERSION}/samtools-${ST_VERSION}.tar.bz2
+    bunzip2 samtools-${ST_VERSION}.tar.bz2
+    tar -xf samtools-${ST_VERSION}.tar
     echo "Compressing TAR"
-    bzip2 samtools-1.20.tar
-    cd samtools-1.20
+    bzip2 samtools-${ST_VERSION}.tar
+    cd samtools-${ST_VERSION}
     ./configure
     make
     install ./samtools ${LKTOOLS_DIR}/samtools
@@ -462,10 +493,11 @@ then
     rm -Rf bcftools*
     rm -Rf $LKTOOLS_DIR/bcftools
 
-    wget $WGET_OPTS https://github.com/samtools/bcftools/releases/download/1.20/bcftools-1.20.tar.bz2
-    tar xjvf bcftools-1.20.tar.bz2
-    chmod 755 bcftools-1.20
-    cd bcftools-1.20
+    ST_VERSION=1.21
+    wget $WGET_OPTS https://github.com/samtools/bcftools/releases/download/${ST_VERSION}/bcftools-${ST_VERSION}.tar.bz2
+    tar xjvf bcftools-${ST_VERSION}.tar.bz2
+    chmod 755 bcftools-${ST_VERSION}
+    cd bcftools-${ST_VERSION}
     rm -f plugins/liftover.c
     wget $WGET_OPTS -P plugins https://raw.githubusercontent.com/freeseek/score/master/liftover.c
 
@@ -495,15 +527,17 @@ then
     rm -Rf $LKTOOLS_DIR/tabix
     rm -Rf $LKTOOLS_DIR/bgzip
 
-    wget $WGET_OPTS https://github.com/samtools/htslib/releases/download/1.20/htslib-1.20.tar.bz2
-    bunzip2 htslib-1.20.tar.bz2
-    tar -xf htslib-1.20.tar
+    ST_VERSION=1.21
+    wget $WGET_OPTS https://github.com/samtools/htslib/releases/download/${ST_VERSION}/htslib-${ST_VERSION}.tar.bz2
+    bunzip2 htslib-${ST_VERSION}.tar.bz2
+    tar -xf htslib-${ST_VERSION}.tar
     echo "Compressing TAR"
-    bzip2 htslib-1.20.tar
-    chmod 755 htslib-1.20
-    cd htslib-1.20
-    ./configure
+    bzip2 htslib-${ST_VERSION}.tar
+    chmod 755 htslib-${ST_VERSION}
+    cd htslib-${ST_VERSION}
+    ./configure --prefix=${LKTOOLS_DIR}/lib
     make
+    make install
 
     install ./tabix $LKTOOLS_DIR
     install ./bgzip $LKTOOLS_DIR
@@ -528,7 +562,7 @@ then
     rm -Rf bedtools*
     rm -Rf $LKTOOLS_DIR/bedtools
 
-    wget -O bedtools $WGET_OPTS https://github.com/arq5x/bedtools2/releases/download/v2.30.0/bedtools.static.binary
+    wget -O bedtools $WGET_OPTS https://github.com/arq5x/bedtools2/releases/download/v2.31.0/bedtools.static
     chmod +x bedtools
 
     install ./bedtools ${LKTOOLS_DIR}/bedtools
@@ -645,7 +679,7 @@ then
     rm -Rf $LKTOOLS_DIR/htsjdk-*
     rm -Rf $LKTOOLS_DIR/libIntelDeflater.so
 
-    wget $WGET_OPTS https://github.com/broadinstitute/picard/releases/download/3.0.0/picard.jar
+    wget $WGET_OPTS https://github.com/broadinstitute/picard/releases/download/3.3.0/picard.jar
 
     cp -R ./picard.jar $LKTOOLS_DIR/
 else
@@ -1063,8 +1097,8 @@ cd $LKSRC_DIR
 
 if [[ ! -e ${LKTOOLS_DIR}/lofreq || ! -z $FORCE_REINSTALL ]];
 then
-    rm -Rf lofreq_star*
-    rm -Rf $LKTOOLS_DIR/lofreq_star*
+    rm -Rf lofreq*
+    rm -Rf $LKTOOLS_DIR/lofreq*
 
     wget $WGET_OPTS https://github.com/CSB5/lofreq/raw/master/dist/lofreq_star-2.1.4_linux-x86-64.tgz
     tar -xf lofreq_star-2.1.4_linux-x86-64.tgz

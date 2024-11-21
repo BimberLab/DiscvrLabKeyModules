@@ -350,6 +350,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             File tmpDir = new File(SequencePipelineService.get().getJavaTempDir());
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-v \"" + tmpDir.getPath() + ":/tmp\" \\");
+            ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
             writer.println("\t-u $UID \\");
             writer.println("\t-e USERID=$UID \\");

@@ -13,6 +13,7 @@ import htsjdk.variant.vcf.VCFHeader;
 import htsjdk.variant.vcf.VCFReader;
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -36,7 +37,6 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -107,11 +107,11 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
 
             if (SequenceUtil.FILETYPE.bamOrCram.getFileType().isType(so.getFile()))
             {
-                getAndValidateHeaderForBam(so, newRsName);
+                getAndValidateHeaderForBam(so, newRsName, ctx.getLogger());
             }
             else if (SequenceUtil.FILETYPE.gvcf.getFileType().isType(so.getFile()) | SequenceUtil.FILETYPE.vcf.getFileType().isType(so.getFile()))
             {
-                getAndValidateHeaderForVcf(so, newRsName);
+                getAndValidateHeaderForVcf(so, newRsName, ctx.getLogger());
             }
             else
             {
@@ -121,7 +121,7 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
             ctx.getSequenceSupport().cacheObject("readsetId", newRsName);
         }
 
-        private SAMFileHeader getAndValidateHeaderForBam(SequenceOutputFile so, String newRsName) throws PipelineJobException
+        private SAMFileHeader getAndValidateHeaderForBam(SequenceOutputFile so, String newRsName, Logger log) throws PipelineJobException
         {
             SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault();
             try (SamReader reader = samReaderFactory.open(so.getFile()))
@@ -131,22 +131,24 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
                 Set<String> distinctLibraries = rgs.stream().map(SAMReadGroupRecord::getLibrary).collect(Collectors.toSet());
                 if (distinctLibraries.size() > 1)
                 {
-                    throw new PipelineJobException("File has more than one library in read group(s), found: " + distinctLibraries.stream().collect(Collectors.joining(", ")));
+                    throw new PipelineJobException("File has more than one library in read group(s), found: " + String.join(", ", distinctLibraries));
                 }
 
                 Set<String> distinctSamples = rgs.stream().map(SAMReadGroupRecord::getSample).collect(Collectors.toSet());
                 if (distinctSamples.size() > 1)
                 {
-                    throw new PipelineJobException("File has more than one sample in read group(s), found: " + distinctSamples.stream().collect(Collectors.joining(", ")));
+                    throw new PipelineJobException("File has more than one sample in read group(s), found: " + String.join(", ", distinctSamples));
                 }
 
                 if (
-                        distinctLibraries.stream().filter(x -> !x.equals(newRsName)).count() == 0L &&
-                        distinctSamples.stream().filter(x -> !x.equals(newRsName)).count() == 0L
+                        distinctLibraries.stream().allMatch(x -> x.equals(newRsName)) &&
+                        distinctSamples.stream().allMatch(x -> x.equals(newRsName))
                 )
                 {
                     throw new PipelineJobException("Sample and library names match in read group(s), aborting");
                 }
+
+                log.info("Readset name and header do not match: " + newRsName + " / existing library: " + distinctLibraries.stream().distinct().collect(Collectors.joining()) + ", existing sample: " + distinctSamples.stream().distinct().collect(Collectors.joining()));
 
                 return header;
             }
@@ -156,7 +158,7 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
             }
         }
 
-        private VCFHeader getAndValidateHeaderForVcf(SequenceOutputFile so, String newRsName) throws PipelineJobException
+        private VCFHeader getAndValidateHeaderForVcf(SequenceOutputFile so, String newRsName, Logger log) throws PipelineJobException
         {
             try (VCFReader reader = new VCFFileReader(so.getFile()))
             {
@@ -172,6 +174,8 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
                 {
                     throw new PipelineJobException("Sample names match, aborting");
                 }
+
+                log.info("Readset name and header do not match: " + newRsName + " / " + existingSample);
 
                 return header;
             }
@@ -209,7 +213,7 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
 
         private void reheaderVcf(SequenceOutputFile so, JobContext ctx, String newRsName) throws PipelineJobException
         {
-            VCFHeader header = getAndValidateHeaderForVcf(so, newRsName);
+            VCFHeader header = getAndValidateHeaderForVcf(so, newRsName, ctx.getLogger());
             String existingSample = header.getGenotypeSamples().get(0);
 
             File sampleNamesFile =  new File(ctx.getWorkingDirectory(), "sampleNames.txt");
@@ -257,7 +261,7 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
                 }
                 FileUtils.moveFile(outputIdx, inputIndex);
 
-                addTracker(so, existingSample, newRsName);
+                addTracker(so, existingSample, newRsName, null);
             }
             catch (IOException e)
             {
@@ -265,7 +269,7 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
             }
         }
 
-        private void addTracker(SequenceOutputFile so, String existingSample, String newRsName) throws IOException
+        private void addTracker(SequenceOutputFile so, String existingSample, String newRsName, @Nullable String existingLibrary) throws IOException
         {
             File tracker = new File(so.getFile().getParentFile(), "reheaderHistory.txt");
             boolean preExisting = tracker.exists();
@@ -278,10 +282,10 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
             {
                 if (!preExisting)
                 {
-                    writer.println("OriginalSample\tNewSample");
+                    writer.println("OriginalSample\tNewSample\tOriginalLibrary");
                 }
 
-                writer.println(existingSample + "\t" + newRsName);
+                writer.println(existingSample + "\t" + newRsName + "\t" + (existingLibrary == null ? "N/A" : existingLibrary));
             }
         }
 
@@ -289,7 +293,7 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
         {
             try
             {
-                SAMFileHeader header = getAndValidateHeaderForBam(so, newRsName);
+                SAMFileHeader header = getAndValidateHeaderForBam(so, newRsName, ctx.getLogger());
 
                 List<SAMReadGroupRecord> rgs = header.getReadGroups();
                 String existingSample = rgs.get(0).getSample();
@@ -341,7 +345,7 @@ public class UpdateReadsetFilesHandler extends AbstractParameterizedOutputHandle
                 }
                 FileUtils.moveFile(outputIdx, inputIndex);
 
-                addTracker(so, existingSample, newRsName);
+                addTracker(so, existingSample, newRsName, existingLibrary);
             }
             catch (IOException e)
             {

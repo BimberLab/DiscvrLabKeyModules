@@ -84,7 +84,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         put("height", 100);
                         put("width", 400);
                         put("allowBlank", false);
-                    }}, null)
+                    }}, null),
+                    ToolParameterDescriptor.create("useCellRanger7", "Use cellranger 7", "If checked, this will use cellranger 7, rather than the current version", "checkbox", null, false)
                 ), null, "https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/what-is-cell-ranger", true, false, false, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
         }
 
@@ -274,7 +275,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             output.addInput(getGenomeFasta(), "Input FASTA");
 
             List<String> args = new ArrayList<>();
-            args.add(getWrapper().getExe().getPath());
+            args.add(getWrapper().getExe(false).getPath());
             args.add("mkvdjref");
             args.add("--seqs=" + getGenomeFasta().getPath());
             args.add("--genome=" + indexDir.getName());
@@ -301,8 +302,10 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         {
             AlignmentOutputImpl output = new AlignmentOutputImpl();
 
+            boolean useCellRanger7 = getProvider().getParameterByName("useCellRanger7").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+
             List<String> args = new ArrayList<>();
-            args.add(getWrapper().getExe().getPath());
+            args.add(getWrapper().getExe(useCellRanger7).getPath());
             args.add("multi");
             args.add("--disable-ui");
 
@@ -830,9 +833,9 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         }
     }
 
-    protected File getExe()
+    protected File getExe(boolean useCellRanger7)
     {
-        return SequencePipelineService.get().getExeForPackage("CELLRANGERPATH", "cellranger");
+        return SequencePipelineService.get().getExeForPackage("CELLRANGERPATH", useCellRanger7 ? "cellranger7": "cellranger");
     }
 
     private static void processAndMergeCSVs(File abCSV, File gdCSV, Logger log) throws PipelineJobException
@@ -977,7 +980,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
     {
         try
         {
-            String ret = executeWithOutput(Arrays.asList(getExe().getPath(), "--version"));
+            String ret = executeWithOutput(Arrays.asList(getExe(false).getPath(), "--version"));
 
             return ret.replaceAll("^cellranger ", "");
         }

@@ -146,7 +146,7 @@ public class CacheGenomePipelineJob extends PipelineJob
             }
 
             @Override
-            public PipelineJob.Task createTask(PipelineJob job)
+            public PipelineJob.Task<?> createTask(PipelineJob job)
             {
                 return new CacheGenomesTask(this, job);
             }
