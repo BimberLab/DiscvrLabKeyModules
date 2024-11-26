@@ -48,8 +48,8 @@ public class DockerWrapper extends AbstractCommandWrapper
             writer.println("WD=`pwd`");
             writer.println("HOME=`echo ~/`");
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            writer.println("sudo $DOCKER pull " + _containerName);
-            writer.println("sudo $DOCKER run --rm=true \\");
+            writer.println("$DOCKER pull " + _containerName);
+            writer.println("$DOCKER run --rm=true \\");
             writer.println("\t-v \"${WD}:/work\" \\");
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
             _ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));

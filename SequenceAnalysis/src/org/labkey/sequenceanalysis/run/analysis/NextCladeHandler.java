@@ -168,8 +168,8 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
             writer.println("HOME=`echo ~/`");
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            writer.println("sudo $DOCKER pull nextstrain/nextclade:latest");
-            writer.println("sudo $DOCKER run --rm=true \\");
+            writer.println("$DOCKER pull nextstrain/nextclade:latest");
+            writer.println("$DOCKER run --rm=true \\");
 
             if (SequencePipelineService.get().getMaxThreads(log) != null)
             {

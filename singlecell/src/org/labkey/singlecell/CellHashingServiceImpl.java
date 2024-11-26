@@ -1311,8 +1311,8 @@ public class CellHashingServiceImpl extends CellHashingService
             writer.println("HOME=`echo ~/`");
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            writer.println("sudo $DOCKER pull ghcr.io/bimberlab/cellhashr:latest");
-            writer.println("sudo $DOCKER run --rm=true \\");
+            writer.println("$DOCKER pull ghcr.io/bimberlab/cellhashr:latest");
+            writer.println("$DOCKER run --rm=true \\");
             if (SequencePipelineService.get().getMaxRam() != null)
             {
                 writer.println("\t--memory=" + SequencePipelineService.get().getMaxRam() + "g \\");

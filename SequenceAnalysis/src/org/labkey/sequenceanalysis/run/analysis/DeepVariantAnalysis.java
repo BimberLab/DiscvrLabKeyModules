@@ -266,8 +266,8 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
                 writer.println("WD=`pwd`");
                 writer.println("HOME=`echo ~/`");
                 writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-                writer.println("sudo $DOCKER pull google/deepvariant:" + binVersion);
-                writer.println("sudo $DOCKER run --rm=true \\");
+                writer.println("$DOCKER pull google/deepvariant:" + binVersion);
+                writer.println("$DOCKER run --rm=true \\");
                 writer.println("\t-v \"${WD}:/work\" \\");
                 writer.println("\t-v \"${HOME}:/homeDir\" \\");
                 ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));

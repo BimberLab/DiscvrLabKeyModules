@@ -594,8 +594,8 @@ public class NimbleHelper
             writer.println("HOME=`echo ~/`");
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            writer.println("sudo $DOCKER pull " + DOCKER_CONTAINER_NAME);
-            writer.println("sudo $DOCKER run --rm=true \\");
+            writer.println("$DOCKER pull " + DOCKER_CONTAINER_NAME);
+            writer.println("$DOCKER run --rm=true \\");
 
             Integer maxRam = SequencePipelineService.get().getMaxRam();
             if (maxRam != null)

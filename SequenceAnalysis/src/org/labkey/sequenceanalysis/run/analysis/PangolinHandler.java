@@ -291,8 +291,8 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
             writer.println("HOME=`echo ~/`");
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            writer.println("sudo $DOCKER pull ghcr.io/bimberlabinternal/pangolin:latest");
-            writer.println("sudo $DOCKER run --rm=true \\");
+            writer.println("$DOCKER pull ghcr.io/bimberlabinternal/pangolin:latest");
+            writer.println("$DOCKER run --rm=true \\");
 
             if (SequencePipelineService.get().getMaxThreads(log) != null)
             {

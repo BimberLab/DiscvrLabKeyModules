@@ -320,8 +320,8 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             writer.println("HOME=`echo ~/`");
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            writer.println("sudo $DOCKER pull " + dockerContainerName);
-            writer.println("sudo $DOCKER run --rm=true \\");
+            writer.println("$DOCKER pull " + dockerContainerName);
+            writer.println("$DOCKER run --rm=true \\");
 
             Integer maxThreads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
             if (maxThreads != null)
