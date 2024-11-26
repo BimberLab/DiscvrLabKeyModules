@@ -191,6 +191,7 @@ then
     cd ../
     cp -R paragraph $LKTOOLS_DIR
     ln -s ${LKTOOLS_DIR}/paragraph/bin/paragraph ${LKTOOLS_DIR}/paragraph
+    ln -s ${LKTOOLS_DIR}/paragraph/bin/idxdepth ${LKTOOLS_DIR}/idxdepth
     ln -s ${LKTOOLS_DIR}/paragraph/bin/multigrmpy.py ${LKTOOLS_DIR}/multigrmpy.py
 else
     echo "Already installed"

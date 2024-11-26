@@ -299,13 +299,14 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                         }
 
                         // NOTE: if the line has blank ending columns, trimmed lines might lack that value
-                        if (maxRssIdx > -1 && maxRssIdx < tokens.length)
+                        if ((job.getClusterId() + ".0").equals(id) && maxRssIdx > -1 && maxRssIdx < tokens.length)
                         {
                             try
                             {
-                                if (NumberUtils.isCreatable(tokens[maxRssIdx]))
+                                String maxRSS = StringUtils.trimToNull(tokens[maxRssIdx]);
+                                if (maxRSS != null)
                                 {
-                                    long bytes = FileSizeFormatter.convertStringRepresentationToBytes(tokens[maxRssIdx]);
+                                    long bytes = FileSizeFormatter.convertStringRepresentationToBytes(maxRSS);
                                     long requestInBytes = FileSizeFormatter.convertStringRepresentationToBytes(getConfig().getRequestMemory() + "G"); //request is always GB
                                     if (bytes > requestInBytes)
                                     {
