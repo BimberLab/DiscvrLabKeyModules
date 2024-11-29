@@ -25,6 +25,7 @@ import org.labkey.cluster.ClusterServiceImpl;
 import org.quartz.JobExecutionException;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -323,6 +324,10 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                                             try (PrintWriter writer = PrintWriters.getPrintWriter(new File(sf.getFilePath())))
                                             {
                                                 writer.println(info + ". Raw slurm value: " + maxRSS);
+                                            }
+                                            catch (FileNotFoundException e)
+                                            {
+                                                _log.error("Unable to find log file for job, " + job.getJobId() + ": " + sf.getFilePath());
                                             }
                                         }
                                     }
