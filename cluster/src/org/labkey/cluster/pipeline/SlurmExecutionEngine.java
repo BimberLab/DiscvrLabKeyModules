@@ -14,8 +14,12 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.cluster.ClusterManager;
 import org.labkey.cluster.ClusterServiceImpl;
 import org.quartz.JobExecutionException;
@@ -23,6 +27,7 @@ import org.quartz.JobExecutionException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -311,6 +316,15 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                                     if (bytes > requestInBytes)
                                     {
                                         info = "Job exceeded memory, max was: " + FileSizeFormatter.convertBytesToUnit(bytes, 'G') + "G";
+
+                                        PipelineStatusFile sf = PipelineService.get().getStatusFile(job.getJobId());
+                                        if (sf != null)
+                                        {
+                                            try (PrintWriter writer = PrintWriters.getPrintWriter(new File(sf.getFilePath())))
+                                            {
+                                                writer.println(info + ". Raw slurm value: " + maxRSS);
+                                            }
+                                        }
                                     }
                                 }
                             }
