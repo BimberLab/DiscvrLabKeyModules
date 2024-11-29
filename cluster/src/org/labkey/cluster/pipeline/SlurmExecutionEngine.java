@@ -315,7 +315,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                                     long requestInBytes = FileSizeFormatter.convertStringRepresentationToBytes(getConfig().getRequestMemory() + "G"); //request is always GB
                                     if (bytes > requestInBytes)
                                     {
-                                        info = "Job exceeded memory, max was: " + FileSizeFormatter.convertBytesToUnit(bytes, 'G') + "G";
+                                        info = "Job exceeded memory, max was: " + FileSizeFormatter.convertBytesToUnit(bytes, 'G') + "G, requested memory was: " + getConfig().getRequestMemory() + "G";
 
                                         PipelineStatusFile sf = PipelineService.get().getStatusFile(job.getJobId());
                                         if (sf != null)
