@@ -50,7 +50,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false),
-                ToolParameterDescriptor.create("debug", "Debug Logging", "If checked, --debug will be passed to paragraph to increase logging", "checkbox", new JSONObject(){{
+                ToolParameterDescriptor.create("verbose", "Verbose Logging", "If checked, --verbose will be passed to paragraph to increase logging", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false),
                 ToolParameterDescriptor.create("retrieveReferenceSeq", "Retrieve Reference Sequence", "If checked, --debug will be passed to paragraph to increase logging", "checkbox", new JSONObject(){{
@@ -164,7 +164,24 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                     depthArgs.add(threads.toString());
                 }
 
-                new SimpleScriptWrapper(ctx.getLogger()).execute(depthArgs);
+                File doneFile = new File(ctx.getWorkingDirectory(), "idxdepth.done");
+                ctx.getFileManager().addIntermediateFile(doneFile);
+                if (doneFile.exists())
+                {
+                    ctx.getLogger().info("idxdepth already performed, skipping");
+                }
+                else
+                {
+                    new SimpleScriptWrapper(ctx.getLogger()).execute(depthArgs);
+                    try
+                    {
+                        FileUtils.touch(doneFile);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
 
                 if (!coverageJson.exists())
                 {
@@ -174,7 +191,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
 
                 // Should produce a simple text file:
                 //    id  path    depth   read length
-                //    TNPRC-IB18  ../IB18.cram 29.77   150
+                //    IB18  ../IB18.cram 29.77   150
                 File coverageFile = new File(ctx.getWorkingDirectory(), "coverage.txt");
                 String rgId = null;
                 try (PrintWriter writer = PrintWriters.getPrintWriter(coverageFile); SamReader reader = SamReaderFactory.makeDefault().open(so.getFile()))
@@ -235,7 +252,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 }
 
                 paragraphArgs.add("--scratch-dir");
-                paragraphArgs.add(scratchDir.getPath());
+                paragraphArgs.add("/work/" + scratchDir.getName());
 
                 ctx.getFileManager().addIntermediateFile(scratchDir);
 
@@ -247,11 +264,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 paragraphArgs.add("-m");
                 paragraphArgs.add("/work/" + coverageFile.getName());
 
-                if (ctx.getParams().optBoolean("debug", false))
-                {
-                    paragraphArgs.add("--debug");
-                }
-                else
+                if (ctx.getParams().optBoolean("verbose", false))
                 {
                     paragraphArgs.add("--verbose");
                 }
