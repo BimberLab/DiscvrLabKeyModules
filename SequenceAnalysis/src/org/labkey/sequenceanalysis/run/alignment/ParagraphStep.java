@@ -228,6 +228,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 ctx.getFileManager().addIntermediateFile(coverageFile);
 
                 DockerWrapper dockerWrapper = new DockerWrapper("ghcr.io/bimberlabinternal/paragraph:latest", ctx.getLogger(), ctx);
+                dockerWrapper.setTmpDir(new File(SequencePipelineService.get().getJavaTempDir()));
                 List<String> paragraphArgs = new ArrayList<>();
                 paragraphArgs.add("/opt/paragraph/bin/multigrmpy.py");
 
