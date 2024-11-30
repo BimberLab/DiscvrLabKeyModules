@@ -1328,8 +1328,6 @@ public class CellHashingServiceImpl extends CellHashingService
             writer.println("\t-v \"${WD}:/work\" \\");
             ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
-            writer.println("\t-u $UID \\");
-            writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
             writer.println("\tghcr.io/bimberlab/cellhashr:latest \\");
             writer.println("\tRscript --vanilla " + localRScript.getName());

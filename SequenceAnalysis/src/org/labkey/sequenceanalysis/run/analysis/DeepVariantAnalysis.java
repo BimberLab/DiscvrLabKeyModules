@@ -275,8 +275,6 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
                 {
                     writer.println("\t-v \"${TMPDIR}:/tmp\" \\");
                 }
-                writer.println("\t-u $UID \\");
-                writer.println("\t-e USERID=$UID \\");
                 writer.println("\t--entrypoint /bin/bash \\");
                 writer.println("\t-w /work \\");
                 Integer maxRam = SequencePipelineService.get().getMaxRam();

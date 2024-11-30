@@ -309,8 +309,6 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
             String extraArgString = extraArgs == null ? "" : " " + StringUtils.join(extraArgs, " ");
             writer.println("\t-v \"${WD}:/work\" \\");
             ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
-            writer.println("\t-u $UID \\");
-            writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
             writer.println("\tghcr.io/bimberlabinternal/pangolin:latest \\");
             writer.println("\tpangolin" + extraArgString + " '/work/" + consensusFasta.getName() + "'");

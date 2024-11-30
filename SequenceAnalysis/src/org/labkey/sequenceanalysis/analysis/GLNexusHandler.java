@@ -297,8 +297,6 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 {
                     writer.println("\t-v \"${TMPDIR}:/tmp\" \\");
                 }
-                writer.println("\t-u $UID \\");
-                writer.println("\t-e USERID=$UID \\");
 
                 Integer maxRam = SequencePipelineService.get().getMaxRam();
                 if (maxRam != null)

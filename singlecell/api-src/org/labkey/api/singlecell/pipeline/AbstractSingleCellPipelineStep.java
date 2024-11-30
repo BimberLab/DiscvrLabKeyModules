@@ -352,8 +352,6 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             writer.println("\t-v \"" + tmpDir.getPath() + ":/tmp\" \\");
             ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
             writer.println("\t-v \"${HOME}:/homeDir\" \\");
-            writer.println("\t-u $UID \\");
-            writer.println("\t-e USERID=$UID \\");
             writer.println("\t-e TMPDIR=/tmp \\");
             if (dockerHomeDir != null)
             {

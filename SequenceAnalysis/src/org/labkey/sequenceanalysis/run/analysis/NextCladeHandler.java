@@ -185,8 +185,6 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
 
             writer.println("\t-v \"${WD}:/work\" \\");
             ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
-            writer.println("\t-u $UID \\");
-            writer.println("\t-e USERID=$UID \\");
             writer.println("\t-w /work \\");
             writer.println("\tnextstrain/nextclade:latest \\");
             writer.println("\t/bin/bash -c \"nextclade dataset get --name='sars-cov-2' --output-dir='/work/data/sars-cov-2';nextclade run --input-dataset='/work/data/sars-cov-2' --output-json '/work/" + jsonFile.getName() + "' '" + consensusFasta.getName() + "'\" && rm -Rf /work/data");
