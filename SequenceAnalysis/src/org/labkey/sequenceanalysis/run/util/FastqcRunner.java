@@ -374,7 +374,8 @@ public class FastqcRunner
             throw new RuntimeException("Not found: " + htsjdkJar.getPath());
         }
 
-        File commonsMath = new File(libDir, "commons-math3-3.6.1.jar");
+        File apiLibDir = new File(ModuleLoader.getInstance().getModule("api").getExplodedPath(), "lib");
+        File commonsMath = new File(apiLibDir, "commons-math3-3.6.1.jar");
         if (!commonsMath.exists())
         {
             throw new RuntimeException("Not found: " + commonsMath.getPath());
@@ -385,13 +386,6 @@ public class FastqcRunner
         {
             throw new RuntimeException("Not found: " + jhdf5.getPath());
         }
-
-        // NOTE: FastQC expects an alternate package name within this JAR, so use their packaged code instead:
-//        File base64 = new File(libDir, "base64-2.3.8.jar");
-//        if (!base64.exists())
-//        {
-//            throw new RuntimeException("Not found: " + base64.getPath());
-//        }
 
         List<String> classPath = new ArrayList<>();
         classPath.add(".");
