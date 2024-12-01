@@ -20,17 +20,25 @@ public class DockerWrapper extends AbstractCommandWrapper
     private final String _containerName;
     private final PipelineContext _ctx;
     private File _tmpDir = null;
+    private String _entryPoint = null;
 
     public DockerWrapper(String containerName, Logger log, PipelineContext ctx)
     {
         super(log);
         _containerName = containerName;
         _ctx = ctx;
+
+        _environment.clear();
     }
 
     public void setTmpDir(File tmpDir)
     {
         _tmpDir = tmpDir;
+    }
+
+    public void setEntryPoint(String entryPoint)
+    {
+        _entryPoint = entryPoint;
     }
 
     public void executeWithDocker(List<String> containerArgs, File workDir, PipelineOutputTracker tracker) throws PipelineJobException
@@ -46,37 +54,72 @@ public class DockerWrapper extends AbstractCommandWrapper
             writer.println("#!/bin/bash");
             writer.println("set -x");
             writer.println("WD=`pwd`");
-            writer.println("HOME=`echo ~/`");
+
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
             writer.println("$DOCKER pull " + _containerName);
             writer.println("$DOCKER run --rm=true \\");
-            writer.println("\t-v \"${WD}:/work\" \\");
-            writer.println("\t-v \"${HOME}:/homeDir\" \\");
+
+            // NOTE: getDockerVolumes() should be refactored to remove the -v and this logic should be updated accordingly:
+            File homeDir = new File(System.getProperty("user.home"));
+            if (homeDir.exists())
+            {
+                final String searchString = "-v '" + homeDir.getPath() + "'";
+                if (_ctx.getDockerVolumes().stream().noneMatch(searchString::startsWith))
+                {
+                    writer.println("\t-v \"" + homeDir.getPath() + ":/homeDir\" \\");
+                }
+                else
+                {
+                    _ctx.getLogger().debug("homeDir already present in docker volumes, omitting");
+                }
+
+                _environment.put("USER_HOME", homeDir.getPath());
+            }
+
             _ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
             if (_tmpDir != null)
             {
-                writer.println("\t-v \"" + _tmpDir.getPath() + ":/tmp\" \\");
+                // NOTE: getDockerVolumes() should be refactored to remove the -v and this logic should be updated accordingly:
+                final String searchString = "-v '" + _tmpDir.getPath() + "'";
+                if (_ctx.getDockerVolumes().stream().noneMatch(searchString::startsWith))
+                {
+                    writer.println("\t-v \"" + _tmpDir.getPath() + ":/tmp\" \\");
+                }
+                else
+                {
+                    _ctx.getLogger().debug("tmpDir already present in docker volumes, omitting");
+                }
             }
-            writer.println("\t--entrypoint /bin/bash \\");
-            writer.println("\t-w /work \\");
+
+            if (_entryPoint != null)
+            {
+                writer.println("\t--entrypoint \"" + _entryPoint + "\"\\");
+            }
+
+            writer.println("\t-w " + workDir.getPath() + " \\");
             Integer maxRam = SequencePipelineService.get().getMaxRam();
             if (maxRam != null)
             {
                 writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM=" + maxRam + " \\");
                 writer.println("\t--memory='" + maxRam + "g' \\");
             }
+
+            for (String key : _environment.keySet())
+            {
+                writer.println("\t-e " + key + "=" + _environment.get(key) + " \\");
+            }
             writer.println("\t" + _containerName + " \\");
-            writer.println("\t/work/" + dockerBashScript.getName());
-            writer.println("EXIT_CODE=$?");
-            writer.println("echo 'Docker run exit code: '$EXIT_CODE");
-            writer.println("exit $EXIT_CODE");
+            writer.println("\t" + workDir.getPath() + "/" + dockerBashScript.getName());
+            writer.println("DOCKER_EXIT_CODE=$?");
+            writer.println("echo 'Docker run exit code: '$DOCKER_EXIT_CODE");
+            writer.println("exit $DOCKER_EXIT_CODE");
 
             dockerWriter.println("#!/bin/bash");
             dockerWriter.println("set -x");
             dockerWriter.println(StringUtils.join(containerArgs, " "));
-            dockerWriter.println("EXIT_CODE=$?");
-            dockerWriter.println("echo 'Exit code: '$?");
-            dockerWriter.println("exit $EXIT_CODE");
+            dockerWriter.println("BASH_EXIT_CODE=$?");
+            dockerWriter.println("echo 'Bash exit code: '$BASH_EXIT_CODE");
+            dockerWriter.println("exit $BASH_EXIT_CODE");
         }
         catch (IOException e)
         {

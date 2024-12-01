@@ -219,7 +219,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                     }
 
                     double readLength = json.getInt("read_length");
-                    writer.println(rgId + "\t" + "/work/" + so.getFile().getName() + "\t" + depth + "\t" + readLength);
+                    writer.println(rgId + "\t" + so.getFile().getPath() + "\t" + depth + "\t" + readLength);
                 }
                 catch (IOException e)
                 {
@@ -232,12 +232,9 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 List<String> paragraphArgs = new ArrayList<>();
                 paragraphArgs.add("/opt/paragraph/bin/multigrmpy.py");
 
-                dockerWrapper.ensureLocalCopy(so.getFile(), ctx.getWorkingDirectory(), ctx.getFileManager());
-                dockerWrapper.ensureLocalCopy(SequenceAnalysisService.get().getExpectedBamOrCramIndex(so.getFile()), ctx.getWorkingDirectory(), ctx.getFileManager());
-
                 File paragraphOutDir = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(so.getFile()));
                 paragraphArgs.add("-o");
-                paragraphArgs.add("/work/" + paragraphOutDir.getName());
+                paragraphArgs.add(paragraphOutDir.getPath());
 
                 File scratchDir = new File(ctx.getOutputDir(), "pgScratch");
                 if (scratchDir.exists())
@@ -253,17 +250,15 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 }
 
                 paragraphArgs.add("--scratch-dir");
-                paragraphArgs.add("/work/" + scratchDir.getName());
+                paragraphArgs.add(scratchDir.getPath());
 
                 ctx.getFileManager().addIntermediateFile(scratchDir);
 
                 paragraphArgs.add("-i");
-                dockerWrapper.ensureLocalCopy(svVcf, ctx.getWorkingDirectory(), ctx.getFileManager());
-                dockerWrapper.ensureLocalCopy(new File(svVcf.getPath() + ".tbi"), ctx.getWorkingDirectory(), ctx.getFileManager());
-                paragraphArgs.add("/work/" + svVcf.getName());
+                paragraphArgs.add(svVcf.getPath());
 
                 paragraphArgs.add("-m");
-                paragraphArgs.add("/work/" + coverageFile.getName());
+                paragraphArgs.add(coverageFile.getPath());
 
                 if (ctx.getParams().optBoolean("verbose", false))
                 {
@@ -272,9 +267,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
 
                 paragraphArgs.add("-r");
                 File genomeFasta = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id()).getWorkingFastaFile();
-                dockerWrapper.ensureLocalCopy(genomeFasta, ctx.getWorkingDirectory(), ctx.getFileManager());
-                dockerWrapper.ensureLocalCopy(new File(genomeFasta.getPath() + ".fai"), ctx.getWorkingDirectory(), ctx.getFileManager());
-                paragraphArgs.add("/work/" + genomeFasta.getName());
+                paragraphArgs.add(genomeFasta.getPath());
 
                 if (ctx.getParams().optBoolean("retrieveReferenceSeq", false))
                 {

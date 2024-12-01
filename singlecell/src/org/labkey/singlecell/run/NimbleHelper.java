@@ -27,7 +27,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.sequenceanalysis.run.DockerWrapper;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 
@@ -309,11 +309,8 @@ public class NimbleHelper
 
     private File prepareReference(File genomeCsv, File genomeFasta, NimbleGenome genome, PipelineStepOutput output) throws PipelineJobException
     {
-        genomeCsv = ensureLocalCopy(genomeCsv, output);
-        genomeFasta = ensureLocalCopy(genomeFasta, output);
-
         File nimbleJson = new File(getPipelineCtx().getWorkingDirectory(), genome.genomeId + ".json");
-        runUsingDocker(Arrays.asList("python3", "-m", "nimble", "generate", "--opt-file", "/work/" + genomeFasta.getName(), "--file", "/work/" + genomeCsv.getName(), "--output_path", "/work/" + nimbleJson.getName()), output, "generate-" + genome.genomeId);
+        runUsingDocker(Arrays.asList("python3", "-m", "nimble", "generate", "--opt-file", genomeFasta.getPath(), "--file", genomeCsv.getPath(), "--output_path", nimbleJson.getPath()), output, "generate-" + genome.genomeId);
         if (!nimbleJson.exists())
         {
             File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "generate-" + genome.genomeId);
@@ -410,20 +407,6 @@ public class NimbleHelper
     {
         Map<NimbleGenome, File> resultMap = new HashMap<>();
 
-        File localBam = ensureLocalCopy(bam, output);
-        ensureLocalCopy(SequenceAnalysisService.get().getExpectedBamOrCramIndex(bam), output);
-
-        List<File> localRefJsons = refJsons.stream().map(refJson -> {
-            try
-            {
-                return ensureLocalCopy(refJson, output);
-            }
-            catch (PipelineJobException e)
-            {
-                throw new RuntimeException(e);
-            }
-        }).collect(Collectors.toList());
-
         List<String> alignArgs = new ArrayList<>();
         alignArgs.add("python3");
         alignArgs.add("-m");
@@ -447,13 +430,13 @@ public class NimbleHelper
         File alignmentTsvBase = new File(getPipelineCtx().getWorkingDirectory(), "alignResults." + (genomes.size() == 1 ? genomes.get(0).genomeId + "." : "") + "txt.gz");
 
         alignArgs.add("--reference");
-        alignArgs.add(localRefJsons.stream().map(x -> "/work/" + x.getName()).collect(Collectors.joining(",")));
+        alignArgs.add(refJsons.stream().map(File::getPath).collect(Collectors.joining(",")));
 
         alignArgs.add("--output");
-        alignArgs.add("/work/" + alignmentTsvBase.getName());
+        alignArgs.add(alignmentTsvBase.getPath());
 
         alignArgs.add("--input");
-        alignArgs.add("/work/" + localBam.getName());
+        alignArgs.add(bam.getPath());
 
         boolean dockerRan = runUsingDocker(alignArgs, output, "align.all");
         for (NimbleGenome genome : genomes)
@@ -492,7 +475,7 @@ public class NimbleHelper
 
         reportArgs.add("report");
         reportArgs.add("-i");
-        reportArgs.add("/work/" + alignResultsGz.getName());
+        reportArgs.add(alignResultsGz.getPath());
 
         File reportResultsGz = new File(ctx.getWorkingDirectory(), "reportResults." + genomeId + ".txt");
         if (reportResultsGz.exists())
@@ -501,7 +484,7 @@ public class NimbleHelper
         }
 
         reportArgs.add("-o");
-        reportArgs.add("/work/" + reportResultsGz.getName());
+        reportArgs.add(reportResultsGz.getPath());
 
         runUsingDocker(reportArgs, output, null, ctx);
 
@@ -520,7 +503,7 @@ public class NimbleHelper
 
             plotArgs.add("plot");
             plotArgs.add("--input_file");
-            plotArgs.add("/work/" + alignResultsGz.getName());
+            plotArgs.add(alignResultsGz.getPath());
 
             File plotResultsHtml = getReportHtmlFileFromResults(reportResultsGz);
             if (plotResultsHtml.exists())
@@ -529,7 +512,7 @@ public class NimbleHelper
             }
 
             plotArgs.add("--output_file");
-            plotArgs.add("/work/" + plotResultsHtml.getName());
+            plotArgs.add(plotResultsHtml.getPath());
 
             runUsingDocker(plotArgs, output, null, ctx);
 
@@ -565,10 +548,9 @@ public class NimbleHelper
 
     private static boolean runUsingDocker(List<String> nimbleArgs, PipelineStepOutput output, @Nullable String resumeString, PipelineContext ctx) throws PipelineJobException
     {
-        File localBashScript = new File(ctx.getWorkingDirectory(), "docker.sh");
-        File dockerBashScript = new File(ctx.getWorkingDirectory(), "dockerRun.sh");
-        output.addIntermediateFile(localBashScript);
-        output.addIntermediateFile(dockerBashScript);
+        DockerWrapper wrapper = new DockerWrapper(DOCKER_CONTAINER_NAME, ctx.getLogger(), ctx);
+        wrapper.setWorkingDir(ctx.getWorkingDirectory());
+        wrapper.setEntryPoint("/bin/bash");
 
         // Create temp folder:
         File tmpDir = new File(ctx.getWorkingDirectory(), "tmpDir");
@@ -585,51 +567,9 @@ public class NimbleHelper
             }
         }
         output.addIntermediateFile(tmpDir);
+        wrapper.setTmpDir(tmpDir);
 
-        try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript);PrintWriter dockerWriter = PrintWriters.getPrintWriter(dockerBashScript))
-        {
-            writer.println("#!/bin/bash");
-            writer.println("set -x");
-            writer.println("WD=`pwd`");
-            writer.println("HOME=`echo ~/`");
-
-            writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            writer.println("$DOCKER pull " + DOCKER_CONTAINER_NAME);
-            writer.println("$DOCKER run --rm=true \\");
-
-            Integer maxRam = SequencePipelineService.get().getMaxRam();
-            if (maxRam != null)
-            {
-                //int swap = 4*maxRam;
-                writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM=" + maxRam + " \\");
-                writer.println("\t--memory='" + maxRam + "g' \\");
-            }
-
-            ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
-            writer.println("\t-v \"${WD}:/work\" \\");
-            writer.println("\t-v \"${HOME}:/homeDir\" \\");
-            writer.println("\t-e RUST_BACKTRACE=1 \\");
-            writer.println("\t-e TMPDIR=/work/tmpDir \\");
-            writer.println("\t--entrypoint /bin/bash \\");
-            writer.println("\t-w /work \\");
-            writer.println("\t" + DOCKER_CONTAINER_NAME + " \\");
-            writer.println("\t/work/" + dockerBashScript.getName());
-            writer.println("EXIT_CODE=$?");
-            writer.println("echo 'Docker run exit code: '$EXIT_CODE");
-            writer.println("exit $EXIT_CODE");
-
-            dockerWriter.println("#!/bin/bash");
-            dockerWriter.println("set -x");
-
-            dockerWriter.println(StringUtils.join(nimbleArgs, " "));
-            dockerWriter.println("EXIT_CODE=$?");
-            dockerWriter.println("echo 'Exit code: '$?");
-            dockerWriter.println("exit $EXIT_CODE");
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
+        wrapper.addToEnvironment("RUST_BACKTRACE", "1");
 
         File doneFile = null;
         if (resumeString != null)
@@ -648,9 +588,7 @@ public class NimbleHelper
             }
         }
 
-        SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(ctx.getLogger());
-        rWrapper.setWorkingDir(ctx.getWorkingDirectory());
-        rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
+        wrapper.executeWithDocker(nimbleArgs, ctx.getWorkingDirectory(), output);
 
         if (doneFile != null)
         {
@@ -667,38 +605,6 @@ public class NimbleHelper
         return true;
     }
 
-    private File ensureLocalCopy(File input, PipelineStepOutput output) throws PipelineJobException
-    {
-        return ensureLocalCopy(input, output, getPipelineCtx());
-    }
-
-    public static File ensureLocalCopy(File input, PipelineStepOutput output, PipelineContext ctx) throws PipelineJobException
-    {
-        try
-        {
-            if (ctx.getWorkingDirectory().equals(input.getParentFile()))
-            {
-                return input;
-            }
-
-            File local = new File(ctx.getWorkingDirectory(), input.getName());
-            if (!local.exists())
-            {
-                ctx.getLogger().debug("Copying file locally: " + input.getPath());
-                FileUtils.copyFile(input, local);
-            }
-
-            output.addIntermediateFile(local);
-
-            return local;
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-    }
-
-
     private static class NimbleGenome
     {
         private final int genomeId;
@@ -712,7 +618,7 @@ public class NimbleHelper
         {
             if (arr.length() < 3)
             {
-                throw new PipelineJobException("Improper genome: " + arr.toString());
+                throw new PipelineJobException("Improper genome: " + arr);
             }
 
             genomeId = arr.getInt(0);
@@ -757,7 +663,7 @@ public class NimbleHelper
     private String getVersion(PipelineStepOutput output) throws PipelineJobException
     {
         List<String> nimbleArgs = new ArrayList<>();
-        nimbleArgs.add("/bin/bash -c 'python3 -m nimble -v' > /work/nimbleVersion.txt");
+        nimbleArgs.add("/bin/bash -c 'python3 -m nimble -v' > nimbleVersion.txt");
 
         runUsingDocker(nimbleArgs, output, null);
 
@@ -767,7 +673,7 @@ public class NimbleHelper
             throw new PipelineJobException("Unable to find file: " + outFile.getPath());
         }
 
-        String ret = null;
+        String ret;
         try
         {
             ret = StringUtils.trimToNull(Files.readString(outFile.toPath()));
