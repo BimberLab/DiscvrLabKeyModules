@@ -1,7 +1,6 @@
 package org.labkey.cluster.pipeline;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +13,6 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
-import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.util.FileUtil;
@@ -312,8 +310,8 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                                 String maxRSS = StringUtils.trimToNull(tokens[maxRssIdx]);
                                 if (maxRSS != null)
                                 {
-                                    long bytes = FileSizeFormatter.convertStringRepresentationToBytes(maxRSS);
-                                    long requestInBytes = FileSizeFormatter.convertStringRepresentationToBytes(getConfig().getRequestMemory() + "G"); //request is always GB
+                                    double bytes = FileSizeFormatter.convertStringRepresentationToBytes(maxRSS);
+                                    double requestInBytes = FileSizeFormatter.convertStringRepresentationToBytes(getConfig().getRequestMemory() + "G"); //request is always GB
                                     if (bytes > requestInBytes)
                                     {
                                         info = "Job exceeded memory, max was: " + FileSizeFormatter.convertBytesToUnit(bytes, 'G') + "G, requested memory was: " + getConfig().getRequestMemory() + "G";
@@ -780,13 +778,13 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
     // Based on: https://stackoverflow.com/questions/3758606/how-can-i-convert-byte-size-into-a-human-readable-format-in-java
     private static class FileSizeFormatter
     {
-        public static long convertStringRepresentationToBytes(final String value)
+        public static double convertStringRepresentationToBytes(final String value)
         {
             try
             {
                 char unit = value.toUpperCase().charAt(value.length() - 1);
                 long sizeFactor = getSizeFactor(unit);
-                long size = Long.parseLong(value.substring(0, value.length() - 1));
+                double size = Double.parseDouble(value.substring(0, value.length() - 1));
 
                 return size * sizeFactor;
             }
@@ -796,11 +794,11 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             }
         }
 
-        public static long convertBytesToUnit(final long bytes, final char unit)
+        public static double convertBytesToUnit(final double bytes, final char unit)
         {
             long sizeFactor = getSizeFactor(unit);
 
-            return bytes / sizeFactor;
+            return bytes / (double)sizeFactor;
         }
 
         private static long getSizeFactor(char unit)
@@ -826,11 +824,11 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         @Test
         public void testFileSizeFormatter()
         {
-            long bytes = FileSizeFormatter.convertStringRepresentationToBytes("1362624K");
-            Assert.assertEquals("Incorrect byte value", 1395326976, bytes);
+            double bytes = FileSizeFormatter.convertStringRepresentationToBytes("1362624K");
+            Assert.assertEquals("Incorrect byte value", 1395326976.0, bytes, 0.0);
 
-            long val2 = FileSizeFormatter.convertBytesToUnit(bytes, 'K');
-            Assert.assertEquals("Incorrect string value", 1362624, val2);
+            double val2 = FileSizeFormatter.convertBytesToUnit(bytes, 'K');
+            Assert.assertEquals("Incorrect string value", 1362624.0, val2, 0.0);
         }
     }
 }
