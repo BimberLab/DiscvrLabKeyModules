@@ -27,6 +27,7 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -319,7 +320,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                                         PipelineStatusFile sf = PipelineService.get().getStatusFile(job.getJobId());
                                         if (sf != null)
                                         {
-                                            try (PrintWriter writer = PrintWriters.getPrintWriter(new File(sf.getFilePath())))
+                                            try (PrintWriter writer = PrintWriters.getPrintWriter(new File(sf.getFilePath()), StandardOpenOption.APPEND))
                                             {
                                                 writer.println(info + ". Raw slurm value: " + maxRSS);
                                             }
