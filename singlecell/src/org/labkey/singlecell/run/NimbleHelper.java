@@ -567,7 +567,8 @@ public class NimbleHelper
             }
         }
         output.addIntermediateFile(tmpDir);
-        wrapper.setTmpDir(tmpDir);
+        wrapper.setTmpDir(null);
+        wrapper.addToEnvironment("TMPDIR", tmpDir.getPath());
 
         wrapper.addToEnvironment("RUST_BACKTRACE", "1");
 
