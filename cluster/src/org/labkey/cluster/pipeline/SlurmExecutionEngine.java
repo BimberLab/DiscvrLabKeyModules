@@ -247,6 +247,8 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             int stateIdx = -1;
             int hostnameIdx = -1;
             int maxRssIdx = -1;
+            int reqMemIdx = -1;
+            String reqMem = null;
             for (String line : ret)
             {
                 line = StringUtils.trimToNull(line);
@@ -263,6 +265,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     stateIdx = header.indexOf("STATE");
                     hostnameIdx = header.indexOf("NODELIST");
                     maxRssIdx = header.indexOf("MAXRSS");
+                    reqMemIdx = header.indexOf("REQMEM");
 
                     if (stateIdx == -1)
                     {
@@ -303,6 +306,16 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                             }
                         }
 
+                        if (reqMemIdx > -1 && reqMemIdx < tokens.length)
+                        {
+                            String val = StringUtils.trimToNull(tokens[reqMemIdx]);
+                            if (val != null)
+                            {
+                                reqMem = val;
+                            }
+
+                        }
+
                         // NOTE: if the line has blank ending columns, trimmed lines might lack that value
                         if ((job.getClusterId() + ".0").equals(id) && maxRssIdx > -1 && maxRssIdx < tokens.length)
                         {
@@ -312,21 +325,28 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                                 if (maxRSS != null)
                                 {
                                     double bytes = FileSizeFormatter.convertStringRepresentationToBytes(maxRSS);
-                                    double requestInBytes = FileSizeFormatter.convertStringRepresentationToBytes(getConfig().getRequestMemory() + "G"); //request is always GB
-                                    if (bytes > requestInBytes)
+                                    if (reqMem == null)
                                     {
-                                        info = "Job exceeded memory, max was: " + FileSizeFormatter.convertBytesToUnit(bytes, 'G') + "G, requested memory was: " + getConfig().getRequestMemory() + "G";
-
-                                        PipelineStatusFile sf = PipelineService.get().getStatusFile(job.getJobId());
-                                        if (sf != null)
+                                        _log.warn("Unable to find ReqMem for slurm job: " + job.getClusterId());
+                                    }
+                                    else
+                                    {
+                                        double requestInBytes = FileSizeFormatter.convertStringRepresentationToBytes(reqMem);
+                                        if (bytes > requestInBytes)
                                         {
-                                            try (PrintWriter writer = PrintWriters.getPrintWriter(new File(sf.getFilePath()), StandardOpenOption.APPEND))
+                                            info = "Job exceeded memory, max was: " + FileSizeFormatter.convertBytesToUnit(bytes, 'G') + "G, requested memory was: " + FileSizeFormatter.convertBytesToUnit(requestInBytes, 'G');
+
+                                            PipelineStatusFile sf = PipelineService.get().getStatusFile(job.getJobId());
+                                            if (sf != null)
                                             {
-                                                writer.println(info + ". Raw slurm value: " + maxRSS);
-                                            }
-                                            catch (FileNotFoundException e)
-                                            {
-                                                _log.error("Unable to find log file for job, " + job.getJobId() + ": " + sf.getFilePath());
+                                                try (PrintWriter writer = PrintWriters.getPrintWriter(new File(sf.getFilePath()), StandardOpenOption.APPEND))
+                                                {
+                                                    writer.println(info + ". Raw slurm value: " + maxRSS);
+                                                }
+                                                catch (FileNotFoundException e)
+                                                {
+                                                    _log.error("Unable to find log file for job, " + job.getJobId() + ": " + sf.getFilePath());
+                                                }
                                             }
                                         }
                                     }
