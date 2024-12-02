@@ -438,6 +438,25 @@ public class NimbleHelper
         alignArgs.add("--input");
         alignArgs.add(bam.getPath());
 
+        // Create temp folder:
+        File tmpDir = new File(getPipelineCtx().getWorkingDirectory(), "tmpDir");
+        if (tmpDir.exists())
+        {
+            try
+            {
+                FileUtils.deleteDirectory(tmpDir);
+                Files.createDirectory(tmpDir.toPath());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+        output.addIntermediateFile(tmpDir);
+
+        alignArgs.add("--tmpdir");
+        alignArgs.add(tmpDir.getPath());
+
         boolean dockerRan = runUsingDocker(alignArgs, output, "align.all");
         for (NimbleGenome genome : genomes)
         {
@@ -552,23 +571,7 @@ public class NimbleHelper
         wrapper.setWorkingDir(ctx.getWorkingDirectory());
         wrapper.setEntryPoint("/bin/bash");
 
-        // Create temp folder:
-        File tmpDir = new File(ctx.getWorkingDirectory(), "tmpDir");
-        if (tmpDir.exists())
-        {
-            try
-            {
-                FileUtils.deleteDirectory(tmpDir);
-                Files.createDirectory(tmpDir.toPath());
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-        }
-        output.addIntermediateFile(tmpDir);
         wrapper.setTmpDir(null);
-        wrapper.addToEnvironment("TMPDIR", tmpDir.getPath());
 
         wrapper.addToEnvironment("RUST_BACKTRACE", "1");
 
