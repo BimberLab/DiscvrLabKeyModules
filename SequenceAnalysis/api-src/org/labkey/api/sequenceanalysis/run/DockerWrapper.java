@@ -62,13 +62,14 @@ public class DockerWrapper extends AbstractCommandWrapper
             writer.println("WD=`pwd`");
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
+            writer.println("$DOCKER pull " + _containerName);
             if (_runPrune)
             {
                 writer.println("$DOCKER image prune -f");
             }
 
-            writer.println("$DOCKER pull " + _containerName);
             writer.println("$DOCKER run --rm=true \\");
+            writer.println("\t--group-add keep-groups \\");
 
             // NOTE: getDockerVolumes() should be refactored to remove the -v and this logic should be updated accordingly:
             File homeDir = new File(System.getProperty("user.home"));
