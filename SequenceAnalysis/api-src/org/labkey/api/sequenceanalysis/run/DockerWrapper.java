@@ -21,6 +21,7 @@ public class DockerWrapper extends AbstractCommandWrapper
     private final PipelineContext _ctx;
     private File _tmpDir = null;
     private String _entryPoint = null;
+    private boolean _runPrune = true;
 
     public DockerWrapper(String containerName, Logger log, PipelineContext ctx)
     {
@@ -41,6 +42,11 @@ public class DockerWrapper extends AbstractCommandWrapper
         _entryPoint = entryPoint;
     }
 
+    public void setRunPrune(boolean runPrune)
+    {
+        _runPrune = runPrune;
+    }
+
     public void executeWithDocker(List<String> containerArgs, File workDir, PipelineOutputTracker tracker) throws PipelineJobException
     {
         File localBashScript = new File(workDir, "docker.sh");
@@ -56,6 +62,11 @@ public class DockerWrapper extends AbstractCommandWrapper
             writer.println("WD=`pwd`");
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
+            if (_runPrune)
+            {
+                writer.println("$DOCKER image prune -f");
+            }
+
             writer.println("$DOCKER pull " + _containerName);
             writer.println("$DOCKER run --rm=true \\");
 
