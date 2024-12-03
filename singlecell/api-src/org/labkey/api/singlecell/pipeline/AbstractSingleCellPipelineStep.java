@@ -17,7 +17,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.sequenceanalysis.run.DockerWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
 
@@ -301,6 +301,8 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
 
     public static void executeR(SequenceOutputHandler.JobContext ctx, String dockerContainerName, String outputPrefix, List<String> lines, @Nullable Integer seuratThreads, @Nullable String dockerHomeDir) throws PipelineJobException
     {
+        DockerWrapper wrapper = new DockerWrapper(dockerContainerName, ctx.getLogger(), ctx);
+
         File localRScript = new File(ctx.getOutputDir(), FileUtil.makeLegalName(outputPrefix + ".R").replaceAll(" ", "_"));
         try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
         {
@@ -311,72 +313,24 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             throw new PipelineJobException(e);
         }
 
-        File localBashScript = new File(ctx.getOutputDir(), "dockerWrapper.sh");
-        try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
+        if (seuratThreads != null)
         {
-            writer.println("#!/bin/bash");
-            writer.println("set -x");
-            writer.println("WD=`pwd`");
-            writer.println("HOME=`echo ~/`");
-
-            writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            writer.println("$DOCKER pull " + dockerContainerName);
-            writer.println("$DOCKER run --rm=true \\");
-
             Integer maxThreads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
-            if (maxThreads != null)
+            if (maxThreads != null && maxThreads < seuratThreads)
             {
-                writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS=" + maxThreads + " \\");
+                seuratThreads = maxThreads;
             }
 
-            if (seuratThreads != null)
-            {
-                if (maxThreads != null && maxThreads < seuratThreads)
-                {
-                    seuratThreads = maxThreads;
-                }
-
-                writer.println("\t-e SEURAT_MAX_THREADS=" + seuratThreads + " \\");
-            }
-
-            Integer maxRam = SequencePipelineService.get().getMaxRam();
-            if (maxRam != null)
-            {
-                //int swap = 4*maxRam;
-                writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM=" + maxRam + " \\");
-                writer.println("\t--memory='" + maxRam + "g' \\");
-            }
-
-            File tmpDir = new File(SequencePipelineService.get().getJavaTempDir());
-            writer.println("\t-v \"${WD}:/work\" \\");
-            writer.println("\t-v \"" + tmpDir.getPath() + ":/tmp\" \\");
-            ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
-            writer.println("\t-v \"${HOME}:/homeDir\" \\");
-            writer.println("\t-e TMPDIR=/tmp \\");
-            if (dockerHomeDir != null)
-            {
-                writer.println("\t-e HOME=" + dockerHomeDir + " \\");
-            }
-            writer.println("\t-w /work \\");
-            //NOTE: this seems to disrupt packages installed into home
-            //writer.println("\t-e HOME=/homeDir \\");
-            writer.println("\t" + dockerContainerName + " \\");
-            writer.println("\tRscript --vanilla '" + localRScript.getName() + "'");
-            writer.println("EXIT_CODE=$?");
-            writer.println("echo 'Bash script complete: '$EXIT_CODE");
-            writer.println("exit $EXIT_CODE");
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
+            wrapper.addToEnvironment("SEURAT_MAX_THREADS", seuratThreads.toString());
         }
 
-        SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(ctx.getLogger());
-        rWrapper.setWorkingDir(ctx.getOutputDir());
-        rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
+        File tmpDir = new File(SequencePipelineService.get().getJavaTempDir());
+        wrapper.setTmpDir(tmpDir);
+
+        wrapper.setWorkingDir(ctx.getOutputDir());
+        wrapper.executeWithDocker(Arrays.asList("Rscript", "--vanilla", "'" + localRScript.getName() + "'"), ctx.getWorkingDirectory(), ctx.getFileManager());
 
         localRScript.delete();
-        localBashScript.delete();
     }
 
     public String getDockerHomeDir()
