@@ -58,7 +58,6 @@ dependencies {
             {
                 // Exclude in favor of angus activation from API
                 exclude group: 'org.eclipse.angus', module: 'angus-activation'
-                exclude group: "jakarta.activation", module: "jakarta.activation-api"
             }
     )
 
@@ -76,7 +75,6 @@ dependencies {
             {
                 // Exclude in favor of angus activation from API
                 exclude group: 'org.eclipse.angus', module: 'angus-activation'
-                exclude group: "jakarta.activation", module: "jakarta.activation-api"
             }
     )
 
