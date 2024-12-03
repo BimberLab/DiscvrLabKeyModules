@@ -189,15 +189,10 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
     public Collection<String> getDockerVolumes()
     {
-        return _dockerVolumes == null ? Collections.emptySet() : Collections.unmodifiableCollection(_dockerVolumes);
-    }
-
-    public void setDockerVolumes(Collection<String> dockerVolumes)
-    {
         // TODO: this is for legacy jobs that included the -v arg. Eventually remove:
-        if (dockerVolumes.stream().anyMatch(x -> x.startsWith("-v")))
+        if (_dockerVolumes != null && _dockerVolumes.stream().anyMatch(x -> x.startsWith("-v")))
         {
-            dockerVolumes = dockerVolumes.stream().map(x -> {
+            _dockerVolumes = _dockerVolumes.stream().map(x -> {
                 if (x.startsWith("-v"))
                 {
                     x = x.split(":")[1];
@@ -208,6 +203,11 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
             }).collect(Collectors.toSet());
         }
 
+        return _dockerVolumes == null ? Collections.emptySet() : Collections.unmodifiableCollection(_dockerVolumes);
+    }
+
+    public void setDockerVolumes(Collection<String> dockerVolumes)
+    {
         _dockerVolumes = dockerVolumes;
     }
 
