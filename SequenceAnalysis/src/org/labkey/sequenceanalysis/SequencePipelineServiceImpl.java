@@ -472,14 +472,26 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
         {
             if (settings.isAvailable(c))
             {
-                for (String volume : settings.getDockerVolumes(c))
-                {
-                    volumeLines.add("-v '" + volume + "':'" + volume + "'");
-                }
+                return Collections.unmodifiableCollection(settings.getDockerVolumes(c));
             }
         }
 
         return volumeLines;
+    }
+
+    @Override
+    public @Nullable File inferDockerVolume(File input)
+    {
+        for (JobResourceSettings settings : SequencePipelineServiceImpl.get().getResourceSettings())
+        {
+            File ret = settings.inferDockerVolume(input);
+            if (ret != null)
+            {
+                return ret;
+            }
+        }
+
+        return null;
     }
 
     @Override
@@ -570,7 +582,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     @Override
     public Set<JobResourceSettings> getResourceSettings()
     {
-        return _resourceSettings;
+        return Collections.unmodifiableSet(_resourceSettings);
     }
 
     @Override

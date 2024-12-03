@@ -1,7 +1,5 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -20,13 +18,10 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.api.sequenceanalysis.run.DockerWrapper;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.writer.PrintWriters;
-import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -194,32 +189,6 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             super(logger);
         }
 
-        private File ensureLocalCopy(File input, File workingDirectory, PipelineOutputTracker output) throws PipelineJobException
-        {
-            try
-            {
-                if (workingDirectory.equals(input.getParentFile()))
-                {
-                    return input;
-                }
-
-                File local = new File(workingDirectory, input.getName());
-                if (!local.exists())
-                {
-                    getLogger().debug("Copying file locally: " + input.getPath());
-                    FileUtils.copyFile(input, local);
-                }
-
-                output.addIntermediateFile(local);
-
-                return local;
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-        }
-
         public void execute(File inputBam, File refFasta, File outputGvcf, boolean retainVcf, PipelineOutputTracker tracker, String binVersion, List<String> extraArgs, PipelineContext ctx) throws PipelineJobException
         {
             File workDir = outputGvcf.getParentFile();
@@ -230,24 +199,17 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
                 tracker.addIntermediateFile(new File(outputVcf.getPath() + ".tbi"));
             }
 
-            File inputBamLocal = ensureLocalCopy(inputBam, workDir, tracker);
-            ensureLocalCopy(SequenceUtil.getExpectedIndex(inputBam), workDir, tracker);
+            List<File> inputFiles = new ArrayList<>();
 
-            File refFastaLocal = ensureLocalCopy(refFasta, workDir, tracker);
-            ensureLocalCopy(new File(refFasta.getPath() + ".fai"), workDir, tracker);
-            ensureLocalCopy(new File(FileUtil.getBaseName(refFasta.getPath()) + ".dict"), workDir, tracker);
-
-            File localBashScript = new File(workDir, "docker.sh");
-            File dockerBashScript = new File(workDir, "dockerRun.sh");
-            tracker.addIntermediateFile(localBashScript);
-            tracker.addIntermediateFile(dockerBashScript);
+            inputFiles.add(inputBam);
+            inputFiles.add(refFasta);
 
             List<String> bashArgs = new ArrayList<>(Arrays.asList("/opt/deepvariant/bin/run_deepvariant"));
             bashArgs.add("--make_examples_extra_args='normalize_reads=true'");
-            bashArgs.add("--ref=/work/" + refFastaLocal.getName());
-            bashArgs.add("--reads=/work/" + inputBamLocal.getName());
-            bashArgs.add("--output_gvcf=/work/" + outputGvcf.getName());
-            bashArgs.add("--output_vcf=/work/" + outputVcf.getName());
+            bashArgs.add("--ref=" + refFasta.getPath());
+            bashArgs.add("--reads=" + inputBam.getPath());
+            bashArgs.add("--output_gvcf=" + outputGvcf.getPath());
+            bashArgs.add("--output_vcf=" + outputVcf.getPath());
             Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
             if (maxThreads != null)
             {
@@ -259,50 +221,9 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
                 bashArgs.addAll(extraArgs);
             }
 
-            try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript); PrintWriter dockerWriter = PrintWriters.getPrintWriter(dockerBashScript))
-            {
-                writer.println("#!/bin/bash");
-                writer.println("set -x");
-                writer.println("WD=`pwd`");
-                writer.println("HOME=`echo ~/`");
-                writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-                writer.println("$DOCKER pull google/deepvariant:" + binVersion);
-                writer.println("$DOCKER run --rm=true \\");
-                writer.println("\t-v \"${WD}:/work\" \\");
-                writer.println("\t-v \"${HOME}:/homeDir\" \\");
-                ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
-                if (!StringUtils.isEmpty(System.getenv("TMPDIR")))
-                {
-                    writer.println("\t-v \"${TMPDIR}:/tmp\" \\");
-                }
-                writer.println("\t--entrypoint /bin/bash \\");
-                writer.println("\t-w /work \\");
-                Integer maxRam = SequencePipelineService.get().getMaxRam();
-                if (maxRam != null)
-                {
-                    writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM=" + maxRam + " \\");
-                    writer.println("\t--memory='" + maxRam + "g' \\");
-                }
-                writer.println("\tgoogle/deepvariant:" + binVersion + " \\");
-                writer.println("\t/work/" + dockerBashScript.getName());
-                writer.println("EXIT_CODE=$?");
-                writer.println("echo 'Docker run exit code: '$EXIT_CODE");
-                writer.println("exit $EXIT_CODE");
-
-                dockerWriter.println("#!/bin/bash");
-                dockerWriter.println("set -x");
-                dockerWriter.println(StringUtils.join(bashArgs, " "));
-                dockerWriter.println("EXIT_CODE=$?");
-                dockerWriter.println("echo 'Exit code: '$?");
-                dockerWriter.println("exit $EXIT_CODE");
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-
-            setWorkingDir(workDir);
-            execute(Arrays.asList("/bin/bash", localBashScript.getPath()));
+            DockerWrapper wrapper = new DockerWrapper("google/deepvariant:" + binVersion, ctx.getLogger(), ctx);
+            wrapper.setEntryPoint("/bin/bash");
+            wrapper.executeWithDocker(bashArgs, ctx.getWorkingDirectory(), tracker, inputFiles);
 
             if (!outputGvcf.exists())
             {

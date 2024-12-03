@@ -1,8 +1,8 @@
 package org.labkey.api.sequenceanalysis.run;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
@@ -13,7 +13,12 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class DockerWrapper extends AbstractCommandWrapper
 {
@@ -22,6 +27,7 @@ public class DockerWrapper extends AbstractCommandWrapper
     private File _tmpDir = null;
     private String _entryPoint = null;
     private boolean _runPrune = true;
+    private String _alternateUserHome = null;
 
     public DockerWrapper(String containerName, Logger log, PipelineContext ctx)
     {
@@ -30,6 +36,11 @@ public class DockerWrapper extends AbstractCommandWrapper
         _ctx = ctx;
 
         _environment.clear();
+    }
+
+    public void setAlternateUserHome(String alternateUserHome)
+    {
+        _alternateUserHome = alternateUserHome;
     }
 
     public void setTmpDir(File tmpDir)
@@ -48,6 +59,11 @@ public class DockerWrapper extends AbstractCommandWrapper
     }
 
     public void executeWithDocker(List<String> containerArgs, File workDir, PipelineOutputTracker tracker) throws PipelineJobException
+    {
+        executeWithDocker(containerArgs, workDir, tracker, null);
+    }
+
+    public void executeWithDocker(List<String> containerArgs, File workDir, PipelineOutputTracker tracker, @Nullable Collection<File> inputFiles) throws PipelineJobException
     {
         File localBashScript = new File(workDir, "docker.sh");
         File dockerBashScript = new File(workDir, "dockerRun.sh");
@@ -75,25 +91,33 @@ public class DockerWrapper extends AbstractCommandWrapper
             File homeDir = new File(System.getProperty("user.home"));
             if (homeDir.exists())
             {
-                final String searchString = "-v '" + homeDir.getPath() + "'";
-                if (_ctx.getDockerVolumes().stream().noneMatch(searchString::startsWith))
+                if (_ctx.getDockerVolumes().stream().noneMatch(homeDir.getPath()::startsWith))
                 {
-                    writer.println("\t-v \"" + homeDir.getPath() + ":/homeDir\" \\");
+                    writer.println("\t-v '" + homeDir.getPath() + "':'" + homeDir.getPath() + "' \\");
                 }
                 else
                 {
-                    _ctx.getLogger().debug("homeDir already present in docker volumes, omitting");
+                    _ctx.getLogger().debug("homeDir already present in docker volumes, will not re-add");
                 }
 
                 _environment.put("USER_HOME", homeDir.getPath());
             }
 
-            _ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
+            if (_alternateUserHome != null)
+            {
+                _environment.put("HOME", _alternateUserHome);
+            }
+
+            _ctx.getDockerVolumes().forEach(v -> writer.println("\t-v '" + v + "':'" + v + "'\\"));
+            if (inputFiles != null)
+            {
+                inspectInputFiles(inputFiles).forEach(v -> writer.println("\t-v '" + v + "':'" + v + "'\\"));
+            }
+
             if (_tmpDir != null)
             {
                 // NOTE: getDockerVolumes() should be refactored to remove the -v and this logic should be updated accordingly:
-                final String searchString = "-v '" + _tmpDir.getPath() + "'";
-                if (_ctx.getDockerVolumes().stream().noneMatch(searchString::startsWith))
+                if (_ctx.getDockerVolumes().stream().noneMatch(_tmpDir.getPath()::startsWith))
                 {
                     writer.println("\t-v \"" + _tmpDir.getPath() + ":/tmp\" \\");
                 }
@@ -101,6 +125,8 @@ public class DockerWrapper extends AbstractCommandWrapper
                 {
                     _ctx.getLogger().debug("tmpDir already present in docker volumes, omitting");
                 }
+
+                addToEnvironment("TMPDIR", _tmpDir.getPath());
             }
 
             if (_entryPoint != null)
@@ -109,6 +135,8 @@ public class DockerWrapper extends AbstractCommandWrapper
             }
 
             writer.println("\t-w " + workDir.getPath() + " \\");
+            addToEnvironment("WORK_DIR", workDir.getPath());
+
             Integer maxRam = SequencePipelineService.get().getMaxRam();
             if (maxRam != null)
             {
@@ -121,7 +149,7 @@ public class DockerWrapper extends AbstractCommandWrapper
                 writer.println("\t-e " + key + "=" + _environment.get(key) + " \\");
             }
             writer.println("\t" + _containerName + " \\");
-            writer.println("\t" + workDir.getPath() + "/" + dockerBashScript.getName());
+            writer.println("\t/bin/bash " + dockerBashScript.getPath());
             writer.println("DOCKER_EXIT_CODE=$?");
             writer.println("echo 'Docker run exit code: '$DOCKER_EXIT_CODE");
             writer.println("exit $DOCKER_EXIT_CODE");
@@ -141,29 +169,30 @@ public class DockerWrapper extends AbstractCommandWrapper
         execute(Arrays.asList("/bin/bash", localBashScript.getPath()));
     }
 
-    public File ensureLocalCopy(File input, File workingDirectory, PipelineOutputTracker output) throws PipelineJobException
+    private Collection<File> inspectInputFiles(Collection<File> inputFiles)
     {
-        try
+        Set<File> toAdd = inputFiles.stream().map(f -> f.isDirectory() ? f : f.getParentFile()).filter(x -> _ctx.getDockerVolumes().stream().noneMatch(x.getPath()::startsWith)).collect(Collectors.toSet());
+        if (!toAdd.isEmpty())
         {
-            if (workingDirectory.equals(input.getParentFile()))
-            {
-                return input;
-            }
+            Set<File> paths = new HashSet<>();
+            toAdd.forEach(x -> {
+                _ctx.getLogger().debug("Adding volume for path: " + x.getPath());
 
-            File local = new File(workingDirectory, input.getName());
-            if (!local.exists())
-            {
-                getLogger().debug("Copying file locally: " + input.getPath());
-                FileUtils.copyFile(input, local);
-            }
+                File converted = SequencePipelineService.get().inferDockerVolume(x);
+                if (!x.equals(converted))
+                {
+                    _ctx.getLogger().debug("added as: " + converted.getPath());
+                }
 
-            output.addIntermediateFile(local);
+                if (_ctx.getDockerVolumes().stream().noneMatch(converted.getPath()::startsWith))
+                {
+                    paths.add(converted);
+                }
+            });
 
-            return local;
+            return paths;
         }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
+
+        return Collections.emptySet();
     }
 }

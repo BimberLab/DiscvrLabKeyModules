@@ -23,6 +23,7 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.api.sequenceanalysis.run.DockerWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
@@ -235,108 +236,16 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
             super(logger);
         }
 
-        private File ensureLocalCopy(File input, File workingDirectory, PipelineOutputTracker output) throws PipelineJobException
-        {
-            try
-            {
-                if (workingDirectory.equals(input.getParentFile()))
-                {
-                    return input;
-                }
-
-                File local = new File(workingDirectory, input.getName());
-                if (!local.exists())
-                {
-                    getLogger().debug("Copying file locally: " + input.getPath());
-                    FileUtils.copyFile(input, local);
-                }
-
-                output.addIntermediateFile(local);
-
-                return local;
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-        }
-
         public void execute(List<File> inputGvcfs, File outputVcf, PipelineOutputTracker tracker, String binVersion, String configType, SAMSequenceRecord rec, JobContext ctx) throws PipelineJobException
         {
-            File workDir = outputVcf.getParentFile();
-            tracker.addIntermediateFile(outputVcf);
-            tracker.addIntermediateFile(new File(outputVcf.getPath() + ".tbi"));
+            DockerWrapper wrapper = new DockerWrapper("ghcr.io/dnanexus-rnd/glnexus:" + binVersion, ctx.getLogger(), ctx);
+            wrapper.setTmpDir(new File(SequencePipelineService.get().getJavaTempDir()));
+            wrapper.setWorkingDir(ctx.getWorkingDirectory());
 
-            List<File> gvcfsLocal = new ArrayList<>();
-            for (File f : inputGvcfs)
-            {
-                gvcfsLocal.add(ensureLocalCopy(f, workDir, tracker));
-                ensureLocalCopy(new File(f.getPath() + ".tbi"), workDir, tracker);
-            }
-
-            File localBashScript = new File(workDir, "docker.sh");
-            tracker.addIntermediateFile(localBashScript);
-
-            File bed = new File(workDir, "contig.bed");
+            File bed = new File(ctx.getWorkingDirectory(), "contig.bed");
             tracker.addIntermediateFile(bed);
-
-            try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript);PrintWriter bedWriter = PrintWriters.getPrintWriter(bed))
+            try (PrintWriter bedWriter = PrintWriters.getPrintWriter(bed))
             {
-                writer.println("#!/bin/bash");
-                writer.println("set -x");
-                writer.println("WD=`pwd`");
-                writer.println("HOME=`echo ~/`");
-                writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-                writer.println("$DOCKER pull ghcr.io/dnanexus-rnd/glnexus:" + binVersion);
-                writer.println("$DOCKER run --rm=true \\");
-                writer.println("\t-v \"${WD}:/work\" \\");
-                writer.println("\t-v \"${HOME}:/homeDir\" \\");
-                ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
-                writer.println("\t -w /work \\");
-                if (!StringUtils.isEmpty(System.getenv("TMPDIR")))
-                {
-                    writer.println("\t-v \"${TMPDIR}:/tmp\" \\");
-                }
-
-                Integer maxRam = SequencePipelineService.get().getMaxRam();
-                if (maxRam != null)
-                {
-                    writer.println("\t--memory='" + maxRam + "g' \\");
-                }
-                writer.println("\tghcr.io/dnanexus-rnd/glnexus:" + binVersion + " \\");
-                writer.println("\tglnexus_cli \\");
-                writer.println("\t--config " + configType + " \\");
-                writer.println("\t--bed /work/" + bed.getName() + " \\");
-                writer.println("\t--trim-uncalled-alleles \\");
-
-                if (maxRam != null)
-                {
-                    writer.println("\t--mem-gbytes " + maxRam + "\\");
-                }
-
-                Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
-                if (maxThreads != null)
-                {
-                    writer.println("\t--threads " + maxThreads + " \\");
-                }
-
-                gvcfsLocal.forEach(f -> {
-                    writer.println("\t/work/" + f.getName() + " \\");
-                });
-
-                File bcftools = BcftoolsRunner.getBcfToolsPath();
-                File bgzip = BgzipRunner.getExe();
-                writer.println("\t| " + bcftools.getPath() + " view | " + bgzip.getPath() + " -c > " + outputVcf.getPath());
-
-                // Command will fail if this exists:
-                File dbDir = new File (outputVcf.getParentFile(), "GLnexus.DB");
-                tracker.addIntermediateFile(dbDir);
-                if (dbDir.exists())
-                {
-                    getLogger().debug("Deleting pre-existing GLnexus.DB dir");
-                    FileUtils.deleteDirectory(dbDir);
-                }
-
                 // Create a single-contig BED file:
                 bedWriter.println(rec.getSequenceName() + "\t0\t" + rec.getSequenceLength());
             }
@@ -345,8 +254,50 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 throw new PipelineJobException(e);
             }
 
-            setWorkingDir(workDir);
-            execute(Arrays.asList("/bin/bash", localBashScript.getPath()));
+            List<String> dockerArgs = new ArrayList<>();
+            dockerArgs.add("glnexus_cli");
+            dockerArgs.add("--config " + configType);
+
+            Integer maxRam = SequencePipelineService.get().getMaxRam();
+            if (maxRam != null)
+            {
+                dockerArgs.add("--mem-gbytes " + maxRam);
+            }
+
+            dockerArgs.add("--bed " + bed.getPath());
+            dockerArgs.add("--trim-uncalled-alleles");
+
+            Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
+            if (maxThreads != null)
+            {
+                dockerArgs.add("--threads " + maxThreads);
+            }
+
+            inputGvcfs.forEach(f -> {
+                dockerArgs.add(f.getPath());
+            });
+
+            File bcftools = BcftoolsRunner.getBcfToolsPath();
+            File bgzip = BgzipRunner.getExe();
+            dockerArgs.add(" | " + bcftools.getPath() + " view | " + bgzip.getPath() + " -c > " + outputVcf.getPath());
+
+            // Command will fail if this exists:
+            File dbDir = new File (ctx.getWorkingDirectory(), "GLnexus.DB");
+            tracker.addIntermediateFile(dbDir);
+            if (dbDir.exists())
+            {
+                getLogger().debug("Deleting pre-existing GLnexus.DB dir");
+                try
+                {
+                    FileUtils.deleteDirectory(dbDir);
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+
+            wrapper.executeWithDocker(dockerArgs, ctx.getWorkingDirectory(), tracker, inputGvcfs);
 
             if (!outputVcf.exists())
             {

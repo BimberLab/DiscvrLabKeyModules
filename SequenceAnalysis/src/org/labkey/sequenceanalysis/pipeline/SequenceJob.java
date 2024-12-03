@@ -58,6 +58,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by bimber on 8/31/2016.
@@ -193,6 +194,20 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
     public void setDockerVolumes(Collection<String> dockerVolumes)
     {
+        // TODO: this is for legacy jobs that included the -v arg. Eventually remove:
+        if (dockerVolumes.stream().anyMatch(x -> x.startsWith("-v")))
+        {
+            dockerVolumes = dockerVolumes.stream().map(x -> {
+                if (x.startsWith("-v"))
+                {
+                    x = x.split(":")[1];
+                    x = x.substring( 1, x.length() - 1);
+                }
+
+                return x;
+            }).collect(Collectors.toSet());
+        }
+
         _dockerVolumes = dockerVolumes;
     }
 

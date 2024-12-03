@@ -603,7 +603,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Creating Final HTML Report");
             File finalHtml = new File(ctx.getOutputDir(), "finalHtml.html");
             List<String> lines = new ArrayList<>();
-            lines.add("rmarkdown::render(output_file = '" + finalHtml.getName() + "', input = '" + finalMarkdownFile.getName() + "', intermediates_dir  = '/work')");
+            lines.add("rmarkdown::render(output_file = '" + finalHtml.getName() + "', input = '" + finalMarkdownFile.getName() + "', intermediates_dir  = '" + ctx.getWorkingDirectory() + "')");
             AbstractSingleCellPipelineStep.executeR(ctx, AbstractCellMembraneStep.CONTAINER_NAME, "pandoc", lines, null, null);
             _resumer.getFileManager().addIntermediateFile(finalMarkdownFile);
             _resumer.getFileManager().addIntermediateFiles(_resumer.getMarkdownsInOrder());

@@ -1,7 +1,9 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
@@ -15,4 +17,9 @@ public interface JobResourceSettings
     List<ToolParameterDescriptor> getParams();
 
     Collection<String> getDockerVolumes(Container c);
+
+    default @Nullable File inferDockerVolume(File input)
+    {
+        return null;
+    }
 }
