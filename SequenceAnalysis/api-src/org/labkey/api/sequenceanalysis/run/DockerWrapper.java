@@ -146,7 +146,7 @@ public class DockerWrapper extends AbstractCommandWrapper
 
             for (String key : _environment.keySet())
             {
-                writer.println("\t-e " + key + "=" + _environment.get(key) + " \\");
+                writer.println("\t-e " + key + "='" + _environment.get(key) + "' \\");
             }
             writer.println("\t" + _containerName + " \\");
             writer.println("\t/bin/bash " + dockerBashScript.getPath());
