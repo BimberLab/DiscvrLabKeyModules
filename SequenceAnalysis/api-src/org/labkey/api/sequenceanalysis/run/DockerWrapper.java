@@ -108,10 +108,10 @@ public class DockerWrapper extends AbstractCommandWrapper
                 _environment.put("HOME", _alternateUserHome);
             }
 
-            _ctx.getDockerVolumes().forEach(v -> writer.println("\t-v '" + v + "':'" + v + "'\\"));
+            _ctx.getDockerVolumes().forEach(v -> writer.println("\t-v '" + v + "':'" + v + "' \\"));
             if (inputFiles != null)
             {
-                inspectInputFiles(inputFiles).forEach(v -> writer.println("\t-v '" + v + "':'" + v + "'\\"));
+                inspectInputFiles(inputFiles).forEach(v -> writer.println("\t-v '" + v + "':'" + v + "' \\"));
             }
 
             if (_tmpDir != null)
@@ -119,7 +119,7 @@ public class DockerWrapper extends AbstractCommandWrapper
                 // NOTE: getDockerVolumes() should be refactored to remove the -v and this logic should be updated accordingly:
                 if (_ctx.getDockerVolumes().stream().noneMatch(_tmpDir.getPath()::startsWith))
                 {
-                    writer.println("\t-v \"" + _tmpDir.getPath() + ":/tmp\" \\");
+                    writer.println("\t-v '" + _tmpDir.getPath() + "':/tmp \\");
                 }
                 else
                 {
