@@ -69,6 +69,7 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.labkey.singlecell.run.CellRangerGexCountStep.LOUPE_CATEGORY;
 
@@ -1214,12 +1215,43 @@ public class CellHashingServiceImpl extends CellHashingService
         File localRScript = new File(outputDir, "generateCallsWrapper.R");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
         {
-            List<String> methodNames = parameters.methods.stream().map(Enum::name).collect(Collectors.toList());
-            List<String> consensusMethodNames = parameters.consensusMethods == null ? Collections.emptyList() : parameters.consensusMethods.stream().map(Enum::name).collect(Collectors.toList());
             String cellbarcodeWhitelist = cellBarcodeWhitelistFile != null ? "'" + cellBarcodeWhitelistFile.getPath() + "'" : "NULL";
+            long totalCellBarcodes;
+            if (cellBarcodeWhitelistFile != null)
+            {
+                try (Stream<String> st = Files.lines(cellBarcodeWhitelistFile.toPath()))
+                {
+                    totalCellBarcodes = st.count();
+                }
+            }
+            else
+            {
+                totalCellBarcodes = 99999L;
+            }
+            ctx.getLogger().debug("Total input cell barcodes: " + totalCellBarcodes);
 
             Set<String> allowableBarcodes = parameters.getAllowableBarcodeNames();
             String allowableBarcodeParam = allowableBarcodes != null ? "c('" + StringUtils.join(allowableBarcodes, "','") + "')" : "NULL";
+
+            List<String> methodNames = parameters.methods.stream().filter(m -> {
+                if (totalCellBarcodes > m.getMinCells())
+                {
+                    ctx.getLogger().debug("Dropping method due to insufficient cells: " + m.name());
+                    return false;
+                }
+
+                return true;
+            }).map(CALLING_METHOD::getLabel).distinct().toList();
+
+            List<String> consensusMethodNames = parameters.consensusMethods == null ? Collections.emptyList() : parameters.consensusMethods.stream().filter(m -> {
+                if (totalCellBarcodes > m.getMinCells())
+                {
+                    ctx.getLogger().debug("Dropping consensus method due to insufficient cells: " + m.name());
+                    return false;
+                }
+
+                return true;
+            }).map(CALLING_METHOD::getLabel).distinct().toList();
 
             String skipNormalizationQcString = parameters.skipNormalizationQc ? "TRUE" : "FALSE";
             String keepMarkdown = parameters.keepMarkdown ? "TRUE" : "FALSE";

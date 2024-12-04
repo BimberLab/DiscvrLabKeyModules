@@ -153,7 +153,7 @@ abstract public class CellHashingService
                 if (methodStr2 != null)
                 {
                     ret.consensusMethods = extractMethods(methodStr2);
-                    if (!ret.methods.containsAll(ret.consensusMethods))
+                    if (!new HashSet<>(ret.methods).containsAll(ret.consensusMethods))
                     {
                         throw new PipelineJobException("All consensusMethods must be present in methods: " + methodStr2);
                     }
@@ -189,7 +189,7 @@ abstract public class CellHashingService
 
             if (ret.consensusMethods != null && !ret.consensusMethods.isEmpty())
             {
-                if (!ret.methods.containsAll(ret.consensusMethods))
+                if (!new HashSet<>(ret.methods).containsAll(ret.consensusMethods))
                 {
                     throw new PipelineJobException("All consensusMethods must be present in methods: " + ret.consensusMethods.stream().map(CALLING_METHOD::name).collect(Collectors.joining(",")));
                 }
@@ -326,6 +326,7 @@ abstract public class CellHashingService
     public enum CALLING_METHOD
     {
         multiseq(true, false),
+        multiseqOnLargeData(true, true, false, 10000, "multiseq"),
         htodemux(false, false),
         dropletutils(true, true),
         gmm_demux(true, true),
@@ -337,6 +338,8 @@ abstract public class CellHashingService
         boolean isDefaultRun;
         boolean isDefaultConsensus;
         boolean requiresH5;
+        int minCells;
+        String label;
 
         CALLING_METHOD(boolean isDefaultRun, boolean isDefaultConsensus)
         {
@@ -345,9 +348,16 @@ abstract public class CellHashingService
 
         CALLING_METHOD(boolean isDefaultRun, boolean isDefaultConsensus, boolean requiresH5)
         {
+            this(isDefaultRun, isDefaultConsensus, requiresH5, 0, null);
+        }
+
+        CALLING_METHOD(boolean isDefaultRun, boolean isDefaultConsensus, boolean requiresH5, int minCells, String label)
+        {
             this.isDefaultRun = isDefaultRun;
             this.isDefaultConsensus = isDefaultConsensus;
             this.requiresH5 = requiresH5;
+            this.minCells = minCells;
+            this.label = label;
         }
 
         public boolean isDefaultRun()
@@ -358,6 +368,16 @@ abstract public class CellHashingService
         public boolean isDefaultConsensus()
         {
             return isDefaultConsensus;
+        }
+
+        public int getMinCells()
+        {
+            return minCells;
+        }
+
+        public String getLabel()
+        {
+            return label == null ? name() : label;
         }
 
         public boolean isRequiresH5()
