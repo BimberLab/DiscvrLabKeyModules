@@ -491,7 +491,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
             }
         }
 
-        return null;
+        return input;
     }
 
     @Override
