@@ -150,7 +150,7 @@ public class DockerWrapper extends AbstractCommandWrapper
                 writer.println("\t-e " + key + "='" + _dockerEnvironment.get(key) + "' \\");
             }
             writer.println("\t" + _containerName + " \\");
-            writer.println("\t/bin/bash " + dockerBashScript.getPath());
+            writer.println("\t" + dockerBashScript.getPath());
             writer.println("DOCKER_EXIT_CODE=$?");
             writer.println("echo 'Docker run exit code: '$DOCKER_EXIT_CODE");
             writer.println("exit $DOCKER_EXIT_CODE");
@@ -169,7 +169,7 @@ public class DockerWrapper extends AbstractCommandWrapper
 
         localBashScript.setExecutable(true);
         dockerBashScript.setExecutable(true);
-        execute(Arrays.asList(localBashScript.getPath()));
+        execute(Arrays.asList("/bin/bash", localBashScript.getPath()));
     }
 
     public void addToDockerEnvironment(String key, String value)
