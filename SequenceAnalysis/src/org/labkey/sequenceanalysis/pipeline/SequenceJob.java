@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -203,12 +204,12 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
             }).collect(Collectors.toSet());
         }
 
-        return _dockerVolumes == null ? Collections.emptySet() : Collections.unmodifiableCollection(_dockerVolumes);
+        return _dockerVolumes == null ? Collections.emptySet() : new HashSet<>(_dockerVolumes);
     }
 
     public void setDockerVolumes(Collection<String> dockerVolumes)
     {
-        _dockerVolumes = dockerVolumes;
+        _dockerVolumes = dockerVolumes == null ? null : new HashSet<>(dockerVolumes);
     }
 
     public void setDescription(String description)
