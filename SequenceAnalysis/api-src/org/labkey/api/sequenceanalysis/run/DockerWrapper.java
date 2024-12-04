@@ -15,8 +15,10 @@ import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -28,14 +30,13 @@ public class DockerWrapper extends AbstractCommandWrapper
     private String _entryPoint = null;
     private boolean _runPrune = true;
     private String _alternateUserHome = null;
+    private final Map<String, String> _dockerEnvironment = new HashMap<>();
 
     public DockerWrapper(String containerName, Logger log, PipelineContext ctx)
     {
         super(log);
         _containerName = containerName;
         _ctx = ctx;
-
-        _environment.clear();
     }
 
     public void setAlternateUserHome(String alternateUserHome)
@@ -75,7 +76,7 @@ public class DockerWrapper extends AbstractCommandWrapper
         {
             writer.println("#!/bin/bash");
             writer.println("set -x");
-            writer.println("WD=`pwd`");
+            writer.println("set -e");
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
             writer.println("$DOCKER pull " + _containerName);
@@ -100,12 +101,12 @@ public class DockerWrapper extends AbstractCommandWrapper
                     _ctx.getLogger().debug("homeDir already present in docker volumes, will not re-add");
                 }
 
-                _environment.put("USER_HOME", homeDir.getPath());
+                _dockerEnvironment.put("USER_HOME", homeDir.getPath());
             }
 
             if (_alternateUserHome != null)
             {
-                _environment.put("HOME", _alternateUserHome);
+                _dockerEnvironment.put("HOME", _alternateUserHome);
             }
 
             _ctx.getDockerVolumes().forEach(v -> writer.println("\t-v '" + v + "':'" + v + "' \\"));
@@ -126,7 +127,7 @@ public class DockerWrapper extends AbstractCommandWrapper
                     _ctx.getLogger().debug("tmpDir already present in docker volumes, omitting");
                 }
 
-                addToEnvironment("TMPDIR", _tmpDir.getPath());
+                addToDockerEnvironment("TMPDIR", _tmpDir.getPath());
             }
 
             if (_entryPoint != null)
@@ -135,7 +136,7 @@ public class DockerWrapper extends AbstractCommandWrapper
             }
 
             writer.println("\t-w " + workDir.getPath() + " \\");
-            addToEnvironment("WORK_DIR", workDir.getPath());
+            addToDockerEnvironment("WORK_DIR", workDir.getPath());
 
             Integer maxRam = SequencePipelineService.get().getMaxRam();
             if (maxRam != null)
@@ -144,9 +145,9 @@ public class DockerWrapper extends AbstractCommandWrapper
                 writer.println("\t--memory='" + maxRam + "g' \\");
             }
 
-            for (String key : _environment.keySet())
+            for (String key : _dockerEnvironment.keySet())
             {
-                writer.println("\t-e " + key + "='" + _environment.get(key) + "' \\");
+                writer.println("\t-e " + key + "='" + _dockerEnvironment.get(key) + "' \\");
             }
             writer.println("\t" + _containerName + " \\");
             writer.println("\t/bin/bash " + dockerBashScript.getPath());
@@ -169,6 +170,11 @@ public class DockerWrapper extends AbstractCommandWrapper
         localBashScript.setExecutable(true);
         dockerBashScript.setExecutable(true);
         execute(Arrays.asList("/bin/bash", localBashScript.getPath()));
+    }
+
+    public void addToDockerEnvironment(String key, String value)
+    {
+        _dockerEnvironment.put(key, value);
     }
 
     private Collection<File> inspectInputFiles(Collection<File> inputFiles)

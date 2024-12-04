@@ -326,7 +326,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 seuratThreads = maxThreads;
             }
 
-            wrapper.addToEnvironment("SEURAT_MAX_THREADS", seuratThreads.toString());
+            wrapper.addToDockerEnvironment("SEURAT_MAX_THREADS", seuratThreads.toString());
         }
 
         File tmpDir = new File(SequencePipelineService.get().getJavaTempDir());

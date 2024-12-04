@@ -48,7 +48,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
     private boolean _warnNonZeroExits = true;
     private boolean _throwNonZeroExits = true;
     private Integer _lastReturnCode = null;
-    protected final Map<String, String> _environment = new HashMap<>();
+    private final Map<String, String> _environment = new HashMap<>();
     private final List<String> _commandsExecuted = new ArrayList<>();
 
     public AbstractCommandWrapper(@Nullable Logger logger)

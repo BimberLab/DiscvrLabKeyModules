@@ -573,7 +573,7 @@ public class NimbleHelper
 
         wrapper.setTmpDir(null);
 
-        wrapper.addToEnvironment("RUST_BACKTRACE", "1");
+        wrapper.addToDockerEnvironment("RUST_BACKTRACE", "1");
 
         File doneFile = null;
         if (resumeString != null)

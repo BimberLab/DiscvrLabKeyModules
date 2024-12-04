@@ -1253,7 +1253,7 @@ public class CellHashingServiceImpl extends CellHashingService
         }
 
         DockerWrapper wrapper = new DockerWrapper("ghcr.io/bimberlab/cellhashr:latest", ctx.getLogger(), ctx);
-        wrapper.addToEnvironment("CELLHASHR_DEBUG", "1");
+        wrapper.addToDockerEnvironment("CELLHASHR_DEBUG", "1");
 
         PipelineStepOutput output = new DefaultPipelineStepOutput();
         wrapper.executeWithDocker(Arrays.asList("Rscript", "--vanilla", localRScript.getPath()), ctx.getWorkingDirectory(), output, inputFiles);
