@@ -281,7 +281,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                     paragraphArgs.add(threads.toString());
                 }
 
-                dockerWrapper.executeWithDocker(paragraphArgs, ctx.getWorkingDirectory(), ctx.getFileManager());
+                dockerWrapper.executeWithDocker(paragraphArgs, ctx.getWorkingDirectory(), ctx.getFileManager(), Arrays.asList(so.getFile(), genomeFasta, svVcf));
 
                 File genotypes = new File(paragraphOutDir, "genotypes.vcf.gz");
                 if (!genotypes.exists())
