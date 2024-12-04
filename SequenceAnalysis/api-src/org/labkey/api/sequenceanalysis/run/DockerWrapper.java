@@ -169,7 +169,7 @@ public class DockerWrapper extends AbstractCommandWrapper
 
         localBashScript.setExecutable(true);
         dockerBashScript.setExecutable(true);
-        execute(Arrays.asList("/bin/bash", localBashScript.getPath()));
+        execute(Arrays.asList(localBashScript.getPath()));
     }
 
     public void addToDockerEnvironment(String key, String value)
