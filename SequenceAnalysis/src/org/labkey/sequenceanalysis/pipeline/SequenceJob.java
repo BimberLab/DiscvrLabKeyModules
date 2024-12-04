@@ -138,7 +138,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         writeParameters(params);
 
         _folderFileRoot = c.isWorkbook() ? PipelineService.get().findPipelineRoot(c.getParent()) : pipeRoot;
-        _dockerVolumes = SequencePipelineService.get().getDockerVolumes(c);
+        _dockerVolumes = new HashSet<>(SequencePipelineService.get().getDockerVolumes(c));
 
         setLogFile(_getLogFile());
         writeSupportToDisk();
