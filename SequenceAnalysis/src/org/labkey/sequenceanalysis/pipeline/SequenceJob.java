@@ -57,8 +57,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Created by bimber on 8/31/2016.
@@ -137,7 +139,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         writeParameters(params);
 
         _folderFileRoot = c.isWorkbook() ? PipelineService.get().findPipelineRoot(c.getParent()) : pipeRoot;
-        _dockerVolumes = SequencePipelineService.get().getDockerVolumes(c);
+        _dockerVolumes = new HashSet<>(SequencePipelineService.get().getDockerVolumes(c));
 
         setLogFile(_getLogFile());
         writeSupportToDisk();
@@ -190,12 +192,26 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
     public Collection<String> getDockerVolumes()
     {
-        return _dockerVolumes == null ? Collections.emptySet() : Collections.unmodifiableCollection(_dockerVolumes);
+        // TODO: this is for legacy jobs that included the -v arg. Eventually remove:
+        if (_dockerVolumes != null && _dockerVolumes.stream().anyMatch(x -> x.startsWith("-v")))
+        {
+            _dockerVolumes = _dockerVolumes.stream().map(x -> {
+                if (x.startsWith("-v"))
+                {
+                    x = x.split(":")[1];
+                    x = x.substring( 1, x.length() - 1);
+                }
+
+                return x;
+            }).collect(Collectors.toSet());
+        }
+
+        return _dockerVolumes == null ? Collections.emptySet() : new HashSet<>(_dockerVolumes);
     }
 
     public void setDockerVolumes(Collection<String> dockerVolumes)
     {
-        _dockerVolumes = dockerVolumes;
+        _dockerVolumes = dockerVolumes == null ? null : new HashSet<>(dockerVolumes);
     }
 
     public void setDescription(String description)

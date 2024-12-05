@@ -31,14 +31,16 @@ import org.labkey.api.reader.Readers;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.DefaultPipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.sequenceanalysis.run.DockerWrapper;
 import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.model.CDNA_Library;
 import org.labkey.api.singlecell.model.Sample;
@@ -67,6 +69,7 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.labkey.singlecell.run.CellRangerGexCountStep.LOUPE_CATEGORY;
 
@@ -1142,50 +1145,6 @@ public class CellHashingServiceImpl extends CellHashingService
         }
     }
 
-    public File ensureLocalCopy(File input, File outputDir, Logger log, Set<File> toDelete) throws PipelineJobException
-    {
-        if (!outputDir.equals(input.getParentFile()))
-        {
-            try
-            {
-                //needed for docker currently
-                log.debug("Copying file to working directory: " + input.getPath());
-                File dest = new File(outputDir, input.getName());
-                if (dest.exists())
-                {
-                    log.debug("deleting existing folder: " + dest.getPath());
-                    if (input.isDirectory())
-                    {
-                        FileUtils.deleteDirectory(dest);
-                    }
-                    else
-                    {
-                        dest.delete();
-                    }
-                }
-
-                if (input.isDirectory())
-                {
-                    FileUtils.copyDirectory(input, dest);
-                }
-                else
-                {
-                    FileUtils.copyFile(input, dest);
-                }
-
-                toDelete.add(dest);
-
-                return dest;
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-        }
-
-        return input;
-    }
-
     private File getExpectedCallsFile(File outputDir, String basename)
     {
         return new File(outputDir, basename + CALL_EXTENSION);
@@ -1200,24 +1159,20 @@ public class CellHashingServiceImpl extends CellHashingService
     {
         log.debug("generating final calls from folder: " + citeSeqCountOutDir.getPath());
 
-        Set<File> toDelete = new HashSet<>();
-
-        SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(log);
-        rWrapper.setWorkingDir(outputDir);
+        List<File> inputFiles = new ArrayList<>();
 
         File molInfo = getMolInfoFileFromCounts(citeSeqCountOutDir);
         if (!molInfo.exists())
         {
             throw new PipelineJobException("File not found, cannot calculate saturation: " + molInfo.getPath());
         }
-
-        molInfo = ensureLocalCopy(molInfo, outputDir, log, toDelete);
+        inputFiles.add(molInfo);
 
         // h5 file used by demuxEM/demuxmix:
-        File h5 = null;
-        if (parameters.h5File != null)
+        File h5 = parameters.h5File;
+        if (h5 != null)
         {
-            h5 = ensureLocalCopy(parameters.h5File, outputDir, log, toDelete);
+            inputFiles.add(h5);
         }
 
         if (CALLING_METHOD.requiresH5(parameters.methods) && h5 == null)
@@ -1225,17 +1180,13 @@ public class CellHashingServiceImpl extends CellHashingService
             throw new PipelineJobException("No h5 file provided, but demuxEM/demuxmix was specified");
         }
 
-        citeSeqCountOutDir = ensureLocalCopy(citeSeqCountOutDir, outputDir, log, toDelete);
+        if (citeSeqCountOutDir != null)
+        {
+            inputFiles.add(citeSeqCountOutDir);
+        }
 
         File cellBarcodeWhitelistFile = parameters.cellBarcodeWhitelistFile;
-        if (cellBarcodeWhitelistFile != null)
-        {
-            cellBarcodeWhitelistFile = ensureLocalCopy(cellBarcodeWhitelistFile, outputDir, log, toDelete);
-        }
-        else
-        {
-            log.debug("No cell barcode whitelist provided");
-        }
+        inputFiles.add(cellBarcodeWhitelistFile);
 
         File htmlFile = new File(outputDir, basename + ".html");
         File localHtml = new File(localPipelineDir, htmlFile.getName());
@@ -1264,24 +1215,55 @@ public class CellHashingServiceImpl extends CellHashingService
         File localRScript = new File(outputDir, "generateCallsWrapper.R");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
         {
-            List<String> methodNames = parameters.methods.stream().map(Enum::name).collect(Collectors.toList());
-            List<String> consensusMethodNames = parameters.consensusMethods == null ? Collections.emptyList() : parameters.consensusMethods.stream().map(Enum::name).collect(Collectors.toList());
-            String cellbarcodeWhitelist = cellBarcodeWhitelistFile != null ? "'/work/" + cellBarcodeWhitelistFile.getName() + "'" : "NULL";
+            String cellbarcodeWhitelist = cellBarcodeWhitelistFile != null ? "'" + cellBarcodeWhitelistFile.getPath() + "'" : "NULL";
+            long totalCellBarcodes;
+            if (cellBarcodeWhitelistFile != null)
+            {
+                try (Stream<String> st = Files.lines(cellBarcodeWhitelistFile.toPath()))
+                {
+                    totalCellBarcodes = st.count();
+                }
+            }
+            else
+            {
+                totalCellBarcodes = 99999L;
+            }
+            ctx.getLogger().debug("Total input cell barcodes: " + totalCellBarcodes);
 
             Set<String> allowableBarcodes = parameters.getAllowableBarcodeNames();
             String allowableBarcodeParam = allowableBarcodes != null ? "c('" + StringUtils.join(allowableBarcodes, "','") + "')" : "NULL";
 
+            List<String> methodNames = parameters.methods.stream().filter(m -> {
+                if (totalCellBarcodes > m.getMinCells())
+                {
+                    ctx.getLogger().debug("Dropping method due to insufficient cells: " + m.name());
+                    return false;
+                }
+
+                return true;
+            }).map(CALLING_METHOD::getLabel).distinct().toList();
+
+            List<String> consensusMethodNames = parameters.consensusMethods == null ? Collections.emptyList() : parameters.consensusMethods.stream().filter(m -> {
+                if (totalCellBarcodes > m.getMinCells())
+                {
+                    ctx.getLogger().debug("Dropping consensus method due to insufficient cells: " + m.name());
+                    return false;
+                }
+
+                return true;
+            }).map(CALLING_METHOD::getLabel).distinct().toList();
+
             String skipNormalizationQcString = parameters.skipNormalizationQc ? "TRUE" : "FALSE";
             String keepMarkdown = parameters.keepMarkdown ? "TRUE" : "FALSE";
             String doTSNE = parameters.doTSNE ? "TRUE" : "FALSE";
-            String h5String = h5 == null ? "" : ", rawFeatureMatrixH5 = '/work/" + h5.getName() + "'";
+            String h5String = h5 == null ? "" : ", rawFeatureMatrixH5 = '" + h5.getPath() + "'";
             String consensusMethodString = consensusMethodNames.isEmpty() ? "" : ", methodsForConsensus = c('" + StringUtils.join(consensusMethodNames, "','") + "')";
-            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '/work/" + citeSeqCountOutDir.getName() + "'" + h5String +
-                    ", molInfoFile = '/work/" + molInfo.getName() + "'" +
-                    ", reportFile = '/work/" + htmlFile.getName() + "'" +
-                    ", callFile = '/work/" + callsFile.getName() + "'" +
-                    ", metricsFile = '/work/" + metricsFile.getName() + "'" +
-                    ", rawCountsExport = '/work/" + countFile.getName() + "'" +
+            writer.println("f <- cellhashR::CallAndGenerateReport(rawCountData = '" + citeSeqCountOutDir.getPath() + "'" + h5String +
+                    ", molInfoFile = '" + molInfo.getPath() + "'" +
+                    ", reportFile = '" + htmlFile.getPath() + "'" +
+                    ", callFile = '" + callsFile.getPath() + "'" +
+                    ", metricsFile = '" + metricsFile.getPath() + "'" +
+                    ", rawCountsExport = '" + countFile.getPath() + "'" +
                     ", cellbarcodeWhitelist  = " + cellbarcodeWhitelist +
                     ", barcodeWhitelist = " + allowableBarcodeParam +
                     ", title = '" + parameters.getReportTitle() + "'" +
@@ -1302,44 +1284,13 @@ public class CellHashingServiceImpl extends CellHashingService
             throw new PipelineJobException(e);
         }
 
-        File localBashScript = new File(outputDir, "generateCallsDockerWrapper.sh");
-        try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
-        {
-            writer.println("#!/bin/bash");
-            writer.println("set -x");
-            writer.println("WD=`pwd`");
-            writer.println("HOME=`echo ~/`");
+        DockerWrapper wrapper = new DockerWrapper("ghcr.io/bimberlab/cellhashr:latest", ctx.getLogger(), ctx);
+        wrapper.addToDockerEnvironment("CELLHASHR_DEBUG", "1");
 
-            writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            writer.println("sudo $DOCKER pull ghcr.io/bimberlab/cellhashr:latest");
-            writer.println("sudo $DOCKER run --rm=true \\");
-            if (SequencePipelineService.get().getMaxRam() != null)
-            {
-                writer.println("\t--memory=" + SequencePipelineService.get().getMaxRam() + "g \\");
-                writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM \\");
-            }
+        PipelineStepOutput output = new DefaultPipelineStepOutput();
+        wrapper.executeWithDocker(Arrays.asList("Rscript", "--vanilla", localRScript.getPath()), ctx.getWorkingDirectory(), output, inputFiles);
+        output.getIntermediateFiles().forEach(File::delete);
 
-            if (SequencePipelineService.get().getMaxThreads(log) != null)
-            {
-                writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS \\");
-            }
-
-            writer.println("\t-e CELLHASHR_DEBUG=1 \\");
-            writer.println("\t-v \"${WD}:/work\" \\");
-            ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
-            writer.println("\t-v \"${HOME}:/homeDir\" \\");
-            writer.println("\t-u $UID \\");
-            writer.println("\t-e USERID=$UID \\");
-            writer.println("\t-w /work \\");
-            writer.println("\tghcr.io/bimberlab/cellhashr:latest \\");
-            writer.println("\tRscript --vanilla " + localRScript.getName());
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-
-        rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
         if (!htmlFile.exists())
         {
             throw new PipelineJobException("Unable to find HTML file: " + htmlFile.getPath());
@@ -1409,28 +1360,7 @@ public class CellHashingServiceImpl extends CellHashingService
             throw new PipelineJobException("Unable to find HTO calls file: " + callsFile.getPath());
         }
 
-        localBashScript.delete();
         localRScript.delete();
-
-        try
-        {
-            for (File f : toDelete)
-            {
-                log.debug("deleting local copy: " + f.getPath());
-                if (f.isDirectory())
-                {
-                    FileUtils.deleteDirectory(f);
-                }
-                else
-                {
-                    f.delete();
-                }
-            }
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
 
         return callsFile;
     }

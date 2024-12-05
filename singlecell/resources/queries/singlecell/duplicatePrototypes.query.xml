@@ -2,7 +2,7 @@
     <metadata>
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="" useColumnOrder="false" tableDbType="TABLE">
-                <tableTitle>Duplicated Seurat Object Prototypes</tableTitle>
+                <tableTitle>Duplicated Seurat Object Prototypes and Loupe Files</tableTitle>
                 <columns>
                     <column columnName="readset">
                         <columnTitle>Readset Id</columnTitle>
