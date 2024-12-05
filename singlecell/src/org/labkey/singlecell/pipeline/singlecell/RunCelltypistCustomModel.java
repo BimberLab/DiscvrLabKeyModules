@@ -1,6 +1,5 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
-import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
@@ -12,8 +11,9 @@ import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.PageFlowUtil;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class RunCelltypistCustomModel extends AbstractRiraStep
@@ -94,25 +94,22 @@ public class RunCelltypistCustomModel extends AbstractRiraStep
         }
 
         File model = ctx.getSequenceSupport().getCachedData(fileId);
-        File local = new File(ctx.getWorkingDirectory(), model.getName());
-        if (local.exists())
-        {
-            local.delete();
-        }
-
-        try
-        {
-            FileUtils.copyFile(model, local);
-            ctx.getFileManager().addIntermediateFile(local);
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
 
         Chunk ret = super.createParamChunk(ctx, inputObjects, outputPrefix);
-        ret.bodyLines.add("modelFile <- '/work/" + local.getName() + "'");
+        ret.bodyLines.add("modelFile <- '" + model.getPath() + "'");
 
         return ret;
+    }
+
+    @Override
+    protected Collection<File> getAdditionalDockerInputs(SequenceOutputHandler.JobContext ctx) throws PipelineJobException
+    {
+        Integer fileId = getProvider().getParameterByName("modelFileId").extractValue(ctx.getJob(), getProvider(), getStepIdx(), Integer.class);
+        if (fileId == null)
+        {
+            throw new PipelineJobException("Missing value for modelFileId param");
+        }
+
+        return Collections.singleton(ctx.getSequenceSupport().getCachedData(fileId));
     }
 }

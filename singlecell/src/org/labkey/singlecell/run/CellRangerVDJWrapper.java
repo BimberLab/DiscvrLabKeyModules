@@ -3,6 +3,7 @@ package org.labkey.singlecell.run;
 import au.com.bytecode.opencsv.CSVReader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.stream.IntStreams;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -61,6 +62,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 public class CellRangerVDJWrapper extends AbstractCommandWrapper
 {
@@ -862,6 +864,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             Map<String, Integer> chimericCallsRecovered = new HashMap<>();
             int restoredTRDVAV = 0;
 
+            final Map<String, Integer> headerIdx = new HashMap<>();
             int lineIdx = 0;
             while ((line = reader.readLine()) != null)
             {
@@ -873,6 +876,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         writer.println(line + ",chain_type");
                     }
 
+                    String[] header = line.split(",");
+                    IntStream.range(0, header.length).forEach(idx -> headerIdx.put(header[idx], idx));
                     continue;
                 }
 
@@ -880,18 +885,23 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 String[] tokens = line.split(",", -1);  // -1 used to preserve trailing empty strings
 
                 // Restore original value for TRD/TRA
-                if (tokens[6].contains("TRDV") && tokens[6].contains("/") && tokens[6].contains("AV"))
+                final int vGeneIdx = headerIdx.get("v_gene");
+                final int jGeneIdx = headerIdx.get("j_gene");
+                final int cGeneIdx = headerIdx.get("c_gene");
+                final int chainIdx = headerIdx.get("chain");
+
+                if (tokens[vGeneIdx].contains("TRDV") && tokens[vGeneIdx].contains("/") && tokens[vGeneIdx].contains("AV"))
                 {
                     restoredTRDVAV++;
-                    String[] split = tokens[6].split("/");
-                    tokens[6] = "TR" + split[1] + "/" + split[0].replaceAll("TR", "");
+                    String[] split = tokens[vGeneIdx].split("/");
+                    tokens[vGeneIdx] = "TR" + split[1] + "/" + split[0].replaceAll("TR", "");
                 }
 
                 List<String> chains = new ArrayList<>();
                 String vGeneChain = null;
                 String jGeneChain = null;
                 String cGeneChain = null;
-                for (int idx : new Integer[]{6,8,9})
+                for (int idx : new Integer[]{vGeneIdx,jGeneIdx,cGeneIdx})
                 {
                     String val = StringUtils.trimToNull(tokens[idx]);
                     if (val != null)
@@ -899,15 +909,15 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         val = val.substring(0, 3);
 
                         chains.add(val);
-                        if (idx == 6)
+                        if (idx == vGeneIdx)
                         {
                             vGeneChain = val;
                         }
-                        if (idx == 8)
+                        if (idx == jGeneIdx)
                         {
                             jGeneChain = val;
                         }
-                        else if (idx == 9)
+                        else if (idx == cGeneIdx)
                         {
                             cGeneChain = val;
                         }
@@ -915,7 +925,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 }
 
                 Set<String> uniqueChains = new HashSet<>(chains);
-                String originalChain = StringUtils.trimToNull(tokens[5]);
+                String originalChain = StringUtils.trimToNull(tokens[chainIdx]);
 
                 // Recover TRDV/TRAJ/TRAC:
                 if (uniqueChains.size() > 1)
@@ -925,7 +935,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                     {
                         uniqueChains.clear();
                         uniqueChains.add(cGeneChain);
-                        String key = originalChain + "->" + cGeneChain + " (based on C-GENE)";
+                        String key = vGeneChain + ":" + jGeneChain + ":" + originalChain + "->" + cGeneChain + " (based on C-GENE)";
                         chimericCallsRecovered.put(key, chimericCallsRecovered.getOrDefault(key, 0) + 1);
                     }
                     else if (uniqueChains.size() == 2)
@@ -950,14 +960,14 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 if (uniqueChains.size() == 1)
                 {
                     String chain = uniqueChains.iterator().next();
-                    tokens[5] = chain;
+                    tokens[chainIdx] = chain;
                 }
                 else
                 {
-                    log.info("Multiple chains detected [" + StringUtils.join(chains, ",")+ "], leaving original call alone: " + originalChain  + ". " + tokens[6] + "/" + tokens[8] + "/" + tokens[9]);
+                    log.info("Multiple chains detected [" + StringUtils.join(chains, ",")+ "], leaving original call alone: " + originalChain  + ". " + tokens[vGeneIdx] + "/" + tokens[jGeneIdx] + "/" + tokens[cGeneIdx]);
                 }
 
-                if (acceptableChains.contains(tokens[5]))
+                if (acceptableChains.contains(tokens[chainIdx]))
                 {
                     writer.println(StringUtils.join(tokens, ",") + "," + chainType);
                 }

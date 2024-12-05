@@ -115,8 +115,7 @@ public class RepeatNimbleReportHandler extends AbstractParameterizedOutputHandle
                 }
 
                 // This will update these files in-place:
-                File alignmentFileLocal = NimbleHelper.ensureLocalCopy(alignmentFile, output, ctx);
-                File reportFile = NimbleHelper.runNimbleReport(alignmentFileLocal, so.getLibrary_id(), output, ctx);
+                File reportFile = NimbleHelper.runNimbleReport(alignmentFile, so.getLibrary_id(), output, ctx);
                 if (!reportFile.exists())
                 {
                     throw new PipelineJobException("Unable to find file: " + reportFile.getPath());

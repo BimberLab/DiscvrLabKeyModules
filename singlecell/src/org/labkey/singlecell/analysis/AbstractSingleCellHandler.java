@@ -139,7 +139,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
     public Collection<String> getAllowableActionNames()
     {
         Set<String> allowableNames = new HashSet<>();
-        for (PipelineStepProvider provider: SequencePipelineService.get().getProviders(SingleCellStep.class))
+        for (PipelineStepProvider<?> provider: SequencePipelineService.get().getProviders(SingleCellStep.class))
         {
             allowableNames.add(provider.getLabel());
         }
@@ -603,8 +603,8 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Creating Final HTML Report");
             File finalHtml = new File(ctx.getOutputDir(), "finalHtml.html");
             List<String> lines = new ArrayList<>();
-            lines.add("rmarkdown::render(output_file = '" + finalHtml.getName() + "', input = '" + finalMarkdownFile.getName() + "', intermediates_dir  = '/work')");
-            AbstractSingleCellPipelineStep.executeR(ctx, AbstractCellMembraneStep.CONTAINER_NAME, "pandoc", lines, null, null);
+            lines.add("rmarkdown::render(output_file = '" + finalHtml.getName() + "', input = '" + finalMarkdownFile.getName() + "', intermediates_dir  = '" + ctx.getWorkingDirectory() + "')");
+            AbstractSingleCellPipelineStep.executeR(ctx, AbstractCellMembraneStep.CONTAINER_NAME, "pandoc", lines, null, null, null);
             _resumer.getFileManager().addIntermediateFile(finalMarkdownFile);
             _resumer.getFileManager().addIntermediateFiles(_resumer.getMarkdownsInOrder());
             _resumer.getFileManager().addIntermediateFiles(_resumer.getHtmlFilesInOrder());
@@ -630,7 +630,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         Integer id = NumberUtils.createInteger(output.getDatasetId());
                         if (!inputMap.containsKey(id))
                         {
-                            ctx.getLogger().warn("No input found matching dataset Id: " + output.getDatasetId());
+                            ctx.getLogger().warn("No input found matching dataset Id: {}", output.getDatasetId());
                         }
                         else
                         {
@@ -641,7 +641,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     }
                     catch (NumberFormatException e)
                     {
-                        ctx.getLogger().error("Expected dataset ID to be an integer: " + output.getDatasetId());
+                        ctx.getLogger().error("Expected dataset ID to be an integer: {}", output.getDatasetId());
                     }
                 }
                 else

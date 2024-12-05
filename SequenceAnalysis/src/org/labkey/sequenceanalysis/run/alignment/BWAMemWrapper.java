@@ -38,9 +38,14 @@ public class BWAMemWrapper extends BWAWrapper
 
     public static class BWAMemAlignmentStep extends BWAAlignmentStep<BWAMemWrapper>
     {
+        public BWAMemAlignmentStep(AlignmentStepProvider<?> provider, PipelineContext ctx, BWAMemWrapper wrapper)
+        {
+            super(provider, ctx, wrapper);
+        }
+
         public BWAMemAlignmentStep(AlignmentStepProvider<?> provider, PipelineContext ctx)
         {
-            super(provider, ctx, new BWAMemWrapper(ctx.getLogger()));
+            this(provider, ctx, new BWAMemWrapper(ctx.getLogger()));
         }
 
         @Override

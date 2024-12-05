@@ -37,17 +37,11 @@ public class BWAMem2Wrapper extends BWAMemWrapper
         super(logger);
     }
 
-    public static class BWAMem2AlignmentStep extends BWAAlignmentStep<BWAMem2Wrapper>
+    public static class BWAMem2AlignmentStep extends BWAMemAlignmentStep
     {
         public BWAMem2AlignmentStep(AlignmentStepProvider<?> provider, PipelineContext ctx)
         {
             super(provider, ctx, new BWAMem2Wrapper(ctx.getLogger()));
-        }
-
-        @Override
-        public boolean doAddReadGroups()
-        {
-            return false;
         }
     }
 
