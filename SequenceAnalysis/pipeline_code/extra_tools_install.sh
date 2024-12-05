@@ -218,3 +218,14 @@ then
 else
     echo "Already installed"
 fi
+
+if [[ ! -e ${LKTOOLS_DIR}/multiqc || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf multiqc*
+    rm -Rf $LKTOOLS_DIR/multiqc*
+
+    python3 -m pip install --user multiqc
+else
+    echo "Already installed"
+fi
