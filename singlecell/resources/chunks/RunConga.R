@@ -1,6 +1,6 @@
-netRc <- paste0(Sys.getEnv('USER_HOME'), '/.netrc')
+netRc <- paste0(Sys.getenv('USER_HOME'), '/.netrc')
 if (!file.exists(netRc)) {
-    print(list.files(Sys.getEnv('USER_HOME')))
+    print(list.files(Sys.getenv('USER_HOME')))
     stop(paste0('Unable to find file: ', netRc))
 }
 
