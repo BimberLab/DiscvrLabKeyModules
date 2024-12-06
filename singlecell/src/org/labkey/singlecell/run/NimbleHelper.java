@@ -297,6 +297,8 @@ public class NimbleHelper
             {
                 if (SequencePipelineService.get().hasMinLineCount(results, 2))
                 {
+                    long lineCount = SequencePipelineService.get().getLineCount(results);
+                    _ctx.getLogger().debug("Found {} lines in file {}", lineCount, results.getPath());
                     throw new PipelineJobException("Unable to find file: " + reportHtml.getPath());
                 }
             }
@@ -496,7 +498,7 @@ public class NimbleHelper
         reportArgs.add("-i");
         reportArgs.add(alignResultsGz.getPath());
 
-        File reportResultsGz = new File(ctx.getWorkingDirectory(), "reportResults." + genomeId + ".txt");
+        File reportResultsGz = new File(ctx.getWorkingDirectory(), "reportResults." + genomeId + ".txt.gz");
         if (reportResultsGz.exists())
         {
             reportResultsGz.delete();
