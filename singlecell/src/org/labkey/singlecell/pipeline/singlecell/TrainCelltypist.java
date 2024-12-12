@@ -134,7 +134,7 @@ public class TrainCelltypist extends AbstractRiraStep
     {
         Chunk ret = super.createParamChunk(ctx, inputObjects, outputPrefix);
         String modelName = getModelName(ctx.getJob(), true);
-        ret.bodyLines.add("modelFile <- '/work/" + modelName + "'");
+        ret.bodyLines.add("modelFile <- '" + new File(ctx.getWorkingDirectory(), modelName).getPath() + "'");
 
         return ret;
     }

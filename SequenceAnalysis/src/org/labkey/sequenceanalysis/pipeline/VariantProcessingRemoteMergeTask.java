@@ -110,18 +110,17 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
     {
         SequenceTaskHelper.logModuleVersions(getJob().getLogger());
         RecordedAction action = new RecordedAction(ACTION_NAME);
-        TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd);
         JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir(), new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd), _wd);
 
         File finalOut;
         SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
         if (handler instanceof SequenceOutputHandler.HasCustomVariantMerge)
         {
-            finalOut = ((SequenceOutputHandler.HasCustomVariantMerge)handler).performVariantMerge(manager, action, handler, getJob());
+            finalOut = ((SequenceOutputHandler.HasCustomVariantMerge)handler).performVariantMerge(ctx.getFileManager(), action, handler, getJob());
         }
         else
         {
-            finalOut = runDefaultVariantMerge(ctx, manager, action, handler);
+            finalOut = runDefaultVariantMerge(ctx, action, handler);
         }
 
         Map<String, File> scatterOutputs = getPipelineJob().getScatterJobOutputs();
@@ -136,7 +135,7 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
             if (finalOut != null)
             {
                 SequenceOutputFile finalOutput = ((SequenceOutputHandler.TracksVCF) getPipelineJob().getHandler()).createFinalSequenceOutput(getJob(), finalOut, getPipelineJob().getFiles());
-                manager.addSequenceOutput(finalOutput);
+                ctx.getFileManager().addSequenceOutput(finalOutput);
             }
         }
         else
@@ -147,16 +146,16 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
         File cacheDir = getPipelineJob().getLocationForCachedInputs(_wd, false);
         if (cacheDir.exists())
         {
-            manager.addIntermediateFile(cacheDir);
+            ctx.getFileManager().addIntermediateFile(cacheDir);
         }
 
-        manager.deleteIntermediateFiles();
-        manager.cleanup(Collections.singleton(action));
+        ctx.getFileManager().deleteIntermediateFiles();
+        ctx.getFileManager().cleanup(Collections.singleton(action));
 
         return new RecordedActionSet(action);
     }
 
-    private @Nullable File runDefaultVariantMerge(JobContextImpl ctx, TaskFileManagerImpl manager, RecordedAction action, SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler) throws PipelineJobException
+    private @Nullable File runDefaultVariantMerge(JobContextImpl ctx, RecordedAction action, SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler) throws PipelineJobException
     {
         Map<String, List<Interval>> jobToIntervalMap = getPipelineJob().getJobToIntervalMap();
         getJob().setStatus(PipelineJob.TaskStatus.running, "Combining Per-Contig VCFs: " + jobToIntervalMap.size());
@@ -186,9 +185,9 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
 
             toConcat.add(vcf);
 
-            manager.addInput(action, "Input VCF", vcf);
-            manager.addIntermediateFile(vcf);
-            manager.addIntermediateFile(new File(vcf.getPath() + ".tbi"));
+            ctx.getFileManager().addInput(action, "Input VCF", vcf);
+            ctx.getFileManager().addIntermediateFile(vcf);
+            ctx.getFileManager().addIntermediateFile(new File(vcf.getPath() + ".tbi"));
         }
 
         if (totalNull > 0 && !toConcat.isEmpty())
@@ -225,13 +224,13 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
                 boolean sortAfterMerge = getPipelineJob().scatterMethodRequiresSort() || handler instanceof VariantProcessingStep.SupportsScatterGather && ((VariantProcessingStep.SupportsScatterGather) handler).doSortAfterMerge();
                 combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, genome, getJob().getLogger(), true, null, sortAfterMerge);
             }
-            manager.addOutput(action, "Merged VCF", combined);
+            ctx.getFileManager().addOutput(action, "Merged VCF", combined);
         }
 
         if (handler instanceof VariantProcessingStep.SupportsScatterGather)
         {
             ctx.getLogger().debug("Running additional merge tasks");
-            ((VariantProcessingStep.SupportsScatterGather) handler).performAdditionalMergeTasks(ctx, getPipelineJob(), manager, genome, toConcat, new ArrayList<>(jobToIntervalMap.keySet()));
+            ((VariantProcessingStep.SupportsScatterGather) handler).performAdditionalMergeTasks(ctx, getPipelineJob(), genome, toConcat, new ArrayList<>(jobToIntervalMap.keySet()));
         }
 
         return combined;

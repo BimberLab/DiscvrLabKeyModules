@@ -188,9 +188,12 @@ then
     unzip paragraph-v2.4a-binary.zip
     rm paragraph-v2.4a-binary.zip
 
+    python3 -m pip install pysam intervaltree
+
     cd ../
     cp -R paragraph $LKTOOLS_DIR
     ln -s ${LKTOOLS_DIR}/paragraph/bin/paragraph ${LKTOOLS_DIR}/paragraph
+    ln -s ${LKTOOLS_DIR}/paragraph/bin/idxdepth ${LKTOOLS_DIR}/idxdepth
     ln -s ${LKTOOLS_DIR}/paragraph/bin/multigrmpy.py ${LKTOOLS_DIR}/multigrmpy.py
 else
     echo "Already installed"
@@ -212,6 +215,17 @@ then
     module load python/3.11.7
     python -m ensurepip --upgrade
     python -m pip install --force-reinstall --target ${LKTOOLS_DIR}/pythonPackages git+https://github.com/fritzsedlazeck/Sniffles.git
+else
+    echo "Already installed"
+fi
+
+if [[ ! -e ${LKTOOLS_DIR}/multiqc || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf multiqc*
+    rm -Rf $LKTOOLS_DIR/multiqc*
+
+    python3 -m pip install --user multiqc
 else
     echo "Already installed"
 fi

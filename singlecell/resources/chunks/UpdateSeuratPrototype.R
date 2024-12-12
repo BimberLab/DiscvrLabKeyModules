@@ -1,9 +1,10 @@
-if (!file.exists('/homeDir/.netrc')) {
-  print(list.files('/homeDir'))
-  stop('Unable to find file: /homeDir/.netrc')
+netRc <- paste0(Sys.getenv('USER_HOME'), '/.netrc')
+if (!file.exists(netRc)) {
+  print(list.files(Sys.getenv('USER_HOME')))
+  stop(paste0('Unable to find file: ', netRc))
 }
 
-invisible(Rlabkey::labkey.setCurlOptions(NETRC_FILE = '/homeDir/.netrc'))
+invisible(Rlabkey::labkey.setCurlOptions(NETRC_FILE = netRc))
 Rdiscvr::SetLabKeyDefaults(baseUrl = serverBaseUrl, defaultFolder = defaultLabKeyFolder)
 
 for (datasetId in names(seuratObjects)) {

@@ -3,7 +3,6 @@ package org.labkey.sequenceanalysis.run.analysis;
 import htsjdk.samtools.util.IOUtil;
 import htsjdk.samtools.util.Interval;
 import htsjdk.variant.variantcontext.VariantContext;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONArray;
@@ -31,11 +30,9 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
-import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.sequenceanalysis.run.DockerWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
@@ -43,7 +40,6 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -141,69 +137,12 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
 
     public static File runNextClade(File consensusFasta, Logger log, PipelineOutputTracker tracker, File outputDir, PipelineContext ctx) throws PipelineJobException
     {
-        if (!consensusFasta.getParentFile().equals(outputDir))
-        {
-            try
-            {
-                File consensusFastaLocal = new File(outputDir, consensusFasta.getName());
-                log.info("Copying FASTA locally: " + consensusFastaLocal.getPath());
-                FileUtils.copyFile(consensusFasta, consensusFastaLocal);
-                tracker.addIntermediateFile(consensusFastaLocal);
-                consensusFasta = consensusFastaLocal;
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-        }
-
         File jsonFile = getJsonFile(outputDir, consensusFasta);
 
-        File localBashScript = new File(outputDir, "dockerWrapper.sh");
-        try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
-        {
-            writer.println("#!/bin/bash");
-            writer.println("set -x");
-            writer.println("WD=`pwd`");
-            writer.println("HOME=`echo ~/`");
+        DockerWrapper wrapper = new DockerWrapper("nextstrain/nextclade:latest", ctx.getLogger(), ctx);
+        File dataDir = new File(outputDir, "data");
 
-            writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            writer.println("sudo $DOCKER pull nextstrain/nextclade:latest");
-            writer.println("sudo $DOCKER run --rm=true \\");
-
-            if (SequencePipelineService.get().getMaxThreads(log) != null)
-            {
-                writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS \\");
-            }
-
-            Integer maxRam = SequencePipelineService.get().getMaxRam();
-            if (maxRam != null)
-            {
-                writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM \\");
-                writer.println("\t--memory='" + maxRam + "g' \\");
-            }
-
-            writer.println("\t-v \"${WD}:/work\" \\");
-            ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
-            writer.println("\t-u $UID \\");
-            writer.println("\t-e USERID=$UID \\");
-            writer.println("\t-w /work \\");
-            writer.println("\tnextstrain/nextclade:latest \\");
-            writer.println("\t/bin/bash -c \"nextclade dataset get --name='sars-cov-2' --output-dir='/work/data/sars-cov-2';nextclade run --input-dataset='/work/data/sars-cov-2' --output-json '/work/" + jsonFile.getName() + "' '" + consensusFasta.getName() + "'\" && rm -Rf /work/data");
-            writer.println("");
-            writer.println("echo 'Bash script complete'");
-            writer.println("");
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-
-        SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(log);
-        rWrapper.setWorkingDir(outputDir);
-        rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
-
-        tracker.addIntermediateFile(localBashScript);
+        wrapper.executeWithDocker(Arrays.asList("bin/bash", "-c \"nextclade dataset get --name='sars-cov-2' --output-dir='" + dataDir.getPath() + "/sars-cov-2';nextclade run --input-dataset='" + dataDir.getPath() + "/sars-cov-2' --output-json '" + jsonFile.getPath() + "' '" + consensusFasta.getPath() + "'\" && rm -Rf " + dataDir), ctx.getWorkingDirectory(), tracker);
 
         if (!jsonFile.exists())
         {
@@ -219,7 +158,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         {
             JSONObject results = new JSONObject(IOUtil.readFully(is));
             JSONArray samples = results.getJSONArray("results");
-            if (samples.length() == 0)
+            if (samples.isEmpty())
             {
                 log.info("No samples found in NextClade JSON, this probably means no clade was assigned");
                 return null;

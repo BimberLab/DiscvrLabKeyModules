@@ -30,19 +30,16 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
-import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.sequenceanalysis.run.DockerWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -266,67 +263,9 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
 
     private static File runUsingDocker(File outputDir, Logger log, File consensusFasta, PipelineOutputTracker tracker, List<String> extraArgs, PipelineContext ctx) throws PipelineJobException
     {
-        if (!consensusFasta.getParentFile().equals(outputDir))
-        {
-            try
-            {
-                File consensusFastaLocal = new File(outputDir, consensusFasta.getName());
-                log.info("Copying FASTA locally: " + consensusFastaLocal.getPath());
-                FileUtils.copyFile(consensusFasta, consensusFastaLocal);
-                tracker.addIntermediateFile(consensusFastaLocal);
-                consensusFasta = consensusFastaLocal;
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-        }
-
-        File localBashScript = new File(outputDir, "dockerWrapper.sh");
-        try (PrintWriter writer = PrintWriters.getPrintWriter(localBashScript))
-        {
-            writer.println("#!/bin/bash");
-            writer.println("set -x");
-            writer.println("WD=`pwd`");
-            writer.println("HOME=`echo ~/`");
-
-            writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            writer.println("sudo $DOCKER pull ghcr.io/bimberlabinternal/pangolin:latest");
-            writer.println("sudo $DOCKER run --rm=true \\");
-
-            if (SequencePipelineService.get().getMaxThreads(log) != null)
-            {
-                writer.println("\t-e SEQUENCEANALYSIS_MAX_THREADS \\");
-            }
-
-            Integer maxRam = SequencePipelineService.get().getMaxRam();
-            if (maxRam != null)
-            {
-                writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM \\");
-                writer.println("\t--memory='" + maxRam + "g' \\");
-            }
-
-            String extraArgString = extraArgs == null ? "" : " " + StringUtils.join(extraArgs, " ");
-            writer.println("\t-v \"${WD}:/work\" \\");
-            ctx.getDockerVolumes().forEach(ln -> writer.println(ln + " \\"));
-            writer.println("\t-u $UID \\");
-            writer.println("\t-e USERID=$UID \\");
-            writer.println("\t-w /work \\");
-            writer.println("\tghcr.io/bimberlabinternal/pangolin:latest \\");
-            writer.println("\tpangolin" + extraArgString + " '/work/" + consensusFasta.getName() + "'");
-            writer.println("");
-            writer.println("echo 'Bash script complete'");
-            writer.println("");
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-
-        SimpleScriptWrapper rWrapper = new SimpleScriptWrapper(log);
-        rWrapper.setWorkingDir(outputDir);
-        rWrapper.execute(Arrays.asList("/bin/bash", localBashScript.getName()));
-        tracker.addIntermediateFile(localBashScript);
+        DockerWrapper wrapper = new DockerWrapper("ghcr.io/bimberlabinternal/pangolin:latest", ctx.getLogger(), ctx);
+        String extraArgString = extraArgs == null ? "" : " " + StringUtils.join(extraArgs, " ");
+        wrapper.executeWithDocker(Arrays.asList("pangolin" + extraArgString + " '" + consensusFasta.getPath() + "'"), ctx.getWorkingDirectory(), tracker);
 
         File output = new File(outputDir, "lineage_report.csv");
         if (!output.exists())
