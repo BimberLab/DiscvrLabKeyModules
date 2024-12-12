@@ -50,7 +50,7 @@ function View(){
 
     return (
         //TODO: can we make this expand to full page height?
-        <div style={{height: "100%"}}>
+        <div style={{height: "100vh"}}>
             <ErrorBoundary>
                 <ThemeProvider theme={theme}>
                     <JBrowseLinearGenomeView viewState={state as ViewModel} />
