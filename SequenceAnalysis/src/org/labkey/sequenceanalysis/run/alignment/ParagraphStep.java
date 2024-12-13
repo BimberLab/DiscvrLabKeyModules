@@ -53,6 +53,9 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 ToolParameterDescriptor.create("verbose", "Verbose Logging", "If checked, --verbose will be passed to paragraph to increase logging", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false),
+                ToolParameterDescriptor.create("useLocalScratch", "User local scratch", "If checked, the tool will write the intermediate temp files to a folder in the working directory, rather than the job's tempDir. This can make debugging easier.", "checkbox", new JSONObject(){{
+                    put("checked", false);
+                }}, false),
                 ToolParameterDescriptor.create("retrieveReferenceSeq", "Retrieve Reference Sequence", "If checked, --debug will be passed to paragraph to increase logging", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false)
@@ -237,12 +240,12 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 paragraphArgs.add("-o");
                 paragraphArgs.add(paragraphOutDir.getPath());
 
-                File scratchDir = new File(ctx.getOutputDir(), "pgScratch");
-                if (scratchDir.exists())
+                File localScratchDir = new File(ctx.getOutputDir(), "pgScratch");
+                if (localScratchDir.exists())
                 {
                     try
                     {
-                        FileUtils.deleteDirectory(scratchDir);
+                        FileUtils.deleteDirectory(localScratchDir);
                     }
                     catch (IOException e)
                     {
@@ -250,10 +253,14 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                     }
                 }
 
-                paragraphArgs.add("--scratch-dir");
-                paragraphArgs.add(scratchDir.getPath());
+                boolean useLocalScratch = ctx.getParams().optBoolean("useLocalScratch", false);
+                if (useLocalScratch)
+                {
+                    paragraphArgs.add("--scratch-dir");
+                    paragraphArgs.add(localScratchDir.getPath());
 
-                ctx.getFileManager().addIntermediateFile(scratchDir);
+                    ctx.getFileManager().addIntermediateFile(localScratchDir);
+                }
 
                 paragraphArgs.add("-i");
                 paragraphArgs.add(svVcf.getPath());

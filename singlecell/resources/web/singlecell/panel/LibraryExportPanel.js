@@ -22,7 +22,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                 name: 'importType',
                 columns: 1,
                 items: [{
-                    boxLabel: 'Novogene/Plate List',
+                    boxLabel: '10x Plate List',
                     inputValue: 'plateList',
                     name: 'importType',
                     checked: true
@@ -112,7 +112,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                     forceSelection: true,
                                     editable: true,
                                     allowBlank: true,
-                                    storeValues: ['Novogene', 'Novogene-New']
+                                    storeValues: ['Novogene', 'Novogene-New', 'MedGenome']
                                 },{
                                     xtype: 'textarea',
                                     itemId: 'plateList',
@@ -145,7 +145,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                     xtype: 'ldk-numberfield',
                                     itemId: 'laneDataMax',
                                     fieldLabel: 'Max Data Per Lane',
-                                    value: 700
+                                    value: 900
                                 },{
                                     xtype: 'ldk-numberfield',
                                     itemId: 'defaultVolume',
@@ -167,26 +167,26 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                         Ext4.Array.forEach(text, function(r, idx){
                                             var val = r[0];
                                             if (val.startsWith('G')){
-                                                val = val.substr(1);
+                                                val = val.substring(1);
                                                 val = val.replace('_', '-');
                                                 r[0] = 'GEX';
                                                 r.unshift(val);
 
                                             }
                                             else if (val.startsWith('T')){
-                                                val = val.substr(1);
+                                                val = val.substring(1);
                                                 val = val.replace('_', '-');
                                                 r[0] = 'VDJ';
                                                 r.unshift(val);
                                             }
                                             else if (val.startsWith('H') || val.startsWith('M')){
-                                                val = val.substr(1);
+                                                val = val.substring(1);
                                                 val = val.replace('_', '-');
                                                 r[0] = 'HTO';
                                                 r.unshift(val);
                                             }
                                             else if (val.startsWith('C')){
-                                                val = val.substr(1);
+                                                val = val.substring(1);
                                                 val = val.replace('_', '-');
                                                 r[0] = 'CITE';
                                                 r.unshift(val);
@@ -213,7 +213,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                                             if (r[0].match('\\*$')) {
                                                 var m = r[0].match('\\*$');
-                                                var val = r[0].substr(0, m.index);
+                                                var val = r[0].substring(0, m.index);
                                                 wildcards[val] = r;
                                             }
                                         }, this);
@@ -843,7 +843,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                         }, this);
                     }
                 }
-                else if (instrument === '10x Sample Sheet' || instrument === 'Novogene' || instrument === 'Novogene-New') {
+                else if (instrument === '10x Sample Sheet' || instrument === 'Novogene' || instrument === 'Novogene-New' || instrument === 'MedGenome') {
                     //we make the default assumption that we're using 10x primers, which are listed in the sample-sheet orientation
                     var doRC = false;
                     var rows = [];
@@ -862,7 +862,8 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
 
                             var cleanedName = r[fieldName] + '_' + r[fieldName + '/name'].replace(/ /g, '_');
                             cleanedName = cleanedName.replace(/\//g, '-');
-                            var sampleName = getSampleName(simpleSampleNames, r[fieldName], r[fieldName + '/name']) + (suffix && instrument.startsWith('Novogene') ? '' : '-' + suffix);
+                            var sampleName = getSampleName(simpleSampleNames, r[fieldName], r[fieldName + '/name']) + (suffix && (instrument.startsWith('Novogene') || instrument === 'MedGenome') ? '' : '-' + suffix);
+                            console.log(sampleName)
 
                             var barcode5s = r[fieldName + '/barcode5/sequence'] ? r[fieldName + '/barcode5/sequence'].split(',') : [];
                             if (!barcode5s.length) {
@@ -968,6 +969,53 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                     data.push(r.laneAssignment || '');
                                     data.push(barcode5Name || '');
                                 }
+                                else if (instrument === 'MedGenome') {
+                                    let libraryType = 'UNKNOWN';
+                                    switch (suffix) {
+                                        case 'GEX':
+                                            libraryType = '10x GEX';
+                                            break;
+                                        case 'TCR':
+                                            libraryType = '10X VDJ';
+                                            break;
+                                        case 'HTO':
+                                            libraryType = 'Cell Hashing';
+                                        case 'CITE':
+                                            libraryType = '10X Feature Barcode';
+                                            break;
+                                        default:
+                                            console.error('Unknown suffix: ' + suffix);
+                                    }
+
+                                    data = [sampleName];
+                                    data.push(r.plateAlias ? r.plateAlias : samplePrefix + r.plateId.replace(/-/g, '_'));
+                                    data.push(r.laneAssignment ? 'Pool on Lane ' + r.laneAssignment : '');
+                                    data.push('1.5 mL tube');
+                                    data.push(totalData + 'GB'); //Total data
+                                    data.push('PBMC'); // Source
+                                    data.push('Macaque'); // Species
+                                    data.push(libraryType);
+                                    data.push('10x'); // Kit type
+                                    data.push('10x'); // Index type
+
+                                    data.push(r[fieldName + '/barcode5']);
+                                    data.push(bc); // i7
+
+                                    data.push(r[fieldName + '/barcode3'])
+                                    data.push(bc3); //P5
+
+                                    data.push(size);
+
+                                    var quantity = defaultVolume * r[fieldName + '/concentration']; 
+                                    data.push(quantity);
+                                    data.push(defaultVolume);
+                                    data.push(r[fieldName + '/concentration'] || '');
+
+                                    data.push(r.laneAssignment || '');
+                                    data.push(r.laneAssignment ? 'Lane ' + r.laneAssignment : '');
+
+                                    console.log(data)
+                                }
                                 rows.push(data.join(delim));
                             }, this);
 
@@ -978,7 +1026,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                         }
                     };
 
-                    var delim = instrument.startsWith('Novogene') ? '\t' : ',';
+                    var delim = instrument.startsWith('Novogene') || instrument === 'MedGenome' ? '\t' : ',';
                     Ext4.Array.forEach(sortedRows, function (r) {
                         var totalCells = totalCellsByReadset[r.plateId];
 
@@ -994,7 +1042,7 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                     }, this);
 
                     //add missing barcodes:
-                    if (includeBlanks && !instrument.startsWith('Novogene')) {
+                    if (includeBlanks && !instrument.startsWith('Novogene') && !instrument.startsWith('MedGenome')) {
                         var blankIdx = 0;
                         Ext4.Array.forEach(SingleCell.panel.LibraryExportPanel.TENX_BARCODES, function (barcode5) {
                             if (barcodeCombosUsed.indexOf(barcode5) === -1) {
@@ -1005,6 +1053,13 @@ Ext4.define('SingleCell.panel.LibraryExportPanel', {
                                     rows.push([barcode5 + '_' + (idx + 1), plateIds.join(';').replace(/\//g, '-') + '_Blank' + blankIdx, seq, ''].join(delim));
                                 }, this);
                             }
+                        }, this);
+                    }
+
+                    if (instrument === 'MedGenome') {
+                        console.log(rows)
+                        Ext4.Array.forEach(rows, function(r, idx){
+                            rows[idx] = (idx + 1) + '\t' + r;
                         }, this);
                     }
                 }
