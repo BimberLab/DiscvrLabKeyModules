@@ -617,7 +617,7 @@ then
 
     mkdir blat
     cd blat
-    wget $WGET_OPTS http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/blat/blat
+    wget $WGET_OPTS https://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/blat/blat
     chmod +x blat
 
     install blat $LKTOOLS_DIR/blat
