@@ -1,7 +1,6 @@
 package org.labkey.cluster.pipeline;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -14,15 +13,21 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.PipelineStatusFile;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.cluster.ClusterManager;
 import org.labkey.cluster.ClusterServiceImpl;
 import org.quartz.JobExecutionException;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -242,6 +247,8 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             int stateIdx = -1;
             int hostnameIdx = -1;
             int maxRssIdx = -1;
+            int reqMemIdx = -1;
+            String reqMem = null;
             for (String line : ret)
             {
                 line = StringUtils.trimToNull(line);
@@ -258,6 +265,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     stateIdx = header.indexOf("STATE");
                     hostnameIdx = header.indexOf("NODELIST");
                     maxRssIdx = header.indexOf("MAXRSS");
+                    reqMemIdx = header.indexOf("REQMEM");
 
                     if (stateIdx == -1)
                     {
@@ -298,18 +306,49 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                             }
                         }
 
+                        if (reqMemIdx > -1 && reqMemIdx < tokens.length)
+                        {
+                            String val = StringUtils.trimToNull(tokens[reqMemIdx]);
+                            if (val != null)
+                            {
+                                reqMem = val;
+                            }
+
+                        }
+
                         // NOTE: if the line has blank ending columns, trimmed lines might lack that value
-                        if (maxRssIdx > -1 && maxRssIdx < tokens.length)
+                        if ((job.getClusterId() + ".0").equals(id) && maxRssIdx > -1 && maxRssIdx < tokens.length)
                         {
                             try
                             {
-                                if (NumberUtils.isCreatable(tokens[maxRssIdx]))
+                                String maxRSS = StringUtils.trimToNull(tokens[maxRssIdx]);
+                                if (maxRSS != null)
                                 {
-                                    long bytes = FileSizeFormatter.convertStringRepresentationToBytes(tokens[maxRssIdx]);
-                                    long requestInBytes = FileSizeFormatter.convertStringRepresentationToBytes(getConfig().getRequestMemory() + "G"); //request is always GB
-                                    if (bytes > requestInBytes)
+                                    double bytes = FileSizeFormatter.convertStringRepresentationToBytes(maxRSS);
+                                    if (reqMem == null)
                                     {
-                                        info = "Job exceeded memory, max was: " + FileSizeFormatter.convertBytesToUnit(bytes, 'G') + "G";
+                                        _log.warn("Unable to find ReqMem for slurm job: " + job.getClusterId());
+                                    }
+                                    else
+                                    {
+                                        double requestInBytes = FileSizeFormatter.convertStringRepresentationToBytes(reqMem);
+                                        if (bytes > requestInBytes)
+                                        {
+                                            info = "Job exceeded memory, max was: " + FileSizeFormatter.convertBytesToUnit(bytes, 'G') + "G, requested memory was: " + FileSizeFormatter.convertBytesToUnit(requestInBytes, 'G');
+
+                                            PipelineStatusFile sf = PipelineService.get().getStatusFile(job.getJobId());
+                                            if (sf != null)
+                                            {
+                                                try (PrintWriter writer = PrintWriters.getPrintWriter(new File(sf.getFilePath()), StandardOpenOption.APPEND))
+                                                {
+                                                    writer.println(info + ". Raw slurm value: " + maxRSS);
+                                                }
+                                                catch (FileNotFoundException e)
+                                                {
+                                                    _log.error("Unable to find log file for job, " + job.getJobId() + ": " + sf.getFilePath());
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -760,13 +799,13 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
     // Based on: https://stackoverflow.com/questions/3758606/how-can-i-convert-byte-size-into-a-human-readable-format-in-java
     private static class FileSizeFormatter
     {
-        public static long convertStringRepresentationToBytes(final String value)
+        public static double convertStringRepresentationToBytes(final String value)
         {
             try
             {
                 char unit = value.toUpperCase().charAt(value.length() - 1);
                 long sizeFactor = getSizeFactor(unit);
-                long size = Long.parseLong(value.substring(0, value.length() - 1));
+                double size = Double.parseDouble(value.substring(0, value.length() - 1));
 
                 return size * sizeFactor;
             }
@@ -776,11 +815,11 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             }
         }
 
-        public static long convertBytesToUnit(final long bytes, final char unit)
+        public static double convertBytesToUnit(final double bytes, final char unit)
         {
             long sizeFactor = getSizeFactor(unit);
 
-            return bytes / sizeFactor;
+            return bytes / (double)sizeFactor;
         }
 
         private static long getSizeFactor(char unit)
@@ -806,11 +845,11 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         @Test
         public void testFileSizeFormatter()
         {
-            long bytes = FileSizeFormatter.convertStringRepresentationToBytes("1362624K");
-            Assert.assertEquals("Incorrect byte value", 1395326976, bytes);
+            double bytes = FileSizeFormatter.convertStringRepresentationToBytes("1362624K");
+            Assert.assertEquals("Incorrect byte value", 1395326976.0, bytes, 0.0);
 
-            long val2 = FileSizeFormatter.convertBytesToUnit(bytes, 'K');
-            Assert.assertEquals("Incorrect string value", 1362624, val2);
+            double val2 = FileSizeFormatter.convertBytesToUnit(bytes, 'K');
+            Assert.assertEquals("Incorrect string value", 1362624.0, val2, 0.0);
         }
     }
 }

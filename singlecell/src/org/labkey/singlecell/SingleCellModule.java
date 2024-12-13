@@ -90,7 +90,6 @@ import org.labkey.singlecell.pipeline.singlecell.RunRiraClassification;
 import org.labkey.singlecell.pipeline.singlecell.RunSDA;
 import org.labkey.singlecell.pipeline.singlecell.RunScGate;
 import org.labkey.singlecell.pipeline.singlecell.RunScGateBuiltin;
-import org.labkey.singlecell.pipeline.singlecell.RunScMetabolism;
 import org.labkey.singlecell.pipeline.singlecell.RunSingleR;
 import org.labkey.singlecell.pipeline.singlecell.RunVision;
 import org.labkey.singlecell.pipeline.singlecell.ScoreCellCycle;
@@ -284,7 +283,6 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new RunLDA.Provider());
         SequencePipelineService.get().registerPipelineStep(new FilterDisallowedClasses.Provider());
         SequencePipelineService.get().registerPipelineStep(new SummarizeTCellActivation.Provider());
-        SequencePipelineService.get().registerPipelineStep(new RunScMetabolism.Provider());
         SequencePipelineService.get().registerPipelineStep(new ScoreCellCycle.Provider());
         SequencePipelineService.get().registerPipelineStep(new TrainScTour.Provider());
         SequencePipelineService.get().registerPipelineStep(new PredictScTour.Provider());

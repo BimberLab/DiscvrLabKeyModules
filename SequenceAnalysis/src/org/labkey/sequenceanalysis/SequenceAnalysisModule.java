@@ -104,6 +104,7 @@ import org.labkey.sequenceanalysis.run.alignment.Pbmm2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.StarWrapper;
 import org.labkey.sequenceanalysis.run.alignment.VulcanWrapper;
 import org.labkey.sequenceanalysis.run.analysis.BamIterator;
+import org.labkey.sequenceanalysis.run.analysis.BcftoolsFillFromFastaStep;
 import org.labkey.sequenceanalysis.run.analysis.BcftoolsFillTagsStep;
 import org.labkey.sequenceanalysis.run.analysis.BcftoolsFixploidyStep;
 import org.labkey.sequenceanalysis.run.analysis.DeepVariantAnalysis;
@@ -365,6 +366,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new SummarizeGenotypeQualityStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new BcftoolsFillTagsStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new BcftoolsFixploidyStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new BcftoolsFillFromFastaStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SVAnnotateStep.Provider());
 
         //handlers

@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -43,8 +44,11 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
                     ToolParameterDescriptor.create("limitToChromosomes", "Limit to Chromosomes", "If checked, the analysis will include only the primary chromosomes", "checkbox", new JSONObject()
                     {{
                         put("checked", true);
-                    }}, true)
-            ), null, "https://www.kingrelatedness.com/manual.shtml");
+                    }}, true),
+                    ToolParameterDescriptor.create("excludedContigs", "Excluded Contigs", "A comma separated list of contigs to exclude, such as X,Y,MT.", "textfield", new JSONObject(){{
+
+                    }}, "X,Y,MT")
+                    ), null, "https://www.kingrelatedness.com/manual.shtml");
         }
 
         @Override
@@ -90,15 +94,22 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
                 return NumberUtils.isCreatable(name) || "X".equalsIgnoreCase(name) || "Y".equalsIgnoreCase(name);
             }).map(SAMSequenceRecord::getSequenceName).toList();
 
-            if (toKeep.size() == 0)
+            if (toKeep.isEmpty())
             {
-                getPipelineCtx().getLogger().info("The option to limit to chromosomes was selected, but no contigs were foudn with numeric names or names beginning with chr. All contigs will be used.");
+                getPipelineCtx().getLogger().info("The option to limit to chromosomes was selected, but no contigs were found with numeric names or names beginning with chr. All contigs will be used.");
             }
             else
             {
                 plinkArgs.add("--chr");
                 plinkArgs.add(StringUtils.join(toKeep, ","));
             }
+        }
+
+        String excludedContigs = StringUtils.trimToNull(getProvider().getParameterByName("excludedContigs").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
+        if (excludedContigs != null)
+        {
+            plinkArgs.add("--not-chr");
+            plinkArgs.add(excludedContigs);
         }
 
         plinkArgs.add("--allow-extra-chr");

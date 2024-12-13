@@ -90,7 +90,7 @@ public class SplitVcfBySamplesStep extends AbstractCommandPipelineStep<SplitVcfB
     }
 
     @Override
-    public void performAdditionalMergeTasks(SequenceOutputHandler.JobContext ctx, PipelineJob job, TaskFileManager manager, ReferenceGenome genome, List<File> orderedScatterOutputs, List<String> orderedJobDirs) throws PipelineJobException
+    public void performAdditionalMergeTasks(SequenceOutputHandler.JobContext ctx, PipelineJob job, ReferenceGenome genome, List<File> orderedScatterOutputs, List<String> orderedJobDirs) throws PipelineJobException
     {
         job.getLogger().info("Merging additional track VCFs");
         File inputVCF = ((SequenceJob)getPipelineCtx().getJob()).getInputFiles().get(0);
@@ -133,7 +133,7 @@ public class SplitVcfBySamplesStep extends AbstractCommandPipelineStep<SplitVcfB
             so.setFile(combined);
             so.setCategory("VCF File");
             so.setLibrary_id(genome.getGenomeId());
-            manager.addSequenceOutput(so);
+            ctx.getFileManager().addSequenceOutput(so);
         }
     }
 

@@ -44,10 +44,16 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 {{
                     put("allowBlank", false);
                 }}, null),
-                ToolParameterDescriptor.create("doBndSubset", "Remove BNDs", "If the reference VCF contains BNDs, selecting this option will cause the job to remove them prior to paragraph", "checkbox", new JSONObject(){{
+                ToolParameterDescriptor.create("doBndSubset", "Filter Input VCF", "If selected, prior to running SelectVariants will be run to remove BNDs sites with POS<150 and symbolic INS without ALT sequence", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false),
                 ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
+                    put("checked", false);
+                }}, false),
+                ToolParameterDescriptor.create("verbose", "Verbose Logging", "If checked, --verbose will be passed to paragraph to increase logging", "checkbox", new JSONObject(){{
+                    put("checked", false);
+                }}, false),
+                ToolParameterDescriptor.create("retrieveReferenceSeq", "Retrieve Reference Sequence", "If checked, --debug will be passed to paragraph to increase logging", "checkbox", new JSONObject(){{
                     put("checked", false);
                 }}, false)
         ));
@@ -124,7 +130,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                     SelectVariantsWrapper svw = new SelectVariantsWrapper(ctx.getLogger());
                     List<String> selectArgs = new ArrayList<>();
                     selectArgs.add("-select");
-                    selectArgs.add("SVTYPE != 'BND' && POS > 150 && !(vc.hasAttribute('SVTYPE') && vc.getAttribute('SVTYPE') == 'INS' && vc.hasSymbolicAlleles() && !vc.hasAttribute('SEQ'))");
+                    selectArgs.add("SVTYPE != 'BND' && SVTYPE != 'DUP' && POS > 150 && !(vc.hasAttribute('SVTYPE') && vc.getAttribute('SVTYPE') == 'INS' && vc.hasSymbolicAlleles() && !vc.hasAttribute('SEQ'))");
                     selectArgs.add("--exclude-filtered");
                     selectArgs.add("--exclude-filtered");
                     selectArgs.add("--sites-only-vcf-output");
@@ -158,7 +164,24 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                     depthArgs.add(threads.toString());
                 }
 
-                new SimpleScriptWrapper(ctx.getLogger()).execute(depthArgs);
+                File doneFile = new File(ctx.getWorkingDirectory(), "idxdepth.done");
+                ctx.getFileManager().addIntermediateFile(doneFile);
+                if (doneFile.exists())
+                {
+                    ctx.getLogger().info("idxdepth already performed, skipping");
+                }
+                else
+                {
+                    new SimpleScriptWrapper(ctx.getLogger()).execute(depthArgs);
+                    try
+                    {
+                        FileUtils.touch(doneFile);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
 
                 if (!coverageJson.exists())
                 {
@@ -168,7 +191,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
 
                 // Should produce a simple text file:
                 //    id  path    depth   read length
-                //    TNPRC-IB18  ../IB18.cram 29.77   150
+                //    IB18  ../IB18.cram 29.77   150
                 File coverageFile = new File(ctx.getWorkingDirectory(), "coverage.txt");
                 String rgId = null;
                 try (PrintWriter writer = PrintWriters.getPrintWriter(coverageFile); SamReader reader = SamReaderFactory.makeDefault().open(so.getFile()))
@@ -196,7 +219,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                     }
 
                     double readLength = json.getInt("read_length");
-                    writer.println(rgId + "\t" + "/work/" + so.getFile().getName() + "\t" + depth + "\t" + readLength);
+                    writer.println(rgId + "\t" + so.getFile().getPath() + "\t" + depth + "\t" + readLength);
                 }
                 catch (IOException e)
                 {
@@ -205,33 +228,52 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 ctx.getFileManager().addIntermediateFile(coverageFile);
 
                 DockerWrapper dockerWrapper = new DockerWrapper("ghcr.io/bimberlabinternal/paragraph:latest", ctx.getLogger(), ctx);
+                dockerWrapper.setTmpDir(new File(SequencePipelineService.get().getJavaTempDir()));
+
                 List<String> paragraphArgs = new ArrayList<>();
                 paragraphArgs.add("/opt/paragraph/bin/multigrmpy.py");
 
-                dockerWrapper.ensureLocalCopy(so.getFile(), ctx.getWorkingDirectory(), ctx.getFileManager());
-                dockerWrapper.ensureLocalCopy(SequenceAnalysisService.get().getExpectedBamOrCramIndex(so.getFile()), ctx.getWorkingDirectory(), ctx.getFileManager());
-
                 File paragraphOutDir = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(so.getFile()));
                 paragraphArgs.add("-o");
-                paragraphArgs.add("/work/" + paragraphOutDir.getName());
+                paragraphArgs.add(paragraphOutDir.getPath());
+
+                File scratchDir = new File(ctx.getOutputDir(), "pgScratch");
+                if (scratchDir.exists())
+                {
+                    try
+                    {
+                        FileUtils.deleteDirectory(scratchDir);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+
+                paragraphArgs.add("--scratch-dir");
+                paragraphArgs.add(scratchDir.getPath());
+
+                ctx.getFileManager().addIntermediateFile(scratchDir);
 
                 paragraphArgs.add("-i");
-                dockerWrapper.ensureLocalCopy(svVcf, ctx.getWorkingDirectory(), ctx.getFileManager());
-                dockerWrapper.ensureLocalCopy(new File(svVcf.getPath() + ".tbi"), ctx.getWorkingDirectory(), ctx.getFileManager());
-                paragraphArgs.add("/work/" + svVcf.getName());
+                paragraphArgs.add(svVcf.getPath());
 
                 paragraphArgs.add("-m");
-                paragraphArgs.add("/work/" + coverageFile.getName());
+                paragraphArgs.add(coverageFile.getPath());
+
+                if (ctx.getParams().optBoolean("verbose", false))
+                {
+                    paragraphArgs.add("--verbose");
+                }
 
                 paragraphArgs.add("-r");
                 File genomeFasta = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id()).getWorkingFastaFile();
-                dockerWrapper.ensureLocalCopy(genomeFasta, ctx.getWorkingDirectory(), ctx.getFileManager());
-                dockerWrapper.ensureLocalCopy(new File(genomeFasta.getPath() + ".fai"), ctx.getWorkingDirectory(), ctx.getFileManager());
-                paragraphArgs.add("/work/" + genomeFasta.getName());
+                paragraphArgs.add(genomeFasta.getPath());
 
-                paragraphArgs.add("--scratch-dir");
-                paragraphArgs.add("/tmp");
-                dockerWrapper.setTmpDir(new File(SequencePipelineService.get().getJavaTempDir()));
+                if (ctx.getParams().optBoolean("retrieveReferenceSeq", false))
+                {
+                    paragraphArgs.add("--retrieve-reference-sequence");
+                }
 
                 if (threads != null)
                 {
@@ -239,7 +281,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                     paragraphArgs.add(threads.toString());
                 }
 
-                dockerWrapper.executeWithDocker(paragraphArgs, ctx.getWorkingDirectory(), ctx.getFileManager());
+                dockerWrapper.executeWithDocker(paragraphArgs, ctx.getWorkingDirectory(), ctx.getFileManager(), Arrays.asList(so.getFile(), genomeFasta, svVcf));
 
                 File genotypes = new File(paragraphOutDir, "genotypes.vcf.gz");
                 if (!genotypes.exists())

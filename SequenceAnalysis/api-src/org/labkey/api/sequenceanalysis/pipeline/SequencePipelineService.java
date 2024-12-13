@@ -102,6 +102,12 @@ abstract public class SequencePipelineService
 
     abstract public Collection<String> getDockerVolumes(Container c);
 
+    /**
+     * The purpose of this method is to assist with translating from raw filepath to the desired volume to mount in a docker container.
+     * This is mostly relevant for situations where the NFS root should be mounted, rather than a child folder.
+     */
+    abstract public @Nullable File inferDockerVolume(File input);
+
     abstract public List<File> getSequenceJobInputFiles(PipelineJob job);
 
     /**

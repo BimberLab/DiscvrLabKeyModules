@@ -200,27 +200,8 @@ public class OrphanFilePipelineJob extends PipelineJob
 
             if (!orphanJobs.isEmpty())
             {
-                getJob().getLogger().info("## The following sequence jobs are not referenced by readsets, analyses or output files.");
+                getJob().getLogger().info("## There are {} sequence jobs are not referenced by readsets, analyses or output files.", orphanJobs.size());
                 getJob().getLogger().info("## The best action would be to view the pipeline job list, 'Sequence Jobs' view, and filter for jobs without sequence outputs.  Deleting any unwanted jobs through the UI should also delete files.");
-                for (PipelineStatusFile sf : orphanJobs)
-                {
-                    File f = new File(sf.getFilePath()).getParentFile();
-                    if (f.exists())
-                    {
-                        long size = FileUtils.sizeOfDirectory(f);
-                        //ignore if less than 1mb
-                        if (size > 1e6)
-                        {
-                            getJob().getLogger().info("\n## size: " + FileUtils.byteCountToDisplaySize(size));
-                            getJob().getLogger().info("\n" + f.getPath());
-                        }
-                    }
-                    else
-                    {
-                        messages.add("## Pipeline job folder does not exist: " + sf.getRowId());
-                        messages.add(f.getPath());
-                    }
-                }
             }
 
             if (!messages.isEmpty())
@@ -388,8 +369,6 @@ public class OrphanFilePipelineJob extends PipelineJob
                         {
                             if (!knownSequenceJobPaths.contains(subdir))
                             {
-                                messages.add("#pipeline path listed as orphan, and not present in known job paths: ");
-                                messages.add(subdir.getPath());
                                 probableDeletes.add(subdir);
                                 unexpectedPipelineDirs.add(subdir);
                             }

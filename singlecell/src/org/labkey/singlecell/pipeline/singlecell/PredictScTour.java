@@ -12,7 +12,10 @@ import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public class PredictScTour extends AbstractRiraStep
 {
@@ -51,25 +54,22 @@ public class PredictScTour extends AbstractRiraStep
         }
 
         File model = ctx.getSequenceSupport().getCachedData(fileId);
-        File local = new File(ctx.getWorkingDirectory(), model.getName());
-        if (local.exists())
-        {
-            local.delete();
-        }
-
-        try
-        {
-            FileUtils.copyFile(model, local);
-            ctx.getFileManager().addIntermediateFile(local);
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
 
         Chunk ret = super.createParamChunk(ctx, inputObjects, outputPrefix);
-        ret.bodyLines.add("modelFile <- '/work/" + local.getName() + "'");
+        ret.bodyLines.add("modelFile <- '" + model.getPath() + "'");
 
         return ret;
+    }
+
+    @Override
+    protected Collection<File> getAdditionalDockerInputs(SequenceOutputHandler.JobContext ctx) throws PipelineJobException
+    {
+        Integer fileId = getProvider().getParameterByName("modelFileId").extractValue(ctx.getJob(), getProvider(), getStepIdx(), Integer.class);
+        if (fileId == null)
+        {
+            throw new PipelineJobException("Missing value for modelFileId param");
+        }
+
+        return Collections.singleton(ctx.getSequenceSupport().getCachedData(fileId));
     }
 }
