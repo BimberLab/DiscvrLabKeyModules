@@ -229,3 +229,21 @@ then
 else
     echo "Already installed"
 fi
+
+
+if [[ ! -e ${LKTOOLS_DIR}/gt || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf gt*
+    rm -Rf $LKTOOLS_DIR/gt*
+
+    wget https://github.com/genometools/genometools/releases/download/v1.6.5/gt-1.6.5-Linux_x86_64-64bit-complete.tar.gz
+    tar -xf gt-1.6.5-Linux_x86_64-64bit-complete.tar.gz
+
+    install ./gt-1.6.5-Linux_x86_64-64bit-complete/bin/gt $LKTOOLS_DIR/
+    mv ./gt-1.6.5-Linux_x86_64-64bit-complete/gtdata $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi
+
+
