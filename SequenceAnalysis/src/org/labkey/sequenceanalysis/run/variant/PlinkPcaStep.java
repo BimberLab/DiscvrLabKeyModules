@@ -80,7 +80,7 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                         put("valueField", "application");
                         put("sortField", "application");
                     }}, null),
-                    ToolParameterDescriptor.create("kingCutoff", "KING Cutoff", "Can be used to prune close relations, identified using KING", "ldk_numberfield", new JSONObject(){{
+                    ToolParameterDescriptor.create("kingCutoff", "KING Cutoff", "Can be used to prune close relations, identified using KING", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("maxValue", 1);
                     }}, 0.25),
