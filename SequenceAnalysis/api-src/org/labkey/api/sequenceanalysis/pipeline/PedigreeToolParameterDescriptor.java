@@ -13,11 +13,12 @@ public class PedigreeToolParameterDescriptor extends ToolParameterDescriptor
         this(true);
     }
 
-    public PedigreeToolParameterDescriptor(boolean isRequired)
+    public PedigreeToolParameterDescriptor(final boolean isRequired)
     {
-        super(null, NAME, "Pedigree Source", "This is the table used for pedigree data", "laboratory-pedigreeselectorfield", "laboratory.subjects", new JSONObject());
+        super(null, NAME, "Pedigree Source", "This is the table used for pedigree data", "laboratory-pedigreeselectorfield", "laboratory.subjects", new JSONObject(){{
+            put("allowBlank", !isRequired);
+        }});
 
-        getAdditionalExtConfig().put("allowBlank", isRequired);
         _isRequired = isRequired;
     }
 
