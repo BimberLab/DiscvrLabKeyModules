@@ -13,7 +13,7 @@ import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
-import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
+import org.labkey.api.sequenceanalysis.pipeline.PedigreeToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -23,13 +23,14 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class KingInferenceStep extends AbstractCommandPipelineStep<KingInferenceStep.KingWrapper> implements VariantProcessingStep
+public class KingInferenceStep extends AbstractCommandPipelineStep<KingInferenceStep.KingWrapper> implements VariantProcessingStep, VariantProcessingStep.RequiresPedigree
 {
     public KingInferenceStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
@@ -47,7 +48,8 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
                     }}, true),
                     ToolParameterDescriptor.create("excludedContigs", "Excluded Contigs", "A comma separated list of contigs to exclude, such as X,Y,MT.", "textfield", new JSONObject(){{
 
-                    }}, "X,Y,MT")
+                    }}, "X,Y,MT"),
+                    new PedigreeToolParameterDescriptor(false)
                     ), null, "https://www.kingrelatedness.com/manual.shtml");
         }
 
@@ -117,6 +119,19 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
 
         plinkArgs.add("--max-alleles");
         plinkArgs.add("2");
+
+        String demographicsProviderName = getProvider().getParameterByName(PedigreeToolParameterDescriptor.NAME).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx());
+        if (demographicsProviderName != null)
+        {
+            File pedFile = ProcessVariantsHandler.getPedigreeFile(getPipelineCtx().getSourceDirectory(true), demographicsProviderName);
+            if (!pedFile.exists())
+            {
+                throw new PipelineJobException("Unable to find pedigree file: " + pedFile.getPath());
+            }
+
+            plinkArgs.add("--ped");
+            plinkArgs.add(pedFile.getPath());
+        }
 
         plinkArgs.add("--out");
         plinkArgs.add(plinkOut.getPath());
