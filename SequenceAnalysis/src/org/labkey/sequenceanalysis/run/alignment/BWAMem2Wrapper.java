@@ -53,6 +53,12 @@ public class BWAMem2Wrapper extends BWAMemWrapper
         }
     }
 
+    @Override
+    protected String getIndexDirName()
+    {
+        return("bwamem2");
+    }
+
     public static class Provider extends AbstractAlignmentStepProvider<AlignmentStep>
     {
         public Provider()

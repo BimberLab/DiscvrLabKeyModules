@@ -151,7 +151,7 @@ public class BWAWrapper extends AbstractCommandWrapper
             File inputFastq2 = assertSingleFile(inputFastqs2);
 
             AlignmentOutputImpl output = new AlignmentOutputImpl();
-            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, "bwa", referenceGenome);
+            AlignerIndexUtil.copyIndexIfExists(this.getPipelineCtx(), output, getIndexCachedDirName(getPipelineCtx().getJob()), referenceGenome);
 
             doPerformAlignment(output, inputFastq1, inputFastq2, outputDirectory, referenceGenome, basename, rs, readGroupId, platformUnit);
             output.addCommandsExecuted(getWrapper().getCommandsExecuted());
@@ -197,7 +197,7 @@ public class BWAWrapper extends AbstractCommandWrapper
         args.add("aln");
         appendThreads(job, args);
         args.addAll(bwaAlnArgs);
-        args.add(new File(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
+        args.add(new File(referenceGenome.getAlignerIndexDir(getIndexDirName()), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
         args.add(inputFile.getPath());
 
         File output = new File(getOutputDir(inputFile), inputFile.getName() + ".sai");
@@ -230,12 +230,12 @@ public class BWAWrapper extends AbstractCommandWrapper
             throw new PipelineJobException("Reference FASTA does not exist: " + referenceGenome.getWorkingFastaFile().getPath());
         }
 
-        File expectedIndex = new File(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile()) + ".bwa.index.sa");
+        File expectedIndex = new File(referenceGenome.getAlignerIndexDir(getIndexDirName()), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile()) + ".bwa.index.sa");
         if (!expectedIndex.exists())
         {
             throw new PipelineJobException("Expected index does not exist: " + expectedIndex);
         }
-        args.add(new File(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
+        args.add(new File(referenceGenome.getAlignerIndexDir(getIndexDirName()), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
 
         //add SAI
         args.add(sai1.getPath());
@@ -282,5 +282,10 @@ public class BWAWrapper extends AbstractCommandWrapper
     public File getExe()
     {
         return SequencePipelineService.get().getExeForPackage("BWAPATH", "bwa");
+    }
+
+    protected String getIndexDirName()
+    {
+        return("bwa");
     }
 }
