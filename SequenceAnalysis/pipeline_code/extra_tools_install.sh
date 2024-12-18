@@ -246,4 +246,18 @@ else
     echo "Already installed"
 fi
 
+if [[ ! -e ${LKTOOLS_DIR}/king || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf king*
+    rm -Rf Linux-king*
+    rm -Rf $LKTOOLS_DIR/king*
+
+    wget https://www.kingrelatedness.com/Linux-king.tar.gz
+    tar -xf Linux-king.tar.gz
+
+    install king $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi
 
