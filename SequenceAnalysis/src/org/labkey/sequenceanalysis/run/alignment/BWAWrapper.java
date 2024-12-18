@@ -76,7 +76,7 @@ public class BWAWrapper extends AbstractCommandWrapper
         @Override
         public AlignmentStep create(PipelineContext context)
         {
-            return new BWAAlignmentStep(this, context, new BWAWrapper(context.getLogger()));
+            return new BWAAlignmentStep<>(this, context, new BWAWrapper(context.getLogger()));
         }
     }
 
@@ -84,7 +84,7 @@ public class BWAWrapper extends AbstractCommandWrapper
     {
         protected boolean _addBtwswArg = true;
 
-        public BWAAlignmentStep(AlignmentStepProvider provider, PipelineContext ctx, WrapperType wrapper)
+        public BWAAlignmentStep(AlignmentStepProvider<?> provider, PipelineContext ctx, WrapperType wrapper)
         {
             super(provider, ctx, wrapper);
         }
@@ -104,7 +104,7 @@ public class BWAWrapper extends AbstractCommandWrapper
         @Override
         public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
         {
-            getPipelineCtx().getLogger().info("Creating BWA index");
+            getPipelineCtx().getLogger().info("Creating " + getProvider().getName() + " index");
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
             File indexDir = new File(outputDir, getIndexCachedDirName(getPipelineCtx().getJob()));
@@ -139,7 +139,7 @@ public class BWAWrapper extends AbstractCommandWrapper
             output.appendOutputs(referenceGenome.getWorkingFastaFile(), indexDir);
 
             //recache if not already
-            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, "bwa", referenceGenome);
+            AlignerIndexUtil.saveCachedIndex(hasCachedIndex, getPipelineCtx(), indexDir, getIndexCachedDirName(getPipelineCtx().getJob()), referenceGenome);
 
             return output;
         }

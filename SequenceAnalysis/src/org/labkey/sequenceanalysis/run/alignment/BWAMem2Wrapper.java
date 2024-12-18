@@ -45,6 +45,12 @@ public class BWAMem2Wrapper extends BWAMemWrapper
 
             _addBtwswArg = false;
         }
+
+        @Override
+        public String getIndexCachedDirName(PipelineJob job)
+        {
+            return "bwamem2";
+        }
     }
 
     public static class Provider extends AbstractAlignmentStepProvider<AlignmentStep>
