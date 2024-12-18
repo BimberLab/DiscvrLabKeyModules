@@ -23,6 +23,7 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.api.util.Compress;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 
 import java.io.File;
@@ -180,7 +181,7 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
             throw new PipelineJobException("Unable to find file: " + kinshipOutput.getPath());
         }
 
-        File kinshipOutputTxt = new File(kinshipOutput.getPath() + ".txt");
+        File kinshipOutputTxt = new File(kinshipOutput.getPath() + ".txt.gz");
         if (kinshipOutputTxt.exists())
         {
             kinshipOutputTxt.delete();
@@ -188,6 +189,7 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
 
         try
         {
+            kinshipOutput = Compress.compressGzip(kinshipOutput);
             FileUtils.moveFile(kinshipOutput, kinshipOutputTxt);
         }
         catch (IOException e)
