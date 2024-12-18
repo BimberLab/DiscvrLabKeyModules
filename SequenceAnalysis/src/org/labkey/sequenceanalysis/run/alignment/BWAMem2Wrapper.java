@@ -74,6 +74,8 @@ public class BWAMem2Wrapper extends BWAMemWrapper
 
                     }}, null)
             ), null, "https://github.com/bwa-mem2/bwa-mem2", true, true);
+
+            setAlwaysCacheIndex(true);
         }
 
         @Override
