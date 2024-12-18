@@ -41,7 +41,6 @@ public class BWAWrapper extends AbstractCommandWrapper
         super(logger);
     }
 
-
     public static class Provider extends AbstractAlignmentStepProvider<AlignmentStep>
     {
         public Provider()
@@ -83,6 +82,8 @@ public class BWAWrapper extends AbstractCommandWrapper
 
     public static class BWAAlignmentStep<WrapperType extends BWAWrapper> extends AbstractAlignmentPipelineStep<WrapperType> implements AlignmentStep
     {
+        protected boolean _addBtwswArg = true;
+
         public BWAAlignmentStep(AlignmentStepProvider provider, PipelineContext ctx, WrapperType wrapper)
         {
             super(provider, ctx, wrapper);
@@ -116,8 +117,11 @@ public class BWAWrapper extends AbstractCommandWrapper
                 args.add("index");
 
                 //necessary for DBs larger than 2gb
-                args.add("-a");
-                args.add("bwtsw");
+                if (_addBtwswArg)
+                {
+                    args.add("-a");
+                    args.add("bwtsw");
+                }
 
                 args.add("-p");
 

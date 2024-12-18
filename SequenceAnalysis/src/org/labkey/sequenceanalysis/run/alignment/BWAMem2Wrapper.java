@@ -42,6 +42,8 @@ public class BWAMem2Wrapper extends BWAMemWrapper
         public BWAMem2AlignmentStep(AlignmentStepProvider<?> provider, PipelineContext ctx)
         {
             super(provider, ctx, new BWAMem2Wrapper(ctx.getLogger()));
+
+            _addBtwswArg = false;
         }
     }
 
