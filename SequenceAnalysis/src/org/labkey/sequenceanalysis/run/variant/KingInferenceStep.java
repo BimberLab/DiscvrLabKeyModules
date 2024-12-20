@@ -31,14 +31,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class KingInferenceStep extends AbstractCommandPipelineStep<KingInferenceStep.KingWrapper> implements VariantProcessingStep, VariantProcessingStep.RequiresPedigree
+public class KingInferenceStep extends AbstractCommandPipelineStep<KingInferenceStep.KingWrapper> implements VariantProcessingStep
 {
     public KingInferenceStep(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
         super(provider, ctx, new KingInferenceStep.KingWrapper(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<KingInferenceStep>
+    public static class Provider extends AbstractVariantProcessingStepProvider<KingInferenceStep> implements VariantProcessingStep.SupportsPedigree
     {
         public Provider()
         {

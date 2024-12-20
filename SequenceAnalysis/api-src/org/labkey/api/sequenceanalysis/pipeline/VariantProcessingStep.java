@@ -88,7 +88,7 @@ public interface VariantProcessingStep extends PipelineStep
             return provider.getParameterByName(PedigreeToolParameterDescriptor.NAME).extractValue(job, provider, stepIdx, String.class);
         }
 
-        default DemographicsProvider getDemographicsProvider(PipelineStepProvider<?> provider, PipelineJob job, int stepIdx)
+        default @Nullable DemographicsProvider getDemographicsProvider(PipelineStepProvider<?> provider, PipelineJob job, int stepIdx)
         {
             if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
             {
