@@ -10,6 +10,7 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
@@ -170,7 +171,7 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
                 throw new PipelineJobException("Unable to find pedigree file: " + pedFile.getPath());
             }
 
-            File kingFam = createFamFile(pedFile, new File(plinkOutBed.getParentFile(), "plink.fam"), kingArgs);
+            File kingFam = createFamFile(pedFile, new File(plinkOutBed.getParentFile(), "plink.fam"));
             kingArgs.add("--ped");
             kingArgs.add(kingFam.getPath());
 
@@ -213,11 +214,11 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
         return output;
     }
 
-    private File createFamFile(File pedFile, File famFile, List<String> kingArgs) throws PipelineJobException
+    private File createFamFile(File pedFile, File famFile) throws PipelineJobException
     {
         File newFamFile = new File(famFile.getParentFile(), "king.fam");
 
-        Map<String, String> pedMap = new HashMap<>();
+        Map<String, String> pedMap = new CaseInsensitiveHashMap<>();
         try (BufferedReader reader = Readers.getReader(pedFile))
         {
             String line;
@@ -251,10 +252,13 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
                 String newRow = pedMap.get(tokens[1]);
                 if (newRow == null)
                 {
-                    throw new PipelineJobException("Unable to find pedigree entry for: " + tokens[1]);
+                    getPipelineCtx().getLogger().warn("Unable to find pedigree entry for: " + tokens[1] + ", reusing original");
+                    writer.println(line);
                 }
-
-                writer.println(newRow);
+                else
+                {
+                    writer.println(newRow);
+                }
             }
         }
         catch (IOException e)
