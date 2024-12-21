@@ -1,5 +1,6 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -101,10 +102,10 @@ public class AppendNimble extends AbstractRDiscvrStep
             }
 
             int genomeId = arr.getInt(0);
-            Integer maxAmbiguityAllowed2 = arr.get(2) == null ? null : arr.getInt(2);
+            String maxAmbiguityAllowed2 = arr.get(2) == null ? null : StringUtils.trimToNull(String.valueOf(arr.get(2)));
             if (maxAmbiguityAllowed2 == null)
             {
-                maxAmbiguityAllowed2 = maxAmbiguityAllowed;
+                maxAmbiguityAllowed2 = String.valueOf(maxAmbiguityAllowed);
             }
 
             ret.bodyLines.add("\t" + delim + "'" + genomeId + "' = " + (maxAmbiguityAllowed2 == null ? "Inf" : maxAmbiguityAllowed2));
