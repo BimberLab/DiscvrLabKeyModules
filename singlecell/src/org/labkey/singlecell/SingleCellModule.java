@@ -82,6 +82,7 @@ import org.labkey.singlecell.pipeline.singlecell.RunCelltypist;
 import org.labkey.singlecell.pipeline.singlecell.RunCelltypistCustomModel;
 import org.labkey.singlecell.pipeline.singlecell.RunConga;
 import org.labkey.singlecell.pipeline.singlecell.RunCsCore;
+import org.labkey.singlecell.pipeline.singlecell.RunDecoupler;
 import org.labkey.singlecell.pipeline.singlecell.RunEscape;
 import org.labkey.singlecell.pipeline.singlecell.RunLDA;
 import org.labkey.singlecell.pipeline.singlecell.RunPCA;
@@ -291,6 +292,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new CustomGSEA.Provider());
         SequencePipelineService.get().registerPipelineStep(new StudyMetadata.Provider());
         SequencePipelineService.get().registerPipelineStep(new UpdateSeuratPrototype.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunDecoupler.Provider());
 
         SequenceAnalysisService.get().registerReadsetListener(new SingleCellReadsetListener());
     }
