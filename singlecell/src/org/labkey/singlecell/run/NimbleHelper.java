@@ -339,7 +339,7 @@ public class NimbleHelper
         }
         catch (IOException e)
         {
-            throw new PipelineJobException(e);
+            throw new PipelineJobException("Unable to parse JSON: " + configFile.getPath(), e);
         }
 
         JSONObject config = json.getJSONObject(0);
