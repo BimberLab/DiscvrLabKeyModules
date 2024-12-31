@@ -161,7 +161,7 @@ dependencies {
 if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null && project.hasProperty("teamcity"))
 {
     project.evaluationDependsOn(BuildUtils.getTestProjectPath(project.gradle))
-    def configDir = new File(ServerDeployExtension.getServerDeployDirectory(project), "config")
+    def configDir = new File(ServerDeployExtension.getServerDeployDirectoryPath(project), "config")
     def testProject = project.findProject(BuildUtils.getTestProjectPath(project.gradle))
     def createPipelineConfigTask = project.tasks.register("createPipelineConfig", Copy) {
         Copy task ->
