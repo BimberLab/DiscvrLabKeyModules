@@ -1948,7 +1948,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 }
 
                 File outDir = new File(getHelper().getWorkingDirectory(), "cachedReadData");
-                getTaskFileManagerImpl().addIntermediateFile(outDir);
+                getTaskFileManagerImpl().addDeferredIntermediateFile(outDir); // NOTE: this must be deferred so it remains until the end
 
                 File doneFile = new File(outDir, rd.getSra_accession() + ".done");
                 sraIDs.add(rd.getSra_accession());
