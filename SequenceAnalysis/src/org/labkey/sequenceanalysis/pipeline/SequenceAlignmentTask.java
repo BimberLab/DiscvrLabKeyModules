@@ -1955,6 +1955,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 RestoreSraDataHandler.FastqDumpWrapper sra = new RestoreSraDataHandler.FastqDumpWrapper(getJob().getLogger());
                 if (doneFile.exists())
                 {
+                    getPipelineJob().getLogger().debug("Re-using existing SRA download: " + rd.getSra_accession());
                     rdi.setFile(new File(outDir, rd.getSra_accession() + (rd.isPairedEnd() ? "_1" : "") + ".fastq.gz"), 1);
                     if (rd.getFileId2() != null)
                     {
