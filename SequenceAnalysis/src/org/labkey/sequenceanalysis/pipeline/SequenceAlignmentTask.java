@@ -1968,8 +1968,14 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     {
                         if (outDir.exists())
                         {
-                            getHelper().getLogger().debug("Deleting existing folder: " + outDir.getPath());
-                            FileUtils.deleteDirectory(outDir);
+                            getHelper().getLogger().debug("Inspecting existing folder: " + outDir.getPath());
+                            Arrays.stream(outDir.listFiles()).forEach(f -> {
+                                if (f.getName().startsWith(rd.getSra_accession()))
+                                {
+                                    getPipelineJob().getLogger().debug("Deleting existing file: " + f.getPath());
+                                    f.delete();
+                                }
+                            });
                         }
 
                         outDir.mkdirs();
@@ -1980,6 +1986,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                         {
                             moved1.delete();
                         }
+
+                        getPipelineJob().getLogger().debug("Moving gzipped file to: " + moved1.getPath());
                         FileUtils.moveFile(downloaded.first, moved1);
                         rdi.setFile(moved1, 1);
 
@@ -1990,6 +1998,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                             {
                                 moved2.delete();
                             }
+                            getPipelineJob().getLogger().debug("Moving gzipped file to: " + moved2.getPath());
                             FileUtils.moveFile(downloaded.second, moved2);
                             rdi.setFile(moved2, 2);
                         }
