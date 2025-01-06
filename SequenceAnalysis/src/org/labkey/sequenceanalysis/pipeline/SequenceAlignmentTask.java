@@ -1977,8 +1977,10 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                                 }
                             });
                         }
-
-                        outDir.mkdirs();
+                        else
+                        {
+                            outDir.mkdirs();
+                        }
 
                         Pair<File, File> downloaded = sra.downloadSra(rd.getSra_accession(), unzippedOutDir, rd.isPairedEnd());
                         File moved1 = new File(outDir, downloaded.first.getName());
