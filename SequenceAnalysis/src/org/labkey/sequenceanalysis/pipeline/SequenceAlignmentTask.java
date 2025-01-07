@@ -702,6 +702,20 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             _resumer.setInitialAlignmentDone(bam, alignActions, discardBam);
         }
 
+        // Because this folder can be large, delete it quickly when possible:
+        if (getCachedReadDataDir().exists())
+        {
+            try
+            {
+                getJob().getLogger().debug("Deleting cachedReadDataDir");
+                FileUtils.deleteDirectory(getCachedReadDataDir());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
         // This is a special case where the alignment does not actually generate a permanent BAM
         if (bam == null && discardBam)
         {
@@ -1892,8 +1906,34 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
     }
 
+    private File getCachedReadDataDir()
+    {
+        return new File(getHelper().getWorkingDirectory(), "cachedReadData");
+    }
+
     private void restoreArchivedReadDataIfNeeded(Readset rs) throws PipelineJobException
     {
+        if (_resumer.isInitialAlignmentDone())
+        {
+            getJob().getLogger().debug("Initial alignment is complete, will not attempt to download SRA if needed");
+
+            if (getCachedReadDataDir().exists())
+            {
+                getJob().getLogger().debug("Deleting existing cachedReadDataDir");
+
+                try
+                {
+                    FileUtils.deleteDirectory(getCachedReadDataDir());
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+
+            return;
+        }
+
         Set<String> sraIDs = new HashSet<>();
         for (ReadData rd : rs.getReadData())
         {
@@ -1947,7 +1987,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     }
                 }
 
-                File outDir = new File(getHelper().getWorkingDirectory(), "cachedReadData");
+                File outDir = getCachedReadDataDir();
                 getTaskFileManagerImpl().addDeferredIntermediateFile(outDir); // NOTE: this must be deferred so it remains until the end
 
                 File doneFile = new File(outDir, rd.getSra_accession() + ".done");

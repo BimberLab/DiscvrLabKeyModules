@@ -460,6 +460,21 @@ public class NimbleHelper
         alignArgs.add(tmpDir.getPath());
 
         boolean dockerRan = runUsingDocker(alignArgs, output, "align.all");
+
+        // Because this can be large, delete it quickly:
+        if (tmpDir.exists())
+        {
+            try
+            {
+                getPipelineCtx().getLogger().debug("Deleting nimble temp dir");
+                FileUtils.deleteDirectory(tmpDir);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
         for (NimbleGenome genome : genomes)
         {
             File alignResultsGz = new File(getPipelineCtx().getWorkingDirectory(), "alignResults." + genome.genomeId + ".txt.gz");
