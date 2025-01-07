@@ -1,5 +1,6 @@
 package org.labkey.api.sequenceanalysis.run;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -7,6 +8,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
 
 import java.io.File;
@@ -28,7 +30,8 @@ public class DockerWrapper extends AbstractCommandWrapper
     private final PipelineContext _ctx;
     private File _tmpDir = null;
     private String _entryPoint = null;
-    private boolean _runPrune = true;
+    private boolean _runPrune = false;
+    private boolean _useLocalContainerStorage;
     private String _alternateUserHome = null;
     private final Map<String, String> _dockerEnvironment = new HashMap<>();
 
@@ -37,6 +40,8 @@ public class DockerWrapper extends AbstractCommandWrapper
         super(log);
         _containerName = containerName;
         _ctx = ctx;
+
+        _useLocalContainerStorage = SequencePipelineService.get().useLocalDockerContainerStorage();
     }
 
     public void setAlternateUserHome(String alternateUserHome)
@@ -59,6 +64,11 @@ public class DockerWrapper extends AbstractCommandWrapper
         _runPrune = runPrune;
     }
 
+    public void setUseLocalContainerStorage(boolean useLocalContainerStorage)
+    {
+        _useLocalContainerStorage = useLocalContainerStorage;
+    }
+
     public void executeWithDocker(List<String> containerArgs, File workDir, PipelineOutputTracker tracker) throws PipelineJobException
     {
         executeWithDocker(containerArgs, workDir, tracker, null);
@@ -79,14 +89,19 @@ public class DockerWrapper extends AbstractCommandWrapper
             writer.println("set -e");
 
             writer.println("DOCKER='" + SequencePipelineService.get().getDockerCommand() + "'");
-            writer.println("$DOCKER pull " + _containerName);
+            writer.println("$DOCKER pull " + getLocalStorageArgs() + getEffectiveContainerName());
             if (_runPrune)
             {
-                writer.println("$DOCKER image prune -f");
+                writer.println("$DOCKER image prune " + getLocalStorageArgs() + "-f");
             }
 
             writer.println("$DOCKER run --rm=true \\");
-            writer.println("\t--group-add keep-groups \\");
+            if (_useLocalContainerStorage)
+            {
+                getLogger().debug("Using local container storage: " + getLocalContainerDir().getPath());
+                prepareLocalStorage();
+                writer.println("\t" + getLocalStorageArgs() + "\\");
+            }
 
             // NOTE: getDockerVolumes() should be refactored to remove the -v and this logic should be updated accordingly:
             File homeDir = new File(System.getProperty("user.home"));
@@ -149,7 +164,7 @@ public class DockerWrapper extends AbstractCommandWrapper
             {
                 writer.println("\t-e " + key + "='" + _dockerEnvironment.get(key) + "' \\");
             }
-            writer.println("\t" + _containerName + " \\");
+            writer.println("\t" + getEffectiveContainerName() + " \\");
             writer.println("\t" + dockerBashScript.getPath());
             writer.println("DOCKER_EXIT_CODE=$?");
             writer.println("echo 'Docker run exit code: '$DOCKER_EXIT_CODE");
@@ -170,6 +185,23 @@ public class DockerWrapper extends AbstractCommandWrapper
         localBashScript.setExecutable(true);
         dockerBashScript.setExecutable(true);
         execute(Arrays.asList("/bin/bash", localBashScript.getPath()));
+
+        if (_useLocalContainerStorage)
+        {
+            try
+            {
+                FileUtils.deleteDirectory(getLocalContainerDir());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+    }
+
+    private String getEffectiveContainerName()
+    {
+        return _containerName;
     }
 
     public void addToDockerEnvironment(String key, String value)
@@ -202,5 +234,40 @@ public class DockerWrapper extends AbstractCommandWrapper
         }
 
         return Collections.emptySet();
+    }
+
+    private File getLocalContainerDir()
+    {
+        return new File(SequencePipelineService.get().getJavaTempDir(), "containers");
+    }
+
+    private File prepareLocalStorage() throws PipelineJobException
+    {
+        try
+        {
+            if (getLocalContainerDir().exists())
+            {
+                getLogger().debug("Deleting existing container dir: " + getLocalContainerDir());
+                FileUtils.deleteDirectory(getLocalContainerDir());
+            }
+
+            FileUtil.createDirectory(getLocalContainerDir().toPath());
+
+            return getLocalContainerDir();
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+    }
+
+    private String getLocalStorageArgs()
+    {
+        if (!_useLocalContainerStorage)
+        {
+            return "";
+        }
+
+        return "--root=" + getLocalContainerDir().getPath() + " ";
     }
 }

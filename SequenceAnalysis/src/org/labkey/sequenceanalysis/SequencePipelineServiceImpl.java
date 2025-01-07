@@ -460,6 +460,18 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     }
 
     @Override
+    public boolean useLocalDockerContainerStorage()
+    {
+        String value = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath("USE_LOCAL_DOCKER_STORAGE");
+        if (StringUtils.trimToNull(value) == null)
+        {
+            return false;
+        }
+
+        return Boolean.parseBoolean(value);
+    }
+
+    @Override
     public Collection<String> getDockerVolumes(Container c)
     {
         if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
