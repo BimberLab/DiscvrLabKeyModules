@@ -261,3 +261,16 @@ else
     echo "Already installed"
 fi
 
+if [[ ! -e ${LKTOOLS_DIR}/regctl || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf regctl*
+    rm -Rf $LKTOOLS_DIR/regctl*
+
+    curl -L https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64 > regctl
+    chmod 755 regctl
+
+    install regctl $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi
