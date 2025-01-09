@@ -92,7 +92,7 @@ public class DockerWrapper extends AbstractCommandWrapper
 
             writer.println("IMAGE_EXISTS=`$DOCKER images -q \"" + getEffectiveContainerName() + "\" | wc -l`");
             writer.println("LOCAL=not_present");
-            writer.println("if [ $IMAGE_EXISTS > 0 ];then");
+            writer.println("if [[ $IMAGE_EXISTS > 0 ]];then");
             writer.println("\tLOCAL=`docker inspect --format='{{.Digest}}' " + getEffectiveContainerName() + "`");
             writer.println("fi");
             writer.println("LATEST=`regctl image digest --list " + getEffectiveContainerName() + "`");
