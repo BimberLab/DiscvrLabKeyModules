@@ -464,7 +464,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
             List<String> args = new ArrayList<>();
             args.add(getExe().getPath());
 
-            args.add("-S");
+            // NOTE: we probably want the --split-3 behavior, which is the default for fasterq-dump
             args.add("--include-technical");
 
             Integer threads = SequencePipelineService.get().getMaxThreads(getLogger());

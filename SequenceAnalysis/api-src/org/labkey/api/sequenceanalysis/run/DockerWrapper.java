@@ -109,6 +109,8 @@ public class DockerWrapper extends AbstractCommandWrapper
 
             writer.println("$DOCKER run --rm=true \\");
             writer.println("\t--group-add keep-groups \\");
+            writer.println("\t--transient-store \\");
+
             if (_useLocalContainerStorage)
             {
                 getLogger().debug("Using local container storage: " + getLocalContainerDir().getPath());
