@@ -384,7 +384,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     File expectedFile2 = rd.getFileId2() == null ? null : ctx.getSequenceSupport().getCachedData(rd.getFileId2());
 
                     FastqDumpWrapper wrapper = new FastqDumpWrapper(ctx.getLogger());
-                    Pair<File, File> files = wrapper.downloadSra(accession, ctx.getOutputDir(), rd.isPairedEnd());
+                    Pair<File, File> files = wrapper.downloadSra(accession, ctx.getOutputDir(), rd.isPairedEnd(), false);
 
                     long lines1 = SequenceUtil.getLineCount(files.first) / 4;
                     ctx.getJob().getLogger().debug("Reads in " + files.first.getName() + ": " + lines1);
@@ -459,13 +459,16 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
             super(logger);
         }
 
-        public Pair<File, File> downloadSra(String dataset, File outDir, boolean expectPaired) throws PipelineJobException
+        public Pair<File, File> downloadSra(String dataset, File outDir, boolean expectPaired, boolean includeTechnical) throws PipelineJobException
         {
             List<String> args = new ArrayList<>();
             args.add(getExe().getPath());
 
             // NOTE: we probably want the --split-3 behavior, which is the default for fasterq-dump
-            args.add("--include-technical");
+            if (includeTechnical)
+            {
+                args.add("--include-technical");
+            }
 
             Integer threads = SequencePipelineService.get().getMaxThreads(getLogger());
             if (threads != null)

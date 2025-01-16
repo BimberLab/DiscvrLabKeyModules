@@ -2022,7 +2022,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                             outDir.mkdirs();
                         }
 
-                        Pair<File, File> downloaded = sra.downloadSra(rd.getSra_accession(), unzippedOutDir, rd.isPairedEnd());
+                        Pair<File, File> downloaded = sra.downloadSra(rd.getSra_accession(), unzippedOutDir, rd.isPairedEnd(), false);
                         File moved1 = new File(outDir, downloaded.first.getName());
                         if (moved1.exists())
                         {
