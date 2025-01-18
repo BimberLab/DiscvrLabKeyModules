@@ -104,6 +104,7 @@ abstract public class CellHashingService
         public Integer minCountPerCell = 5;
         public Double majorityConsensusThreshold = null;
         public Double minAllowableDoubletRateFilter = null;
+        public Double minAllowableSingletRate = null;
         public Double callerDisagreementThreshold = null;
         public List<CALLING_METHOD> methods = CALLING_METHOD.getDefaultConsensusMethods(); //Default to just executing the set used for default consensus calls, rather than additional ones
         public List<CALLING_METHOD> consensusMethods = null;
@@ -127,6 +128,7 @@ abstract public class CellHashingService
             ret.minCountPerCell = step.getProvider().getParameterByName("minCountPerCell").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Integer.class, 3);
             ret.majorityConsensusThreshold = step.getProvider().getParameterByName("majorityConsensusThreshold").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Double.class, null);
             ret.minAllowableDoubletRateFilter = step.getProvider().getParameterByName("minAllowableDoubletRateFilter").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Double.class, null);
+            ret.minAllowableSingletRate = step.getProvider().getParameterByName("minAllowableSingletRate").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Double.class, null);
             ret.callerDisagreementThreshold = step.getProvider().getParameterByName("callerDisagreementThreshold").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Double.class, null);
             ret.doTSNE = step.getProvider().getParameterByName("doTSNE").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, false);
             ret.doNotAllowResume = step.getProvider().getParameterByName("doNotAllowResume").extractValue(ctx.getJob(), step.getProvider(), step.getStepIdx(), Boolean.class, false);
@@ -171,6 +173,7 @@ abstract public class CellHashingService
             ret.minCountPerCell = params.optInt("minCountPerCell", 3);
             ret.majorityConsensusThreshold = params.get("majorityConsensusThreshold") == null ? null : params.getDouble("majorityConsensusThreshold");
             ret.minAllowableDoubletRateFilter = params.get("minAllowableDoubletRateFilter") == null ? null : params.getDouble("minAllowableDoubletRateFilter");
+            ret.minAllowableSingletRate = params.get("minAllowableSingletRate") == null ? null : params.getDouble("minAllowableSingletRate");
             ret.callerDisagreementThreshold = params.get("callerDisagreementThreshold") == null ? null : params.getDouble("callerDisagreementThreshold");
             ret.doTSNE = params.optBoolean("doTSNE", false);
             ret.doNotAllowResume = params.optBoolean("doNotAllowResume", false);
