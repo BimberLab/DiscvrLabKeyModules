@@ -1238,15 +1238,8 @@ public class CellHashingServiceImpl extends CellHashingService
             Set<String> allowableBarcodes = parameters.getAllowableBarcodeNames();
             String allowableBarcodeParam = allowableBarcodes != null ? "c('" + StringUtils.join(allowableBarcodes, "','") + "')" : "NULL";
 
-            List<String> methodNames = parameters.methods.stream().filter(m -> {
-                if (totalCellBarcodes < m.getMinCells())
-                {
-                    ctx.getLogger().debug("Dropping method due to insufficient cells: " + m.name());
-                    return false;
-                }
-
-                return true;
-            }).map(CALLING_METHOD::getLabel).distinct().toList();
+            // NOTE: we do not need to filter total methods on min cells:
+            List<String> methodNames = parameters.methods.stream().map(CALLING_METHOD::getLabel).distinct().toList();
 
             List<String> consensusMethodNames = parameters.consensusMethods == null ? Collections.emptyList() : parameters.consensusMethods.stream().filter(m -> {
                 if (totalCellBarcodes < m.getMinCells())
