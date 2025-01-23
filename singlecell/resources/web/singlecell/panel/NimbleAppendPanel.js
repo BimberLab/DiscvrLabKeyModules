@@ -40,7 +40,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 				},LABKEY.ext4.GRIDBUTTONS.DELETERECORD()],
 				store: {
 					type: 'array',
-					fields: ['genomeId', 'targetAssay','maxAmbiguityAllowed']
+					fields: ['genomeId', 'targetAssay','maxAmbiguityAllowed', 'queryDatabaseForLineageUpdates']
 				},
 				columns: [{
 					dataIndex: 'genomeId',
@@ -77,6 +77,15 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 						allowBlank: true,
 						minValue: 0
 					}
+				},{
+					dataIndex: 'queryDatabaseForLineageUpdates',
+					width: 175,
+					header: 'Check for Lineage Updates',
+					editor: {
+						xtype: 'checkbox',
+						allowBlank: true,
+						value: false
+					}
 				}]
 			}]
 		});
@@ -87,7 +96,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 	getValue: function(){
 		var ret = [];
 		this.down('ldk-gridpanel').store.each(function(r, i) {
-			ret.push([r.data.genomeId, r.data.targetAssay, r.data.maxAmbiguityAllowed ?? '']);
+			ret.push([r.data.genomeId, r.data.targetAssay, r.data.maxAmbiguityAllowed ?? '', !!r.data.queryDatabaseForLineageUpdates]);
 		}, this);
 
 		return Ext4.isEmpty(ret) ? null : JSON.stringify(ret);
@@ -123,7 +132,8 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 				var rec = grid.store.createModel({
 					genomeId: row[0],
 					targetAssay: row[1],
-					maxAmbiguityAllowed: row[2]
+					maxAmbiguityAllowed: row[2],
+					queryDatabaseForLineageUpdates: !!row[3]
 				});
 				grid.store.add(rec);
 			}, this);
