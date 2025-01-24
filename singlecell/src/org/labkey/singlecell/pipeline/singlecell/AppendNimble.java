@@ -79,7 +79,7 @@ public class AppendNimble extends AbstractRDiscvrStep
             JSONArray arr = json.getJSONArray(i);
             if (arr.length() != 4)
             {
-                throw new PipelineJobException("Unexpected value: " + json.getString(i));
+                throw new PipelineJobException("Unexpected value: " + json.get(i));
             }
 
             int genomeId = arr.getInt(0);
