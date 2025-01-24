@@ -77,7 +77,7 @@ public class AppendNimble extends AbstractRDiscvrStep
         for (int i = 0; i < json.length(); i++)
         {
             JSONArray arr = json.getJSONArray(i);
-            if (arr.length() != 3)
+            if (arr.length() != 4)
             {
                 throw new PipelineJobException("Unexpected value: " + json.getString(i));
             }
