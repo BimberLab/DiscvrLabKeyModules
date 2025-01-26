@@ -10,7 +10,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 	initComponent: function(){
 		Ext4.apply(this, {
 			style: 'padding: 10px;margins: 5px;',
-            minWidth: 850,
+            minWidth: 950,
 			border: true,
 			items: [{
 				html: 'This step will query nimble results for the selected genome(s). It will then append these results to the seurat object on the target assay.',
@@ -20,7 +20,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 			},{
 				xtype: 'ldk-gridpanel',
 				clicksToEdit: 1,
-				width: 775,
+				width: 875,
 				tbar: [{
 					text: 'Add',
 					handler: function(btn){
