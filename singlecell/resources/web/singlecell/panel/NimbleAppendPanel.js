@@ -10,7 +10,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 	initComponent: function(){
 		Ext4.apply(this, {
 			style: 'padding: 10px;margins: 5px;',
-            minWidth: 950,
+            minWidth: 1025,
 			border: true,
 			items: [{
 				html: 'This step will query nimble results for the selected genome(s). It will then append these results to the seurat object on the target assay.',
@@ -20,7 +20,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 			},{
 				xtype: 'ldk-gridpanel',
 				clicksToEdit: 1,
-				width: 875,
+				width: 1000,
 				tbar: [{
 					text: 'Add',
 					handler: function(btn){
@@ -40,7 +40,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 				},LABKEY.ext4.GRIDBUTTONS.DELETERECORD()],
 				store: {
 					type: 'array',
-					fields: ['genomeId', 'targetAssay','maxAmbiguityAllowed', 'queryDatabaseForLineageUpdates']
+					fields: ['genomeId', 'targetAssay','maxAmbiguityAllowed', 'queryDatabaseForLineageUpdates', 'replaceExistingAssayData']
 				},
 				columns: [{
 					dataIndex: 'genomeId',
@@ -86,6 +86,16 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 						allowBlank: true,
 						value: false
 					}
+				},{
+					dataIndex: 'replaceExistingAssayData',
+					width: 150,
+					header: 'Replace Existing Data?',
+					editor: {
+						xtype: 'checkbox',
+						allowBlank: true,
+						value: true
+					}
+
 				}]
 			}]
 		});
@@ -96,7 +106,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 	getValue: function(){
 		var ret = [];
 		this.down('ldk-gridpanel').store.each(function(r, i) {
-			ret.push([r.data.genomeId, r.data.targetAssay, r.data.maxAmbiguityAllowed ?? '', !!r.data.queryDatabaseForLineageUpdates]);
+			ret.push([r.data.genomeId, r.data.targetAssay, r.data.maxAmbiguityAllowed ?? '', !!r.data.queryDatabaseForLineageUpdates], !!r.data.replaceExistingAssayData);
 		}, this);
 
 		return Ext4.isEmpty(ret) ? null : JSON.stringify(ret);
@@ -133,7 +143,8 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 					genomeId: row[0],
 					targetAssay: row[1],
 					maxAmbiguityAllowed: row[2],
-					queryDatabaseForLineageUpdates: !!row[3]
+					queryDatabaseForLineageUpdates: !!row[3],
+					replaceExistingAssayData: !!row[4]
 				});
 				grid.store.add(rec);
 			}, this);

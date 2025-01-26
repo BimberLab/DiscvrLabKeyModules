@@ -77,7 +77,7 @@ public class AppendNimble extends AbstractRDiscvrStep
         for (int i = 0; i < json.length(); i++)
         {
             JSONArray arr = json.getJSONArray(i);
-            if (arr.length() != 4)
+            if (arr.length() != 5)
             {
                 throw new PipelineJobException("Unexpected value: " + json.get(i));
             }
@@ -96,7 +96,7 @@ public class AppendNimble extends AbstractRDiscvrStep
         for (int i = 0; i < json.length(); i++)
         {
             JSONArray arr = json.getJSONArray(i);
-            if (arr.length() < 3)
+            if (arr.length() != 5)
             {
                 throw new PipelineJobException("Unexpected value: " + json.getString(i));
             }
@@ -118,13 +118,32 @@ public class AppendNimble extends AbstractRDiscvrStep
         for (int i = 0; i < json.length(); i++)
         {
             JSONArray arr = json.getJSONArray(i);
-            if (arr.length() != 4)
+            if (arr.length() != 5)
             {
                 throw new PipelineJobException("Unexpected value: " + json.getString(i));
             }
 
             int genomeId = arr.getInt(0);
-            String valStr = arr.get(2) == null ? null : StringUtils.trimToNull(String.valueOf(arr.get(2)));
+            String valStr = arr.get(3) == null ? null : StringUtils.trimToNull(String.valueOf(arr.get(2)));
+            boolean val = Boolean.parseBoolean(valStr);
+
+            ret.bodyLines.add("\t" + delim + "'" + genomeId + "' = " + (val ? "TRUE" : "FALSE"));
+            delim = ",";
+        }
+        ret.bodyLines.add(")");
+
+        ret.bodyLines.add("replaceExistingAssayDataByGenome <- list(");
+        delim = "";
+        for (int i = 0; i < json.length(); i++)
+        {
+            JSONArray arr = json.getJSONArray(i);
+            if (arr.length() != 5)
+            {
+                throw new PipelineJobException("Unexpected value: " + json.getString(i));
+            }
+
+            int genomeId = arr.getInt(0);
+            String valStr = arr.get(4) == null ? null : StringUtils.trimToNull(String.valueOf(arr.get(2)));
             boolean val = Boolean.parseBoolean(valStr);
 
             ret.bodyLines.add("\t" + delim + "'" + genomeId + "' = " + (val ? "TRUE" : "FALSE"));
