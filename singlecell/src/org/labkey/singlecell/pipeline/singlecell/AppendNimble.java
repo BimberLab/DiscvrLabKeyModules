@@ -124,7 +124,7 @@ public class AppendNimble extends AbstractRDiscvrStep
             }
 
             int genomeId = arr.getInt(0);
-            String valStr = arr.get(3) == null ? null : StringUtils.trimToNull(String.valueOf(arr.get(2)));
+            String valStr = arr.get(3) == null ? null : StringUtils.trimToNull(String.valueOf(arr.get(3)));
             boolean val = Boolean.parseBoolean(valStr);
 
             ret.bodyLines.add("\t" + delim + "'" + genomeId + "' = " + (val ? "TRUE" : "FALSE"));
@@ -143,7 +143,7 @@ public class AppendNimble extends AbstractRDiscvrStep
             }
 
             int genomeId = arr.getInt(0);
-            String valStr = arr.get(4) == null ? null : StringUtils.trimToNull(String.valueOf(arr.get(2)));
+            String valStr = arr.get(4) == null ? null : StringUtils.trimToNull(String.valueOf(arr.get(4)));
             boolean val = Boolean.parseBoolean(valStr);
 
             ret.bodyLines.add("\t" + delim + "'" + genomeId + "' = " + (val ? "TRUE" : "FALSE"));
