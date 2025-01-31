@@ -16,7 +16,7 @@ for (datasetId in names(seuratObjects)) {
   printName(datasetId)
   seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
-  Rdiscvr::PerformDefaultNimbleAppend(seuratObj)
+  seuratObj <- Rdiscvr::PerformDefaultNimbleAppend(seuratObj)
 
   saveData(seuratObj, datasetId)
 
