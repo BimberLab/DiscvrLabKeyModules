@@ -56,18 +56,18 @@ mergeBatch <- function(seuratObjects, outerBatchIdx, maxBatchSize = 20, maxInput
 
     # Phase 1: group into batches:
     batchList <- list()
-    activeBatch <- c()
+    activeBatch <- list()
     sizeOfBatch <- 0
     batchIdx <- 1
     for (datasetId in names(seuratObjects)) {
-        activeBatch <- c(activeBatch, seuratObjects[[datasetId]])
+        activeBatch[[datasetId]] <- seuratObjects[[datasetId]]
         sizeInMb <- (file.size(seuratObjects[[datasetId]]) / 1024^2)
         sizeOfBatch <- sizeOfBatch + sizeInMb
 
         if (length(activeBatch) >= maxBatchSize || (sizeOfBatch >= maxInputFileSizeMb && length(activeBatch) > 1)) {
-            logger::log_info(paste0('adding to batch with ', length(activeBatch), ' files and ', sizeOfBatch, 'MB'))
-            batchList[batchIdx] <- activeBatch
-            activeBatch <- c()
+            logger::log_info(paste0('adding to batch with ', length(activeBatch), ' files and ', sizeOfBatch, ' MB'))
+            batchList[[batchIdx]] <- activeBatch
+            activeBatch <- list()
             sizeOfBatch <- 0
             batchIdx <- batchIdx + 1
             next
@@ -76,8 +76,8 @@ mergeBatch <- function(seuratObjects, outerBatchIdx, maxBatchSize = 20, maxInput
 
     # Account for final files:
     if (length(activeBatch) > 0) {
-        logger::log_info(paste0('finalizing batch with ', length(activeBatch), ' files and ', sizeOfBatch, 'MB'))
-        batchList[batchIdx] <- activeBatch
+        logger::log_info(paste0('finalizing batch with ', length(activeBatch), ' files and ', sizeOfBatch, ' MB'))
+        batchList[[batchIdx]] <- activeBatch
     }
 
     if (length(batchList) == 0){
