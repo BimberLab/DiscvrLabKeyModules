@@ -8,6 +8,10 @@ if (!doDiet && length(seuratObjects) > 20 && !disableAutoDietSeurat) {
 filesToDelete <- c()
 
 mergeBatchInMemory <- function(datasetIdToFilePath, saveFile) {
+    if (all(is.null(names(datasetIdToFilePath)))) {
+        stop('No names provided on datasetIdToFilePath')
+    }
+
     toMerge <- list()
     for (datasetId in names(datasetIdToFilePath)) {
         print(paste0('Loading: ', datasetId))
@@ -43,7 +47,7 @@ mergeBatchInMemory <- function(datasetIdToFilePath, saveFile) {
     saveRDS(seuratObj, file = saveFile)
     filesToDelete <<- c(filesToDelete, saveFile)
 
-    return(fn)
+    return(saveFile)
 }
 
 mergeBatch <- function(seuratObjects, outerBatchIdx, maxBatchSize = 20, maxInputFileSizeMb = maxAllowableInputFileSizeMb) {
@@ -89,8 +93,9 @@ mergeBatch <- function(seuratObjects, outerBatchIdx, maxBatchSize = 20, maxInput
         activeBatch <- batchList[[i]]
         logger::log_info(paste0('Merging inner batch ', i, ' of ', length(batchList), ' with ', length(activeBatch), ' files'))
 
-        saveFile <- paste0('merge.', outerBatchIdx, '.', i, '.rds')
-        mergedObjectFiles[[i]] <- mergeBatchInMemory(activeBatch, saveFile = saveFile)
+        batchName <- paste0('merge.', outerBatchIdx, '.', i)
+        saveFile <- paste0(batchName, '.rds')
+        mergedObjectFiles[[batchName]] <- mergeBatchInMemory(activeBatch, saveFile = saveFile)
 
         logger::log_info(paste0('mem used: ', R.utils::hsize(as.numeric(pryr::mem_used()))))
         gc()
