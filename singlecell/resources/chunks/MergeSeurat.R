@@ -115,10 +115,14 @@ mergeBatch <- function(seuratObjects, outerBatchIdx, maxBatchSize = 20, maxInput
 }
 
 mergedObjectFiles <- mergeBatch(seuratObjects, outerBatchIdx = 1)
+if (length(mergedObjectFiles) != 1) {
+    stop(paste0('Expected single file, found: ', length(mergedObjectFiles)))
+}
 
 print('Overall merge complete')
 gc()
-saveData(seuratObjMerged, projectName)
+
+saveData(readRDS(mergedObjectFiles[[1]]), projectName)
 
 # Cleanup:
 for (fn in filesToDelete) {
