@@ -43,9 +43,12 @@ mergeBatchInMemory <- function(datasetIdToFilePath, saveFile) {
         stop('There were no passing seurat objects!')
     }
 
-    seuratObj <- CellMembrane::MergeSeuratObjs(toMerge, projectName = projectName, doGC = doDiet, errorOnBarcodeSuffix = errorOnBarcodeSuffix)
-    saveRDS(seuratObj, file = saveFile)
+    saveRDS(CellMembrane::MergeSeuratObjs(toMerge, projectName = projectName, doGC = doDiet, errorOnBarcodeSuffix = errorOnBarcodeSuffix), file = saveFile)
     filesToDelete <<- c(filesToDelete, saveFile)
+
+    logger::log_info(paste0('mem used: ', R.utils::hsize(as.numeric(pryr::mem_used()))))
+    gc()
+    logger::log_info(paste0('after gc: ', R.utils::hsize(as.numeric(pryr::mem_used()))))
 
     return(saveFile)
 }
@@ -95,11 +98,12 @@ mergeBatch <- function(seuratObjects, outerBatchIdx, maxBatchSize = 20, maxInput
 
         batchName <- paste0('merge.', outerBatchIdx, '.', i)
         saveFile <- paste0(batchName, '.rds')
+        if (length(activeBatch) == 1){
+            print('Only single file in batch, skipping merge')
+            mergedObjectFiles[[batchName]] <- activeBatch[[1]]
+            next
+        }
         mergedObjectFiles[[batchName]] <- mergeBatchInMemory(activeBatch, saveFile = saveFile)
-
-        logger::log_info(paste0('mem used: ', R.utils::hsize(as.numeric(pryr::mem_used()))))
-        gc()
-        logger::log_info(paste0('after gc: ', R.utils::hsize(as.numeric(pryr::mem_used()))))
     }
     logger::log_info('Done with inner batch')
 
