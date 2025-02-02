@@ -274,3 +274,21 @@ then
 else
     echo "Already installed"
 fi
+
+if [[ ! -e ${LKTOOLS_DIR}/svtyper || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf $LKTOOLS_DIR/svtyper*
+
+    # NOTE: this fork is used to ensure python3 compatibility
+    #python3 -m pip install --user git+https://github.com/hall-lab/svtyper.git
+    python3 -m pip install --user git+https://github.com/bbimber/svtyper.git
+
+    SVTYPER=`which svtyper`
+    ln -s $SVTYPER ${LKTOOLS_DIR}/svtyper
+
+    SVTYPER=`which svtyper-sso`
+    ln -s $SVTYPER ${LKTOOLS_DIR}/svtyper-sso
+else
+    echo "Already installed"
+fi
