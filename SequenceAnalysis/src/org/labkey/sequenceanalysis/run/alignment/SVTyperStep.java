@@ -106,7 +106,7 @@ public class SVTyperStep extends AbstractParameterizedOutputHandler<SequenceOutp
                 List<String> jsonArgs = new ArrayList<>();
                 SimpleScriptWrapper wrapper = new SimpleScriptWrapper(ctx.getLogger());
                 jsonArgs.add(AbstractCommandWrapper.resolveFileInPath("svtyper", null, true).getPath());
-                jsonArgs.add("-b");
+                jsonArgs.add("-B");
                 jsonArgs.add(so.getFile().getPath());
 
                 File coverageJson = new File(ctx.getWorkingDirectory(), "bam.json");
