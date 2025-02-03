@@ -113,7 +113,6 @@ public class SVTyperStep extends AbstractParameterizedOutputHandler<SequenceOutp
                 jsonArgs.add("-l");
                 jsonArgs.add(coverageJson.getPath());
 
-
                 if (threads != null)
                 {
                     jsonArgs.add("--max_reads");
