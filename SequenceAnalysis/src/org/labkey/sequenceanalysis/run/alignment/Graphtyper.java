@@ -1,5 +1,8 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
+import htsjdk.samtools.util.CloseableIterator;
+import htsjdk.variant.variantcontext.VariantContext;
+import htsjdk.variant.vcf.VCFFileReader;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -15,11 +18,13 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -125,6 +130,12 @@ public class Graphtyper extends AbstractParameterizedOutputHandler<SequenceOutpu
                     args.add(threads.toString());
                 }
 
+                args.add("--region_file");
+                File regionFile = new File(ctx.getWorkingDirectory(), "regions.txt");
+                args.add(regionFile.getPath());
+
+                generateRegionFile(svVcf, regionFile);
+                ctx.getFileManager().addIntermediateFile(regionFile);
                 wrapper.execute(args);
                 
                 File genotypes = new File(ctx.getWorkingDirectory(), "sv_results/" + SequenceAnalysisService.get().getUnzippedBaseName(so.getName()) + ".vcf.gz");
@@ -144,6 +155,49 @@ public class Graphtyper extends AbstractParameterizedOutputHandler<SequenceOutpu
 
                 ctx.getFileManager().addSequenceOutput(genotypes, "Graphtyper Genotypes: " + so.getName(), "Graphtyper Genoypes", so.getReadset(), null, so.getLibrary_id(), "Input VCF: " + svVcf.getName() + " (" + svVcfId + ")");
             }
+        }
+    }
+
+    private static void generateRegionFile(File svVcf, File regionFile) throws PipelineJobException
+    {
+        try (PrintWriter writer = PrintWriters.getPrintWriter(regionFile))
+        {
+            try (VCFFileReader reader = new VCFFileReader(svVcf, true); CloseableIterator<VariantContext> iterator = reader.iterator())
+            {
+                String chr = null;
+                int start = 1;
+                int end = -1;
+                while (iterator.hasNext())
+                {
+                    VariantContext vc = iterator.next();
+                    if (chr == null)
+                    {
+                        chr = vc.getContig();
+                    }
+
+                    if (!vc.getContig().equals(chr))
+                    {
+                        writer.println(chr + ":" + start + "-" + end);
+
+                        // Reset
+                        chr = vc.getContig();
+                        start = 1;
+                        end = -1;
+                    }
+
+                    start = Math.min(start, vc.getStart());
+                    end = Math.max(end, vc.getEnd());
+                }
+
+                if (chr != null)
+                {
+                    writer.println(chr + ":" + start + "-" + end);
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
         }
     }
 }
