@@ -292,3 +292,16 @@ then
 else
     echo "Already installed"
 fi
+
+if [[ ! -e ${LKTOOLS_DIR}/graphtyper || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf $LKTOOLS_DIR/graphtyper*
+
+    wget https://github.com/DecodeGenetics/graphtyper/releases/download/v2.7.7/graphtyper
+    chmod a+x graphtyper
+
+    mv ./graphtyper $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi

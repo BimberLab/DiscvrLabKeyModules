@@ -1,7 +1,5 @@
 package org.labkey.sequenceanalysis.run.alignment;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
@@ -10,6 +8,7 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -27,11 +26,11 @@ import java.util.List;
 
 //https://github.com/hall-lab/svtyper
 
-public class SVTyperStep extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
+public class Graphtyper extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
-    public SVTyperStep()
+    public Graphtyper()
     {
-        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "SVTyper SV Genotyping", "This will run SVTyper on one or more BAM files to genotype SVs", null, Arrays.asList(
+        super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Graphtyper (SV Genotyping)", "This will run Graphtyper on one or more BAM files to genotype SVs", null, Arrays.asList(
                 ToolParameterDescriptor.createExpDataParam("svVCF", "Input VCF", "This is the DataId of the VCF containing the SVs to genotype", "ldk-expdatafield", new JSONObject()
                 {{
                     put("allowBlank", false);
@@ -103,69 +102,32 @@ public class SVTyperStep extends AbstractParameterizedOutputHandler<SequenceOutp
 
             for (SequenceOutputFile so : inputFiles)
             {
-                List<String> jsonArgs = new ArrayList<>();
+                List<String> args = new ArrayList<>();
                 SimpleScriptWrapper wrapper = new SimpleScriptWrapper(ctx.getLogger());
-                jsonArgs.add(AbstractCommandWrapper.resolveFileInPath("svtyper", null, true).getPath());
-                jsonArgs.add("-B");
-                jsonArgs.add(so.getFile().getPath());
+                args.add(AbstractCommandWrapper.resolveFileInPath("graphtyper", null, true).getPath());
+                args.add("genotype_sv");
 
-                File coverageJson = new File(ctx.getWorkingDirectory(), "bam.json");
-                jsonArgs.add("-l");
-                jsonArgs.add(coverageJson.getPath());
+                ReferenceGenome rg = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id());
+                if (rg == null)
+                {
+                    throw new PipelineJobException("Missing reference genome: " + so.getLibrary_id());
+                }
+
+                args.add(rg.getWorkingFastaFile().getPath());
+                args.add(svVcf.toString());
+
+                args.add("--sam");
+                args.add(so.getFile().getPath());
 
                 if (threads != null)
                 {
-                    jsonArgs.add("--cores");
-                    jsonArgs.add(threads.toString());
+                    args.add("--threads");
+                    args.add(threads.toString());
                 }
 
-                File doneFile = new File(ctx.getWorkingDirectory(), "json.done");
-                ctx.getFileManager().addIntermediateFile(doneFile);
-                if (doneFile.exists())
-                {
-                    ctx.getLogger().info("BAM json already generated, skipping");
-                }
-                else
-                {
-                    wrapper.execute(jsonArgs);
-                    try
-                    {
-                        FileUtils.touch(doneFile);
-                        ctx.getFileManager().addIntermediateFile(doneFile);
-                    }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
-                    }
-                }
-
-                if (!coverageJson.exists())
-                {
-                    throw new PipelineJobException("Missing file: " + coverageJson.getPath());
-                }
-                ctx.getFileManager().addIntermediateFile(coverageJson);
-
-                List<String> svtyperArgs = new ArrayList<>();
-                svtyperArgs.add(AbstractCommandWrapper.resolveFileInPath("svtyper-sso", null, true).getPath());
-
-                svtyperArgs.add("-i");
-                svtyperArgs.add(svVcf.getPath());
-
-                svtyperArgs.add("-B");
-                svtyperArgs.add(so.getFile().getPath());
-
-                svtyperArgs.add("-l");
-                svtyperArgs.add(coverageJson.getPath());
-
-                if (threads != null)
-                {
-                    svtyperArgs.add("--core");
-                    svtyperArgs.add(threads.toString());
-                }
-
-                File genotypes = new File(ctx.getWorkingDirectory(), SequenceAnalysisService.get().getUnzippedBaseName(so.getName()) + ".svtyper.vcf.gz");
-                wrapper.execute(Arrays.asList("/bin/bash", "-c", StringUtils.join(svtyperArgs, " ") + "| bgzip -c"), ProcessBuilder.Redirect.to(genotypes));
-
+                wrapper.execute(args);
+                
+                File genotypes = new File(ctx.getWorkingDirectory(), "sv_results/" + SequenceAnalysisService.get().getUnzippedBaseName(so.getName()) + ".vcf.gz");
                 if (!genotypes.exists())
                 {
                     throw new PipelineJobException("Missing file: " + genotypes.getPath());
@@ -180,7 +142,7 @@ public class SVTyperStep extends AbstractParameterizedOutputHandler<SequenceOutp
                     throw new PipelineJobException(e);
                 }
 
-                ctx.getFileManager().addSequenceOutput(genotypes, "SVTyper Genotypes: " + so.getName(), "SVTyper Genoypes", so.getReadset(), null, so.getLibrary_id(), "Input VCF: " + svVcf.getName() + " (" + svVcfId + ")");
+                ctx.getFileManager().addSequenceOutput(genotypes, "Graphtyper Genotypes: " + so.getName(), "Graphtyper Genoypes", so.getReadset(), null, so.getLibrary_id(), "Input VCF: " + svVcf.getName() + " (" + svVcfId + ")");
             }
         }
     }
