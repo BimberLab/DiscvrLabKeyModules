@@ -113,12 +113,6 @@ public class SVTyperStep extends AbstractParameterizedOutputHandler<SequenceOutp
                 jsonArgs.add("-l");
                 jsonArgs.add(coverageJson.getPath());
 
-                if (threads != null)
-                {
-                    jsonArgs.add("--cores");
-                    jsonArgs.add(threads.toString());
-                }
-
                 File doneFile = new File(ctx.getWorkingDirectory(), "json.done");
                 ctx.getFileManager().addIntermediateFile(doneFile);
                 if (doneFile.exists())
