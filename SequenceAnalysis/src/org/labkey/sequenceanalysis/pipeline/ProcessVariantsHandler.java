@@ -259,9 +259,13 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 }
             }
 
-            if (stepCtx.getProvider() instanceof VariantProcessingStep.RequiresPedigree rp)
+            if (stepCtx.getProvider() instanceof VariantProcessingStep.SupportsPedigree rp)
             {
-                demographicsProviders.add(rp.getDemographicsProvider(stepCtx.getProvider(), job, stepCtx.getStepIdx()));
+                DemographicsProvider dp = rp.getDemographicsProvider(stepCtx.getProvider(), job, stepCtx.getStepIdx());
+                if (dp != null)
+                {
+                    demographicsProviders.add(dp);
+                }
             }
 
             if (useScatterGather)

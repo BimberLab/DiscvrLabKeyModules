@@ -11,7 +11,13 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
-    seuratObj <- Rdiscvr::QueryAndApplyCdnaMetadata(seuratObj)
+    if ('BarcodePrefix' %in% names(seuratObj@meta.data) && !any(is.na(as.integer(seuratObj$BarcodePrefix)))) {
+        seuratObj <- Rdiscvr::QueryAndApplyCdnaMetadata(seuratObj)
+    } else if ('cDNA_ID' %in% names(seuratObj@meta.data)) {
+        seuratObj <- Rdiscvr::QueryAndApplyMetadataUsingCDNA(seuratObj)
+    } else {
+        stop('Unable to find either BarcodePrefix or cDNA_ID in meta.data')
+    }
 
     saveData(seuratObj, datasetId)
 

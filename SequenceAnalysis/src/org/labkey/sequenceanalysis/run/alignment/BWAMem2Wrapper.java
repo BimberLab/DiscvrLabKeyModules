@@ -42,7 +42,21 @@ public class BWAMem2Wrapper extends BWAMemWrapper
         public BWAMem2AlignmentStep(AlignmentStepProvider<?> provider, PipelineContext ctx)
         {
             super(provider, ctx, new BWAMem2Wrapper(ctx.getLogger()));
+
+            _addBtwswArg = false;
         }
+
+        @Override
+        public String getIndexCachedDirName(PipelineJob job)
+        {
+            return "bwamem2";
+        }
+    }
+
+    @Override
+    protected String getIndexDirName()
+    {
+        return("bwamem2");
     }
 
     public static class Provider extends AbstractAlignmentStepProvider<AlignmentStep>
@@ -60,6 +74,8 @@ public class BWAMem2Wrapper extends BWAMemWrapper
 
                     }}, null)
             ), null, "https://github.com/bwa-mem2/bwa-mem2", true, true);
+
+            setAlwaysCacheIndex(true);
         }
 
         @Override

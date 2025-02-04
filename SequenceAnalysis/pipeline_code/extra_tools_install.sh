@@ -229,3 +229,79 @@ then
 else
     echo "Already installed"
 fi
+
+
+if [[ ! -e ${LKTOOLS_DIR}/gt || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf gt*
+    rm -Rf $LKTOOLS_DIR/gt*
+
+    wget https://github.com/genometools/genometools/releases/download/v1.6.5/gt-1.6.5-Linux_x86_64-64bit-complete.tar.gz
+    tar -xf gt-1.6.5-Linux_x86_64-64bit-complete.tar.gz
+
+    install ./gt-1.6.5-Linux_x86_64-64bit-complete/bin/gt $LKTOOLS_DIR/
+    mv ./gt-1.6.5-Linux_x86_64-64bit-complete/gtdata $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi
+
+if [[ ! -e ${LKTOOLS_DIR}/king || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf king*
+    rm -Rf Linux-king*
+    rm -Rf $LKTOOLS_DIR/king*
+
+    wget https://www.kingrelatedness.com/Linux-king.tar.gz
+    tar -xf Linux-king.tar.gz
+
+    install king $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi
+
+if [[ ! -e ${LKTOOLS_DIR}/regctl || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf regctl*
+    rm -Rf $LKTOOLS_DIR/regctl*
+
+    curl -L https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64 > regctl
+    chmod 755 regctl
+
+    install regctl $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi
+
+if [[ ! -e ${LKTOOLS_DIR}/svtyper || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf $LKTOOLS_DIR/svtyper*
+
+    # NOTE: this fork is used to ensure python3 compatibility
+    #python3 -m pip install --user git+https://github.com/hall-lab/svtyper.git
+    python3 -m pip install --user git+https://github.com/bbimber/svtyper.git
+
+    SVTYPER=`which svtyper`
+    ln -s $SVTYPER ${LKTOOLS_DIR}/svtyper
+
+    SVTYPER=`which svtyper-sso`
+    ln -s $SVTYPER ${LKTOOLS_DIR}/svtyper-sso
+else
+    echo "Already installed"
+fi
+
+if [[ ! -e ${LKTOOLS_DIR}/graphtyper || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf $LKTOOLS_DIR/graphtyper*
+
+    wget https://github.com/DecodeGenetics/graphtyper/releases/download/v2.7.7/graphtyper
+    chmod a+x graphtyper
+
+    mv ./graphtyper $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi

@@ -292,17 +292,9 @@ public class NimbleHelper
 
             output.addSequenceOutput(results, basename + ": nimble align", "Nimble Results", rs.getRowId(), null, genome.getGenomeId(), description);
 
+            // NOTE: situations like zero alignments would result in no report being created. Rely on the code in doAlign to verify proper execution of nimble
             File reportHtml = getReportHtmlFileFromResults(results);
-            if (!reportHtml.exists())
-            {
-                if (SequencePipelineService.get().hasMinLineCount(results, 2))
-                {
-                    long lineCount = SequencePipelineService.get().getLineCount(results);
-                    _ctx.getLogger().debug("Found {} lines in file {}", lineCount, results.getPath());
-                    throw new PipelineJobException("Unable to find file: " + reportHtml.getPath());
-                }
-            }
-            else
+            if (reportHtml.exists())
             {
                 output.addSequenceOutput(reportHtml, basename + ": nimble report", NIMBLE_REPORT_CATEGORY, rs.getRowId(), null, genome.getGenomeId(), description);
             }
@@ -339,7 +331,7 @@ public class NimbleHelper
         }
         catch (IOException e)
         {
-            throw new PipelineJobException(e);
+            throw new PipelineJobException("Unable to parse JSON: " + configFile.getPath(), e);
         }
 
         JSONObject config = json.getJSONObject(0);
@@ -460,6 +452,21 @@ public class NimbleHelper
         alignArgs.add(tmpDir.getPath());
 
         boolean dockerRan = runUsingDocker(alignArgs, output, "align.all");
+
+        // Because this can be large, delete it quickly:
+        if (tmpDir.exists())
+        {
+            try
+            {
+                getPipelineCtx().getLogger().debug("Deleting nimble temp dir");
+                FileUtils.deleteDirectory(tmpDir);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
         for (NimbleGenome genome : genomes)
         {
             File alignResultsGz = new File(getPipelineCtx().getWorkingDirectory(), "alignResults." + genome.genomeId + ".txt.gz");
@@ -539,7 +546,7 @@ public class NimbleHelper
 
             if (!plotResultsHtml.exists())
             {
-                throw new PipelineJobException("Missing file: " + plotResultsHtml.getPath());
+                ctx.getLogger().info("No report HTML generated, but nimble plot had exit code 0");
             }
         }
         else

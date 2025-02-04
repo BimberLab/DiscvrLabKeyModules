@@ -63,7 +63,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
     @Override
     public String getDescription()
     {
-        return "Delete SequenceAnalysis Artifacts";
+        return "SequenceAnalysis File Maintenance";
     }
 
     @Override
@@ -293,12 +293,12 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 
     private void processContainer(Container c, Logger log) throws IOException, PipelineJobException
     {
+        if (!c.isWorkbook())
+            log.info("processing container: " + c.getPath());
+
         PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
         if (root != null && !root.isCloudRoot())
         {
-            if (!c.isWorkbook())
-                log.info("processing container: " + c.getPath());
-
             //first sequences
             File sequenceDir = new File(root.getRootPath(), ".sequences");
             TableInfo tableRefNtSequences = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);

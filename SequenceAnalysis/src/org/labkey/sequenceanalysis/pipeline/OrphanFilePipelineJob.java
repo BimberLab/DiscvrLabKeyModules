@@ -396,11 +396,10 @@ public class OrphanFilePipelineJob extends PipelineJob
                 }
             }
 
-            //TODO: look for .deleted and /archive
             File deletedDir = new File(root.getRootPath().getParentFile(), ".deleted");
             if (deletedDir.exists())
             {
-                messages.add("## .deleted dir found: " + deletedDir.getPath());
+                getJob().getLogger().warn("WARNING: .deleted dir found: " + deletedDir.getPath());
             }
 
             File assayData = new File(root.getRootPath(), "assaydata");
@@ -513,12 +512,6 @@ public class OrphanFilePipelineJob extends PipelineJob
 
             for (File f : arr)
             {
-                //skipped for perf reasons.  extremely unlikely
-                //if (Files.isSymbolicLink(f.toPath()))
-                //{
-                //    continue;
-                //}
-
                 if (f.isDirectory())
                 {
                     if (f.getName().endsWith(".gdb"))
@@ -534,6 +527,20 @@ public class OrphanFilePipelineJob extends PipelineJob
                 else
                 {
                     //iterate possible issues:
+
+                    // extremely large log (200 MB):
+                    if (f.getName().endsWith(".log") & f.length() > (200*1024*1024))
+                    {
+                        getJob().getLogger().warn("WARNING: Extremely large log file: " + f.getPath() + ", " + FileUtils.byteCountToDisplaySize(f.length()));
+                    }
+
+                    if (f.getName().endsWith(".rds"))
+                    {
+                        if (!dataMap.containsKey(f.toURI()))
+                        {
+                            getJob().getLogger().warn("WARNING: Unknown RDS file: " + f.getPath());
+                        }
+                    }
 
                     //orphan index
                     if (f.getPath().toLowerCase().endsWith(".bai") || f.getPath().toLowerCase().endsWith(".tbi") || f.getPath().toLowerCase().endsWith(".idx") || f.getPath().toLowerCase().endsWith(".crai"))

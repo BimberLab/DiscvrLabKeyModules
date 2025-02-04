@@ -10,10 +10,12 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
-import org.labkey.api.sequenceanalysis.pipeline.CommandLineParam;
+import org.labkey.api.sequenceanalysis.pipeline.PedigreeToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -23,11 +25,19 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
+import org.labkey.api.util.Compress;
+import org.labkey.api.writer.PrintWriters;
+import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class KingInferenceStep extends AbstractCommandPipelineStep<KingInferenceStep.KingWrapper> implements VariantProcessingStep
 {
@@ -36,7 +46,7 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
         super(provider, ctx, new KingInferenceStep.KingWrapper(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<KingInferenceStep>
+    public static class Provider extends AbstractVariantProcessingStepProvider<KingInferenceStep> implements VariantProcessingStep.SupportsPedigree
     {
         public Provider()
         {
@@ -47,7 +57,8 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
                     }}, true),
                     ToolParameterDescriptor.create("excludedContigs", "Excluded Contigs", "A comma separated list of contigs to exclude, such as X,Y,MT.", "textfield", new JSONObject(){{
 
-                    }}, "X,Y,MT")
+                    }}, "X,Y,MT"),
+                    new PedigreeToolParameterDescriptor(false)
                     ), null, "https://www.kingrelatedness.com/manual.shtml");
         }
 
@@ -150,6 +161,23 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
         kingArgs.add("--prefix");
         kingArgs.add(SequenceAnalysisService.get().getUnzippedBaseName(inputVCF.getName()));
 
+        // Update the pedigree / fam file:
+        String demographicsProviderName = getProvider().getParameterByName(PedigreeToolParameterDescriptor.NAME).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx());
+        if (demographicsProviderName != null)
+        {
+            File pedFile = ProcessVariantsHandler.getPedigreeFile(getPipelineCtx().getSourceDirectory(true), demographicsProviderName);
+            if (!pedFile.exists())
+            {
+                throw new PipelineJobException("Unable to find pedigree file: " + pedFile.getPath());
+            }
+
+            File kingFam = createFamFile(pedFile, new File(plinkOutBed.getParentFile(), "plink.fam"));
+            kingArgs.add("--ped");
+            kingArgs.add(kingFam.getPath());
+
+            output.addIntermediateFile(kingFam);
+        }
+
         if (threads != null)
         {
             kingArgs.add("--cpus");
@@ -165,7 +193,7 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
             throw new PipelineJobException("Unable to find file: " + kinshipOutput.getPath());
         }
 
-        File kinshipOutputTxt = new File(kinshipOutput.getPath() + ".txt");
+        File kinshipOutputTxt = new File(kinshipOutput.getPath() + ".txt.gz");
         if (kinshipOutputTxt.exists())
         {
             kinshipOutputTxt.delete();
@@ -173,6 +201,7 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
 
         try
         {
+            kinshipOutput = Compress.compressGzip(kinshipOutput);
             FileUtils.moveFile(kinshipOutput, kinshipOutputTxt);
         }
         catch (IOException e)
@@ -183,6 +212,61 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
         output.addSequenceOutput(kinshipOutputTxt, "King Relatedness: " + inputVCF.getName(), "KING Relatedness", null, null, genome.getGenomeId(), null);
 
         return output;
+    }
+
+    private File createFamFile(File pedFile, File famFile) throws PipelineJobException
+    {
+        File newFamFile = new File(famFile.getParentFile(), "king.fam");
+
+        Map<String, String> pedMap = new CaseInsensitiveHashMap<>();
+        try (BufferedReader reader = Readers.getReader(pedFile))
+        {
+            String line;
+            while ((line = reader.readLine()) != null)
+            {
+                String[] tokens = line.split(" ");
+                if (tokens.length != 6)
+                {
+                    throw new PipelineJobException("Improper ped line length: " + tokens.length);
+                }
+
+                pedMap.put(tokens[1], StringUtils.join(Arrays.asList("0", tokens[1], tokens[2], tokens[3], tokens[4], "-9"), "\t"));
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        try (BufferedReader reader = Readers.getReader(famFile);PrintWriter writer = PrintWriters.getPrintWriter(newFamFile))
+        {
+            String line;
+            while ((line = reader.readLine()) != null)
+            {
+                String[] tokens = line.split("\t");
+                if (tokens.length != 6)
+                {
+                    throw new PipelineJobException("Improper ped line length: " + tokens.length);
+                }
+
+                String newRow = pedMap.get(tokens[1]);
+                if (newRow == null)
+                {
+                    getPipelineCtx().getLogger().warn("Unable to find pedigree entry for: " + tokens[1] + ", reusing original");
+                    writer.println(line);
+                }
+                else
+                {
+                    writer.println(newRow);
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        return newFamFile;
     }
 
     public static class KingWrapper extends AbstractCommandWrapper

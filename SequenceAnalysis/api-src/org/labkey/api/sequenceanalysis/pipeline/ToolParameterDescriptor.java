@@ -41,7 +41,7 @@ public class ToolParameterDescriptor
     private String _label;
     private String _description;
     private final String _fieldXtype;
-    private final JSONObject _additionalExtConfig;
+    protected JSONObject _additionalExtConfig;
     private final Object _defaultValue;
 
     public ToolParameterDescriptor(CommandLineParam ca, String name, String label, String description, String fieldXtype, @Nullable Object defaultValue, @Nullable JSONObject additionalExtConfig)

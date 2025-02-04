@@ -79,7 +79,7 @@ public interface ReferenceGenome extends Serializable
 
     /**
      * @param name The name used by the aligner to identify its cached directory
-     * @return The folder expected containing the cached index, which is not guarenteed to exist.  See AlignerIndexUtil for related methods.
+     * @return The folder expected containing the cached index, which is not guaranteed to exist.  See AlignerIndexUtil for related methods.
      */
     File getAlignerIndexDir(String name);
 
