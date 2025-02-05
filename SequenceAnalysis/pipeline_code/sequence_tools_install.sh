@@ -985,15 +985,15 @@ then
     rm -Rf $LKTOOLS_DIR/blast_formatter
     rm -Rf $LKTOOLS_DIR/makeblastdb
 
-    wget $WGET_OPTS ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.2.31/ncbi-blast-2.2.31+-x64-linux.tar.gz
-    gunzip ncbi-blast-2.2.31+-x64-linux.tar.gz
-    tar -xf ncbi-blast-2.2.31+-x64-linux.tar
-    gzip ncbi-blast-2.2.31+-x64-linux.tar
+    wget $WGET_OPTS ftp://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/2.16.0/ncbi-blast-2.16.0+-x64-linux.tar.gz
+    gunzip ncbi-blast-2.16.0+-x64-linux.tar.gz
+    tar -xf ncbi-blast-2.16.0+-x64-linux.tar
+    gzip ncbi-blast-2.16.0+-x64-linux.tar
 
-    install ./ncbi-blast-2.2.31+/bin/blastn $LKTOOLS_DIR/blastn
-    install ./ncbi-blast-2.2.31+/bin/blast_formatter $LKTOOLS_DIR/blast_formatter
-    install ./ncbi-blast-2.2.31+/bin/makeblastdb $LKTOOLS_DIR/makeblastdb
-    install ./ncbi-blast-2.2.31+/bin/makembindex $LKTOOLS_DIR/makembindex
+    install ./ncbi-blast-2.16.0+/bin/blastn $LKTOOLS_DIR/blastn
+    install ./ncbi-blast-2.16.0+/bin/blast_formatter $LKTOOLS_DIR/blast_formatter
+    install ./ncbi-blast-2.16.0+/bin/makeblastdb $LKTOOLS_DIR/makeblastdb
+    install ./ncbi-blast-2.16.0+/bin/makembindex $LKTOOLS_DIR/makembindex
 else
     echo "Already installed"
 fi

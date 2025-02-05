@@ -116,7 +116,7 @@ public class BWAMemWrapper extends BWAWrapper
         }
         appendThreads(job, bwaArgs);
 
-        bwaArgs.add("'" + new File(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath() + "'");
+        bwaArgs.add("'" + new File(referenceGenome.getAlignerIndexDir(getIndexDirName()), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath() + "'");
         bwaArgs.add("'" + inputFastq1.getPath() + "'");
 
         if (inputFastq2 != null)

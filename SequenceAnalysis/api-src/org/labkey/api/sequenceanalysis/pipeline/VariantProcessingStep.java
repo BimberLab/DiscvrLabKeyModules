@@ -72,21 +72,46 @@ public interface VariantProcessingStep extends PipelineStep
         File getVCF();
     }
 
-    interface RequiresPedigree
+    interface RequiresPedigree extends SupportsPedigree
+    {
+        @Override
+        default boolean isRequired()
+        {
+            return true;
+        }
+    }
+
+    interface SupportsPedigree
     {
         default String getDemographicsProviderName(PipelineStepProvider<?> provider, PipelineJob job, int stepIdx)
         {
             return provider.getParameterByName(PedigreeToolParameterDescriptor.NAME).extractValue(job, provider, stepIdx, String.class);
         }
 
-        default DemographicsProvider getDemographicsProvider(PipelineStepProvider<?> provider, PipelineJob job, int stepIdx)
+        default @Nullable DemographicsProvider getDemographicsProvider(PipelineStepProvider<?> provider, PipelineJob job, int stepIdx)
         {
             if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
             {
                 throw new IllegalStateException("getDemographicsProvider() can only be run from the webserver");
             }
 
-            return LaboratoryService.get().getDemographicsProviderByName(job.getContainer(), job.getUser(), getDemographicsProviderName(provider, job, stepIdx));
+            String dpn = getDemographicsProviderName(provider, job, stepIdx);
+            if (dpn == null)
+            {
+                if (isRequired())
+                {
+                    throw new IllegalArgumentException("The DemographicsProvider name cannot be null");
+                }
+
+                return null;
+            }
+
+            return LaboratoryService.get().getDemographicsProviderByName(job.getContainer(), job.getUser(), dpn);
+        }
+
+        default boolean isRequired()
+        {
+            return false;
         }
     }
 

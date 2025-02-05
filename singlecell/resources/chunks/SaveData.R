@@ -11,8 +11,8 @@ if (length(errorMessages) > 0) {
     write(errorMessages, file = 'seuratErrors.txt')
 }
 
-if (file.exists('savedSeuratObjects.txt')) {
-    print(paste0('Total lines in savedSeuratObjects.txt:', length(readLines('savedSeuratObjects.txt'))))
+if (file.exists(trackerFile)) {
+    print(paste0('Total lines in ', trackerFile, ':', length(readLines(trackerFile))))
 } else {
-    print('File does not exist: savedSeuratObjects.txt')
+    print(paste0('File does not exist: ', trackerFile))
 }

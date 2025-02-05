@@ -100,6 +100,8 @@ abstract public class SequencePipelineService
      */
     abstract public String getDockerCommand();
 
+    abstract public boolean useLocalDockerContainerStorage();
+
     abstract public Collection<String> getDockerVolumes(Container c);
 
     /**

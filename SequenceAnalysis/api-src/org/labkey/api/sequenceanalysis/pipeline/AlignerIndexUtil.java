@@ -40,7 +40,7 @@ public class AlignerIndexUtil
 
     public static boolean copyIndexIfExists(PipelineContext ctx, AlignmentOutputImpl output, String localName, String webserverName, ReferenceGenome genome, boolean forceCopyLocal) throws PipelineJobException
     {
-        ctx.getLogger().debug("copying index to shared dir if exists: " + localName);
+        ctx.getLogger().debug("checking if index exists: " + localName + ". copy local: " + forceCopyLocal);
         if (ctx.getWorkDir() == null)
         {
             throw new PipelineJobException("PipelineContext.getWorkDir() is null");

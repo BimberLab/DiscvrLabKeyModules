@@ -702,6 +702,20 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             _resumer.setInitialAlignmentDone(bam, alignActions, discardBam);
         }
 
+        // Because this folder can be large, delete it quickly when possible:
+        if (getCachedReadDataDir().exists())
+        {
+            try
+            {
+                getJob().getLogger().debug("Deleting cachedReadDataDir");
+                FileUtils.deleteDirectory(getCachedReadDataDir());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
         // This is a special case where the alignment does not actually generate a permanent BAM
         if (bam == null && discardBam)
         {
@@ -1892,8 +1906,34 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
     }
 
+    private File getCachedReadDataDir()
+    {
+        return new File(getHelper().getWorkingDirectory(), "cachedReadData");
+    }
+
     private void restoreArchivedReadDataIfNeeded(Readset rs) throws PipelineJobException
     {
+        if (_resumer.isInitialAlignmentDone())
+        {
+            getJob().getLogger().debug("Initial alignment is complete, will not attempt to download SRA if needed");
+
+            if (getCachedReadDataDir().exists())
+            {
+                getJob().getLogger().debug("Deleting existing cachedReadDataDir");
+
+                try
+                {
+                    FileUtils.deleteDirectory(getCachedReadDataDir());
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+
+            return;
+        }
+
         Set<String> sraIDs = new HashSet<>();
         for (ReadData rd : rs.getReadData())
         {
@@ -1933,14 +1973,29 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     continue;
                 }
 
-                File outDir = new File(getHelper().getWorkingDirectory(), "cachedReadData");
-                getTaskFileManagerImpl().addDeferredIntermediateFile(outDir);
+                File unzippedOutDir = new File(SequencePipelineService.get().getJavaTempDir(), "cachedReadDataGz");
+                getTaskFileManagerImpl().addIntermediateFile(unzippedOutDir);
+                if (unzippedOutDir.exists())
+                {
+                    try
+                    {
+                        FileUtils.deleteDirectory(unzippedOutDir);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+
+                File outDir = getCachedReadDataDir();
+                getTaskFileManagerImpl().addDeferredIntermediateFile(outDir); // NOTE: this must be deferred so it remains until the end
 
                 File doneFile = new File(outDir, rd.getSra_accession() + ".done");
                 sraIDs.add(rd.getSra_accession());
                 RestoreSraDataHandler.FastqDumpWrapper sra = new RestoreSraDataHandler.FastqDumpWrapper(getJob().getLogger());
                 if (doneFile.exists())
                 {
+                    getPipelineJob().getLogger().debug("Re-using existing SRA download: " + rd.getSra_accession());
                     rdi.setFile(new File(outDir, rd.getSra_accession() + (rd.isPairedEnd() ? "_1" : "") + ".fastq.gz"), 1);
                     if (rd.getFileId2() != null)
                     {
@@ -1949,18 +2004,53 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 }
                 else
                 {
-                    if (!outDir.exists())
-                    {
-                        outDir.mkdirs();
-                    }
-
-                    Pair<File, File> downloaded = sra.downloadSra(rd.getSra_accession(), outDir, rd.isPairedEnd());
-                    rdi.setFile(downloaded.first, 1);
-                    rdi.setFile(downloaded.second, 2);
-
                     try
                     {
+                        if (outDir.exists())
+                        {
+                            getHelper().getLogger().debug("Inspecting existing folder: " + outDir.getPath());
+                            Arrays.stream(outDir.listFiles()).forEach(f -> {
+                                if (f.getName().startsWith(rd.getSra_accession()))
+                                {
+                                    getPipelineJob().getLogger().debug("Deleting existing file: " + f.getPath());
+                                    f.delete();
+                                }
+                            });
+                        }
+                        else
+                        {
+                            outDir.mkdirs();
+                        }
+
+                        Pair<File, File> downloaded = sra.downloadSra(rd.getSra_accession(), unzippedOutDir, rd.isPairedEnd(), false);
+                        File moved1 = new File(outDir, downloaded.first.getName());
+                        if (moved1.exists())
+                        {
+                            moved1.delete();
+                        }
+
+                        getPipelineJob().getLogger().debug("Moving gzipped file to: " + moved1.getPath());
+                        FileUtils.moveFile(downloaded.first, moved1);
+                        rdi.setFile(moved1, 1);
+
+                        if (downloaded.second != null)
+                        {
+                            File moved2 = new File(outDir, downloaded.second.getName());
+                            if (moved2.exists())
+                            {
+                                moved2.delete();
+                            }
+                            getPipelineJob().getLogger().debug("Moving gzipped file to: " + moved2.getPath());
+                            FileUtils.moveFile(downloaded.second, moved2);
+                            rdi.setFile(moved2, 2);
+                        }
+
                         Files.touch(doneFile);
+
+                        if (unzippedOutDir.exists())
+                        {
+                            FileUtils.deleteDirectory(unzippedOutDir);
+                        }
                     }
                     catch (IOException e)
                     {

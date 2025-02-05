@@ -80,6 +80,10 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
                         put("valueField", "application");
                         put("sortField", "application");
                     }}, null),
+                    ToolParameterDescriptor.create("kingCutoff", "KING Cutoff", "Can be used to prune close relations, identified using KING", "ldk-numberfield", new JSONObject(){{
+                        put("minValue", 0);
+                        put("maxValue", 1);
+                    }}, 0.25),
                     ToolParameterDescriptor.create("allowMissingSamples", "Allow Missing Samples", "When using split by application, this controls whether or not the job should fail if a matching readset cannot be found for specific samples.", "checkbox", null, false),
                     ToolParameterDescriptor.create("fileSets", "File Set(s) For Readset Query", "If Split By Application is used, the system needs to query each sample name in the VCF and find the corresponding readset. If this is provided, this query will be limited to redsets where a gVCF exists and is tagged as one of these file sets", "sequenceanalysis-trimmingtextarea", null, null),
                     ToolParameterDescriptor.create(SelectSamplesStep.SAMPLE_INCLUDE, "Sample(s) Include", "Only the following samples will be included in the analysis.", "sequenceanalysis-trimmingtextarea", null, null),
@@ -177,6 +181,13 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
 
         String samplesToExclude = getProvider().getParameterByName(SelectSamplesStep.SAMPLE_EXCLUDE).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
         addSubjectSelectOptions(samplesToExclude, args, "--exclude", new File(outputDirectory, "samplesToExclude.txt"), output);
+
+        Double kingCutoff = getProvider().getParameterByName("kingCutoff").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class);
+        if (kingCutoff != null)
+        {
+            args.add("--king-cutoff");
+            args.add(kingCutoff.toString());
+        }
 
         args.add("--vcf");
         args.add(inputVCF.getPath());

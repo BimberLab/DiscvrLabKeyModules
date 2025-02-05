@@ -979,6 +979,11 @@ public class CellHashingServiceImpl extends CellHashingService
                 put("maxValue", 1);
                 put("decimalPrecision", 2);
             }}, 0.2),
+                ToolParameterDescriptor.create("minAllowableSingletRate", "Min Allowable Singlet Rate", "This is an optional threshold designed to automatically discard poorly performing callers. If a given algorithm returns a singlet rate below this level, it is discarded from the consensus.", "ldk-numberfield", new JSONObject(){{
+                    put("minValue", 0);
+                    put("maxValue", 1);
+                    put("decimalPrecision", 2);
+                }}, 0.05),
             ToolParameterDescriptor.create("skipNormalizationQc", "Skip Normalization QC", null, "checkbox", null, true),
             ToolParameterDescriptor.create("doNotAllowResume", "Do Not Allow Resume", "If checked, on resume the job will repeat hashing scoring, rather than allowing resume from a saved state", "checkbox", null, false),
             ToolParameterDescriptor.create("doTSNE", "Do tSNE", "If true, tSNE will be performed as part of QC", "checkbox", null, false),
@@ -1233,15 +1238,8 @@ public class CellHashingServiceImpl extends CellHashingService
             Set<String> allowableBarcodes = parameters.getAllowableBarcodeNames();
             String allowableBarcodeParam = allowableBarcodes != null ? "c('" + StringUtils.join(allowableBarcodes, "','") + "')" : "NULL";
 
-            List<String> methodNames = parameters.methods.stream().filter(m -> {
-                if (totalCellBarcodes < m.getMinCells())
-                {
-                    ctx.getLogger().debug("Dropping method due to insufficient cells: " + m.name());
-                    return false;
-                }
-
-                return true;
-            }).map(CALLING_METHOD::getLabel).distinct().toList();
+            // NOTE: we do not need to filter total methods on min cells:
+            List<String> methodNames = parameters.methods.stream().map(CALLING_METHOD::getLabel).distinct().toList();
 
             List<String> consensusMethodNames = parameters.consensusMethods == null ? Collections.emptyList() : parameters.consensusMethods.stream().filter(m -> {
                 if (totalCellBarcodes < m.getMinCells())
@@ -1275,6 +1273,7 @@ public class CellHashingServiceImpl extends CellHashingService
                     ", majorityConsensusThreshold = " + (parameters.majorityConsensusThreshold == null ? "NULL" : parameters.majorityConsensusThreshold) +
                     ", callerDisagreementThreshold = " + (parameters.callerDisagreementThreshold == null ? "NULL" : parameters.callerDisagreementThreshold) +
                     (parameters.minAllowableDoubletRateFilter == null ? "" : ", minAllowableDoubletRateFilter = " + parameters.minAllowableDoubletRateFilter) +
+                    (parameters.minAllowableSingletRate == null ? "" : ", minAllowableSingletRate = " + parameters.minAllowableSingletRate) +
                     ", doTSNE = " + doTSNE + ")");
             writer.println("print('Rmarkdown complete')");
 
