@@ -231,8 +231,8 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
         String description = null;
         if (kingCutoff != null)
         {
-            long includedIds = SequencePipelineService.get().getLineCount(new File(outputFile.getParentFile(), "plink.king.cutoff.in.id")) - 1;
-            long excludedIds = SequencePipelineService.get().getLineCount(new File(outputFile.getParentFile(), "plink.king.cutoff.out.id")) - 1;
+            long includedIds = SequencePipelineService.get().getLineCount(new File(outputFile.getParentFile(), "plink.king.cutoff.in.id"));
+            long excludedIds = SequencePipelineService.get().getLineCount(new File(outputFile.getParentFile(), "plink.king.cutoff.out.id"));
 
             description = String.format("KING cutoff: %f, included IDs: %d, excluded IDs: %d", kingCutoff, includedIds, excludedIds);
         }
