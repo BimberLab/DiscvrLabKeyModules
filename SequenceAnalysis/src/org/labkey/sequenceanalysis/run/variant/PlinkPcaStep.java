@@ -228,8 +228,17 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
             throw new PipelineJobException("Unable to find expected file: " + outputFile);
         }
 
+        String description = null;
+        if (kingCutoff != null)
+        {
+            long includedIds = SequencePipelineService.get().getLineCount(new File(outputFile.getParentFile(), "plink.king.cutoff.in.id")) - 1;
+            long excludedIds = SequencePipelineService.get().getLineCount(new File(outputFile.getParentFile(), "plink.king.cutoff.out.id")) - 1;
+
+            description = String.format("KING cutoff: %f, included IDs: %d, excluded IDs: %d", kingCutoff, includedIds, excludedIds);
+        }
+
         output.addOutput(outputFile, "PLink PCA");
-        output.addSequenceOutput(outputFile, "PLink PCA for: " + inputVCF.getName() + (setName == null ? "" : ", for: " + setName), "PLink PCA", null, null, genome.getGenomeId(), null);
+        output.addSequenceOutput(outputFile, "PLink PCA for: " + inputVCF.getName() + (setName == null ? "" : ", for: " + setName), "PLink PCA", null, null, genome.getGenomeId(), description);
     }
 
     @Override
