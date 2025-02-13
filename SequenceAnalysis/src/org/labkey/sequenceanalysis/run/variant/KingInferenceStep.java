@@ -184,7 +184,8 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
             kingArgs.add(threads.toString());
         }
 
-        kingArgs.add("--related");
+        kingArgs.add("--kinship");
+        kingArgs.add("--rplot");
 
         File kinshipOutput = new File(outputDirectory, SequenceAnalysisService.get().getUnzippedBaseName(inputVCF.getName()) + ".kin");
         wrapper.execute(kingArgs);
