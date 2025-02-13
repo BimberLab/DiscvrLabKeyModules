@@ -8,6 +8,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenomeManager;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileUtil;
@@ -159,6 +160,8 @@ public class SnpEffWrapper extends AbstractCommandWrapper
         //params.add(basename);
 
         execute(params);
+
+        ReferenceGenomeManager.get().markGenomeModified(genome, getLogger());
     }
 
 
