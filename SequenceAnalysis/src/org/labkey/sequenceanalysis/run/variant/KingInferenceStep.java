@@ -172,7 +172,7 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
             }
 
             File kingFam = createFamFile(pedFile, new File(plinkOutBed.getParentFile(), "plink.fam"));
-            kingArgs.add("--ped");
+            kingArgs.add("--fam");
             kingArgs.add(kingFam.getPath());
 
             output.addIntermediateFile(kingFam);
