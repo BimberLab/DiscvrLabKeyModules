@@ -90,20 +90,15 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
         plinkArgs.add("--vcf");
         plinkArgs.add(inputVCF.getPath());
 
-        plinkArgs.add("--make-bed");
-        
-        // Added since KING is designed for plink1.9. This avoids the "Too many first alleles as the major allele" error.
-        plinkArgs.add("--maj-ref");        
-
         boolean limitToChromosomes = getProvider().getParameterByName("limitToChromosomes").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
         if (limitToChromosomes)
         {
             SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
-            List<String> toKeep = dict.getSequences().stream().filter(s -> {
-                String name = StringUtils.replaceIgnoreCase(s.getSequenceName(), "^chr", "");
+            List<String> toKeep = dict.getSequences().stream().map(SAMSequenceRecord::getSequenceName).filter(sequenceName -> {
+                String name = StringUtils.replaceIgnoreCase(sequenceName, "^chr", "");
 
                 return NumberUtils.isCreatable(name) || "X".equalsIgnoreCase(name) || "Y".equalsIgnoreCase(name);
-            }).map(SAMSequenceRecord::getSequenceName).toList();
+            }).toList();
 
             if (toKeep.isEmpty())
             {
@@ -129,9 +124,6 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
         plinkArgs.add("--max-alleles");
         plinkArgs.add("2");
 
-        plinkArgs.add("--out");
-        plinkArgs.add(plinkOut.getPath());
-
         Integer threads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
         if (threads != null)
         {
@@ -139,7 +131,13 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
             plinkArgs.add(threads.toString());
         }
 
-        //TODO: consider --memory (in MB)
+        List<String> plinkArgs1 = new ArrayList<>(plinkArgs);
+        plinkArgs1.add("--make-bed");
+
+        // Added since KING is designed for plink1.9. This avoids the "Too many first alleles as the major allele" error.
+        plinkArgs1.add("--maj-ref");
+        plinkArgs1.add("--out");
+        plinkArgs1.add(plinkOut.getPath());
 
         plink.execute(plinkArgs);
 
@@ -149,6 +147,41 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
             throw new PipelineJobException("Unable to find file: " + plinkOutBed.getPath());
         }
 
+        // Compute kinship with plink2:
+        List<String> plinkArgs2 = new ArrayList<>(plinkArgs);
+        plinkArgs2.add("--make-king-table");
+        File plinkOutKing = new File(outputDirectory, "plinkKinship");
+        plinkArgs2.add("--out");
+        plinkArgs2.add(plinkOutKing.getPath());
+
+        plink.execute(plinkArgs1);
+
+        File plinkOutKingFile = new File(plinkOut.getPath() + ".kin0");
+        if (!plinkOutKingFile.exists())
+        {
+            throw new PipelineJobException("Unable to find file: " + plinkOutKingFile.getPath());
+        }
+
+        File plinkOutKingFileTxt = new File(plinkOutKingFile.getPath() + ".txt.gz");
+        if (plinkOutKingFileTxt.exists())
+        {
+            plinkOutKingFileTxt.delete();
+        }
+
+        long lineCount = SequencePipelineService.get().getLineCount(plinkOutKingFile)-1;
+        try
+        {
+            Compress.compressGzip(plinkOutKingFile, plinkOutKingFileTxt);
+            FileUtils.delete(plinkOutKingFile);
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        output.addSequenceOutput(plinkOutKingFileTxt, "PLINK2 Relatedness: " + inputVCF.getName(), "PLINK2 Kinship", null, null, genome.getGenomeId(), "Total lines: " + lineCount);
+
+        // Also with KING:
         KingWrapper wrapper = new KingWrapper(getPipelineCtx().getLogger());
         wrapper.setWorkingDir(outputDirectory);
 
@@ -200,17 +233,18 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
             kinshipOutputTxt.delete();
         }
 
+        lineCount = SequencePipelineService.get().getLineCount(kinshipOutput)-1;
         try
         {
-            kinshipOutput = Compress.compressGzip(kinshipOutput);
-            FileUtils.moveFile(kinshipOutput, kinshipOutputTxt);
+            Compress.compressGzip(kinshipOutput, kinshipOutputTxt);
+            FileUtils.delete(kinshipOutput);
         }
         catch (IOException e)
         {
             throw new PipelineJobException(e);
         }
 
-        output.addSequenceOutput(kinshipOutputTxt, "King Relatedness: " + inputVCF.getName(), "KING Relatedness", null, null, genome.getGenomeId(), null);
+        output.addSequenceOutput(kinshipOutputTxt, "King Relatedness: " + inputVCF.getName(), "KING Relatedness", null, null, genome.getGenomeId(), "Total lines: " + lineCount);
 
         return output;
     }
