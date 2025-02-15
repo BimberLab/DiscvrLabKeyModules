@@ -156,7 +156,7 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
 
         plink.execute(plinkArgs2);
 
-        File plinkOutKingFile = new File(plinkOut.getPath() + ".kin0");
+        File plinkOutKingFile = new File(plinkOutKing.getPath() + ".kin0");
         if (!plinkOutKingFile.exists())
         {
             throw new PipelineJobException("Unable to find file: " + plinkOutKingFile.getPath());
