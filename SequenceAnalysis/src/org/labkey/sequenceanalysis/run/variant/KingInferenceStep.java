@@ -139,7 +139,7 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
         plinkArgs1.add("--out");
         plinkArgs1.add(plinkOut.getPath());
 
-        plink.execute(plinkArgs);
+        plink.execute(plinkArgs1);
 
         File plinkOutBed = new File(plinkOut.getPath() + ".bed");
         if (!plinkOutBed.exists())
@@ -154,7 +154,7 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
         plinkArgs2.add("--out");
         plinkArgs2.add(plinkOutKing.getPath());
 
-        plink.execute(plinkArgs1);
+        plink.execute(plinkArgs2);
 
         File plinkOutKingFile = new File(plinkOut.getPath() + ".kin0");
         if (!plinkOutKingFile.exists())
