@@ -7,6 +7,34 @@ if (!file.exists(netRc)) {
 invisible(Rlabkey::labkey.setCurlOptions(NETRC_FILE = netRc))
 Rdiscvr::SetLabKeyDefaults(baseUrl = serverBaseUrl, defaultFolder = defaultLabKeyFolder)
 
+if (!reticulate::py_module_available(module = 'conga')) {
+    logger::log_warn('python conga not found!')
+    logger::log_warn(paste0('Python available: ', reticulate::py_available()))
+    logger::log_warn('Python config')
+    pyConfig <- reticulate::py_config()
+    for (pn in names(pyConfig)) {
+        logger::log_warn(paste0(pn, ': ', paste0(pyConfig[[pn]]), collapse = ','))
+    }
+
+    logger::log_warn(paste0('pythonpath: ', reticulate::py_config()$pythonpath))
+
+    logger::log_warn('Python packages:')
+    for (pn in reticulate::py_list_packages()$package) {
+        logger::log_warn(pn)
+    }
+
+    if ('conga' %in% reticulate::py_list_packages()$package) {
+        tryCatch({
+            logger::log_warn(reticulate::import('conga'))
+        }, error = function(e){
+            logger::log_warn("Error with reticulate::import('conga')")
+            logger::log_warn(reticulate::py_last_error())
+            logger::log_warn(conditionMessage(e))
+            traceback()
+        })
+    }
+}
+
 for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])

@@ -114,7 +114,7 @@ public class JBrowseModule extends ExtendedSimpleModule
         JBrowseService.get().registerGroupsProvider(new JBrowseLuceneSearch.TestJBrowseGroupProvider());
 
         // These are all part of the JBrowse demo data:
-        ContentSecurityPolicyFilter.registerAllowedConnectionSource(this.getClass().getName(), "https://jbrowse.org", "https://s3.amazonaws.com", "https://ftp.ncbi.nlm.nih.gov");
+        ContentSecurityPolicyFilter.registerAllowedConnectionSource(this.getClass().getName(), "https://jbrowse.org", "https://s3.amazonaws.com", "https://ftp.ncbi.nlm.nih.gov", "https://www.gstatic.com");
 
         ContextListener.addShutdownListener(new JBrowseLuceneSearch.ShutdownHandler());
     }
