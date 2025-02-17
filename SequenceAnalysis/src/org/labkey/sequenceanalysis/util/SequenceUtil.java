@@ -33,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -428,8 +429,19 @@ public class SequenceUtil
         //then sort/append the records
         CommandWrapper wrapper = SequencePipelineService.get().getCommandWrapper(log);
         String cat = isCompressed ? "zcat" : "cat";
+
+        String sortThreading = "";
+        if (!PipelineJobService.get().isWebServer())
+        {
+            Integer threads = SequencePipelineService.get().getMaxThreads(log);
+            if (threads != null && threads > 1)
+            {
+                sortThreading = " --parallel " + threads;
+            }
+        }
+
         File tempSorted = new File(input.getParent(), "sorted.tmp");
-        wrapper.execute(Arrays.asList("/bin/sh", "-c", "{ cat '" + tempHeader.getPath() + "'; " + cat + " '" + input.getPath() + "' | grep -v '^#' | sort -V -k1,1" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n") + "; } " + (isCompressed ? " | bgzip -c " : "")), ProcessBuilder.Redirect.to(tempSorted));
+        wrapper.execute(Arrays.asList("/bin/sh", "-c", "{ cat '" + tempHeader.getPath() + "'; " + cat + " '" + input.getPath() + "' | grep -v '^#' | sort -V -k1,1" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n") + sortThreading + "; } " + (isCompressed ? " | bgzip -c " : "")), ProcessBuilder.Redirect.to(tempSorted));
 
         //replace the non-sorted output
         input.delete();

@@ -18,9 +18,8 @@ for (datasetId in names(seuratObjects)) {
 
   for (genomeId in names(nimbleGenomes)) {
     maxAmbiguityAllowed <- nimbleGenomeAmbiguousPreference[[genomeId]]
-    queryDatabaseForLineageUpdates <- queryDatabaseForLineageUpdatesPreference[[genomeId]]
     replaceExistingAssayData <- replaceExistingAssayDataByGenome[[genomeId]]
-    seuratObj <- Rdiscvr::DownloadAndAppendNimble(seuratObject = seuratObj, allowableGenomes = genomeId, ensureSamplesShareAllGenomes = ensureSamplesShareAllGenomes, targetAssayName = nimbleGenomes[[genomeId]], enforceUniqueFeatureNames = TRUE, maxAmbiguityAllowed = maxAmbiguityAllowed, maxLibrarySizeRatio = maxLibrarySizeRatio, queryDatabaseForLineageUpdates = queryDatabaseForLineageUpdates, replaceExistingAssayData = replaceExistingAssayData)
+    seuratObj <- Rdiscvr::DownloadAndAppendNimble(seuratObject = seuratObj, allowableGenomes = genomeId, ensureSamplesShareAllGenomes = ensureSamplesShareAllGenomes, targetAssayName = nimbleGenomes[[genomeId]], enforceUniqueFeatureNames = TRUE, maxAmbiguityAllowed = maxAmbiguityAllowed, maxLibrarySizeRatio = maxLibrarySizeRatio, replaceExistingAssayData = replaceExistingAssayData)
   }
 
   saveData(seuratObj, datasetId)

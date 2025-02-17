@@ -40,7 +40,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 				},LABKEY.ext4.GRIDBUTTONS.DELETERECORD()],
 				store: {
 					type: 'array',
-					fields: ['genomeId', 'targetAssay','maxAmbiguityAllowed', 'queryDatabaseForLineageUpdates', 'replaceExistingAssayData']
+					fields: ['genomeId', 'targetAssay','maxAmbiguityAllowed', 'appendIfExists']
 				},
 				columns: [{
 					dataIndex: 'genomeId',
@@ -78,24 +78,14 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 						minValue: 0
 					}
 				},{
-					dataIndex: 'queryDatabaseForLineageUpdates',
+					dataIndex: 'appendIfExists',
 					width: 175,
-					header: 'Check for Lineage Updates',
+					header: 'Append To Assay If Exists',
 					editor: {
 						xtype: 'checkbox',
 						allowBlank: true,
 						value: false
 					}
-				},{
-					dataIndex: 'replaceExistingAssayData',
-					width: 150,
-					header: 'Replace Existing Data?',
-					editor: {
-						xtype: 'checkbox',
-						allowBlank: true,
-						value: true
-					}
-
 				}]
 			}]
 		});
@@ -106,7 +96,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 	getValue: function(){
 		var ret = [];
 		this.down('ldk-gridpanel').store.each(function(r, i) {
-			ret.push([r.data.genomeId, r.data.targetAssay, r.data.maxAmbiguityAllowed ?? '', !!r.data.queryDatabaseForLineageUpdates], !!r.data.replaceExistingAssayData);
+			ret.push([r.data.genomeId, r.data.targetAssay, r.data.maxAmbiguityAllowed ?? '', !!r.data.appendIfExists]);
 		}, this);
 
 		return Ext4.isEmpty(ret) ? null : JSON.stringify(ret);
@@ -143,8 +133,7 @@ Ext4.define('SingleCell.panel.NimbleAppendPanel', {
 					genomeId: row[0],
 					targetAssay: row[1],
 					maxAmbiguityAllowed: row[2],
-					queryDatabaseForLineageUpdates: !!row[3],
-					replaceExistingAssayData: !!row[4]
+					appendIfExists: !!row[3]
 				});
 				grid.store.add(rec);
 			}, this);
