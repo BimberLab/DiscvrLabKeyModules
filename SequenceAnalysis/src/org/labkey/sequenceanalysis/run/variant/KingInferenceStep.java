@@ -131,6 +131,15 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
             plinkArgs.add(threads.toString());
         }
 
+        Integer maxRam = SequencePipelineService.get().getMaxRam();
+        if (maxRam != null)
+        {
+            plinkArgs.add("--memory");
+
+            maxRam = maxRam * 1000;
+            plinkArgs.add(String.valueOf(maxRam));
+        }
+
         List<String> plinkArgs1 = new ArrayList<>(plinkArgs);
         plinkArgs1.add("--make-bed");
 
