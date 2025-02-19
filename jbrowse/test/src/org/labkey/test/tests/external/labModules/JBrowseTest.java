@@ -557,6 +557,10 @@ public class JBrowseTest extends BaseWebDriverTest
         SequenceTest.ensureRefSeqExists(this, "1", seq);
         SequenceTest.createReferenceGenome(this, 1, JB_GENOME_NAME, "1");
 
+        // NOTE: allow all content to load to avoid alert
+        Locator searchLocator = Locator.tagWithClass("input", "MuiInputBase-input");
+        waitForElement(searchLocator);
+
         SequenceTest.addOutputFile(this, JBrowseTestHelper.MGAP_TEST_VCF, JB_GENOME_NAME, "TestVCF", "VCF File", "This is an output file to test VCF full-text search", false);
 
         JBrowseTestHelper.prepareSearchSession(this, getProjectName());
