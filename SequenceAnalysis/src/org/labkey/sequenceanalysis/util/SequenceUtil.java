@@ -45,6 +45,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.run.util.BgzipRunner;
+import org.labkey.sequenceanalysis.run.variant.GatherVcfsCloudWrapper;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -466,6 +467,33 @@ public class SequenceUtil
     }
 
     public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel, boolean showTotals, boolean sortAfterMerge) throws PipelineJobException
+    {
+        if (sortAfterMerge)
+        {
+            return combineVcfsUsingZcat(files, genome, outputGzip, log, multiThreaded, compressionLevel, showTotals, sortAfterMerge);
+        }
+        else
+        {
+            log.info("Combining VCFs using GatherVcfsCloudWrapper");
+            new GatherVcfsCloudWrapper(log).gatherVcfs(outputGzip, files);
+
+            File idx = new File(outputGzip.getPath() + ".tbi");
+            if (!idx.exists())
+            {
+                throw new PipelineJobException("Unable to find output: " + idx.getPath());
+            }
+
+            if (showTotals)
+            {
+                log.info("total variants: " + SequenceAnalysisService.get().getVCFLineCount(outputGzip, log, false));
+                log.info("passing variants: " + SequenceAnalysisService.get().getVCFLineCount(outputGzip, log, true));
+            }
+
+            return outputGzip;
+        }
+    }
+
+    private static File combineVcfsUsingZcat(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel, boolean showTotals, boolean sortAfterMerge) throws PipelineJobException
     {
         log.info("combining VCFs: ");
 
