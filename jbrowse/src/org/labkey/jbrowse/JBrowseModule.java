@@ -26,6 +26,7 @@ import org.labkey.api.ldk.LDKService;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.security.Directive;
 import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
@@ -114,7 +115,8 @@ public class JBrowseModule extends ExtendedSimpleModule
         JBrowseService.get().registerGroupsProvider(new JBrowseLuceneSearch.TestJBrowseGroupProvider());
 
         // These are all part of the JBrowse demo data:
-        ContentSecurityPolicyFilter.registerAllowedConnectionSource(this.getClass().getName(), "https://jbrowse.org", "https://s3.amazonaws.com", "https://ftp.ncbi.nlm.nih.gov", "https://www.gstatic.com");
+        ContentSecurityPolicyFilter.registerAllowedSources(Directive.Connection, this.getClass().getName(), "https://jbrowse.org", "https://s3.amazonaws.com", "https://ftp.ncbi.nlm.nih.gov");
+        ContentSecurityPolicyFilter.registerAllowedSources(Directive.Style, this.getClass().getName(), "https://www.gstatic.com");
 
         ContextListener.addShutdownListener(new JBrowseLuceneSearch.ShutdownHandler());
     }
