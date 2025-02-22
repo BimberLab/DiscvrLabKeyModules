@@ -20,7 +20,7 @@ public class GatherVcfsCloudWrapper extends AbstractGatk4Wrapper
 
     public void gatherVcfs(File output, List<File> inputVcfs) throws PipelineJobException
     {
-        List<String> args = new ArrayList<>(getBaseArgs());
+        List<String> args = new ArrayList<>(getBaseArgs("GatherVcfsCloud"));
         args.add("-O");
         args.add(output.getPath());
 
