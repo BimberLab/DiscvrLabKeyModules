@@ -34,6 +34,9 @@ public class GatherVcfsCloudWrapper extends AbstractGatk4Wrapper
             throw new PipelineJobException(e);
         }
 
+        args.add("-I");
+        args.add(argFile.getPath());
+
         execute(args);
 
         argFile.delete();
