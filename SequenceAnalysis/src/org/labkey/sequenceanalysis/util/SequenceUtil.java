@@ -480,7 +480,7 @@ public class SequenceUtil
             File idx = new File(outputGzip.getPath() + ".tbi");
             if (!idx.exists())
             {
-                throw new PipelineJobException("Unable to find output: " + idx.getPath());
+                throw new PipelineJobException("Unable to find index: " + idx.getPath());
             }
 
             if (showTotals)

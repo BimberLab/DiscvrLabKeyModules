@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.run.variant;
 
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.run.AbstractGatk4Wrapper;
 import org.labkey.api.writer.PrintWriters;
 
@@ -40,5 +41,14 @@ public class GatherVcfsCloudWrapper extends AbstractGatk4Wrapper
         execute(args);
 
         argFile.delete();
+
+        try
+        {
+            SequenceAnalysisService.get().ensureVcfIndex(output, getLogger());
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
     }
 }
