@@ -172,12 +172,35 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
         plinkArgs2.add(plinkOutKing.getPath());
 
         doneFile = new File (plinkOutKing.getPath() + ".done");
+        File plinkOutKingFile = new File(plinkOutKing.getPath() + ".kin0");
+        File plinkOutKingFileGz = new File(plinkOutKingFile.getPath() + ".txt.gz");
         if (doneFile.exists())
         {
             getPipelineCtx().getLogger().debug("plink has completed, will not repeat");
         }
-        else {
+        else
+        {
             plink.execute(plinkArgs2);
+
+            if (!plinkOutKingFile.exists())
+            {
+                throw new PipelineJobException("Unable to find file: " + plinkOutKingFile.getPath());
+            }
+
+            if (plinkOutKingFileGz.exists())
+            {
+                plinkOutKingFileGz.delete();
+            }
+
+            try
+            {
+                Compress.compressGzip(plinkOutKingFile, plinkOutKingFileGz);
+                FileUtils.delete(plinkOutKingFile);
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
 
             try
             {
@@ -189,30 +212,8 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
             }
         }
 
-        File plinkOutKingFile = new File(plinkOutKing.getPath() + ".kin0");
-        if (!plinkOutKingFile.exists())
-        {
-            throw new PipelineJobException("Unable to find file: " + plinkOutKingFile.getPath());
-        }
-
-        File plinkOutKingFileTxt = new File(plinkOutKingFile.getPath() + ".txt.gz");
-        if (plinkOutKingFileTxt.exists())
-        {
-            plinkOutKingFileTxt.delete();
-        }
-
-        long lineCount = SequencePipelineService.get().getLineCount(plinkOutKingFile)-1;
-        try
-        {
-            Compress.compressGzip(plinkOutKingFile, plinkOutKingFileTxt);
-            FileUtils.delete(plinkOutKingFile);
-        }
-        catch (IOException e)
-        {
-            throw new PipelineJobException(e);
-        }
-
-        output.addSequenceOutput(plinkOutKingFileTxt, "PLINK2/KING Relatedness: " + inputVCF.getName(), "PLINK2/KING Kinship", null, null, genome.getGenomeId(), "Total lines: " + lineCount);
+        long lineCount = SequencePipelineService.get().getLineCount(plinkOutKingFileGz)-1;
+        output.addSequenceOutput(plinkOutKingFileGz, "PLINK2/KING Relatedness: " + inputVCF.getName(), "PLINK2/KING Kinship", null, null, genome.getGenomeId(), "Total lines: " + lineCount);
 
         return output;
     }
