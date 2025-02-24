@@ -218,6 +218,15 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
             args.add(SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger()).toString());
         }
 
+        Integer maxRam = SequencePipelineService.get().getMaxRam();
+        if (maxRam != null)
+        {
+            args.add("--memory");
+
+            maxRam = maxRam * 1000;
+            args.add(String.valueOf(maxRam));
+        }
+
         args.addAll(getClientCommandArgs());
 
         getWrapper().execute(args);
