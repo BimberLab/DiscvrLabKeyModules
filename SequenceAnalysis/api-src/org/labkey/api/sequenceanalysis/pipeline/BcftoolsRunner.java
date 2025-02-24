@@ -39,7 +39,6 @@ public class BcftoolsRunner extends AbstractCommandWrapper
         args.add("index");
         args.add("-t");
         args.add("-f");
-        args.add("-n");
 
         if (!PipelineJobService.get().isWebServer())
         {
