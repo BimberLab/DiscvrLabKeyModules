@@ -33,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
@@ -44,6 +45,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.run.util.BgzipRunner;
+import org.labkey.sequenceanalysis.run.variant.GatherVcfsCloudWrapper;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -428,8 +430,19 @@ public class SequenceUtil
         //then sort/append the records
         CommandWrapper wrapper = SequencePipelineService.get().getCommandWrapper(log);
         String cat = isCompressed ? "zcat" : "cat";
+
+        String sortThreading = "";
+        if (!PipelineJobService.get().isWebServer())
+        {
+            Integer threads = SequencePipelineService.get().getMaxThreads(log);
+            if (threads != null && threads > 1)
+            {
+                sortThreading = " --parallel " + threads;
+            }
+        }
+
         File tempSorted = new File(input.getParent(), "sorted.tmp");
-        wrapper.execute(Arrays.asList("/bin/sh", "-c", "{ cat '" + tempHeader.getPath() + "'; " + cat + " '" + input.getPath() + "' | grep -v '^#' | sort -V -k1,1" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n") + "; } " + (isCompressed ? " | bgzip -c " : "")), ProcessBuilder.Redirect.to(tempSorted));
+        wrapper.execute(Arrays.asList("/bin/sh", "-c", "{ cat '" + tempHeader.getPath() + "'; " + cat + " '" + input.getPath() + "' | grep -v '^#' | sort -V -k1,1" + (startColumnIdx == null ? "" : " -k" + startColumnIdx + "," + startColumnIdx + "n") + sortThreading + "; } " + (isCompressed ? " | bgzip -c " : "")), ProcessBuilder.Redirect.to(tempSorted));
 
         //replace the non-sorted output
         input.delete();
@@ -454,6 +467,33 @@ public class SequenceUtil
     }
 
     public static File combineVcfs(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel, boolean showTotals, boolean sortAfterMerge) throws PipelineJobException
+    {
+        if (sortAfterMerge)
+        {
+            return combineVcfsUsingZcat(files, genome, outputGzip, log, multiThreaded, compressionLevel, showTotals, sortAfterMerge);
+        }
+        else
+        {
+            log.info("Combining VCFs using GatherVcfsCloudWrapper");
+            new GatherVcfsCloudWrapper(log).gatherVcfs(outputGzip, files);
+
+            File idx = new File(outputGzip.getPath() + ".tbi");
+            if (!idx.exists())
+            {
+                throw new PipelineJobException("Unable to find index: " + idx.getPath());
+            }
+
+            if (showTotals)
+            {
+                log.info("total variants: " + SequenceAnalysisService.get().getVCFLineCount(outputGzip, log, false));
+                log.info("passing variants: " + SequenceAnalysisService.get().getVCFLineCount(outputGzip, log, true));
+            }
+
+            return outputGzip;
+        }
+    }
+
+    private static File combineVcfsUsingZcat(List<File> files, ReferenceGenome genome, File outputGzip, Logger log, boolean multiThreaded, @Nullable Integer compressionLevel, boolean showTotals, boolean sortAfterMerge) throws PipelineJobException
     {
         log.info("combining VCFs: ");
 

@@ -72,6 +72,7 @@ import org.labkey.singlecell.pipeline.singlecell.IntegrateData;
 import org.labkey.singlecell.pipeline.singlecell.MergeSeurat;
 import org.labkey.singlecell.pipeline.singlecell.NormalizeAndScale;
 import org.labkey.singlecell.pipeline.singlecell.PerformDefaultNimbleAppend;
+import org.labkey.singlecell.pipeline.singlecell.PerformMhcDimRedux;
 import org.labkey.singlecell.pipeline.singlecell.PhenotypePlots;
 import org.labkey.singlecell.pipeline.singlecell.PlotAssayFeatures;
 import org.labkey.singlecell.pipeline.singlecell.PlotAverageCiteSeqCounts;
@@ -295,6 +296,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new UpdateSeuratPrototype.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunDecoupler.Provider());
         SequencePipelineService.get().registerPipelineStep(new PerformDefaultNimbleAppend.Provider());
+        SequencePipelineService.get().registerPipelineStep(new PerformMhcDimRedux.Provider());
 
         SequenceAnalysisService.get().registerReadsetListener(new SingleCellReadsetListener());
     }

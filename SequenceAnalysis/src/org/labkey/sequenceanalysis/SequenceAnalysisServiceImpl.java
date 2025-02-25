@@ -36,6 +36,7 @@ import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceDataProvider;
 import org.labkey.api.sequenceanalysis.model.Readset;
+import org.labkey.api.sequenceanalysis.pipeline.BcftoolsRunner;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SamtoolsCramConverter;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
@@ -267,8 +268,16 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
                 //note: there is a bug in htsjdk's index creation with gz inputs
                 if (gz.isType(vcf) && !SystemUtils.IS_OS_WINDOWS)
                 {
-                    TabixRunner r = new TabixRunner(log);
-                    r.execute(vcf);
+                    // preferentially use bcftools since it supports multithreading:
+                    if (BcftoolsRunner.isBcftoolsFound())
+                    {
+                        new BcftoolsRunner(log).doIndex(vcf);
+                    }
+                    else
+                    {
+                        new TabixRunner(log).execute(vcf);
+                    }
+
                     if (!expectedIdx.exists())
                     {
                         throw new PipelineJobException("Expected index was not created: " + expectedIdx.getPath());
