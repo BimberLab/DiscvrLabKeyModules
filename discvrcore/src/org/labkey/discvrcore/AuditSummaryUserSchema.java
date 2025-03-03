@@ -123,7 +123,7 @@ public class AuditSummaryUserSchema extends SimpleUserSchema
         DbSchema auditSchema = DbSchema.get("audit", DbSchemaType.Module);
         TableInfo ti = auditSchema.getTable(storageTableName);
 
-        SimpleTable<?> st = new SimpleTable<>(this, ti, ContainerFilter.current(target));
+        SimpleTable<?> st = new SimpleTable<>(this, ti, ContainerFilter.current(this));
         st.setName(tableName);
         st.init();
 
