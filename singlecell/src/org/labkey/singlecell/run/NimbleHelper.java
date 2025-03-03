@@ -501,7 +501,7 @@ public class NimbleHelper
         // Write barcodes:
         DISCVRSeqRunner runner = new DISCVRSeqRunner(log);
         List<String> barcodeArgs = new ArrayList<>(runner.getBaseArgs("Save10xBarcodes"));
-        barcodeArgs.add("--bam");
+        barcodeArgs.add("-I");
         barcodeArgs.add(bam.getPath());
 
         File cbOutput = new File(bam.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(bam.getName()) + "cb.txt.gz");
