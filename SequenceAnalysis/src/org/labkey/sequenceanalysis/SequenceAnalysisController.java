@@ -924,7 +924,7 @@ public class SequenceAnalysisController extends SpringActionController
         @Override
         public @NotNull URLHelper getSuccessURL(DeleteForm form)
         {
-            URLHelper url = form.getReturnURLHelper();
+            URLHelper url = form.getReturnUrlHelper();
             return url != null ? url : _table.getGridURL(getContainer()) != null ? _table.getGridURL(getContainer()) : getContainer().getStartURL(getUser());
         }
     }

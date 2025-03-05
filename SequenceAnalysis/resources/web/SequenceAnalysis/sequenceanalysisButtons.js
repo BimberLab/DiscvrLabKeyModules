@@ -286,7 +286,7 @@ SequenceAnalysis.Buttons = new function(){
                 pks: checked,
                 schemaName: 'sequenceanalysis',
                 queryName: 'sequence_readsets',
-                srcURL: LDK.Utils.getSrcURL()
+                returnUrl: LDK.Utils.getReturnUrl()
             })
         },
 

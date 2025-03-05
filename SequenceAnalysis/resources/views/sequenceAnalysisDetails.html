@@ -38,7 +38,7 @@ Ext4.onReady(function (){
                 text: 'More Actions',
                 menu: [{
                     text: 'Edit Analysis Details',
-                    href: LABKEY.ActionURL.buildURL('ldk', 'manageRecord', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_analyses', keyField: 'rowid', key: analysisId}) + '&returnUrl=' + LDK.Utils.getSrcURL()
+                    href: LABKEY.ActionURL.buildURL('ldk', 'manageRecord', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_analyses', keyField: 'rowid', key: analysisId}) + '&returnUrl=' + LDK.Utils.getReturnUrl()
                 }]
             }]
         }
@@ -94,7 +94,7 @@ Ext4.onReady(function (){
                         text: 'More Actions',
                         menu: [{
                             text: 'Edit Readset Details',
-                            href: LABKEY.ActionURL.buildURL('ldk', 'manageRecord', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', keyField: 'rowid', key: row.readset}) + '&returnUrl=' + LDK.Utils.getSrcURL()
+                            href: LABKEY.ActionURL.buildURL('ldk', 'manageRecord', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', keyField: 'rowid', key: row.readset}) + '&returnUrl=' + LDK.Utils.getReturnUrl()
                         }]
                     }]
                 }

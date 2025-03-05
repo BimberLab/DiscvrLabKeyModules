@@ -37,7 +37,7 @@ Ext4.onReady(function (){
                 text: 'More Actions',
                 menu: [{
                     text: 'Edit Details',
-                    href: LABKEY.ActionURL.buildURL('ldk', 'manageRecord', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', keyField: 'rowid', key: readsetId}) + '&returnUrl=' + LDK.Utils.getSrcURL()
+                    href: LABKEY.ActionURL.buildURL('ldk', 'manageRecord', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_readsets', keyField: 'rowid', key: readsetId}) + '&returnUrl=' + LDK.Utils.getReturnUrl()
                 }]
             }]
         }

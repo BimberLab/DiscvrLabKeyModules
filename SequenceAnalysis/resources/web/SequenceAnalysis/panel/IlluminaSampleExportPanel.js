@@ -226,7 +226,7 @@ Ext4.define('SequenceAnalysis.panel.IlluminaSampleExportPanel', {
             },{
                 text: 'Cancel',
                 handler: function(btn){
-                    var url = LABKEY.ActionURL.getParameter('srcURL');
+                    var url = LABKEY.ActionURL.getParameter('returnUrl');
                     if (url)
                         window.location = decodeURIComponent(url);
                     else
