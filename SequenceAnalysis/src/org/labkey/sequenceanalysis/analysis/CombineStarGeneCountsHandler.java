@@ -31,7 +31,6 @@ public class CombineStarGeneCountsHandler extends AbstractCombineGeneCountsHandl
     @Override
     protected void processOutputFiles(CountResults results, List<SequenceOutputFile> inputFiles, JSONObject params, GeneToNameTranslator translator, PipelineJob job, RecordedAction action) throws PipelineJobException
     {
-
         String strandedSelection = params.optString(STRANDED, INFER);
 
         //next iterate all read count TSVs to guess strandedness
@@ -69,12 +68,12 @@ public class CombineStarGeneCountsHandler extends AbstractCombineGeneCountsHandl
                         continue;
                     }
 
-                    Long unstranded = Long.parseLong(cells[1]);
-                    Long strand1 = Long.parseLong(cells[2]);
+                    long unstranded = Long.parseLong(cells[1]);
+                    long strand1 = Long.parseLong(cells[2]);
                     totalStrand1 += strand1;
-                    Long strand2 = Long.parseLong(cells[3]);
+                    long strand2 = Long.parseLong(cells[3]);
                     totalStrand2 += strand2;
-                    Long strandMax = Math.max(strand1, strand2);
+                    long strandMax = Math.max(strand1, strand2);
 
                     results.distinctGenes.add(geneId);
 
@@ -103,9 +102,9 @@ public class CombineStarGeneCountsHandler extends AbstractCombineGeneCountsHandl
                         strand2Map = new HashMap<>(Math.max(results.distinctGenes.size() + 500, 5000));
                     }
 
-                    unstrandedMap.put(geneId, unstranded.doubleValue());
-                    strand1Map.put(geneId, strand1.doubleValue());
-                    strand2Map.put(geneId, strand2.doubleValue());
+                    unstrandedMap.put(geneId, (double)unstranded);
+                    strand1Map.put(geneId, (double)strand1);
+                    strand2Map.put(geneId, (double)strand2);
 
                     unstrandedCounts.put(so.getRowid(), unstrandedMap);
                     strand1Counts.put(so.getRowid(), strand1Map);
@@ -125,8 +124,9 @@ public class CombineStarGeneCountsHandler extends AbstractCombineGeneCountsHandl
 
         //finally build output
         double avgStrandRatio = sumStrandRatio / countStrandRatio;
+        double threshold = params.optDouble("strandedThreshold", 0.9);
         job.getLogger().info("the average stranded/unstranded ratio for all samples was: " + avgStrandRatio);
-        double threshold = 0.9;
+
         String inferredStrandedness;
         job.getLogger().info("Attempting to infer strandedness");
         if (avgStrandRatio > threshold)
