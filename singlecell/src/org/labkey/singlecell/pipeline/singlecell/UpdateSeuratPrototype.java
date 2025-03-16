@@ -140,7 +140,8 @@ public class UpdateSeuratPrototype extends AbstractRDiscvrStep
                 toReplace.delete();
             }
 
-            FileUtils.moveFile(wrapper.getFile(), toReplace);
+            FileUtils.copyFile(wrapper.getFile(), toReplace);
+            ctx.getFileManager().addIntermediateFile(wrapper.getFile());
 
             // Also metadata:
             File meta = CellHashingServiceImpl.get().getMetaTableFromSeurat(wrapper.getFile());
@@ -149,7 +150,8 @@ public class UpdateSeuratPrototype extends AbstractRDiscvrStep
             {
                 metaOrig.delete();
             }
-            FileUtils.moveFile(meta, metaOrig);
+            FileUtils.copyFile(meta, metaOrig);
+            ctx.getFileManager().addIntermediateFile(meta);
 
             // Also cellbarcodes:
             File cellbarcodes = CellHashingServiceImpl.get().getCellBarcodesFromSeurat(wrapper.getFile());
@@ -158,7 +160,8 @@ public class UpdateSeuratPrototype extends AbstractRDiscvrStep
             {
                 cellbarcodesOrig.delete();
             }
-            FileUtils.moveFile(cellbarcodes, cellbarcodesOrig);
+            FileUtils.copyFile(cellbarcodes, cellbarcodesOrig);
+            ctx.getFileManager().addIntermediateFile(cellbarcodes);
         }
         catch (IOException e)
         {

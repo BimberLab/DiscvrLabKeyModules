@@ -37,7 +37,7 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
-import org.labkey.sequenceanalysis.run.util.LiftoverBcfToolsWrapper;
+import org.labkey.api.sequenceanalysis.run.LiftoverBcfToolsWrapper;
 import org.labkey.sequenceanalysis.run.util.LiftoverVcfWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
