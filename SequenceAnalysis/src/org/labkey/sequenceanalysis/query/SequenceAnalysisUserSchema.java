@@ -31,13 +31,13 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.writer.HtmlWriter;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 
-import java.io.IOException;
-import java.io.Writer;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 
@@ -259,7 +259,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
                     return new DataColumn(colInfo)
                     {
                         @Override
-                        public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
+                        public void renderGridCellContents(RenderContext ctx, HtmlWriter out)
                         {
                             Object o = getValue(ctx);
                             if (o != null)
@@ -267,9 +267,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
                                 ActionURL url = QueryService.get().urlFor(getUser(), ctx.getContainer(), QueryAction.executeQuery, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READ_DATA);
                                 url.addFilter("query", FieldKey.fromString("readset"), CompareType.EQUAL, o);
 
-                                out.write("<a class=\"labkey-text-link\" href=\"" + url + "\">");
-                                out.write("View File(s)");
-                                out.write("</a>");
+                                out.write(PageFlowUtil.link("View File(s)", url));
                             }
                             else
                             {
@@ -448,19 +446,20 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             return new DataColumn(colInfo)
             {
                 @Override
-                public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
+                public void renderGridCellContents(RenderContext ctx, HtmlWriter out)
                 {
                     String result = StringUtils.trimToNull(super.getFormattedHtml(ctx).toString());
-                    String delim = "";
+                    HtmlString delim = HtmlString.EMPTY_STRING;
                     if (result != null)
                     {
                         String[] tokens = result.split(",");
                         for (String token : tokens)
                         {
-                            String url = DetailsURL.fromString(_baseUrl + PageFlowUtil.encode(token), ctx.getContainer()).getActionURL().toString();
+                            ActionURL url = DetailsURL.fromString(_baseUrl + PageFlowUtil.encode(token), ctx.getContainer()).getActionURL();
 
-                            out.write(delim + "<a href=\"" + url + "\">" + token + "</a>");
-                            delim = "<br>";
+                            out.write(delim);
+                            out.write(PageFlowUtil.link(token, url).clearClasses());
+                            delim = HtmlString.BR;
                         }
                     }
                 }

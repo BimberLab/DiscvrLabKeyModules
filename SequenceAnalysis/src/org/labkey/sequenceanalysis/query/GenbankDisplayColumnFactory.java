@@ -6,6 +6,8 @@ import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.URLHelper;
+import org.labkey.api.writer.HtmlWriter;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -23,26 +25,25 @@ public class GenbankDisplayColumnFactory implements DisplayColumnFactory
     @Override
     public DisplayColumn createRenderer(ColumnInfo colInfo)
     {
-        DataColumn ret = new DataColumn(colInfo)
+        return new DataColumn(colInfo)
         {
             @Override
-            public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
+            public void renderGridCellContents(RenderContext ctx, HtmlWriter out)
             {
-                Object val = ctx.get(getBoundColumn().getFieldKey());
+                String val = ctx.get(getBoundColumn().getFieldKey(), String.class);
                 if (val != null)
                 {
-                    String[] vals = String.valueOf(val).replaceAll("\\s+", "").split(";|,");
+                    String[] vals = val.replaceAll("\\s+", "").split("[;,]");
                     String delim = "";
                     for (String v : vals)
                     {
-                        out.write(delim + "<a href=" + getFormattedURL(v) + ">" + PageFlowUtil.encode(v) + "</a>");
+                        out.write(delim);
+                        out.write(PageFlowUtil.link(v).href(getFormattedURL(v)).clearClasses());
                         delim = "; ";
                     }
                 }
             }
         };
-
-        return ret;
     }
 
     protected String getFormattedURL(String v)
