@@ -185,7 +185,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             if (val.indexOf('=') > -1) {
                 const split = val.split('=')
                 if (split.length === 2) {
-                    val = val[1]
+                    val = split[1]
                 }
             }
 
