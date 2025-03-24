@@ -892,6 +892,60 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
+    public static class LuceneCSVExport extends ReadOnlyApiAction<LuceneQueryForm>
+    {
+        @Override
+        public ApiResponse execute(LuceneQueryForm form, BindException errors) throws Exception
+        {
+            JBrowseLuceneSearch searcher;
+            try
+            {
+                searcher = JBrowseLuceneSearch.create(form.getSessionId(), form.getTrackId(), getUser());
+            }
+            catch (IllegalArgumentException e)
+            {
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+
+            getViewContext().getResponse().setContentType("text/csv");
+            getViewContext().getResponse().setHeader("Content-Disposition", "attachment; filename=\"mgap_export.csv\"");
+
+            try
+            {
+                /*searcher.exportCsv(
+                        getUser(),
+                        PageFlowUtil.decode(form.getSearchString()),
+                        form.getSortField(),
+                        form.getSortReverse(),
+                        getViewContext().getResponse().getWriter()
+                );*/
+            }
+            catch (Exception e)
+            {
+                _log.error("Error exporting CSV from Lucene query", e);
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+
+            return null;
+        }
+
+        @Override
+        public void validateForm(LuceneQueryForm form, Errors errors)
+        {
+            if ((form.getSearchString() == null || form.getSessionId() == null || form.getTrackId() == null))
+            {
+                errors.reject(ERROR_MSG, "Must provide search string, track ID, and the JBrowse session ID");
+            }
+            else if (!isValidUUID(form.getTrackId()))
+            {
+                errors.reject(ERROR_MSG, "Invalid track ID: " + form.getTrackId());
+            }
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
     public static class LuceneQueryAction extends ReadOnlyApiAction<LuceneQueryForm>
     {
         @Override
