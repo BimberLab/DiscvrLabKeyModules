@@ -40,7 +40,6 @@ import org.labkey.openldapsync.OpenLdapSyncSchema;
 import org.labkey.security.xml.GroupEnumType;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
-import org.quartz.JobExecutionException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -99,7 +98,7 @@ public class LdapSyncRunner implements Job
     }
 
     @Override
-    public void execute(JobExecutionContext context) throws JobExecutionException
+    public void execute(JobExecutionContext context)
     {
         try
         {
@@ -284,7 +283,7 @@ public class LdapSyncRunner implements Job
         }
     }
 
-    private void handleGroupsRemovedFromLdap() throws LdapException
+    private void handleGroupsRemovedFromLdap()
     {
         //find any previously synced groups that are no longer present
         List<LdapSyncModel> records = getPreviouslySyncedRecords(PrincipalType.GROUP);
@@ -522,7 +521,7 @@ public class LdapSyncRunner implements Job
             previouslySynced.remove(syncedUser);
         }
 
-        if (previouslySynced.size() > 0)
+        if (!previouslySynced.isEmpty())
         {
             //TODO: determine whether to delete/deactive, etc?
             for (Integer userId : previouslySynced)
@@ -543,7 +542,7 @@ public class LdapSyncRunner implements Job
             previouslySyncedGroups.remove(syncedGroup);
         }
 
-        if (previouslySyncedGroups.size() > 0)
+        if (!previouslySyncedGroups.isEmpty())
         {
             //TODO: determine whether to delete/deactive, etc
             for (Integer groupId : previouslySyncedGroups)
@@ -569,14 +568,7 @@ public class LdapSyncRunner implements Job
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("provider"), _wrapper.getProviderName(), CompareType.EQUAL);
         TableSelector ts = new TableSelector(ti, filter, null);
 
-        ts.forEach(LdapSyncModel.class, new Selector.ForEachBlock<LdapSyncModel>()
-        {
-            @Override
-            public void exec(LdapSyncModel model)
-            {
-                _syncedRecordMap.put(model.getSourceId(), model);
-            }
-        });
+        ts.forEach(LdapSyncModel.class, model -> _syncedRecordMap.put(model.getSourceId(), model));
     }
 
     private User createUser(LdapEntry ldapEntry) throws LdapException
@@ -702,7 +694,7 @@ public class LdapSyncRunner implements Job
 
         if (!_previewOnly)
         {
-            return SecurityManager.createGroup(getUserGroupContainer(), groupName);
+            return SecurityManager.createGroup(getUserGroupContainer(), groupName, _settings.getLabKeyAdminUser());
         }
         else
         {
@@ -712,11 +704,11 @@ public class LdapSyncRunner implements Job
 
     private void deleteGroup(Group g)
     {
-        log("Deleteing LabKey group: " + g.getName());
+        log("Deleting LabKey group: " + g.getName());
         _groupsRemoved++;
 
         if (!_previewOnly)
-            SecurityManager.deleteGroup(g);
+            SecurityManager.deleteGroup(g, _settings.getLabKeyAdminUser());
     }
 
     private void deleteUser(User u) throws LdapException
@@ -894,8 +886,7 @@ public class LdapSyncRunner implements Job
             if (project == null)
             {
                 project = ContainerManager.createContainer(ContainerManager.getRoot(), PROJECT_NAME, TestContext.get().getUser());
-                Set<Module> modules = new HashSet<>();
-                modules.addAll(project.getActiveModules());
+                Set<Module> modules = new HashSet<>(project.getActiveModules());
                 modules.add(ModuleLoader.getInstance().getModule(OpenLdapSyncModule.NAME));
                 project.setActiveModules(modules);
             }
@@ -962,7 +953,7 @@ public class LdapSyncRunner implements Job
                 _log.info("Cleaning up group: "+ groupName);
                 Group g = GroupManager.getGroup(getProject(), groupName, GroupEnumType.PROJECT);
                 if (g != null)
-                    SecurityManager.deleteGroup(g);
+                    SecurityManager.deleteGroup(g, TestContext.get().getUser());
             }
         }
 

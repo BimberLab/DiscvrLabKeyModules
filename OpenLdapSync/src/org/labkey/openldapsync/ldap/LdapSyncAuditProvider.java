@@ -6,6 +6,7 @@ import org.labkey.api.audit.AuditTypeEvent;
 import org.labkey.api.audit.AuditTypeProvider;
 import org.labkey.api.audit.query.AbstractAuditDomainKind;
 import org.labkey.api.audit.query.DefaultAuditTypeTable;
+import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.MutableColumnInfo;
@@ -121,7 +122,7 @@ public class LdapSyncAuditProvider extends AbstractAuditTypeProvider implements 
     public static void addAuditEntry(User user, int usersAdded, int usersRemoved, int usersInactivated, int usersModified, int groupsAdded, int groupsRemoved, int membershipsAdded, int membershipsRemoved)
     {
         String comment = String.format("LDAP Sync Summary: users added: %s, users removed: %s, users inactivated: %s, users modified: %s, groups added: %s, groups removed: %s, memberships added: %s, memberships removed: %s", usersAdded, usersRemoved, usersInactivated, usersModified, groupsAdded, groupsRemoved, membershipsAdded, membershipsRemoved);
-        LdapSyncAuditProvider.LdapSyncAuditEvent event = new LdapSyncAuditProvider.LdapSyncAuditEvent(ContainerManager.getRoot().getId(), comment);
+        LdapSyncAuditProvider.LdapSyncAuditEvent event = new LdapSyncAuditProvider.LdapSyncAuditEvent(ContainerManager.getRoot(), comment);
 
         event.setTotalUsersAndGroupsAdded(usersAdded + groupsAdded);
         event.setTotalUsersAndGroupsRemoved(usersRemoved + groupsRemoved);
@@ -141,7 +142,7 @@ public class LdapSyncAuditProvider extends AbstractAuditTypeProvider implements 
             super();
         }
 
-        public LdapSyncAuditEvent(String container, String comment)
+        public LdapSyncAuditEvent(Container container, String comment)
         {
             super(LdapSyncRunner.AUDIT_EVENT_TYPE, container, comment);
         }
