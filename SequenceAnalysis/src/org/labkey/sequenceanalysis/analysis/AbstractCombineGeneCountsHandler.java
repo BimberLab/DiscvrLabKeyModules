@@ -81,11 +81,16 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
 
         if (allowInferStranded)
         {
-            ret.add(ToolParameterDescriptor.create(STRANDED, "Strand 1", "Choose whether to treat these data as stranded, unstranded, or to have the script infer the strandedness", "ldk-simplecombo", new JSONObject()
+            ret.add(ToolParameterDescriptor.create(STRANDED, "Strandedness", "Choose whether to treat these data as stranded, unstranded, or to have the script infer the strandedness", "ldk-simplecombo", new JSONObject()
             {{
                 put("storeValues", STRAND1 + ";" + STRAND2 + ";" + UNSTRANDED + ";" + INFER);
                 put("value", INFER);
             }}, INFER));
+            ret.add(ToolParameterDescriptor.create("strandedThreshold", "Strandedness Threshold", "If infer is selected, Choose whether to treat these data as stranded, unstranded, or to have the script infer the strandedness", "ldk-simplecombo", new JSONObject(){{
+                put("minValue", 0);
+                put("maxValue", 1);
+                put("decimalPrecision", 2);
+            }}, 0.9));
         }
 
         return ret;
@@ -305,7 +310,7 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
                 header.add(hp.getHeader(ctx, outputFileMap.get(rowId)));
             }
 
-            writer.writeNext(header.toArray(new String[header.size()]));
+            writer.writeNext(header.toArray(new String[0]));
 
             Set<String> genesWithoutData = new TreeSet<>();
             for (String geneId : results.distinctGenes)
@@ -313,21 +318,12 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
                 List<String> row = new ArrayList<>(inputFiles.size() + 3);
                 if (translator.getGeneMap().containsKey(geneId))
                 {
-                    if (translator.getGeneMap().containsKey(geneId))
-                    {
-                        row.add(geneId);
-                        row.add(translator.getGeneMap().get(geneId).get("gene_name"));
-                        row.add(translator.getGeneMap().get(geneId).get("gene_description"));
-                    }
-                    else
-                    {
-                        row.add(geneId);
-                        row.add("");
-                        row.add("");
-                    }
+                    row.add(geneId);
+                    row.add(translator.getGeneMap().get(geneId).get("gene_name"));
+                    row.add(translator.getGeneMap().get(geneId).get("gene_description"));
 
                     List<String> toAdd = new ArrayList<>();
-                    Integer totalWithData = 0;
+                    int totalWithData = 0;
                     for (Integer rowId : outputFileMap.keySet())
                     {
                         Double count = results.counts.get(rowId).get(geneId);
@@ -341,9 +337,9 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
 
                     if (totalWithData > 0 || !doSkipGenesWithoutData)
                     {
-                        row.add(totalWithData.toString());
+                        row.add(String.valueOf(totalWithData));
                         row.addAll(toAdd);
-                        writer.writeNext(row.toArray(new String[row.size()]));
+                        writer.writeNext(row.toArray(new String[0]));
                     }
 
                     if (totalWithData == 0 && !OTHER_IDS.contains(geneId))

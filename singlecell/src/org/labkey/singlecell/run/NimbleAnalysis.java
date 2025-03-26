@@ -58,6 +58,8 @@ public class NimbleAnalysis extends AbstractPipelineStep implements AnalysisStep
         NimbleHelper helper = new NimbleHelper(getPipelineCtx(), getProvider(), getStepIdx());
         helper.doNimbleAlign(inputBam, output, rs, FileUtil.getBaseName(inputBam));
 
+        NimbleHelper.write10xBarcodes(inputBam, getPipelineCtx().getLogger(), rs, referenceGenome, output);
+
         return output;
     }
 

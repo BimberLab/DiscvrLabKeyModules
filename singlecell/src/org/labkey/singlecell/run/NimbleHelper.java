@@ -5,6 +5,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.StringBuilderWriter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -27,6 +28,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.run.DISCVRSeqRunner;
 import org.labkey.api.sequenceanalysis.run.DockerWrapper;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
@@ -492,6 +494,28 @@ public class NimbleHelper
         }
 
         return resultMap;
+    }
+
+    public static void write10xBarcodes(File bam, Logger log, Readset rs, ReferenceGenome referenceGenome, PipelineStepOutput output) throws PipelineJobException
+    {
+        // Write barcodes:
+        DISCVRSeqRunner runner = new DISCVRSeqRunner(log);
+        List<String> barcodeArgs = new ArrayList<>(runner.getBaseArgs("Save10xBarcodes"));
+        barcodeArgs.add("-I");
+        barcodeArgs.add(bam.getPath());
+
+        File cbOutput = new File(bam.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(bam.getName()) + "cb.txt.gz");
+        barcodeArgs.add("--cbOutput");
+        barcodeArgs.add(cbOutput.getPath());
+
+        File umiOutput = new File(bam.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(bam.getName()) + "umi.txt.gz");
+        barcodeArgs.add("--umiOutput");
+        barcodeArgs.add(umiOutput.getPath());
+
+        runner.execute(barcodeArgs);
+
+        output.addSequenceOutput(cbOutput, "10x CellBarcode Map: " + rs.getName(), "10x CellBarcode Map", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+        output.addSequenceOutput(umiOutput, "10x UMI Map: " + rs.getName(), "10x UMI Map", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
     }
 
     public static File runNimbleReport(File alignResultsGz, int genomeId, PipelineStepOutput output, PipelineContext ctx) throws PipelineJobException
