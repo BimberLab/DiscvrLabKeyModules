@@ -1,6 +1,6 @@
 import { isEmptyObject } from 'jquery';
 import jexl from 'jexl';
-import { createViewState, loadPlugins } from '@jbrowse/react-linear-genome-view';
+import { createViewState, loadPlugins } from '@jbrowse/react-linear-genome-view2';
 import { ActionURL, Ajax } from '@labkey/api';
 import {
     getGridNumericOperators,
