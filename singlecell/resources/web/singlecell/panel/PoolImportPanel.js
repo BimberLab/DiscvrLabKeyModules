@@ -182,6 +182,13 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 val = val.replace(/ PBMC/, '');
             }
 
+            if (val.indexOf('=') > -1) {
+                const split = val.split('=')
+                if (split.length === 2) {
+                    val = split[1]
+                }
+            }
+
             return val;
         },
 

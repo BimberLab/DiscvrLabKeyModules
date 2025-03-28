@@ -55,6 +55,9 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
                     ToolParameterDescriptor.create("excessHet", "ExcessHet", "If selected, the ExcessHet annotation will run.", "checkbox", new JSONObject(){{
                         put("checked", false);
                     }}, null),
+                    ToolParameterDescriptor.create("svtype", "SVType", "If selected, the SVType annotation will run.", "checkbox", new JSONObject(){{
+                        put("checked", false);
+                    }}, null),
                     new PedigreeToolParameterDescriptor()
             ), PageFlowUtil.set(PedigreeToolParameterDescriptor.getClientDependencyPath()), "");
         }
@@ -117,6 +120,12 @@ public class VariantAnnotatorStep extends AbstractCommandPipelineStep<VariantAnn
         {
             options.add("-A");
             options.add("ExcessHet");
+        }
+
+        if (getProvider().getParameterByName("svtype").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
+        {
+            options.add("-A");
+            options.add("SVType");
         }
 
         if (intervals != null)

@@ -87,6 +87,8 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
             }
         }
 
+        NimbleHelper.write10xBarcodes(localBam, getWrapper().getLogger(), rs, referenceGenome, output);
+
         // Now run nimble itself:
         NimbleHelper helper = new NimbleHelper(getPipelineCtx(), getProvider(), getStepIdx());
         helper.doNimbleAlign(localBam, output, rs, basename);
