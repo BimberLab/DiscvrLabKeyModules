@@ -1,11 +1,9 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { App } from '@labkey/api';
 
 import StandaloneSearch from '../StandaloneSearch';
 
 App.registerApp<any>('jbrowseSearchWebpart', (target: string, sessionId: string) => {
-    ReactDOM.render(
-        <StandaloneSearch sessionId={sessionId} />
-    , document.getElementById(target));
+    createRoot(document.getElementById(target)).render(<StandaloneSearch sessionId={sessionId} />)
 });
