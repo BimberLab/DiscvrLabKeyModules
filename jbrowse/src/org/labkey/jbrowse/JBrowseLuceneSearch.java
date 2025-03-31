@@ -83,7 +83,6 @@ public class JBrowseLuceneSearch
     private static final String GENOMIC_POSITION = "genomicPosition";
     private static final int maxCachedQueries = 1000;
     private static final long maxRamBytesUsed = 250 * 1024 * 1024L;
-    private static final int CSV_CHUNK_SIZE = 10000;
 
     private static final Cache<String, CacheEntry> _cache = new LuceneIndexCache();
 
