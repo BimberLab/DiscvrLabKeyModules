@@ -96,13 +96,15 @@ const VariantTableWidget = observer(props => {
     const handleExport = () => {
         const currentUrl = new URL(window.location.href);
 
-        const searchString = createEncodedFilterString(filters, false);
+        const searchString = createEncodedFilterString(filters, true);
         const sortField = sortModel[0]?.field ?? 'genomicPosition';
         const sortDirection = sortModel[0]?.sort ?? false;
 
         const sortReverse = (sortDirection === 'desc');
 
-        const exportUrl = new URL(ActionURL.buildURL('jbrowse', 'csvExport.api'));
+        const rawUrl = ActionURL.buildURL('jbrowse', 'luceneCSVExport.api');
+        const exportUrl = new URL(rawUrl, window.location.origin);
+
         exportUrl.searchParams.set('sessionId', sessionId);
         exportUrl.searchParams.set('trackId', trackGUID);
         exportUrl.searchParams.set('searchString', searchString);
