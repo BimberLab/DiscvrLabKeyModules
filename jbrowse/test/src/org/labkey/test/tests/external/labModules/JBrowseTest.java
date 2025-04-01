@@ -303,6 +303,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         // Wait for variants to load:
         getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> G"));
+        getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T"));
 
         Assert.assertEquals("Incorrect number of variants", 7, getTotalVariantFeatures());
 

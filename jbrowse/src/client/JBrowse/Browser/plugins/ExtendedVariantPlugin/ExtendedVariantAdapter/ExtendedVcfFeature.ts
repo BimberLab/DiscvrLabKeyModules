@@ -1,32 +1,14 @@
 import { VcfFeature } from '@jbrowse/plugin-variants'
-import VcfParser from '@gmod/vcf'
+import VcfParser, { Variant } from '@gmod/vcf';
 
 export default class ExtendedVcfFeature extends VcfFeature {
-    private readonly vcfParser: VcfParser
-
-    constructor(args: { variant: any; parser: VcfParser; id: string }) {
+    constructor(args: { variant: Variant; parser: VcfParser; id: string }) {
         args.variant = ExtendedVcfFeature.extractImpact(args.variant)
-        //args.variant = ExtendedVcfFeature.calculateVariableSamples(args.variant)
 
         super(args)
-
-        this.vcfParser = args.parser
     }
 
-    public getInfoFieldMeta(propKey: string): VcfParser {
-        const map = this.vcfParser.getMetadata("INFO")
-
-        return map ? map[propKey] :  null
-    }
-
-    static extractImpact(variant:  {
-        REF: string
-        POS: number
-        ALT: string[]
-        CHROM: string
-        INFO: any
-        ID: string[]
-    }) {
+    static extractImpact(variant: Variant) {
         // Only append if not present:
         if (variant.INFO["IMPACT"]) {
             return(variant);

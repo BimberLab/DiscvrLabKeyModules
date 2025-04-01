@@ -1,10 +1,8 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-
 import View from './Browser';
+import { createRoot } from 'react-dom/client';
+import React from 'react';
 
-const render = () => {
-    ReactDOM.render(<View />, document.getElementById('app'));
-};
-
-render();
+// Need to wait for container element to be available in labkey wrapper before render
+window.addEventListener('DOMContentLoaded', (event) => {
+    createRoot(document.getElementById('app')).render(<View />)
+}, true);
