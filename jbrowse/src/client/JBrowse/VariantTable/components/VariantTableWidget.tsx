@@ -101,10 +101,11 @@ const VariantTableWidget = observer(props => {
 
     // Maintain a cached list of all non-WT samples at this position:
     filteredFeatures.forEach(variant => {
-      if (!variant.get('INFO')['variableSamples'] && variant.get('SAMPLES')) {
+      if (!variant.get('INFO')['variableSamples']) {
         variant.get('INFO')['variableSamples'] = []
-        Object.keys(variant.get('SAMPLES')).forEach(function(sampleId) {
-          const gt = variant.get('SAMPLES')[sampleId]["GT"] ? variant.get('SAMPLES')[sampleId]["GT"][0] : null
+        const genotypes = variant.get('GENOTYPES')()
+        Object.keys(genotypes).forEach(function(sampleId) {
+          const gt = genotypes[sampleId] ? genotypes[sampleId] : null
           if (isVariant(gt)) {
             variant.get('INFO')['variableSamples'].push(sampleId)
           }
