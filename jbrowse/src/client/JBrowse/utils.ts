@@ -4,7 +4,6 @@ import { createViewState, loadPlugins } from '@jbrowse/react-linear-genome-view2
 import { ActionURL, Ajax } from '@labkey/api';
 import {
     getGridNumericOperators,
-    GridCellParams,
     GridColDef,
     GridColType,
     GridComparatorFn,
@@ -12,6 +11,7 @@ import {
     GridFilterOperator
 } from '@mui/x-data-grid';
 import { ParsedLocString, parseLocString } from '@jbrowse/core/util';
+import { VcfFeature } from '@jbrowse/plugin-variants';
 
 export function arrayMax(array) {
     return Array.isArray(array) ? Math.max(...array) : array
@@ -43,21 +43,15 @@ export function passesInfoFilters(feature, filters) {
     return true
 }
 
-export function passesSampleFilters(feature, sampleIDs){
+export function passesSampleFilters(variant : VcfFeature, sampleIDs){
     if (!sampleIDs || sampleIDs.length === 0) {
         return true
     }
 
-    const featureVariant = feature.variant ?? feature.data
-    const samples = featureVariant.SAMPLES || featureVariant.samples
-    if (!samples || isEmptyObject(samples)) {
-        return false
-    }
-
     // Preferentially use pre-computed values:
-    if (featureVariant.INFO._variableSamples) {
+    if (variant.get('INFO')['_variableSamples']) {
         for (const sampleId of sampleIDs) {
-            if (featureVariant.INFO._variableSamples.indexOf(sampleId) > -1) {
+            if (variant.get('INFO')._variableSamples.indexOf(sampleId) > -1) {
                 return true
             }
         }
@@ -65,9 +59,14 @@ export function passesSampleFilters(feature, sampleIDs){
         return false
     }
 
+    const genotypes = variant.get('GENOTYPES')()
+    if (!genotypes || isEmptyObject(genotypes)) {
+        return false
+    }
+
     for (const sampleId of sampleIDs) {
-        if (samples[sampleId]) {
-            const gt = samples[sampleId]["GT"][0]
+        if (genotypes[sampleId]) {
+            const gt = genotypes[sampleId]
 
             // If any sample in the whitelist is non-WT, show this site. Otherwise filter.
             if (isVariant(gt)) {
