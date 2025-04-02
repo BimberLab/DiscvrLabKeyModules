@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-import { JBrowseLinearGenomeView, ViewModel } from '@jbrowse/react-linear-genome-view';
+import { JBrowseLinearGenomeView, ViewModel } from '@jbrowse/react-linear-genome-view2'
 import { createTheme } from '@mui/material/styles';
 import LogSession from './plugins/LogSession/index';
 import ExtendedVariantPlugin from './plugins/ExtendedVariantPlugin/index';
