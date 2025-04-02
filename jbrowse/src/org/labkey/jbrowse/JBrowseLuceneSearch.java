@@ -42,7 +42,6 @@ import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.security.User;
 import org.labkey.api.settings.AppProps;
-import org.labkey.api.util.Filter;
 import org.labkey.api.util.ShutdownListener;
 import org.labkey.api.util.logging.LogHelper;
 import org.labkey.jbrowse.model.JBrowseSession;
@@ -62,6 +61,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -506,7 +506,7 @@ public class JBrowseLuceneSearch
         }
 
         @Override
-        public int removeUsingFilter(Filter<String> filter)
+        public int removeUsingFilter(Predicate<String> filter)
         {
             return _cache.removeUsingFilter(filter);
         }
