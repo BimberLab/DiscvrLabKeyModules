@@ -39,6 +39,7 @@ import { BaseFeatureDataAdapter } from '@jbrowse/core/data_adapters/BaseAdapter'
 import { lastValueFrom } from 'rxjs';
 
 const VariantTableWidget = observer(props => {
+    const numberFormatter = new Intl.NumberFormat('en-US');
     const { assembly, trackId, parsedLocString, sessionId, session, pluginManager } = props;
     const { assemblyNames = [], assemblyManager } = session ?? {};
     const { view } = session ?? {};
@@ -469,6 +470,14 @@ const VariantTableWidget = observer(props => {
                 setSortModel(newModel)
                 handleQuery(filters, true, { page: 0, pageSize: pageSizeModel.pageSize }, newModel);
             }}
+            localeText={{
+                MuiTablePagination: {
+                    labelDisplayedRows: ({ from, to, count }) =>
+                        `${numberFormatter.format(from)}–${numberFormatter.format(to)} of ${
+                            count !== -1 ? numberFormatter.format(count) : 'more than ' + numberFormatter.format(to)
+                        }`,
+                    },
+                }}
         />
     )
 
