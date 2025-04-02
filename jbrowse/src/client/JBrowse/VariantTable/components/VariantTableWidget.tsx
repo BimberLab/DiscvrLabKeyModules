@@ -444,7 +444,7 @@ const VariantTableWidget = observer(props => {
           </Grid>
 
           {supportsLuceneIndex ? <Grid key='luceneViewButton' item xs="auto">
-            <Button hidden={!supportsLuceneIndex} style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("luceneRedirect")}>Switch to Free-text Search</Button>
+            <Button hidden={!supportsLuceneIndex} style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("luceneRedirect")}>Switch to Full-text Search</Button>
           </Grid> : null}
         </Grid>
       </div>
