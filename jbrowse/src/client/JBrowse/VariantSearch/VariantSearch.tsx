@@ -11,12 +11,11 @@ import ExtendedVariantPlugin from '../Browser/plugins/ExtendedVariantPlugin/inde
 import VariantTableWidget from './components/VariantTableWidget';
 import { fetchSession } from '../utils';
 import { ErrorBoundary } from './components/ErrorBoundary';
-import LoadingIndicator from './components/LoadingIndicator';
 import deepmerge from '@mui/utils/deepmerge';
 
 const nativePlugins = [ExtendedVariantPlugin, LogSession]
 
-function VariantTable() {
+function VariantSearch() {
     const queryParam = new URLSearchParams(window.location.search);
     const sessionId = queryParam.get('session') || queryParam.get('database') || queryParam.get('sessionId')
     const locString = queryParam.get('location') || queryParam.get('loc')
@@ -97,4 +96,4 @@ function VariantTable() {
     )
 }
 
-export default observer(VariantTable)
+export default observer(VariantSearch)
