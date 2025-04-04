@@ -13,6 +13,6 @@
  }
 
  .MuiDialog-paperScrollPaper {
-   max-height: 100vh;
+   max-height: 95vh;
    overflow-y: scroll;
  }

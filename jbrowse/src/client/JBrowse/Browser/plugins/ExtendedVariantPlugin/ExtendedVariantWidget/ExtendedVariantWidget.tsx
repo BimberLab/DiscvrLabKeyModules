@@ -407,7 +407,7 @@ export default jbrowse => {
         feat["INFO"] = null
 
         return (
-                <Paper data-testid="extended-variant-widget" style={{height: '100vh', overflowY: 'scroll'}}>
+                <Paper data-testid="extended-variant-widget">
                     {message}
                     <FeatureDetails
                             feature={feat}
