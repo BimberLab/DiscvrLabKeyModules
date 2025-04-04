@@ -496,10 +496,10 @@ public class JBrowseTest extends BaseWebDriverTest
         assertElementPresent(Locator.tagWithText("td", "3041"));
         assertElementPresent(Locator.tagWithText("span", "Genotype Frequency (2329)"));
         assertElementPresent(Locator.tagWithText("a", "Click here to view sample-level genotypes"));
-        while(isTextPresent("Loading")){
+        while (isTextPresent("Loading")){
             sleep(10);
         }
-        assertElementPresent(Locator.tagWithAttributeContaining("div","id","reactgooglegraph"));
+        waitForElement(Locator.tagWithAttributeContaining("div","id","reactgooglegraph"));
     }
 
     @Override
