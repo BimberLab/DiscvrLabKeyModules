@@ -330,7 +330,7 @@ export function serializeLocationToLuceneQuery(contig, start, end) {
 function generateLuceneString(field, operator, value) {
   let luceneQueryString = '';
 
-  if (field === 'variableSamples' && operator == "in set") {
+  if (field === 'variableSamples' && operator == "equals one of") {
     return `variableSamples:~${value}~`;
   }
   let intValue = parseInt(value);
@@ -656,7 +656,7 @@ export function searchStringToInitialFilters(knownFieldNames: string[]) : Filter
 
 export function getOperatorsForField(fieldObj: FieldModel): string[] {
     const stringOperators = ["equals", "does not equal", "contains", "does not contain", "starts with", "ends with", "is empty", "is not empty"];
-    const variableSamplesType = ["in set", "variable in", "not variable in", "variable in all of", "variable in any of", "not variable in any of", "not variable in one of", "is empty", "is not empty"];
+    const variableSamplesType = ["equals one of", "variable in", "not variable in", "variable in all of", "variable in any of", "not variable in any of", "not variable in one of", "is empty", "is not empty"];
     const numericOperators = ["=", "!=", ">", ">=", "<", "<="];
     const noneOperators = [];
 

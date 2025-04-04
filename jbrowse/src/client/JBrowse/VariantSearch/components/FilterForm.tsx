@@ -110,7 +110,7 @@ const FilterForm = (props: FilterFormProps ) => {
                         updatedFilter.value = '';
                     }
 
-                    if (value === "in set" || filter.operator === "in set") {
+                    if (value === "equals one of" || filter.operator === "equals one of") {
                         updatedFilter.value = ''; 
                     }
                 }
@@ -268,7 +268,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                     </Select>
                                 </FormControlMinWidth>
 
-                                {filter.operator === "in set" ? (
+                                {filter.operator === "equals one of" ? (
                                     <FormControlMinWidth sx={ highlightedInputs[index]?.value ? highlightedSx : null } >
                                         <InputLabel id="value-select-label">Value</InputLabel>
                                         <Select

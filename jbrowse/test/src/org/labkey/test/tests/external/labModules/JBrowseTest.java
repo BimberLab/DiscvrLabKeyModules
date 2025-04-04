@@ -1616,7 +1616,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "field-label")).click();
         waitForElement(Locator.tagWithText("li", "Samples With Variant")).click();
         waitForElement(Locator.tagWithAttribute("div", "aria-labelledby", "operator-label")).click();
-        waitForElement(Locator.tagWithText("li", "in set")).click();
+        waitForElement(Locator.tagWithText("li", "equals one of")).click();
         waitForElement(Locator.tagWithId("div", "value-select-0")).click();
         waitForElement(Locator.tagWithText("li", "!TestGroup!")).click();
         waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
