@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.run.variant;
 
 import htsjdk.samtools.util.Interval;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractVariantProcessingStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
@@ -12,7 +13,6 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.run.util.VariantEvalWrapper;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.util.List;
 

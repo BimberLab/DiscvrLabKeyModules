@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.run.variant;
 
 import htsjdk.samtools.util.Interval;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.exp.api.ExpData;
@@ -21,7 +22,6 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.SelectVariantsWrapper;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 
-import javax.annotation.Nullable;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
