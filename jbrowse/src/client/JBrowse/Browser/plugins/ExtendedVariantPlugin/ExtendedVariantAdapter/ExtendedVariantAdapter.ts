@@ -27,7 +27,7 @@ export default class extends VcfTabixAdapter {
                 observer.next(v)
             })
             observer.complete()
-        }, opts.signal)
+        }, opts.stopToken)
     }
 
     private async getFeaturesAsArray(query: NoAssemblyRegion, opts: BaseOptions = {}) {

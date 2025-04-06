@@ -1,10 +1,10 @@
-import jexl from 'jexl';
 import { SvgFeatureRendererReactComponent } from '@jbrowse/plugin-svg';
 import { observer } from 'mobx-react';
 import React from 'react';
 import { deserializeFilters } from '../../InfoFilterWidget/filterUtil';
 import Diamond from './Diamond';
 import { passesInfoFilters, passesSampleFilters } from '../../../../../utils';
+import { VcfFeature } from '@jbrowse/plugin-variants';
 
 export function ExtendedVariantRendering(props) {
     const { features, rendererConfig } = props
@@ -17,11 +17,11 @@ export function ExtendedVariantRendering(props) {
 
     const sampleFilters = activeSamples.value ? activeSamples.value.split(',') : null
 
-    function diamondValidator(feature) {
+    function diamondValidator(feature: VcfFeature) {
         return feature.get('type') === "SNV";
     }
 
-    function isFeatureDisplayed(feature) {
+    function isFeatureDisplayed(feature: VcfFeature) {
         return passesInfoFilters(feature, expandedFilters) && passesSampleFilters(feature, sampleFilters)
     }
 
