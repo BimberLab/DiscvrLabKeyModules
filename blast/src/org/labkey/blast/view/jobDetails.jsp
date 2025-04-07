@@ -30,7 +30,7 @@
     }
 %>
 <%
-    JspView<BlastJob> me = (JspView) HttpView.currentView();
+    JspView<BlastJob> me = HttpView.currentView();
     BlastJob job = me.getModelBean();
     String renderTarget = "blast-"; //TODO: make unique?
 
