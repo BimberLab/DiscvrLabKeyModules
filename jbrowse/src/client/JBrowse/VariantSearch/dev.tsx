@@ -1,10 +1,8 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
 
-import VariantTable from './VariantTable';
+import VariantSearch from './VariantSearch';
+import { createRoot } from 'react-dom/client';
 
-const render = () => {
-    ReactDOM.render(<VariantTable />, document.getElementById('app'));
-};
-
-render();
+window.addEventListener('DOMContentLoaded', (event) => {
+    createRoot(document.getElementById('app')).render(<VariantSearch />)
+}, true);

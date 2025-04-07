@@ -53,6 +53,11 @@ mergeBatchInMemory <- function(datasetIdToFilePath, saveFile) {
     return(saveFile)
 }
 
+if (is.null(maxAllowableInputFileSizeMb)) {
+    logger::log_info('maxAllowableInputFileSizeMb not provided, defaulting to 200')
+    maxAllowableInputFileSizeMb <- 200
+}
+
 mergeBatch <- function(seuratObjects, outerBatchIdx, maxBatchSize = 20, maxInputFileSizeMb = maxAllowableInputFileSizeMb) {
     logger::log_info(paste0('Beginning outer batch: ', outerBatchIdx, ' with total files: ', length(seuratObjects)))
 

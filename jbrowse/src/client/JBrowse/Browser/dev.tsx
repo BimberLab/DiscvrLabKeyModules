@@ -1,10 +1,7 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-
 import View from './Browser';
+import { createRoot } from 'react-dom/client';
+import React from 'react';
 
-const render = () => {
-    ReactDOM.render(<View />, document.getElementById('app'));
-};
-
-render();
+window.addEventListener('DOMContentLoaded', (event) => {
+    createRoot(document.getElementById('app')).render(<View />)
+}, true);
