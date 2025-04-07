@@ -15,6 +15,7 @@
  */
 package org.labkey.test.tests.external.labModules;
 
+import au.com.bytecode.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONArray;
@@ -50,6 +51,7 @@ import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.Color;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -1896,6 +1898,40 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForElement(Locator.tagWithId("input", "value-select-0")).sendKeys(Keys.ENTER);
         waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
         waitForElement(Locator.tagWithText("span", "0.029"));
+
+        // Test the CSV export on this discrete case prior to clearing -- there should be 2 rows
+        File downloadCSV = doAndWaitForDownload(() -> clickButton("Export CSV", 0));
+        try (FileReader fileReader = new FileReader(downloadCSV))
+        {
+            CSVReader csvReader = new CSVReader(fileReader);
+            String[] line = csvReader.readNext();
+            Assert.assertArrayEquals(new String[] {
+                    "contig", "start", "end", "ref", "alt", "genomicPosition",
+                    "nCalled", "fractionHet", "variableSamples", "homozygousVarSamples",
+                    "nHomVar", "nHet", "AF", "AC", "CADD_PH", "CLN_ALLELE", "OMIMD", "IMPACT"
+            }, line);
+            line = csvReader.readNext();
+            Assert.assertArrayEquals(new String[] {
+                    "1", "2", "2", "A", "T", "2", "1523", "0.9268293",
+                    "m00004,m00013,m00029,m00101,m00391,m00435,m00458,m00598,m00610,m00789,m00801,m00816,m00969,m02168," +
+                            "m02169,m02179,m02225,m02230,m02280,m02324,m02344,m02369,m02391,m03592,m03655,m03667,m03669," +
+                            "m03684,m03694,m05192,m05264,m05270,m05273,m05550,m05551,m05557,m05622,m05640,m05658,m05659," +
+                            "m05660,m05662,m05666,m05668,m05669,m05671,m05672,m05673,m05675,m05795,m05812,m05834,m05855," +
+                            "m05861,m05895,m06088,m06969,m06970,m06985,m06986,m06988,m06993,m07003,m07006,m07007,m07025," +
+                            "m07034,m07037,m07045,m07409,m07418,m07426,m07438,m07446,m07458,m07489,m07495,m07513,m07863," +
+                            "m07929,m07951,m07952",
+                    "m03694,m05671,m05672,m06970,m06993,m07951",
+                    "6", "76", "0.029", "88", "7.292", "", "", "HIGH"
+            }, line);
+            line = csvReader.readNext();
+            Assert.assertArrayEquals(new String[] {
+                    "1","5336","5336","A","G","5336","1524","1.0","m05373","","0","1","3.281E-4","1","2.868","","","MODERATE"
+            }, line);
+        }
+        catch (Exception e)
+        {
+            Assert.fail();
+        }
 
         clearFilterDialog("IMPACT equals HIGH,MODERATE");
 
