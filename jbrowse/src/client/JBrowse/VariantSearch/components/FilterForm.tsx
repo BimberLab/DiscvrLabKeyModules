@@ -215,7 +215,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                 <FormControlMinWidth sx={highlightedInputs[index]?.field ? highlightedSx : null}>
                                     <ReactSelect
                                         inputId={`field-select-${index}`}
-                                        aria-labelledby={`field-select-${index}`}
+                                        aria-labelledby={`field-label`}
                                         placeholder="Select field..."
                                         menuPortalTarget={document.body}
                                         menuPosition="fixed"
