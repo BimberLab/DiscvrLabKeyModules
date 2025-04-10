@@ -171,6 +171,7 @@ import org.labkey.sequenceanalysis.util.ChainFileValidator;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 import org.labkey.vfs.FileLike;
+import org.labkey.vfs.FileSystemLike;
 import org.springframework.beans.PropertyValues;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
@@ -424,80 +425,6 @@ public class SequenceAnalysisController extends SpringActionController
         public void addNavTrail(NavTree tree)
         {
             tree.addChild("Analyze Alignments");
-        }
-    }
-
-    @RequiresPermission(ReadPermission.class)
-    @IgnoresTermsOfUse
-    public static class DownloadTempImageAction extends ExportAction<TempImageAction>
-    {
-        @Override
-        public void export(TempImageAction form, HttpServletResponse response, BindException errors) throws Exception
-        {
-            File parentDir = form.getDirectory() == null ? FileUtil.getTempDirectory() : new File(FileUtil.getTempDirectory(), form.getDirectory());
-            File targetFile = new File(parentDir, form.getFileName());
-            targetFile = FileUtil.getAbsoluteCaseSensitiveFile(targetFile);
-
-            if (!NetworkDrive.exists(targetFile))
-            {
-                throw new FileNotFoundException("Could not find file: " + targetFile.getPath());
-            }
-
-            if (parentDir.listFiles() == null)
-            {
-                throw new FileNotFoundException("Unable to list the contents of folder: " + parentDir.getPath());
-            }
-
-            PageFlowUtil.streamFile(response, targetFile, false);
-
-            //the file will be recreated, so delete upon running
-            FileUtils.deleteQuietly(targetFile);
-
-            //if the folder if empty, remove it too.  other simultaneous requests might have deleted this folder before we get to it
-            if (parentDir != null && parentDir.exists())
-            {
-                File[] children = parentDir.listFiles();
-                if (children != null && children.length == 0 && !parentDir.equals(FileUtil.getTempDirectory()))
-                {
-                    FileUtils.deleteQuietly(parentDir); //the Images folder
-                    File parent = parentDir.getParentFile();
-                    FileUtils.deleteQuietly(parent); //the file's folder
-
-                    if (parent != null && parent.getParentFile() != null)
-                    {
-                        File[] children2 = parent.getParentFile().listFiles();
-                        if (children2 != null && children2.length == 0)
-                            FileUtils.deleteQuietly(parent.getParentFile()); //the file's folder
-                    }
-                }
-            }
-        }
-    }
-
-    @RequiresPermission(ReadPermission.class)
-    @IgnoresTermsOfUse
-    public static class ConvertTextToFileAction extends ExportAction<ConvertTextToFileForm>
-    {
-        @Override
-        public void export(ConvertTextToFileForm form, HttpServletResponse response, BindException errors) throws Exception
-        {
-            String text = form.getText();
-
-            if (text == null)
-            {
-                errors.reject(ERROR_MSG, "Need to provide text");
-                return;
-            }
-            if (form.getFileName() == null)
-            {
-                errors.reject(ERROR_MSG, "Need to provide a filename");
-                return;
-            }
-
-            Map<String, String> headers = new HashMap<>();
-
-            PageFlowUtil.prepareResponseForFile(response, headers, form.getFileName(), true);
-            response.getOutputStream().print(text);
         }
     }
 
@@ -1119,14 +1046,21 @@ public class SequenceAnalysisController extends SpringActionController
                 if (form.getFileNames() != null)
                 {
                     //TODO: consider proper container??
-                    File root = PipelineService.get().findPipelineRoot(getContainer()).getRootPath();
-                    File base = root;
+                    PipeRoot root = PipelineService.get().findPipelineRoot(getContainer());
+
+                    if (null == root)
+                    {
+                        throw new PipelineJobException("Unable to find pipeline root for container: " + getContainer().getPath());
+                    }
+
+                    FileLike base = root.getRootFileLike();
+
                     if (form.getPath() != null)
-                        base = new File(base, form.getPath());
+                        base = base.resolveFile(new Path(form.getPath()));
 
                     for (String fileName : form.getFileNames())
                     {
-                        File f = new File(base, fileName);
+                        File f = FileSystemLike.toFile(base.resolveChild(fileName));
                         ExpData data = ExperimentService.get().getExpDataByURL(f, getContainer());
                         if (data != null)
                         {
@@ -1137,7 +1071,7 @@ public class SequenceAnalysisController extends SpringActionController
                             Map<String, Object> map = new HashMap<>();
                             map.put("fileName", fileName);
                             map.put("filePath", f.getPath());
-                            map.put("relPath", FileUtil.relativePath(FileUtil.getAbsoluteCaseSensitiveFile(root).getPath(), FileUtil.getAbsoluteCaseSensitiveFile(f).getPath()));
+                            map.put("relPath", FileUtil.relativePath(FileUtil.getAbsoluteCaseSensitiveFile(FileSystemLike.toFile(root.getRootFileLike())).getPath(), FileUtil.getAbsoluteCaseSensitiveFile(f).getPath()));
                             map.put("container", getContainer().getId());
                             map.put("containerPath", getContainer().getPath());
                             String basename = SequenceTaskHelper.getUnzippedBaseName(fileName);
@@ -1646,58 +1580,6 @@ public class SequenceAnalysisController extends SpringActionController
         public void setZipFileName(String zipFileName)
         {
             _zipFileName = zipFileName;
-        }
-    }
-
-    public static class ConvertTextToFileForm
-    {
-        private String _text;
-        private String _fileName;
-
-        public String getText()
-        {
-            return _text;
-        }
-
-        public void setText(String text)
-        {
-            _text = text;
-        }
-
-        public String getFileName()
-        {
-            return _fileName;
-        }
-
-        public void setFileName(String fileName)
-        {
-            _fileName = fileName;
-        }
-    }
-
-    public static class TempImageAction
-    {
-        String _fileName;
-        String _directory;
-
-        public String getFileName()
-        {
-            return _fileName;
-        }
-
-        public void setFileName(String fileName)
-        {
-            _fileName = fileName;
-        }
-
-        public String getDirectory()
-        {
-            return _directory;
-        }
-
-        public void setDirectory(String directory)
-        {
-            _directory = directory;
         }
     }
 
@@ -2320,7 +2202,15 @@ public class SequenceAnalysisController extends SpringActionController
             //resolve files
             List<File> files = new ArrayList<>();
             PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
-            File baseDir = StringUtils.trimToNull(form.getPath()) == null ? root.getRootPath() : new File(root.getRootPath(), form.getPath());
+
+            if (root == null)
+            {
+                errors.reject(ERROR_MSG, "Pipeline root not configured");
+                return null;
+            }
+
+            FileLike baseDir = StringUtils.trimToNull(form.getPath()) == null ? root.getRootFileLike() : root.getRootFileLike().resolveFile(new Path(form.getPath()));
+
             if (!baseDir.exists())
             {
                 errors.reject(ERROR_MSG, "Unable to find directory: " + baseDir.getPath());
@@ -2335,7 +2225,7 @@ public class SequenceAnalysisController extends SpringActionController
 
             for (String fn : form.getFileNames())
             {
-                File f = new File(baseDir, fn);
+                File f = FileSystemLike.toFile(baseDir.resolveChild(fn));
                 if (f.exists())
                 {
                     files.add(f);
