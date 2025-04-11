@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Select from '@mui/material/Select';
+import ReactSelect from 'react-select';
 import AsyncSelect from 'react-select/async';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
@@ -109,7 +110,7 @@ const FilterForm = (props: FilterFormProps ) => {
                         updatedFilter.value = '';
                     }
 
-                    if (value === "in set" || filter.operator === "in set") {
+                    if (value === "equals one of" || filter.operator === "equals one of") {
                         updatedFilter.value = ''; 
                     }
                 }
@@ -211,25 +212,33 @@ const FilterForm = (props: FilterFormProps ) => {
                     <FormScroll>
                         {filters.map((filter, index) => (
                             <FilterRow key={index} >
-                                <FormControlMinWidth sx={ highlightedInputs[index]?.field ? highlightedSx : null }>
-                                  <InputLabel id="field-label">Field</InputLabel>
-                                  <Select
-                                        labelId="field-label"
-                                        label = 'Field'
-                                        value={filter.field}
-                                        onChange={(event) =>
-                                            handleFilterChange(index, "field", event.target.value)
+                                <FormControlMinWidth sx={highlightedInputs[index]?.field ? highlightedSx : null}>
+                                    <ReactSelect
+                                        inputId={`field-select-${index}`}
+                                        aria-labelledby={`field-label`}
+                                        placeholder="Select field..."
+                                        menuPortalTarget={document.body}
+                                        menuPosition="fixed"
+                                        styles={{
+                                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                        }}
+                                        options={fieldTypeInfo.map(field => ({
+                                            value: field.name,
+                                            label: field.label ?? field.name,
+                                        }))}
+                                        onChange={(selected) =>
+                                            handleFilterChange(index, 'field', selected?.value ?? '')
                                         }
-                                    >
-                                        <MenuItem value="" style={{ display: 'none' }}>
-                                            <em>None</em>
-                                        </MenuItem>
-                                        {fieldTypeInfo.map((field) => (
-                                            <MenuItem key={field.name} value={field.name}>
-                                                {field.label ?? field.name}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
+                                        value={
+                                            filter.field
+                                                ? {
+                                                    value: filter.field,
+                                                    label: fieldTypeInfo.find(f => f.name === filter.field)?.label ?? filter.field
+                                                }
+                                                : null
+                                        }
+                                        isClearable
+                                    />
                                 </FormControlMinWidth>
 
                                 <FormControlMinWidth sx={ highlightedInputs[index]?.operator ? highlightedSx : null } >
@@ -259,7 +268,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                     </Select>
                                 </FormControlMinWidth>
 
-                                {filter.operator === "in set" ? (
+                                {filter.operator === "equals one of" ? (
                                     <FormControlMinWidth sx={ highlightedInputs[index]?.value ? highlightedSx : null } >
                                         <InputLabel id="value-select-label">Value</InputLabel>
                                         <Select
