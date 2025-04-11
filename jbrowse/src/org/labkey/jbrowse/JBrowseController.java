@@ -900,19 +900,9 @@ public class JBrowseController extends SpringActionController
         @Override
         public ApiResponse execute(LuceneQueryForm form, BindException errors)
         {
-            JBrowseLuceneSearch searcher;
             try
             {
-                searcher = JBrowseLuceneSearch.create(form.getSessionId(), form.getTrackId(), getUser());
-            }
-            catch (IllegalArgumentException e)
-            {
-                errors.reject(ERROR_MSG, e.getMessage());
-                return null;
-            }
-
-            try
-            {
+                JBrowseLuceneSearch searcher = JBrowseLuceneSearch.create(form.getSessionId(), form.getTrackId(), getUser());
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
                 String timestamp = LocalDateTime.now().format(formatter);
                 String filename = "mGAP_results_" + timestamp + ".csv";
