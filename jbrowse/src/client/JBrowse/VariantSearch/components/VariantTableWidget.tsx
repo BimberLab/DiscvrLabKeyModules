@@ -13,7 +13,6 @@ import {
     GridToolbarExport
 } from '@mui/x-data-grid';
 import SearchIcon from '@mui/icons-material/Search';
-import LinkIcon from '@mui/icons-material/Link';
 import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { AppBar, Box, Button, Dialog, Paper, Popover, Toolbar, Tooltip, Typography } from '@mui/material';
@@ -37,8 +36,10 @@ import '../../jbrowse.css';
 import LoadingIndicator from './LoadingIndicator';
 import { BaseFeatureDataAdapter } from '@jbrowse/core/data_adapters/BaseAdapter';
 import { lastValueFrom } from 'rxjs';
+import { ShareButton } from  './ShareButton';
 
 const VariantTableWidget = observer(props => {
+    const numberFormatter = new Intl.NumberFormat('en-US');
     const { assembly, trackId, parsedLocString, sessionId, session, pluginManager } = props;
     const { assemblyNames = [], assemblyManager } = session ?? {};
     const { view } = session ?? {};
@@ -200,25 +201,7 @@ const VariantTableWidget = observer(props => {
                     delimiter: ';',
                 }} />
 
-                <Button
-                    startIcon={<LinkIcon />}
-                    size="small"
-                    color="primary"
-                    onClick={() => {
-                        navigator.clipboard.writeText(window.location.href)
-                        .then(() => {
-                            // Popup message for successful copy
-                            alert('URL copied to clipboard.');
-                        })
-                        .catch(err => {
-                            // Error handling
-                            console.error('Failed to copy the URL: ', err);
-                            alert('Failed to copy the URL.');
-                        });
-                    }}
-                >
-                Share
-                </Button>
+                <ShareButton />
             </GridToolbarContainer>
         );
     }
@@ -469,6 +452,14 @@ const VariantTableWidget = observer(props => {
                 setSortModel(newModel)
                 handleQuery(filters, true, { page: 0, pageSize: pageSizeModel.pageSize }, newModel);
             }}
+            localeText={{
+                MuiTablePagination: {
+                    labelDisplayedRows: ({ from, to, count }) =>
+                        `${numberFormatter.format(from)}–${numberFormatter.format(to)} of ${
+                            count !== -1 ? numberFormatter.format(count) : 'more than ' + numberFormatter.format(to)
+                        }`,
+                    },
+                }}
         />
     )
 

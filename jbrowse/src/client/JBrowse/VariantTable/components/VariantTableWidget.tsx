@@ -3,7 +3,17 @@ import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { ParsedLocString, parseLocString } from '@jbrowse/core/util';
 import { getAdapter } from '@jbrowse/core/data_adapters/dataAdapterCache';
-import { AppBar, Box, Button, Dialog, Grid, MenuItem, Paper, Toolbar, Typography } from '@mui/material';
+import {
+    AppBar,
+    Box,
+    Button,
+    Dialog,
+    Grid,
+    MenuItem,
+    Paper,
+    Toolbar,
+    Typography,
+} from '@mui/material';
 import ScopedCssBaseline from '@mui/material/ScopedCssBaseline';
 import {
   DataGrid,
@@ -11,7 +21,11 @@ import {
   GridColumnVisibilityModel, GridFilterPanel,
   GridPaginationModel,
   GridRenderCellParams,
-  GridToolbar
+  GridToolbar,
+  GridToolbarColumnsButton,
+  GridToolbarFilterButton,
+  GridToolbarDensitySelector,
+  GridToolbarExport
 } from '@mui/x-data-grid';
 import MenuButton from './MenuButton';
 import '../../jbrowse.css';
@@ -27,6 +41,7 @@ import {
   passesSampleFilters
 } from '../../utils';
 import LoadingIndicator from './LoadingIndicator';
+import { ShareButton } from './ShareButton';
 import { NoAssemblyRegion } from '@jbrowse/core/util/types';
 import StandaloneSearchComponent from '../../Search/components/StandaloneSearchComponent';
 import { VcfFeature } from '@jbrowse/plugin-variants';
@@ -352,12 +367,24 @@ const VariantTableWidget = observer(props => {
     }
   }
 
+  const CustomToolbar = () => (
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1 }}>
+      <Box>
+        <GridToolbarColumnsButton />
+        <GridToolbarFilterButton />
+        <GridToolbarDensitySelector />
+        <GridToolbarExport />
+        <ShareButton />
+      </Box>
+    </Box>
+  );
+
   const gridElement = (
     // NOTE: the filterPanel/sx override is added to fix an issue where the grid column filter value input doesn't align with the field and operator inputs
     <DataGrid
         columns={[...gridColumns, actionsCol]}
         rows={features.map((rawFeature, id) => rawFeatureToRow(rawFeature, id, gridColumns, trackId))}
-        slots={{ toolbar: GridToolbar, filterPanel: GridFilterPanel }}
+        slots={{ toolbar: CustomToolbar, filterPanel: GridFilterPanel }}
         slotProps={{
           filterPanel: {
             filterFormProps: {
@@ -444,7 +471,7 @@ const VariantTableWidget = observer(props => {
           </Grid>
 
           {supportsLuceneIndex ? <Grid key='luceneViewButton' item xs="auto">
-            <Button hidden={!supportsLuceneIndex} style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("luceneRedirect")}>Switch to Free-text Search</Button>
+            <Button hidden={!supportsLuceneIndex} style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("luceneRedirect")}>Switch to Full-text Search</Button>
           </Grid> : null}
         </Grid>
       </div>
