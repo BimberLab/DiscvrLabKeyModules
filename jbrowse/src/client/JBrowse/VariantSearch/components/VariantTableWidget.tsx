@@ -13,6 +13,9 @@ import {
     GridToolbarExport
 } from '@mui/x-data-grid';
 import SearchIcon from '@mui/icons-material/Search';
+import LinkIcon from '@mui/icons-material/Link';
+import DownloadIcon from '@mui/icons-material/Download'
+import { ActionURL } from '@labkey/api';
 import React, { useEffect, useState } from 'react';
 import { getConf } from '@jbrowse/core/configuration';
 import { AppBar, Box, Button, Dialog, Paper, Popover, Toolbar, Tooltip, Typography } from '@mui/material';
@@ -91,6 +94,27 @@ const VariantTableWidget = observer(props => {
         setDataLoaded(false)
         fetchLuceneQuery(passedFilters, sessionId, trackGUID, page, pageSize, field, sort, (json)=>{handleSearch(json)}, (error) => {setDataLoaded(true); setError(error)});
     }
+
+    const handleExport = () => {
+        const currentUrl = new URL(window.location.href);
+
+        const searchString = createEncodedFilterString(filters, true);
+        const sortField = sortModel[0]?.field ?? 'genomicPosition';
+        const sortDirection = sortModel[0]?.sort ?? false;
+
+        const sortReverse = (sortDirection === 'desc');
+
+        const rawUrl = ActionURL.buildURL('jbrowse', 'luceneCSVExport.api');
+        const exportUrl = new URL(rawUrl, window.location.origin);
+
+        exportUrl.searchParams.set('sessionId', sessionId);
+        exportUrl.searchParams.set('trackId', trackGUID);
+        exportUrl.searchParams.set('searchString', searchString);
+        exportUrl.searchParams.set('sortField', sortField);
+        exportUrl.searchParams.set('sortReverse', sortReverse.toString());
+
+        window.location.href = exportUrl.toString();
+    };
 
     const TableCellWithPopover = (props: { value: any }) => {
         const { value } = props;
@@ -184,7 +208,7 @@ const VariantTableWidget = observer(props => {
         );
     }
 
-    function CustomToolbar({ setFilterModalOpen }) {
+    function CustomToolbar({ setFilterModalOpen, handleExport }) {
         return (
             <GridToolbarContainer>
                 <GridToolbarColumnsButton />
@@ -197,9 +221,14 @@ const VariantTableWidget = observer(props => {
                     Search
                 </Button>
                 <GridToolbarDensitySelector />
-                <GridToolbarExport csvOptions={{
-                    delimiter: ';',
-                }} />
+
+                <Button
+                    startIcon={<DownloadIcon />}
+                    color="primary"
+                    onClick={handleExport}
+                >
+                    Export CSV
+                </Button>
 
                 <ShareButton />
             </GridToolbarContainer>
@@ -207,7 +236,10 @@ const VariantTableWidget = observer(props => {
     }
 
     const ToolbarWithProps = () => (
-        <CustomToolbar setFilterModalOpen={setFilterModalOpen} />
+        <CustomToolbar
+            setFilterModalOpen={setFilterModalOpen}
+            handleExport={handleExport}
+        />
     );
 
     const handleOffsetChange = (newOffset: number) => {
