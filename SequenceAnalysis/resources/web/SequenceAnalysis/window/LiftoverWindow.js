@@ -56,7 +56,7 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                                         containerPath: containerPath,
                                         dataRegionName: dataRegionName,
                                         outputFileIds: checked,
-                                        libraryId: distinctGenomes.length == 1 ? distinctGenomes[0] : null,
+                                        libraryId: distinctGenomes.length === 1 ? distinctGenomes[0] : null,
                                         toolParameters: results.toolParameters
                                     }).show();
                                 }
@@ -71,7 +71,7 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
     initComponent: function(){
         Ext4.apply(this, {
             bodyStyle: 'padding: 5px;',
-            width: 500,
+            width: 600,
             modal: true,
             title: 'Liftover File(s) To Alternate Genome',
             items: [{
@@ -117,12 +117,17 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                 itemId: 'useBcfTools',
                 checked: true,
                 fieldLabel: 'Use bcftools'
-            },{
+            }, {
                 xtype: 'checkbox',
                 itemId: 'doNotRetainUnmapped',
                 checked: false,
                 fieldLabel: 'Do Not Retain Unmapped'
-            }].concat(SequenceAnalysis.window.OutputHandlerWindow.getCfgForToolParameters(this.toolParameters)),
+            }].concat(SequenceAnalysis.window.OutputHandlerWindow.getCfgForToolParameters(this.toolParameters)).concat([{
+                xtype: 'sequenceanalysis-variantscattergatherpanel',
+                defaultFieldWidth: 500,
+                labelWidth: 200,
+                bodyStyle: ''
+            }]),
             buttons: [{
                 text: 'Submit',
                 handler: this.onSubmit,
