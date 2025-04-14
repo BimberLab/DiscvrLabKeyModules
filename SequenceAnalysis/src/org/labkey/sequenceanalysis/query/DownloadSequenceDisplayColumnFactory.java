@@ -7,6 +7,7 @@ import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.util.LinkBuilder;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.HttpView;
 import org.labkey.api.view.template.ClientDependency;
@@ -40,7 +41,7 @@ public class DownloadSequenceDisplayColumnFactory implements DisplayColumnFactor
             public void renderGridCellContents(RenderContext ctx, HtmlWriter out)
             {
                 Integer val = ctx.get(FieldKey.fromString(getBoundColumn().getFieldKey().getParent(), "rowId"), Integer.class);
-                out.write(PageFlowUtil.link("Download Sequence").
+                out.write(LinkBuilder.labkeyLink("Download Sequence").
                         attributes(Map.of("data-rowid", val.toString())).
                         addClass("sdc-row"));
 

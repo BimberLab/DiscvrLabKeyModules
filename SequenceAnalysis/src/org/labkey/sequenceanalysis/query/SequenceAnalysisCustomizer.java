@@ -28,6 +28,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
 import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.HtmlStringBuilder;
+import org.labkey.api.util.LinkBuilder;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HttpView;
@@ -277,20 +278,19 @@ public class SequenceAnalysisCustomizer implements TableCustomizer
                                 url.addParameter("query.fileSets~contains", token);
 
                                 out.write(delim);
-                                out.write(PageFlowUtil.link(token, url).clearClasses());
+                                out.write(LinkBuilder.simpleLink(token, url));
                                 delim = COMMA_NEWLINE;
                             }
                         }
 
-                        out.write(PageFlowUtil.link("").
-                                clearClasses().
+                        out.write(LinkBuilder.simpleLink("").
                                 addClass("fa fa-pencil").
                                 addClass("lk-dr-action-icon").
                                 addClass("sfs-row").
                                 attributes(PageFlowUtil.map(
-                                        "data-tt", "tooltip",
-                                        "data-rowid", rowId.toString(),
-                                        "data-original-title", "add/edit"
+                                    "data-tt", "tooltip",
+                                    "data-rowid", rowId.toString(),
+                                    "data-original-title", "add/edit"
                                 ))
                         );
 

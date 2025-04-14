@@ -32,6 +32,7 @@ import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.HtmlString;
+import org.labkey.api.util.LinkBuilder;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.writer.HtmlWriter;
@@ -251,30 +252,23 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             newCol.setShownInInsertView(false);
             newCol.setShownInUpdateView(false);
             newCol.setCalculated(true);
-            newCol.setDisplayColumnFactory(new DisplayColumnFactory()
+            newCol.setDisplayColumnFactory(colInfo -> new DataColumn(colInfo)
             {
                 @Override
-                public DisplayColumn createRenderer(ColumnInfo colInfo)
+                public void renderGridCellContents(RenderContext ctx, HtmlWriter out)
                 {
-                    return new DataColumn(colInfo)
+                    Object o = getValue(ctx);
+                    if (o != null)
                     {
-                        @Override
-                        public void renderGridCellContents(RenderContext ctx, HtmlWriter out)
-                        {
-                            Object o = getValue(ctx);
-                            if (o != null)
-                            {
-                                ActionURL url = QueryService.get().urlFor(getUser(), ctx.getContainer(), QueryAction.executeQuery, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READ_DATA);
-                                url.addFilter("query", FieldKey.fromString("readset"), CompareType.EQUAL, o);
+                        ActionURL url = QueryService.get().urlFor(getUser(), ctx.getContainer(), QueryAction.executeQuery, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READ_DATA);
+                        url.addFilter("query", FieldKey.fromString("readset"), CompareType.EQUAL, o);
 
-                                out.write(PageFlowUtil.link("View File(s)", url));
-                            }
-                            else
-                            {
-                                out.write("No Files");
-                            }
-                        }
-                    };
+                        out.write(LinkBuilder.labkeyLink("View File(s)", url));
+                    }
+                    else
+                    {
+                        out.write("No Files");
+                    }
                 }
             });
             ret.addColumn(newCol);
@@ -458,7 +452,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
                             ActionURL url = DetailsURL.fromString(_baseUrl + PageFlowUtil.encode(token), ctx.getContainer()).getActionURL();
 
                             out.write(delim);
-                            out.write(PageFlowUtil.link(token, url).clearClasses());
+                            out.write(LinkBuilder.simpleLink(token, url));
                             delim = HtmlString.BR;
                         }
                     }
