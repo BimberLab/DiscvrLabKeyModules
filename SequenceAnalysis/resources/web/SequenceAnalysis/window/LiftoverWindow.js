@@ -175,6 +175,10 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
             params.doNotRetainUnmapped = this.down('#doNotRetainUnmapped').getValue();
         }
 
+        Ext4.Array.forEach(this.down('sequenceanalysis-variantscattergatherpanel').query('field'), function(field){
+            params[field.name] = field.getValue();
+        }, this);
+
         Ext4.Msg.wait('Saving...');
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler', this.containerPath),

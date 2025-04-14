@@ -49,6 +49,18 @@
                         name: 'cDNA Libraries with Hashing and Single HTO/Lane',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'singlecell', queryName: 'cdna_libraries', 'query.uniqueHtos~in': '0;1', 'query.hashingReadsetId/name~isnonblank': null, 'query.hashingReadsetId/totalFiles~eq': 0})
                     },{
+                        name: 'GEX Readsets Missing Nimble (Measured using MHC)',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
+                            schemaName: 'sequenceanalysis',
+                            queryName: 'sequence_readsets',
+                            'query.distinctOutputGenomes~contains': 'Mmul_10',
+                            'query.status~isblank': null,
+                            'query.totalForwardReads~isnonblank': null,
+                            'query.sort': 'rowid',
+                            'query.librarytype~eq': '10x 5\' GEX',
+                            'query.distinctOutputGenomes~doesnotcontain': 'Rhesus Macaque MHC v2'
+                        })
+                    },{
                         name: 'Analyses In Novogene-Related Workbook',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {schemaName: 'sequenceanalysis', queryName: 'sequence_analyses', 'query.container/title~containsoneof': 'Novogene;shipment'})
                     }]
