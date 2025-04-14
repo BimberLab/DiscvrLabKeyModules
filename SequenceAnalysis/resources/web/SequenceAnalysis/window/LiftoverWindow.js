@@ -179,9 +179,15 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
             params[field.name] = field.getValue();
         }, this);
 
+        var actionName = 'runSequenceHandler';
+        if (params.scatterGatherMethod && params.scatterGatherMethod !== 'none') {
+            params.scatterGather = true;
+            actionName = 'runVariantProcessing';
+        }
+
         Ext4.Msg.wait('Saving...');
         LABKEY.Ajax.request({
-            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler', this.containerPath),
+            url: LABKEY.ActionURL.buildURL('sequenceanalysis', actionName, this.containerPath),
             jsonData: {
                 handlerClass: 'org.labkey.sequenceanalysis.analysis.LiftoverHandler',
                 outputFileIds: this.outputFileIds,
