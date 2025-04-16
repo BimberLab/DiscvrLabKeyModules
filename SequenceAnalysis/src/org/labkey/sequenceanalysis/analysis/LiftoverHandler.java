@@ -342,7 +342,8 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
                         extraArgs.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
                     });
 
-                    extraArgs.add("--ignore-variants-starting-outside-interval");
+                    extraArgs.add("--variant-output-filtering");
+                    extraArgs.add("STARTS_IN");
                 }
 
                 SelectVariantsWrapper wrapper = new SelectVariantsWrapper(job.getLogger());
