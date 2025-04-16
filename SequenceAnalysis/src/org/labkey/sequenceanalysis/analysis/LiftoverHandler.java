@@ -319,9 +319,9 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
     public void liftOverVcf(JobContext ctx, ReferenceGenome targetGenome, ReferenceGenome sourceGenome, File chain, File input, File output, @Nullable File unmappedOutput, PipelineJob job, double pct, boolean dropGenotypes, boolean useBcfTools, @Nullable List<Interval> intervals) throws IOException, PipelineJobException
     {
         File currentVCF = input;
-        if (dropGenotypes)
+        if (dropGenotypes || intervals != null)
         {
-            ctx.getLogger().info("creating VCF wihtout genotypes");
+            ctx.getLogger().info("subsetting VCF");
             File outputFile = new File(output.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(currentVCF.getName()) + ".noGenotypes.vcf.gz");
             if (new File(outputFile.getPath() + ".tbi").exists())
             {
@@ -330,7 +330,11 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
             else
             {
                 List<String> extraArgs = new ArrayList<>();
-                extraArgs.add("--sites-only-vcf-output");
+                if (dropGenotypes)
+                {
+                    extraArgs.add("--sites-only-vcf-output");
+                }
+
                 if (intervals != null)
                 {
                     intervals.forEach(interval -> {
