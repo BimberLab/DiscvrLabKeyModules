@@ -44,6 +44,7 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 import java.io.File;
 import java.io.IOException;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -175,6 +176,8 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
             PipelineJob job = ctx.getJob();
             JSONObject params = ctx.getParams();
 
+            List<Interval> intervals = ProcessVariantsHandler.getIntervals(ctx);
+
             boolean dropGenotypes = params.optBoolean("dropGenotypes", false);
             boolean useBcfTools = params.optBoolean("useBcfTools", false);
             boolean doNotRetainUnmapped = params.optBoolean("doNotRetainUnmapped", false);
@@ -233,7 +236,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
                     {
                         ReferenceGenome targetGenome = ctx.getSequenceSupport().getCachedGenome(targetGenomeId);
                         ReferenceGenome sourceGenome = ctx.getSequenceSupport().getCachedGenome(f.getLibrary_id());
-                        liftOverVcf(ctx, targetGenome, sourceGenome, chainFile, f.getFile(), lifted, unmappedOutput, job, pct, dropGenotypes, useBcfTools);
+                        liftOverVcf(ctx, targetGenome, sourceGenome, chainFile, f.getFile(), lifted, unmappedOutput, job, pct, dropGenotypes, useBcfTools, intervals);
                     }
                 }
                 catch (Exception e)
@@ -313,7 +316,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
         }
     }
 
-    public void liftOverVcf(JobContext ctx, ReferenceGenome targetGenome, ReferenceGenome sourceGenome, File chain, File input, File output, @Nullable File unmappedOutput, PipelineJob job, double pct, boolean dropGenotypes, boolean useBcfTools) throws IOException, PipelineJobException
+    public void liftOverVcf(JobContext ctx, ReferenceGenome targetGenome, ReferenceGenome sourceGenome, File chain, File input, File output, @Nullable File unmappedOutput, PipelineJob job, double pct, boolean dropGenotypes, boolean useBcfTools, @Nullable List<Interval> intervals) throws IOException, PipelineJobException
     {
         File currentVCF = input;
         if (dropGenotypes)
@@ -326,8 +329,20 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
             }
             else
             {
+                List<String> extraArgs = new ArrayList<>();
+                extraArgs.add("--sites-only-vcf-output");
+                if (intervals != null)
+                {
+                    intervals.forEach(interval -> {
+                        extraArgs.add("-L");
+                        extraArgs.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                    });
+
+                    extraArgs.add("--ignore-variants-starting-outside-interval");
+                }
+
                 SelectVariantsWrapper wrapper = new SelectVariantsWrapper(job.getLogger());
-                wrapper.execute(sourceGenome.getWorkingFastaFile(), currentVCF, outputFile, List.of("--sites-only-vcf-output"));
+                wrapper.execute(sourceGenome.getWorkingFastaFile(), currentVCF, outputFile, extraArgs);
             }
             currentVCF = outputFile;
 
