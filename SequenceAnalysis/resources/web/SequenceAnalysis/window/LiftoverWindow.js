@@ -120,7 +120,7 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
             }, {
                 xtype: 'checkbox',
                 itemId: 'doNotRetainUnmapped',
-                checked: false,
+                checked: true,
                 fieldLabel: 'Do Not Retain Unmapped'
             }].concat(SequenceAnalysis.window.OutputHandlerWindow.getCfgForToolParameters(this.toolParameters)).concat([{
                 xtype: 'sequenceanalysis-variantscattergatherpanel',

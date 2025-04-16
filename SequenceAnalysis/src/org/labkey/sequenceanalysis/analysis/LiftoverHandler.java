@@ -180,7 +180,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
 
             boolean dropGenotypes = params.optBoolean("dropGenotypes", false);
             boolean useBcfTools = params.optBoolean("useBcfTools", false);
-            boolean doNotRetainUnmapped = params.optBoolean("doNotRetainUnmapped", false);
+            boolean doNotRetainUnmapped = params.optBoolean("doNotRetainUnmapped", true);
             if (!doNotRetainUnmapped && !useBcfTools)
             {
                 ctx.getLogger().debug("Picard LiftoverVcf requires an output file for rejected sites, so setting doNotRetainUnmapped to true");
