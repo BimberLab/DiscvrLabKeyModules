@@ -119,9 +119,9 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                 fieldLabel: 'Use bcftools'
             }, {
                 xtype: 'checkbox',
-                itemId: 'doNotRetainUnmapped',
-                checked: true,
-                fieldLabel: 'Do Not Retain Unmapped'
+                itemId: 'retainUnmapped',
+                checked: false,
+                fieldLabel: 'Retain Unmapped Variants'
             }].concat(SequenceAnalysis.window.OutputHandlerWindow.getCfgForToolParameters(this.toolParameters)).concat([{
                 xtype: 'sequenceanalysis-variantscattergatherpanel',
                 defaultFieldWidth: 500,
@@ -163,17 +163,9 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
             params.pct = this.down('#pctField').getValue();
         }
 
-        if (this.down('#dropGenotypes').getValue()){
-            params.dropGenotypes = this.down('#dropGenotypes').getValue();
-        }
-
-        if (this.down('#useBcfTools').getValue()){
-            params.useBcfTools = this.down('#useBcfTools').getValue();
-        }
-
-        if (this.down('#doNotRetainUnmapped').getValue()){
-            params.doNotRetainUnmapped = this.down('#doNotRetainUnmapped').getValue();
-        }
+        params.dropGenotypes = !!this.down('#dropGenotypes').getValue();
+        params.useBcfTools = !!this.down('#useBcfTools').getValue();
+        params.retainUnmapped = !!this.down('#retainUnmapped').getValue();
 
         Ext4.Array.forEach(this.down('sequenceanalysis-variantscattergatherpanel').query('field'), function(field){
             params[field.name] = field.getValue();
