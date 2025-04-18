@@ -342,6 +342,9 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
 
                 SelectVariantsWrapper wrapper = new SelectVariantsWrapper(job.getLogger());
                 wrapper.execute(sourceGenome.getWorkingFastaFile(), currentVCF, outputFile, extraArgs);
+
+                ctx.getFileManager().addIntermediateFile(outputFile);
+                ctx.getFileManager().addIntermediateFile(new File(outputFile.getPath() + ".tbi"));
             }
             currentVCF = outputFile;
 
