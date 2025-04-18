@@ -468,4 +468,50 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
         //sort resulting file
         SequenceUtil.sortROD(output, job.getLogger(), 2);
     }
+
+    @Override
+    public void performAdditionalMergeTasks(JobContext ctx, PipelineJob job, ReferenceGenome genome, List<File> orderedScatterOutputs, List<String> orderedJobDirs) throws PipelineJobException
+    {
+        boolean retainUnmapped = ctx.getParams().optBoolean("retainUnmapped", true);
+        if (retainUnmapped)
+        {
+            job.getLogger().info("Merging liftOver reject VCFs");
+            List<File> toConcat = orderedScatterOutputs.stream().map(vcfFile -> {
+                File f = getUnmappedOutputFile(vcfFile);
+                if (!f.exists())
+                {
+                    throw new IllegalStateException("Missing file: " + f.getPath());
+                }
+
+                ctx.getFileManager().addIntermediateFile(f);
+                ctx.getFileManager().addIntermediateFile(new File(f.getPath() + ".tbi"));
+
+                return f;
+            }).toList();
+
+            job.getLogger().debug("Total VCFs to merge: " + toConcat.size());
+            if (toConcat.isEmpty())
+            {
+                throw new PipelineJobException("No unmapped VCF found");
+            }
+
+            File combined = getUnmappedOutputFile(orderedScatterOutputs.get(0));
+            File combinedIdx = new File(combined.getPath() + ".tbi");
+            if (combinedIdx.exists())
+            {
+                job.getLogger().info("VCF exists, will not recreate: " + combined.getPath());
+            }
+            else
+            {
+                combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, genome, job.getLogger(), true, null);
+            }
+
+            SequenceOutputFile so = new SequenceOutputFile();
+            so.setName(orderedScatterOutputs.get(0).getName() + ": Lifted/Unmapped");
+            so.setFile(combined);
+            so.setCategory("VCF File");
+            so.setLibrary_id(genome.getGenomeId());
+            ctx.getFileManager().addSequenceOutput(so);
+        }
+    }
 }
