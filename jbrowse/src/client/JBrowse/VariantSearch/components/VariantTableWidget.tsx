@@ -560,7 +560,7 @@ const VariantTableWidget = observer(props => {
                                     onClick={() => setFilterModalOpen(true)}
                                     style={{ border: "1px solid gray", margin: "5px" }}
                                 >
-                                    {`${(filter as any).field} ${(filter as any).operator}`}
+                                    {`${(filter as any).field} ${(filter as any).operator.key}`}
                                 </Button>
                             );
                         }
@@ -578,7 +578,7 @@ const VariantTableWidget = observer(props => {
                                 key={index}
                                 onClick={() => setFilterModalOpen(true)}
                                 style={{ border: "1px solid gray", margin: "5px" }}                            >
-                                {`${(filter as any).field} ${(filter as any).operator} ${(filter as any).value}`}
+                                {`${(filter as any).field} ${(filter as any).operator.key} ${(filter as any).value}`}
                             </Button>
                         );
                     })}

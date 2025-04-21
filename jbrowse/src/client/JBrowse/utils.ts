@@ -393,6 +393,7 @@ export class FieldModel {
     url: string
     flex: number
     supportsFilter: boolean = true
+    defaultOperator: string
 
     getLabel(): string {
         return this.label ?? this.name
@@ -421,12 +422,12 @@ export class FieldModel {
         if (this.name === 'variableSamples') {
           return [
             OperatorKey.EqualsOneOf,
-            OperatorKey.VariableIn,
-            OperatorKey.NotVariableIn,
-            OperatorKey.VariableInAll,
-            OperatorKey.VariableInAny,
-            OperatorKey.NotVariableInAny,
-            OperatorKey.NotVariableInOne,
+            OperatorKey.IsIn,
+            OperatorKey.IsNotIn,
+            OperatorKey.IsInAllOf,
+            OperatorKey.IsInAnyOf,
+            OperatorKey.IsNotInAnyOf,
+            OperatorKey.IsNotInOneOf,
             OperatorKey.IsEmpty,
             OperatorKey.IsNotEmpty,
           ].map(k => OperatorRegistry[k])
@@ -465,6 +466,7 @@ export class FieldModel {
     }
 
     getDefaultOperator(): Operator | undefined {
+        if (this.defaultOperator && this.defaultOperator != "") return OperatorRegistry[this.defaultOperator]
         return this.getOperators()[0]
     }
 
@@ -506,15 +508,16 @@ export class FieldModel {
 }
 
 export function createEncodedFilterString(filters: Filter[]): string {
-  if (!filters.length || filters.every(f => f.isEmpty())) return 'all'
-  return encodeURIComponent(filters.map(f => f.encode()).join('&'))
+    if (!filters.length || filters.every(f => f.isEmpty())) return 'all'
+    return encodeURIComponent(filters.map(f => f.encode()).join('&'))
 }
 
 export function buildLuceneQuery(filters: Filter[]): string {
-  return filters
-    .filter(f => !f.isEmpty())
-    .map(f => f.toLucene())
-    .join('&')
+    if (!filters.length || filters.every(f => f.isEmpty())) return 'all'
+    return filters
+        .filter(f => !f.isEmpty())
+        .map(f => f.toLucene())
+        .join('&')
 }
 
 export async function fetchFieldTypeInfo(sessionId: string, trackId: string, successCallback: (fields: FieldModel[], groups: string[], promotedFilters: Map<string, Filter[]>) => void, failureCallback) {
@@ -605,7 +608,7 @@ export function searchStringToInitialFilters(knownFieldNames: string[]) : Filter
         return Filter.fromString(searchString).filter(({ field }) => knownFieldNames.includes(field))
     }
 
-    return [new Filter('', OperatorKey.None, '')]
+    return []
 }
 
 

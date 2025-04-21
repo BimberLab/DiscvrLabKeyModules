@@ -13,12 +13,12 @@ export enum OperatorKey {
   NumericGte         = '>=',
   NumericLt          = '<',
   NumericLte         = '<=',
-  VariableIn         = 'variable in',
-  NotVariableIn      = 'not variable in',
-  VariableInAll      = 'variable in all of',
-  VariableInAny      = 'variable in any of',
-  NotVariableInAny  = 'not variable in any of',
-  NotVariableInOne  = 'not variable in one of',
+  IsIn             = 'is in',
+  IsNotIn          = 'is not in',
+  IsInAllOf        = 'is in all of',
+  IsInAnyOf        = 'is in any of',
+  IsNotInAnyOf     = 'is not in any of',
+  IsNotInOneOf     = 'is not in one of',
   EqualsOneOf        = 'equals one of',
   None              = ''
 }
@@ -120,37 +120,37 @@ export const OperatorRegistry: Record<OperatorKey, Operator> = {
     label: 'Equals One Of',
     generateLucene: (f, v: string) => `${f}:~${v}~`,
   },
-  [OperatorKey.VariableIn]: {
-    key: OperatorKey.VariableIn,
-    label: 'Variable In',
+ [OperatorKey.IsIn]: {
+    key: OperatorKey.IsIn,
+    label: 'Is In',
     generateLucene: (f, v: string) => `${f}:${v}`,
   },
-  [OperatorKey.NotVariableIn]: {
-    key: OperatorKey.NotVariableIn,
-    label: 'Not Variable In',
+  [OperatorKey.IsNotIn]: {
+    key: OperatorKey.IsNotIn,
+    label: 'Is Not In',
     generateLucene: (f, v: string) => `*:* -${f}:${v}`,
   },
-  [OperatorKey.VariableInAll]: {
-    key: OperatorKey.VariableInAll,
-    label: 'Variable In All Of',
+  [OperatorKey.IsInAllOf]: {
+    key: OperatorKey.IsInAllOf,
+    label: 'Is In All Of',
     generateLucene: (f, v: string) =>
       v.split(',').map(val => `+${f}:${val}`).join(' '),
   },
-  [OperatorKey.VariableInAny]: {
-    key: OperatorKey.VariableInAny,
-    label: 'Variable In Any Of',
+  [OperatorKey.IsInAnyOf]: {
+    key: OperatorKey.IsInAnyOf,
+    label: 'Is In Any Of',
     generateLucene: (f, v: string) =>
       v.split(',').map(val => `${f}:${val}`).join(' OR '),
   },
-  [OperatorKey.NotVariableInAny]: {
-    key: OperatorKey.NotVariableInAny,
-    label: 'Not Variable In Any Of',
+  [OperatorKey.IsNotInAnyOf]: {
+    key: OperatorKey.IsNotInAnyOf,
+    label: 'Is Not In Any Of',
     generateLucene: (f, v: string) =>
       v.split(',').map(val => `*:* -${f}:${val}`).join(' AND '),
   },
-  [OperatorKey.NotVariableInOne]: {
-    key: OperatorKey.NotVariableInOne,
-    label: 'Not Variable In One Of',
+  [OperatorKey.IsNotInOneOf]: {
+    key: OperatorKey.IsNotInOneOf,
+    label: 'Is Not In One Of',
     generateLucene: (f, v: string) =>
       v.split(',').map(val => `*:* -${f}:${val}`).join(' OR '),
   },

@@ -104,30 +104,36 @@ const FilterForm = (props: FilterFormProps ) => {
         }
     };
 
-    const handleFilterChange = (index, key, value) => {
-        const newFilters = filters.map((filter, i) => {
-            if (i === index) {
-                const updatedFilter = Object.assign(new Filter('', OperatorKey.None, ''), { ...filter, [key]: value });
+    const handleFilterChange = (
+      index: number,
+      key: 'field' | 'operator' | 'value',
+      value: any
+    ) => {
+      const newFilters = filters.map((filter, i) => {
+        if (i !== index) return filter;
 
-                if (key === "operator") {
-                    updatedFilter.operator = OperatorRegistry[value as OperatorKey];
+        const updatedFilter = Object.assign(
+          new Filter('', OperatorKey.None, ''),
+          { ...filter, [key]: value }
+        );
 
-                    if (value === OperatorKey.IsEmpty || value === OperatorKey.IsNotEmpty) {
-                        updatedFilter.value = '';
-                    }
+        if (key === 'field') {
+          const fieldInfo = fieldTypeInfo.find(f => f.name === value);
+          const defaultOp = fieldInfo?.getDefaultOperator() ?? OperatorRegistry[OperatorKey.None];
+          updatedFilter.operator = defaultOp;
+          updatedFilter.value = '';
+        }
+        else if (key === 'operator') {
+          updatedFilter.operator = OperatorRegistry[value as OperatorKey];
+          updatedFilter.value = '';
+        }
 
-                    if (value === OperatorKey.EqualsOneOf || updatedFilter.operator.key === OperatorKey.EqualsOneOf) {
-                        updatedFilter.value = ''; 
-                    }
-                }
+        return updatedFilter;
+      });
 
-                return updatedFilter;
-            }
-            return filter;
-        });
-
-        localSetFilters(newFilters);
+      localSetFilters(newFilters);
     };
+
 
     const handleSubmit = (event) => {
       event.preventDefault()
@@ -302,6 +308,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                 ) : fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length > 1 ? (
                                     <FormControlMinWidth sx={ highlightedInputs[index]?.value ? highlightedSx : null } >
                                         <AsyncSelect
+                                            key={`async-${index}-${filter.operator.key}`}
                                             id={`value-select-${index}`}
                                             inputId={`value-select-${index}`}
                                             aria-labelledby={`value-select-${index}`}
@@ -328,7 +335,11 @@ const FilterForm = (props: FilterFormProps ) => {
                                                 const val = arr.map(s => s.value).join(',')
                                                 handleFilterChange(index, 'value', val)
                                             }}
-                                            value={filter.value ? (filter.value as string).split(',').map(value => ({label: value, value})) : undefined}
+                                            value={
+                                                filter.value
+                                                  ? (filter.value as string).split(',').map(v => ({ label: v, value: v }))
+                                                  : null
+                                              }
                                         />
                                     </FormControlMinWidth>
                                 ) : fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length > 0 ? (
