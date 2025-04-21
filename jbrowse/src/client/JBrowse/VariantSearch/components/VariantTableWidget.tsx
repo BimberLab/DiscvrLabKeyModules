@@ -25,6 +25,7 @@ import { NoAssemblyRegion } from '@jbrowse/core/util/types';
 import { toArray } from 'rxjs/operators';
 import {
     createEncodedFilterString,
+    buildLuceneQuery,
     fetchFieldTypeInfo,
     fetchLuceneQuery,
     FieldModel,
@@ -78,7 +79,7 @@ const VariantTableWidget = observer(props => {
         const { page = pageSizeModel.page, pageSize = pageSizeModel.pageSize } = pageQueryModel;
         const { field = "genomicPosition", sort = false } = sortQueryModel[0] ?? {};
 
-        const encodedSearchString = createEncodedFilterString(passedFilters, false);
+        const encodedSearchString = createEncodedFilterString(passedFilters);
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.set("searchString", encodedSearchString);
         currentUrl.searchParams.set("page", page.toString());
@@ -98,7 +99,7 @@ const VariantTableWidget = observer(props => {
     const handleExport = () => {
         const currentUrl = new URL(window.location.href);
 
-        const searchString = createEncodedFilterString(filters, true);
+        const searchString = buildLuceneQuery(filters);
         const sortField = sortModel[0]?.field ?? 'genomicPosition';
         const sortDirection = sortModel[0]?.sort ?? false;
 
