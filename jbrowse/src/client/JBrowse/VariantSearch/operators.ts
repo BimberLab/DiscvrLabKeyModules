@@ -42,6 +42,24 @@ function fuzzyNumRange(field: string, raw: string | number) {
   return `[${floatValue - 0.000001} TO ${floatValue + 0.000001}]`
 }
 
+function fuzzyGtRange(f: string, raw: string | number) {
+  const floatValue = parseFloat(String(raw))
+  const intValue   = parseInt(String(raw), 10)
+  if (floatValue !== intValue) {
+    return `${f}:[${floatValue + 0.000001} TO *]`
+  }
+  return `${f}:{${intValue} TO *]`
+}
+
+function fuzzyLtRange(f: string, raw: string | number) {
+  const floatValue = parseFloat(String(raw))
+  const intValue   = parseInt(String(raw), 10)
+  if (floatValue !== intValue) {
+    return `${f}:[* TO ${floatValue - 0.000001}]`
+  }
+  return `${f}:[* TO ${intValue}}`
+}
+
 export const OperatorRegistry: Record<OperatorKey, Operator> = {
   [OperatorKey.Equals]: {
     key: OperatorKey.Equals,
@@ -103,8 +121,7 @@ export const OperatorRegistry: Record<OperatorKey, Operator> = {
   [OperatorKey.NumericGt]: {
     key: OperatorKey.NumericGt,
     label: '>',
-    generateLucene: (f, v: number) =>
-      Number.isInteger(v) ? `${f}:{${v} TO *]` : `${f}:[${v + 0.000001} TO *]`,
+    generateLucene: fuzzyGtRange,
   },
   [OperatorKey.NumericGte]: {
     key: OperatorKey.NumericGte,
@@ -114,8 +131,7 @@ export const OperatorRegistry: Record<OperatorKey, Operator> = {
   [OperatorKey.NumericLt]: {
     key: OperatorKey.NumericLt,
     label: '<',
-    generateLucene: (f, v: number) =>
-      Number.isInteger(v) ? `${f}:[* TO ${v}}` : `${f}:[* TO ${v - 0.000001}]`,
+    generateLucene: fuzzyLtRange,
   },
   [OperatorKey.NumericLte]: {
     key: OperatorKey.NumericLte,
