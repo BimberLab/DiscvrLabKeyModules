@@ -31,8 +31,15 @@ export interface Operator<T extends Value = Value> {
   generateLucene(field: string, value: T): string
 }
 
-function fuzzyNumRange(field: string, v: number) {
-  return `[${v - 0.000001} TO ${v + 0.000001}]`
+function fuzzyNumRange(field: string, raw: string | number) {
+  const floatValue = parseFloat(String(raw))
+  const intValue   = parseInt(String(raw), 10)
+
+  if (floatValue === intValue) {
+    return `[${intValue} TO ${intValue}]`
+  }
+
+  return `[${floatValue - 0.000001} TO ${floatValue + 0.000001}]`
 }
 
 export const OperatorRegistry: Record<OperatorKey, Operator> = {

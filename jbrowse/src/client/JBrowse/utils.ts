@@ -240,7 +240,7 @@ export function navigateToSearch(sessionId, locString, trackId, isValidRefNameFo
         const start = parsedLocString.start;
         const end = parsedLocString.end;
 
-        searchString = serializeLocationToLuceneQuery(contig, start, end)
+        searchString = serializeLocationToEncodedSearchString(contig, start, end)
     }
 
     window.location.href = ActionURL.buildURL("jbrowse", "variantSearch.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL, searchString: searchString})
@@ -318,7 +318,7 @@ export function getGenotypeURL(trackId, contig, start, end) {
     return ActionURL.buildURL("jbrowse", "genotypeTable.view", null, {trackId: trackId, chr: contig, start: start, stop: end})
 }
 
-export function serializeLocationToLuceneQuery(contig, start, end) {
+export function serializeLocationToEncodedSearchString(contig, start, end) {
     const filters = [
         new Filter("contig", OperatorKey.Equals, contig.toString()),
         new Filter("start", OperatorKey.NumericGte, start.toString()),
@@ -348,6 +348,9 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pa
         return
     }
 
+    const lucene = buildLuceneQuery(filters)
+    const encoded = encodeURIComponent(lucene)
+
     let sortReverse;
     if(sortReverseString == "asc") {
         sortReverse = true
@@ -366,7 +369,7 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pa
             failureCallback("There was an error: " + res.status + "\n Status Body: " + res.responseText + "\n Session ID:" + sessionId)
         },
         params: {
-            "searchString": buildLuceneQuery(filters),
+            "searchString": encoded,
             "sessionId": sessionId,
             "trackId": trackGUID,
             "offset": offset,
@@ -513,11 +516,11 @@ export function createEncodedFilterString(filters: Filter[]): string {
 }
 
 export function buildLuceneQuery(filters: Filter[]): string {
-    if (!filters.length || filters.every(f => f.isEmpty())) return 'all'
-    return filters
-        .filter(f => !f.isEmpty())
-        .map(f => f.toLucene())
-        .join('&')
+  if (!filters.length || filters.every(f => f.isEmpty())) return 'all'
+  return filters
+      .filter(f => !f.isEmpty())
+      .map(f => f.toLucene())
+      .join('&')
 }
 
 export async function fetchFieldTypeInfo(sessionId: string, trackId: string, successCallback: (fields: FieldModel[], groups: string[], promotedFilters: Map<string, Filter[]>) => void, failureCallback) {
