@@ -1015,6 +1015,17 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 int hashingIdx = -1;
                 int saturationIdx = -1;
                 boolean hashingUsed = true;
+                int riraIdx = -1;
+                int traIdx = -1;
+                int trbIdx = -1;
+                int trdIdx = -1;
+                int trgIdx = -1;
+
+                int totalTNK = 0;
+                int cellsWithTRA = 0;
+                int cellsWithTRB = 0;
+                int cellsWithTRD = 0;
+                int cellsWithTRG = 0;
                 while ((line = reader.readNext()) != null)
                 {
                     // This will test whether this is the first line or not
@@ -1029,6 +1040,11 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         }
 
                         saturationIdx = Arrays.asList(line).indexOf("Saturation.RNA");
+                        traIdx = Arrays.asList(line).indexOf("TRA");
+                        trbIdx = Arrays.asList(line).indexOf("TRB");
+                        trdIdx = Arrays.asList(line).indexOf("TRD");
+                        trgIdx = Arrays.asList(line).indexOf("TRG");
+                        riraIdx = Arrays.asList(line).indexOf("RIRA_Immune_v2.cellclass");
                     }
                     else
                     {
@@ -1063,6 +1079,49 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                             double saturation = Double.parseDouble(line[saturationIdx]);
                             totalSaturation += saturation;
                         }
+
+                        if (riraIdx >= 0)
+                        {
+                            if ("T_NK".equals(line[riraIdx]))
+                            {
+                                totalTNK++;
+                                if (traIdx >= 0)
+                                {
+                                    String tra = StringUtils.trimToNull(line[traIdx]);
+                                    if (tra != null)
+                                    {
+                                        cellsWithTRA++;
+                                    }
+                                }
+
+                                if (trbIdx >= 0)
+                                {
+                                    String trb = StringUtils.trimToNull(line[trbIdx]);
+                                    if (trb != null)
+                                    {
+                                        cellsWithTRB++;
+                                    }
+                                }
+
+                                if (trdIdx >= 0)
+                                {
+                                    String trd = StringUtils.trimToNull(line[trdIdx]);
+                                    if (trd != null)
+                                    {
+                                        cellsWithTRD++;
+                                    }
+                                }
+
+                                if (trgIdx >= 0)
+                                {
+                                    String trg = StringUtils.trimToNull(line[trgIdx]);
+                                    if (trg != null)
+                                    {
+                                        cellsWithTRG++;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -1089,6 +1148,19 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 if (totalSaturation > 0)
                 {
                     descriptions.add("Mean RNA Saturation: " + (totalSaturation / (double) totalCells));
+                }
+
+                if (totalTNK > 0)
+                {
+                    descriptions.add("Total T/NK Cells: " + totalTNK);
+                    descriptions.add("Fraction T/NK Cells with TRA: " + (cellsWithTRA / (double)totalTNK));
+                    descriptions.add("Fraction T/NK Cells with TRB: " + (cellsWithTRB / (double)totalTNK));
+                    descriptions.add("Fraction T/NK Cells with TRD: " + (cellsWithTRD / (double)totalTNK));
+                    descriptions.add("Fraction T/NK Cells with TRG: " + (cellsWithTRG / (double)totalTNK));
+                }
+                else if (riraIdx == -1 || traIdx == -1)
+                {
+                    descriptions.add("TCR information not present");
                 }
             }
             catch (IOException e)
