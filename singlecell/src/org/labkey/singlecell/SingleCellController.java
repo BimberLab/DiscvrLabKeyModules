@@ -21,10 +21,13 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ApiUsageException;
+import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.MutatingApiAction;
 import org.labkey.api.action.ReadOnlyApiAction;
@@ -45,6 +48,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleHtmlView;
 import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
@@ -58,14 +62,18 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.JsonUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.URLHelper;
+import org.labkey.api.view.HtmlView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.template.ClientDependency;
+import org.labkey.singlecell.analysis.AbstractSingleCellHandler;
 import org.labkey.singlecell.run.CellRangerWrapper;
 import org.springframework.validation.BindException;
+import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.io.File;
@@ -556,6 +564,96 @@ public class SingleCellController extends SpringActionController
         public void setCombineHashingCite(boolean combineHashingCite)
         {
             _combineHashingCite = combineHashingCite;
+        }
+    }
+
+    @RequiresPermission(AdminPermission.class)
+    public static class UpdatePrototypeDescriptionsAction extends ConfirmAction<Object>
+    {
+        @Override
+        public void validateCommand(Object form, Errors errors)
+        {
+
+        }
+
+        @Override
+        public @NotNull URLHelper getSuccessURL(Object form)
+        {
+            return getContainer().getStartURL(getUser());
+        }
+
+        @Override
+        public ModelAndView getConfirmView(Object form, BindException errors) throws Exception
+        {
+            return new HtmlView(HtmlString.unsafe("This will update the description field for all seurat prototypes. Do you want to continue?"));
+        }
+
+        @Override
+        public boolean handlePost(Object form, BindException errors) throws Exception
+        {
+            UserSchema sa = QueryService.get().getUserSchema(getUser(), getContainer(), SingleCellSchema.SEQUENCE_SCHEMA_NAME);
+            new TableSelector(sa.getTable("outputfiles"), PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("category"), "Seurat Object Prototype"), null).forEach(Integer.class, rowId -> {
+                SequenceOutputFile so = SequenceOutputFile.getForId(rowId);
+                if (so == null)
+                {
+                    throw new IllegalStateException("Unable to create SequenceOutputFile for: " + rowId);
+                }
+
+                try
+                {
+                    JSONObject params = new JSONObject();
+
+                    String oldDescription = so.getDescription();
+                    if (oldDescription.contains("SoupX: true"))
+                    {
+                        params.put("singleCellRawData.PrepareRawCounts.useSoupX", true);
+                    }
+
+                    if (oldDescription.contains("Hashing: "))
+                    {
+                        List<String> matching = Arrays.stream(oldDescription.split("\n")).filter(x -> x.contains("Hashing: ")).toList();
+                        if (!matching.isEmpty())
+                        {
+                            if (matching.size() == 1)
+                            {
+                                params.put("singleCell.RunCellHashing.consensusMethods", matching.get(0).replaceFirst("Hashing: ", ""));
+                            }
+                            else
+                            {
+                                _log.error("Expected single match for Hashing on rowId: "+ rowId);
+                            }
+                        }
+                    }
+
+                    if (oldDescription.contains("Cite-seq Normalization: "))
+                    {
+                        List<String> matching = Arrays.stream(oldDescription.split("\n")).filter(x -> x.contains("Cite-seq Normalization: ")).toList();
+                        if (!matching.isEmpty())
+                        {
+                            if (matching.size() == 1)
+                            {
+                                params.put("singleCell.AppendCiteSeq.normalizeMethod", matching.get(0).replaceFirst("Cite-seq Normalization: ", ""));
+                            }
+                            else
+                            {
+                                _log.error("Expected single match for Cite-seq Normalization on rowId: "+ rowId);
+                            }
+                        }
+                    }
+
+                    String description = AbstractSingleCellHandler.getOutputDescription(params, _log, so.getFile(), null);
+                    so.setDescription(description);
+
+                    _log.info(rowId);
+                    _log.info(description);
+                }
+                catch (PipelineJobException e)
+                {
+                    _log.error("Error generating description for: " + rowId, e);
+                }
+            });
+
+            return true;
         }
     }
 }

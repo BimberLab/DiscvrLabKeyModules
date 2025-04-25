@@ -616,7 +616,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 so.setName(output.getDatasetName() == null ? output.getDatasetId() : output.getDatasetName());
                 so.setCategory("Seurat Object");
                 so.setFile(output.getFile());
-                String description = getOutputDescription(ctx, output.getFile(), List.of("Steps: " + steps.stream().map(x -> x.getProvider().getName()).collect(Collectors.joining("; "))));
+                String description = getOutputDescription(ctx.getParams(), ctx.getLogger(), output.getFile(), List.of("Steps: " + steps.stream().map(x -> x.getProvider().getName()).collect(Collectors.joining("; "))));
                 if (jobDescription != null)
                 {
                     description = jobDescription + "\n" + description;
@@ -986,7 +986,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
         }
     }
 
-    public static String getOutputDescription(JobContext ctx, File seuratObj, @Nullable List<String> descriptions) throws PipelineJobException
+    public static String getOutputDescription(JSONObject jsonParams, Logger log, File seuratObj, @Nullable List<String> descriptions) throws PipelineJobException
     {
         if (descriptions == null)
         {
@@ -1034,7 +1034,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         hashingIdx = Arrays.asList(line).indexOf("HTO.Classification");
                         if (hashingIdx == -1)
                         {
-                            ctx.getLogger().debug("HTO.Classification field not present, skipping");
+                            log.debug("HTO.Classification field not present, skipping");
                             hashingUsed = false;
                             hashingIdx = -2;
                         }
@@ -1088,7 +1088,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                                 if (traIdx >= 0)
                                 {
                                     String tra = StringUtils.trimToNull(line[traIdx]);
-                                    if (tra != null)
+                                    if (tra != null && !"NA".equals(tra))
                                     {
                                         cellsWithTRA++;
                                     }
@@ -1097,7 +1097,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                                 if (trbIdx >= 0)
                                 {
                                     String trb = StringUtils.trimToNull(line[trbIdx]);
-                                    if (trb != null)
+                                    if (trb != null && !"NA".equals(trb))
                                     {
                                         cellsWithTRB++;
                                     }
@@ -1106,7 +1106,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                                 if (trdIdx >= 0)
                                 {
                                     String trd = StringUtils.trimToNull(line[trdIdx]);
-                                    if (trd != null)
+                                    if (trd != null && !"NA".equals(trd))
                                     {
                                         cellsWithTRD++;
                                     }
@@ -1115,7 +1115,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                                 if (trgIdx >= 0)
                                 {
                                     String trg = StringUtils.trimToNull(line[trgIdx]);
-                                    if (trg != null)
+                                    if (trg != null && !"NA".equals(trg))
                                     {
                                         cellsWithTRG++;
                                     }
@@ -1169,18 +1169,18 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             }
         }
 
-        if (ctx.getParams().optBoolean("singleCellRawData.PrepareRawCounts.useSoupX", false))
+        if (jsonParams.optBoolean("singleCellRawData.PrepareRawCounts.useSoupX", false))
         {
             descriptions.add("SoupX: true");
         }
 
-        String hashingMethods = ctx.getParams().optString("singleCell.RunCellHashing.consensusMethods");
+        String hashingMethods = jsonParams.optString("singleCell.RunCellHashing.consensusMethods");
         if (StringUtils.trimToNull(hashingMethods) != null)
         {
             descriptions.add("Hashing: " + hashingMethods);
         }
 
-        String citeNormalize = ctx.getParams().optString("singleCell.AppendCiteSeq.normalizeMethod");
+        String citeNormalize = jsonParams.optString("singleCell.AppendCiteSeq.normalizeMethod");
         if (StringUtils.trimToNull(citeNormalize) != null)
         {
             descriptions.add("Cite-seq Normalization: " + citeNormalize);
