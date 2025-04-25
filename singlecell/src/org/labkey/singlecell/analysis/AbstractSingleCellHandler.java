@@ -1152,11 +1152,11 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
                 if (totalTNK > 0)
                 {
-                    descriptions.add("Total T/NK Cells: " + totalTNK);
-                    descriptions.add("Fraction T/NK Cells with TRA: " + (cellsWithTRA / (double)totalTNK));
-                    descriptions.add("Fraction T/NK Cells with TRB: " + (cellsWithTRB / (double)totalTNK));
-                    descriptions.add("Fraction T/NK Cells with TRD: " + (cellsWithTRD / (double)totalTNK));
-                    descriptions.add("Fraction T/NK Cells with TRG: " + (cellsWithTRG / (double)totalTNK));
+                    descriptions.add("Total T/NK Cells: " + decimal.format(totalTNK));
+                    descriptions.add("% T/NK Cells with TRA: " + pf.format(cellsWithTRA / (double)totalTNK));
+                    descriptions.add("% T/NK Cells with TRB: " + pf.format(cellsWithTRB / (double)totalTNK));
+                    descriptions.add("% T/NK Cells with TRD: " + pf.format(cellsWithTRD / (double)totalTNK));
+                    descriptions.add("% T/NK Cells with TRG: " + pf.format(cellsWithTRG / (double)totalTNK));
                 }
                 else if (riraIdx == -1 || traIdx == -1)
                 {
