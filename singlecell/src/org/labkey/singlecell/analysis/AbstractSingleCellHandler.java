@@ -1026,6 +1026,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 int cellsWithTRB = 0;
                 int cellsWithTRD = 0;
                 int cellsWithTRG = 0;
+                int cellsLackingCDR3 = 0;
                 while ((line = reader.readNext()) != null)
                 {
                     // This will test whether this is the first line or not
@@ -1084,6 +1085,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         {
                             if ("T_NK".equals(line[riraIdx]))
                             {
+                                boolean hasCDR3 = false;
                                 totalTNK++;
                                 if (traIdx >= 0)
                                 {
@@ -1091,6 +1093,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                                     if (tra != null && !"NA".equals(tra))
                                     {
                                         cellsWithTRA++;
+                                        hasCDR3 = true;
                                     }
                                 }
 
@@ -1100,6 +1103,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                                     if (trb != null && !"NA".equals(trb))
                                     {
                                         cellsWithTRB++;
+                                        hasCDR3 = true;
                                     }
                                 }
 
@@ -1109,6 +1113,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                                     if (trd != null && !"NA".equals(trd))
                                     {
                                         cellsWithTRD++;
+                                        hasCDR3 = true;
                                     }
                                 }
 
@@ -1118,7 +1123,13 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                                     if (trg != null && !"NA".equals(trg))
                                     {
                                         cellsWithTRG++;
+                                        hasCDR3 = true;
                                     }
+                                }
+
+                                if (!hasCDR3)
+                                {
+                                    cellsLackingCDR3++;
                                 }
                             }
                         }
@@ -1157,6 +1168,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     descriptions.add("% T/NK Cells with TRB: " + pf.format(cellsWithTRB / (double)totalTNK));
                     descriptions.add("% T/NK Cells with TRD: " + pf.format(cellsWithTRD / (double)totalTNK));
                     descriptions.add("% T/NK Cells with TRG: " + pf.format(cellsWithTRG / (double)totalTNK));
+                    descriptions.add("% T/NK Cells without TCR: " + pf.format(cellsLackingCDR3 / (double)totalTNK));
                 }
                 else if (riraIdx == -1 || traIdx == -1)
                 {

@@ -79,6 +79,7 @@ import org.springframework.web.servlet.ModelAndView;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -592,6 +593,7 @@ public class SingleCellController extends SpringActionController
         public boolean handlePost(Object form, BindException errors) throws Exception
         {
             UserSchema sa = QueryService.get().getUserSchema(getUser(), getContainer(), SingleCellSchema.SEQUENCE_SCHEMA_NAME);
+            List<Map<String, Object>> toUpdate = new ArrayList<>();
             new TableSelector(sa.getTable("outputfiles"), PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("category"), "Seurat Object Prototype"), null).forEach(Integer.class, rowId -> {
                 SequenceOutputFile so = SequenceOutputFile.getForId(rowId);
                 if (so == null)
@@ -642,16 +644,33 @@ public class SingleCellController extends SpringActionController
                     }
 
                     String description = AbstractSingleCellHandler.getOutputDescription(params, _log, so.getFile(), null);
-                    so.setDescription(description);
-
-                    _log.info(rowId);
-                    _log.info(description);
+                    toUpdate.add(new CaseInsensitiveHashMap<>(Map.of("rowid", so.getRowid(), "description", description)));
                 }
                 catch (PipelineJobException e)
                 {
                     _log.error("Error generating description for: " + rowId, e);
                 }
             });
+
+            if (!toUpdate.isEmpty())
+            {
+                try
+                {
+                    BatchValidationException bve = new BatchValidationException();
+                    List<Map<String, Object>> oldKeys = toUpdate.stream().map(row -> Map.of("rowid", row.get("rowid"))).toList();
+                    sa.getTable("outputfiles").getUpdateService().updateRows(getUser(), getContainer(), toUpdate, oldKeys, bve, null, null);
+
+                    if (bve.hasErrors())
+                    {
+                        throw bve;
+                    }
+                }
+                catch (SQLException | BatchValidationException e)
+                {
+                    _log.error("Unable to update outputfiles", e);
+                    return false;
+                }
+            }
 
             return true;
         }
