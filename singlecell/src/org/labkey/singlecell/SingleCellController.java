@@ -51,7 +51,9 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryService;
+import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.User;
@@ -594,7 +596,7 @@ public class SingleCellController extends SpringActionController
         {
             UserSchema sa = QueryService.get().getUserSchema(getUser(), getContainer(), SingleCellSchema.SEQUENCE_SCHEMA_NAME);
             List<Map<String, Object>> toUpdate = new ArrayList<>();
-            new TableSelector(sa.getTable("outputfiles"), PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("category"), "Seurat Object Prototype"), null).forEach(Integer.class, rowId -> {
+            new TableSelector(sa.getTable("outputfiles"), PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("category"), "Seurat Object Prototype").addCondition(FieldKey.fromString("modified"), "2025-04-29", CompareType.DATE_LT), null).forEach(Integer.class, rowId -> {
                 SequenceOutputFile so = SequenceOutputFile.getForId(rowId);
                 if (so == null)
                 {
@@ -645,6 +647,12 @@ public class SingleCellController extends SpringActionController
 
                     String description = AbstractSingleCellHandler.getOutputDescription(params, _log, so.getFile(), null);
                     toUpdate.add(new CaseInsensitiveHashMap<>(Map.of("rowid", so.getRowid(), "description", description)));
+
+                    if (toUpdate.size() % 250 == 0)
+                    {
+                        doUpdate(toUpdate, getUser(), getContainer());
+                        toUpdate.clear();
+                    }
                 }
                 catch (PipelineJobException e)
                 {
@@ -654,25 +662,34 @@ public class SingleCellController extends SpringActionController
 
             if (!toUpdate.isEmpty())
             {
-                try
-                {
-                    BatchValidationException bve = new BatchValidationException();
-                    List<Map<String, Object>> oldKeys = toUpdate.stream().map(row -> Map.of("rowid", row.get("rowid"))).toList();
-                    sa.getTable("outputfiles").getUpdateService().updateRows(getUser(), getContainer(), toUpdate, oldKeys, bve, null, null);
-
-                    if (bve.hasErrors())
-                    {
-                        throw bve;
-                    }
-                }
-                catch (SQLException | BatchValidationException e)
-                {
-                    _log.error("Unable to update outputfiles", e);
-                    return false;
-                }
+                doUpdate(toUpdate, getUser(), getContainer());
+                toUpdate.clear();
             }
 
             return true;
+        }
+    }
+
+    private static void doUpdate(List<Map<String, Object>> toUpdate, User u, Container c)
+    {
+        try
+        {
+            _log.info("Total prototype updates: " + toUpdate.size());
+
+            BatchValidationException bve = new BatchValidationException();
+            List<Map<String, Object>> oldKeys = toUpdate.stream().map(row -> Map.of("rowid", row.get("rowid"))).toList();
+
+            UserSchema sa = QueryService.get().getUserSchema(u, c, SingleCellSchema.SEQUENCE_SCHEMA_NAME);
+            sa.getTable("outputfiles").getUpdateService().updateRows(u, c, toUpdate, oldKeys, bve, null, null);
+
+            if (bve.hasErrors())
+            {
+                throw bve;
+            }
+        }
+        catch (SQLException | InvalidKeyException | QueryUpdateServiceException | BatchValidationException e)
+        {
+            _log.error("Unable to update outputfiles", e);
         }
     }
 }
