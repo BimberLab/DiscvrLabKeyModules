@@ -13,6 +13,7 @@ import {
     GridToolbarExport
 } from '@mui/x-data-grid';
 import SearchIcon from '@mui/icons-material/Search';
+import { OperatorKey } from '../operators'
 import LinkIcon from '@mui/icons-material/Link';
 import DownloadIcon from '@mui/icons-material/Download'
 import { ActionURL } from '@labkey/api';
@@ -25,6 +26,7 @@ import { NoAssemblyRegion } from '@jbrowse/core/util/types';
 import { toArray } from 'rxjs/operators';
 import {
     createEncodedFilterString,
+    buildLuceneQuery,
     fetchFieldTypeInfo,
     fetchLuceneQuery,
     FieldModel,
@@ -78,7 +80,7 @@ const VariantTableWidget = observer(props => {
         const { page = pageSizeModel.page, pageSize = pageSizeModel.pageSize } = pageQueryModel;
         const { field = "genomicPosition", sort = false } = sortQueryModel[0] ?? {};
 
-        const encodedSearchString = createEncodedFilterString(passedFilters, false);
+        const encodedSearchString = createEncodedFilterString(passedFilters);
         const currentUrl = new URL(window.location.href);
         currentUrl.searchParams.set("searchString", encodedSearchString);
         currentUrl.searchParams.set("page", page.toString());
@@ -98,7 +100,7 @@ const VariantTableWidget = observer(props => {
     const handleExport = () => {
         const currentUrl = new URL(window.location.href);
 
-        const searchString = createEncodedFilterString(filters, true);
+        const searchString = encodeURIComponent(buildLuceneQuery(filters));
         const sortField = sortModel[0]?.field ?? 'genomicPosition';
         const sortDirection = sortModel[0]?.sort ?? false;
 
@@ -552,14 +554,14 @@ const VariantTableWidget = observer(props => {
             <div style={{ marginBottom: "10px", display: "flex", alignItems: "center" }}>
                 <div style={{ flex: 1 }}>
                     {filters.map((filter, index) => {
-                        if ((filter as any).field && ((filter as any).operator === "is empty" || (filter as any).operator === "is not empty") && !(filter as any).value) {
+                        if ((filter as any).field && ((filter as any).operator.key === OperatorKey.IsEmpty || (filter as any).operator.key === OperatorKey.IsNotEmpty) && !(filter as any).value) {
                             return (
                                 <Button
                                     key={index}
                                     onClick={() => setFilterModalOpen(true)}
                                     style={{ border: "1px solid gray", margin: "5px" }}
                                 >
-                                    {`${(filter as any).field} ${(filter as any).operator}`}
+                                    {`${(filter as any).field} ${(filter as any).operator.key}`}
                                 </Button>
                             );
                         }
@@ -577,7 +579,7 @@ const VariantTableWidget = observer(props => {
                                 key={index}
                                 onClick={() => setFilterModalOpen(true)}
                                 style={{ border: "1px solid gray", margin: "5px" }}                            >
-                                {`${(filter as any).field} ${(filter as any).operator} ${(filter as any).value}`}
+                                {`${(filter as any).field} ${(filter as any).operator.key} ${(filter as any).value}`}
                             </Button>
                         );
                     })}

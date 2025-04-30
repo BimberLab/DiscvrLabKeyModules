@@ -12,6 +12,7 @@ import {
 } from '@mui/x-data-grid';
 import { ParsedLocString, parseLocString } from '@jbrowse/core/util';
 import { VcfFeature } from '@jbrowse/plugin-variants';
+import { Operator, OperatorKey, OperatorRegistry, Value } from './VariantSearch/operators'
 
 export function arrayMax(array) {
     return Array.isArray(array) ? Math.max(...array) : array
@@ -239,7 +240,7 @@ export function navigateToSearch(sessionId, locString, trackId, isValidRefNameFo
         const start = parsedLocString.start;
         const end = parsedLocString.end;
 
-        searchString = serializeLocationToLuceneQuery(contig, start, end)
+        searchString = serializeLocationToEncodedSearchString(contig, start, end)
     }
 
     window.location.href = ActionURL.buildURL("jbrowse", "variantSearch.view", null, {session: sessionId, location: locString, trackId: trackId, activeTracks: trackId, sampleFilters: sampleFilterURL, infoFilters: infoFilterURL, searchString: searchString})
@@ -317,106 +318,14 @@ export function getGenotypeURL(trackId, contig, start, end) {
     return ActionURL.buildURL("jbrowse", "genotypeTable.view", null, {trackId: trackId, chr: contig, start: start, stop: end})
 }
 
-export function serializeLocationToLuceneQuery(contig, start, end) {
+export function serializeLocationToEncodedSearchString(contig, start, end) {
     const filters = [
-        {field: "contig", operator: "equals", value: contig.toString()},
-        {field: "start", operator: ">=", value: start.toString()},
-        {field: "end", operator: "<=", value: end.toString()}
+        new Filter("contig", OperatorKey.Equals, contig.toString()),
+        new Filter("start", OperatorKey.NumericGte, start.toString()),
+        new Filter("end", OperatorKey.NumericLte, end.toString())
     ]
 
-    return createEncodedFilterString(filters, false)
-}
-
-function generateLuceneString(field, operator, value) {
-  let luceneQueryString = '';
-
-  if (field === 'variableSamples' && operator == "equals one of") {
-    return `variableSamples:~${value}~`;
-  }
-  let intValue = parseInt(value);
-  let floatValue = parseFloat(value);
-
-  // Generate Lucene query string based on operator and type of value
-  switch (operator) {
-    case '=': // Exact match for numeric fields
-        luceneQueryString = floatValue !== intValue 
-            ? `${field}:[${Number(value) - 0.000001} TO ${Number(value) + 0.000001}]`
-            : `${field}:[${value} TO ${value}]`;
-        break;
-    case '!=': // Not equal to, for numeric fields
-        luceneQueryString = floatValue !== intValue 
-            ? `${field}:[* TO ${Number(value) - 0.000001}] OR ${field}:[${Number(value) + 0.000001} TO *]` 
-            : `${field}:[* TO ${value}} OR ${field}:{${value} TO *]`;
-        break;
-    case '>': // Greater than for numeric fields
-        luceneQueryString = floatValue !== intValue 
-            ? `${field}:[${Number(value) + 0.000001} TO *]`
-            : `${field}:{${value} TO *]`;
-        break;
-    case '>=': // Greater than or equal to for numeric fields
-        luceneQueryString = `${field}:[${value} TO *]`;
-        break;
-    case '<': // Less than for numeric fields
-        luceneQueryString = floatValue !== intValue 
-            ? `${field}:[* TO ${Number(value) - 0.000001}]`
-            : `${field}:[* TO ${value}}`;
-        break;
-    case '<=': // Less than or equal to for numeric fields
-        luceneQueryString = `${field}:[* TO ${value}]`;
-        break;
-    case 'equals': // Exact match for string fields
-        luceneQueryString = `${field}:${value}`;
-        break;
-    case 'contains': // Substring search for string fields
-        luceneQueryString = `${field}:*${value}*`;
-        break;
-    case 'does not equal': // Not equal to for string fields
-        luceneQueryString = `*:* -${field}:${value}`;
-        break;
-    case 'does not contain': // Does not contain for string fields
-        luceneQueryString = `*:* -${field}:*${value}*`;
-        break;
-    case 'starts with': // Starts with for string fields
-        luceneQueryString = `${field}:${value}*`;
-        break;
-    case 'ends with': // Ends with for string fields
-        luceneQueryString = `${field}:*${value}`;
-        break;
-    case 'is empty': // Field is empty
-        luceneQueryString = `*:* -${field}:*`;
-        break;
-    case 'is not empty': // Field is not empty
-        luceneQueryString = `${field}:*`;
-        break;
-    case 'variable in': // Variable in for multi-valued fields
-        luceneQueryString = `${field}:${value}`;
-        break;
-    case 'not variable in': // Not variable in for multi-valued fields
-        luceneQueryString = `*:* -${field}:${value}`;
-        break;
-    default:
-        // Operators that require multiple values
-        const values = value.split(',');
-
-        switch (operator) {
-        case 'variable in all of': // Variable in all of the provided values
-            luceneQueryString = values.map(v => `+${field}:${v}`).join(' ');
-            break;
-        case 'variable in any of': // Variable in any of the provided values
-            luceneQueryString = values.map(v => `${field}:${v}`).join(' OR ');
-            break;
-        case 'not variable in any of': // Not variable in any of the provided values
-            luceneQueryString = values.map(v => `*:* -${field}:${v}`).join(' AND ');
-            break;
-        case 'not variable in one of': // Not variable in one of the provided values
-            luceneQueryString = values.map(v => `*:* -${field}:${v}`).join(' OR ');
-            break;
-        default:
-            throw new Error(`Invalid operator: ${operator}`);
-        }
-    }
-
-  return luceneQueryString;
+    return createEncodedFilterString(filters)
 }
 
 export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pageSize, sortField, sortReverseString, successCallback, failureCallback) {
@@ -439,6 +348,9 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pa
         return
     }
 
+    const lucene = buildLuceneQuery(filters)
+    const encoded = encodeURIComponent(lucene)
+
     let sortReverse;
     if(sortReverseString == "asc") {
         sortReverse = true
@@ -457,7 +369,7 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pa
             failureCallback("There was an error: " + res.status + "\n Status Body: " + res.responseText + "\n Session ID:" + sessionId)
         },
         params: {
-            "searchString": createEncodedFilterString(filters, true),
+            "searchString": encoded,
             "sessionId": sessionId,
             "trackId": trackGUID,
             "offset": offset,
@@ -466,23 +378,6 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pa
             "sortReverse": sortReverse 
         },
     });
-}
-
-export function createEncodedFilterString(filters: Array<{field: string; operator: string; value: string}>, lucenify: boolean) {
-    let ret: any = []
-
-    if(!filters || filters.length == 0 || (filters.length == 1 && filters[0].field == "" && filters[0].operator == "" && filters[0].value == "")) {
-        return "all"
-    }
-
-    if(lucenify) {
-        ret = filters.map(val => generateLuceneString(val.field, val.operator, val.value));
-    } else {
-        ret = filters.map(val => val.field + "," + val.operator + "," + val.value)
-    }
-    const concatenatedString = ret.join('&');
-
-    return encodeURIComponent(concatenatedString.replace(/\+/g, "%2B"));
 }
 
 export class FieldModel {
@@ -501,6 +396,7 @@ export class FieldModel {
     url: string
     flex: number
     supportsFilter: boolean = true
+    defaultOperator: string
 
     getLabel(): string {
         return this.label ?? this.name
@@ -523,6 +419,58 @@ export class FieldModel {
         }
 
         return muiFieldType
+    }
+
+    getOperators(): Operator[] {
+        if (this.name === 'variableSamples') {
+          return [
+            OperatorKey.EqualsOneOf,
+            OperatorKey.IsIn,
+            OperatorKey.IsNotIn,
+            OperatorKey.IsInAllOf,
+            OperatorKey.IsInAnyOf,
+            OperatorKey.IsNotInAnyOf,
+            OperatorKey.IsNotInOneOf,
+            OperatorKey.IsEmpty,
+            OperatorKey.IsNotEmpty,
+          ].map(k => OperatorRegistry[k])
+        }
+
+        switch (this.type) {
+          case 'String':
+          case 'Flag':
+          case 'Character':
+          case 'Impact':
+            return [
+              OperatorKey.Equals,
+              OperatorKey.NotEquals,
+              OperatorKey.Contains,
+              OperatorKey.NotContains,
+              OperatorKey.StartsWith,
+              OperatorKey.EndsWith,
+              OperatorKey.IsEmpty,
+              OperatorKey.IsNotEmpty,
+            ].map(k => OperatorRegistry[k])
+
+          case 'Float':
+          case 'Integer':
+            return [
+              OperatorKey.NumericEq,
+              OperatorKey.NumericNeq,
+              OperatorKey.NumericGt,
+              OperatorKey.NumericGte,
+              OperatorKey.NumericLt,
+              OperatorKey.NumericLte,
+            ].map(k => OperatorRegistry[k])
+
+          default:
+            return []
+        }
+    }
+
+    getDefaultOperator(): Operator | undefined {
+        if (this.defaultOperator && this.defaultOperator != "") return OperatorRegistry[this.defaultOperator]
+        return this.getOperators()[0]
     }
 
     toGridColDef(): GridColDef {
@@ -560,6 +508,19 @@ export class FieldModel {
 
         return gridCol
     }
+}
+
+export function createEncodedFilterString(filters: Filter[]): string {
+    if (!filters.length || filters.every(f => f.isEmpty())) return 'all'
+    return encodeURIComponent(filters.map(f => f.encode()).join('&'))
+}
+
+export function buildLuceneQuery(filters: Filter[]): string {
+  if (!filters.length || filters.every(f => f.isEmpty())) return 'all'
+  return filters
+      .filter(f => !f.isEmpty())
+      .map(f => f.toLucene())
+      .join('&')
 }
 
 export async function fetchFieldTypeInfo(sessionId: string, trackId: string, successCallback: (fields: FieldModel[], groups: string[], promotedFilters: Map<string, Filter[]>) => void, failureCallback) {
@@ -601,46 +562,45 @@ export function truncateToValidGUID(str: string) {
     return str;
 }
 
-export declare type FilterType = {
-    field: string,
-    value: any,
-    operator: string
-}
+export class Filter {
+  field: string
+  operator: Operator
+  value: Value
 
-export class Filter implements FilterType {
-    field: string = ""
-    value: any = ""
-    operator: string = ""
+  constructor(field: string, operatorKey: OperatorKey, value: Value) {
+    this.field = field
+    this.operator = OperatorRegistry[operatorKey]
+    this.value = value
+  }
 
-    encode(): string {
-        return [this.field, this.operator, this.value].join(',')
-    }
+  encode(): string {
+    return [this.field, this.operator.key, this.value].join(',')
+  }
 
-    isEmpty(): boolean {
-        return !!this.field
-    }
+  toLucene(): string {
+    return this.operator.generateLucene(this.field, this.value as any)
+  }
 
-    static fromString(str: string): Filter[] {
-        const decodedSearchString = decodeURIComponent(str)
-        const searchStringsArray = decodedSearchString.split("&").filter((x) => x !== "all")
+  isEmpty(): boolean {
+    return this.field === ''
+  }
 
-        return searchStringsArray.map((item) => {
-            const parts = item.split(",");
-            const field = parts[0];
-            const operator = parts[1];
-            const value = parts.slice(2).join(",");
-            return Object.assign(new Filter(), { field: field, operator: operator, value: value })
-        })
-    }
+  static fromString(str: string): Filter[] {
+    const decoded = decodeURIComponent(str)
+    return decoded
+      .split('&')
+      .filter(x => x !== 'all')
+      .map(item => {
+        const [field, opKey, ...valParts] = item.split(',')
+        const value = valParts.join(',')
+        return new Filter(field, opKey as OperatorKey, isNaN(Number(value)) ? value : Number(value))
+      })
+  }
 
-    static deduplicate(filters: Filter[]): Filter[] {
-        const filterMap = {}
-        filters.forEach((f) => {
-            filterMap[f.encode()] = f
-        })
-
-        return Object.keys(filterMap).map((key) => filterMap[key])
-    }
+  static deduplicate(filters: Filter[]): Filter[] {
+    const map = new Map(filters.map(f => [f.encode(), f]))
+    return Array.from(map.values())
+  }
 }
 
 export function searchStringToInitialFilters(knownFieldNames: string[]) : Filter[] {
@@ -651,49 +611,9 @@ export function searchStringToInitialFilters(knownFieldNames: string[]) : Filter
         return Filter.fromString(searchString).filter(({ field }) => knownFieldNames.includes(field))
     }
 
-    return [new Filter()]
+    return []
 }
 
-export function getOperatorsForField(fieldObj: FieldModel): string[] {
-    const stringOperators = ["equals", "does not equal", "contains", "does not contain", "starts with", "ends with", "is empty", "is not empty"];
-    const variableSamplesType = ["equals one of", "variable in", "not variable in", "variable in all of", "variable in any of", "not variable in any of", "not variable in one of", "is empty", "is not empty"];
-    const numericOperators = ["=", "!=", ">", ">=", "<", "<="];
-    const noneOperators = [];
-
-    // This can occur for the blank placeholder field:
-    if (!fieldObj) {
-        return[]
-    }
-
-    const field = fieldObj.name;
-    const type = fieldObj.type;
-
-    let allowedOperators;
-    switch (type) {
-        case 'Flag':
-        case 'String':
-        case 'Character':
-            allowedOperators = stringOperators;
-            break;
-        case 'Float':
-        case 'Integer':
-            allowedOperators = numericOperators;
-            break;
-        case 'Impact':
-            allowedOperators = stringOperators;
-            break;
-        case 'None':
-        default:
-            allowedOperators = noneOperators;
-            break;
-    }
-
-    if (field === "variableSamples") {
-        return variableSamplesType
-    }
-
-    return allowedOperators
-}
 
 export const multiValueComparator: GridComparatorFn = (v1, v2) => {
     return arrayMax(parseCellValue(v1)) - arrayMax(parseCellValue(v2))
