@@ -646,9 +646,9 @@ public class SingleCellController extends SpringActionController
                     }
 
                     String description = AbstractSingleCellHandler.getOutputDescription(params, _log, so.getFile(), null);
-                    toUpdate.add(new CaseInsensitiveHashMap<>(Map.of("rowid", so.getRowid(), "description", description)));
+                    toUpdate.add(new CaseInsensitiveHashMap<>(Map.of("rowid", so.getRowid(), "container", so.getContainer(), "description", description)));
 
-                    if (toUpdate.size() % 250 == 0)
+                    if (toUpdate.size() % 200 == 0)
                     {
                         doUpdate(toUpdate, getUser(), getContainer());
                         toUpdate.clear();
