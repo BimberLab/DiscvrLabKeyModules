@@ -348,7 +348,6 @@ export default jbrowse => {
         const infoKeys = Object.keys(feat.INFO)
         let isApiSubscribed = true
         useEffect(() => {
-            console.log('called!')
             Ajax.request({
                 url: ActionURL.buildURL('jbrowse', 'resolveVcfFields.api'),
                 method: 'POST',
