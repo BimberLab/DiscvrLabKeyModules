@@ -56,7 +56,7 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                                         containerPath: containerPath,
                                         dataRegionName: dataRegionName,
                                         outputFileIds: checked,
-                                        libraryId: distinctGenomes.length == 1 ? distinctGenomes[0] : null,
+                                        libraryId: distinctGenomes.length === 1 ? distinctGenomes[0] : null,
                                         toolParameters: results.toolParameters
                                     }).show();
                                 }
@@ -71,7 +71,7 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
     initComponent: function(){
         Ext4.apply(this, {
             bodyStyle: 'padding: 5px;',
-            width: 500,
+            width: 600,
             modal: true,
             title: 'Liftover File(s) To Alternate Genome',
             items: [{
@@ -117,12 +117,17 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
                 itemId: 'useBcfTools',
                 checked: true,
                 fieldLabel: 'Use bcftools'
-            },{
+            }, {
                 xtype: 'checkbox',
-                itemId: 'doNotRetainUnmapped',
+                itemId: 'retainUnmapped',
                 checked: false,
-                fieldLabel: 'Do Not Retain Unmapped'
-            }].concat(SequenceAnalysis.window.OutputHandlerWindow.getCfgForToolParameters(this.toolParameters)),
+                fieldLabel: 'Retain Unmapped Variants'
+            }].concat(SequenceAnalysis.window.OutputHandlerWindow.getCfgForToolParameters(this.toolParameters)).concat([{
+                xtype: 'sequenceanalysis-variantscattergatherpanel',
+                defaultFieldWidth: 500,
+                labelWidth: 200,
+                bodyStyle: ''
+            }]),
             buttons: [{
                 text: 'Submit',
                 handler: this.onSubmit,
@@ -158,21 +163,23 @@ Ext4.define('SequenceAnalysis.window.LiftoverWindow', {
             params.pct = this.down('#pctField').getValue();
         }
 
-        if (this.down('#dropGenotypes').getValue()){
-            params.dropGenotypes = this.down('#dropGenotypes').getValue();
-        }
+        params.dropGenotypes = !!this.down('#dropGenotypes').getValue();
+        params.useBcfTools = !!this.down('#useBcfTools').getValue();
+        params.retainUnmapped = !!this.down('#retainUnmapped').getValue();
 
-        if (this.down('#useBcfTools').getValue()){
-            params.useBcfTools = this.down('#useBcfTools').getValue();
-        }
+        Ext4.Array.forEach(this.down('sequenceanalysis-variantscattergatherpanel').query('field'), function(field){
+            params[field.name] = field.getValue();
+        }, this);
 
-        if (this.down('#doNotRetainUnmapped').getValue()){
-            params.doNotRetainUnmapped = this.down('#doNotRetainUnmapped').getValue();
+        var actionName = 'runSequenceHandler';
+        if (params.scatterGatherMethod && params.scatterGatherMethod !== 'none') {
+            params.scatterGather = true;
+            actionName = 'runVariantProcessing';
         }
 
         Ext4.Msg.wait('Saving...');
         LABKEY.Ajax.request({
-            url: LABKEY.ActionURL.buildURL('sequenceanalysis', 'runSequenceHandler', this.containerPath),
+            url: LABKEY.ActionURL.buildURL('sequenceanalysis', actionName, this.containerPath),
             jsonData: {
                 handlerClass: 'org.labkey.sequenceanalysis.analysis.LiftoverHandler',
                 outputFileIds: this.outputFileIds,

@@ -366,7 +366,7 @@ export default jbrowse => {
             return () => {
                 isApiSubscribed = false;
             };
-        }, [infoKeys])
+        }, [])
 
         let annTable;
         if (feat["INFO"]["ANN"]){

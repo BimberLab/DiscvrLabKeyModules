@@ -3,6 +3,7 @@ Ext4.define('SequenceAnalysis.panel.VariantScatterGatherPanel', {
     alias: 'widget.sequenceanalysis-variantscattergatherpanel',
 
     defaultFieldWidth: null,
+    labelWidth: null,
 
     initComponent: function (){
         Ext4.apply(this, {

@@ -145,7 +145,7 @@ public class SeuratPrototype extends AbstractCellMembraneStep
             String readsetName = ctx.getSequenceSupport().getCachedReadset(wrapper.getReadsetId()).getName();
             so.setReadset(wrapper.getReadsetId());
             so.setName(readsetName + ": Prototype Seurat Object");
-            so.setDescription(AbstractSingleCellHandler.getOutputDescription(ctx, so.getFile(), null));
+            so.setDescription(AbstractSingleCellHandler.getOutputDescription(ctx.getParams(), ctx.getLogger(), so.getFile(), null));
 
             ctx.getFileManager().addSequenceOutput(so);
         }

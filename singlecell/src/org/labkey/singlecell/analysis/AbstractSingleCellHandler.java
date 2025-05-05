@@ -616,7 +616,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 so.setName(output.getDatasetName() == null ? output.getDatasetId() : output.getDatasetName());
                 so.setCategory("Seurat Object");
                 so.setFile(output.getFile());
-                String description = getOutputDescription(ctx, output.getFile(), List.of("Steps: " + steps.stream().map(x -> x.getProvider().getName()).collect(Collectors.joining("; "))));
+                String description = getOutputDescription(ctx.getParams(), ctx.getLogger(), output.getFile(), List.of("Steps: " + steps.stream().map(x -> x.getProvider().getName()).collect(Collectors.joining("; "))));
                 if (jobDescription != null)
                 {
                     description = jobDescription + "\n" + description;
@@ -986,7 +986,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
         }
     }
 
-    public static String getOutputDescription(JobContext ctx, File seuratObj, @Nullable List<String> descriptions) throws PipelineJobException
+    public static String getOutputDescription(JSONObject jsonParams, Logger log, File seuratObj, @Nullable List<String> descriptions) throws PipelineJobException
     {
         if (descriptions == null)
         {
@@ -1015,6 +1015,18 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 int hashingIdx = -1;
                 int saturationIdx = -1;
                 boolean hashingUsed = true;
+                int riraIdx = -1;
+                int traIdx = -1;
+                int trbIdx = -1;
+                int trdIdx = -1;
+                int trgIdx = -1;
+
+                int totalTNK = 0;
+                int cellsWithTRA = 0;
+                int cellsWithTRB = 0;
+                int cellsWithTRD = 0;
+                int cellsWithTRG = 0;
+                int cellsLackingCDR3 = 0;
                 while ((line = reader.readNext()) != null)
                 {
                     // This will test whether this is the first line or not
@@ -1023,12 +1035,17 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         hashingIdx = Arrays.asList(line).indexOf("HTO.Classification");
                         if (hashingIdx == -1)
                         {
-                            ctx.getLogger().debug("HTO.Classification field not present, skipping");
+                            log.debug("HTO.Classification field not present, skipping");
                             hashingUsed = false;
                             hashingIdx = -2;
                         }
 
                         saturationIdx = Arrays.asList(line).indexOf("Saturation.RNA");
+                        traIdx = Arrays.asList(line).indexOf("TRA");
+                        trbIdx = Arrays.asList(line).indexOf("TRB");
+                        trdIdx = Arrays.asList(line).indexOf("TRD");
+                        trgIdx = Arrays.asList(line).indexOf("TRG");
+                        riraIdx = Arrays.asList(line).indexOf("RIRA_Immune_v2.cellclass");
                     }
                     else
                     {
@@ -1063,6 +1080,59 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                             double saturation = Double.parseDouble(line[saturationIdx]);
                             totalSaturation += saturation;
                         }
+
+                        if (riraIdx >= 0)
+                        {
+                            if ("T_NK".equals(line[riraIdx]))
+                            {
+                                boolean hasCDR3 = false;
+                                totalTNK++;
+                                if (traIdx >= 0)
+                                {
+                                    String tra = StringUtils.trimToNull(line[traIdx]);
+                                    if (tra != null && !"NA".equals(tra))
+                                    {
+                                        cellsWithTRA++;
+                                        hasCDR3 = true;
+                                    }
+                                }
+
+                                if (trbIdx >= 0)
+                                {
+                                    String trb = StringUtils.trimToNull(line[trbIdx]);
+                                    if (trb != null && !"NA".equals(trb))
+                                    {
+                                        cellsWithTRB++;
+                                        hasCDR3 = true;
+                                    }
+                                }
+
+                                if (trdIdx >= 0)
+                                {
+                                    String trd = StringUtils.trimToNull(line[trdIdx]);
+                                    if (trd != null && !"NA".equals(trd))
+                                    {
+                                        cellsWithTRD++;
+                                        hasCDR3 = true;
+                                    }
+                                }
+
+                                if (trgIdx >= 0)
+                                {
+                                    String trg = StringUtils.trimToNull(line[trgIdx]);
+                                    if (trg != null && !"NA".equals(trg))
+                                    {
+                                        cellsWithTRG++;
+                                        hasCDR3 = true;
+                                    }
+                                }
+
+                                if (!hasCDR3)
+                                {
+                                    cellsLackingCDR3++;
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -1090,6 +1160,20 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 {
                     descriptions.add("Mean RNA Saturation: " + (totalSaturation / (double) totalCells));
                 }
+
+                if (totalTNK > 0)
+                {
+                    descriptions.add("Total T/NK Cells: " + decimal.format(totalTNK));
+                    descriptions.add("% T/NK Cells with TRA: " + pf.format(cellsWithTRA / (double)totalTNK));
+                    descriptions.add("% T/NK Cells with TRB: " + pf.format(cellsWithTRB / (double)totalTNK));
+                    descriptions.add("% T/NK Cells with TRD: " + pf.format(cellsWithTRD / (double)totalTNK));
+                    descriptions.add("% T/NK Cells with TRG: " + pf.format(cellsWithTRG / (double)totalTNK));
+                    descriptions.add("% T/NK Cells without TCR: " + pf.format(cellsLackingCDR3 / (double)totalTNK));
+                }
+                else if (riraIdx == -1 || traIdx == -1)
+                {
+                    descriptions.add("TCR information not present");
+                }
             }
             catch (IOException e)
             {
@@ -1097,18 +1181,18 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             }
         }
 
-        if (ctx.getParams().optBoolean("singleCellRawData.PrepareRawCounts.useSoupX", false))
+        if (jsonParams.optBoolean("singleCellRawData.PrepareRawCounts.useSoupX", false))
         {
             descriptions.add("SoupX: true");
         }
 
-        String hashingMethods = ctx.getParams().optString("singleCell.RunCellHashing.consensusMethods");
+        String hashingMethods = jsonParams.optString("singleCell.RunCellHashing.consensusMethods");
         if (StringUtils.trimToNull(hashingMethods) != null)
         {
             descriptions.add("Hashing: " + hashingMethods);
         }
 
-        String citeNormalize = ctx.getParams().optString("singleCell.AppendCiteSeq.normalizeMethod");
+        String citeNormalize = jsonParams.optString("singleCell.AppendCiteSeq.normalizeMethod");
         if (StringUtils.trimToNull(citeNormalize) != null)
         {
             descriptions.add("Cite-seq Normalization: " + citeNormalize);
