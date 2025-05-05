@@ -534,7 +534,7 @@ public class OrphanFilePipelineJob extends PipelineJob
                         getJob().getLogger().warn("WARNING: Extremely large log file: " + f.getPath() + ", " + FileUtils.byteCountToDisplaySize(f.length()));
                     }
 
-                    if (f.getName().endsWith(".rds"))
+                    if (f.getName().endsWith(".rds") && !f.getName().endsWith("hashing.rawCounts.rds"))
                     {
                         if (!dataMap.containsKey(f.toURI()))
                         {

@@ -160,80 +160,101 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
             }
             ctx.getFileManager().addIntermediateFile(barcodes);
 
-            List<String> cellsnp = new ArrayList<>();
-            cellsnp.add("cellsnp-lite");
-            cellsnp.add("-s");
-            cellsnp.add(bam.getPath());
-            cellsnp.add("-b");
-            cellsnp.add(barcodes.getPath());
-            cellsnp.add("--genotype");
+            Integer maxThreads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
+            ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(inputFiles.get(0).getLibrary_id());
 
             File cellsnpDir = new File(ctx.getWorkingDirectory(), "cellsnp");
-            if (cellsnpDir.exists())
+            File cellsnpVcf = new File(cellsnpDir, "cellSNP.base.vcf.gz");
+            File cellsnpVcfIdx = new File(cellsnpVcf.getPath() + ".tbi");
+            if (cellsnpVcfIdx.exists())
             {
+                ctx.getLogger().info("cellsnp has already run, resuming");
+            }
+            else
+            {
+                List<String> cellsnp = new ArrayList<>();
+                cellsnp.add("cellsnp-lite");
+                cellsnp.add("-s");
+                cellsnp.add(bam.getPath());
+                cellsnp.add("-b");
+                cellsnp.add(barcodes.getPath());
+                cellsnp.add("--genotype");
+
+                if (cellsnpDir.exists())
+                {
+                    try
+                    {
+                        FileUtils.deleteDirectory(cellsnpDir);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new PipelineJobException(e);
+                    }
+                }
+
+                cellsnp.add("-O");
+                cellsnp.add(cellsnpDir.getPath());
+
+                if (maxThreads != null)
+                {
+                    cellsnp.add("-p");
+                    cellsnp.add(maxThreads.toString());
+                }
+
+                cellsnp.add("--minMAF");
+                cellsnp.add("0.1");
+
+                cellsnp.add("--minCOUNT");
+                cellsnp.add("100");
+
+                String maxDepth = StringUtils.trimToNull(ctx.getParams().optString("maxDepth"));
+                if (maxDepth != null)
+                {
+                    cellsnp.add("--maxDEPTH");
+                    cellsnp.add(maxDepth);
+                }
+
+                cellsnp.add("--gzip");
+
+                cellsnp.add("--refseq");
+                cellsnp.add(genome.getWorkingFastaFile().getPath());
+
+                int vcfFile = ctx.getParams().optInt(REF_VCF, -1);
+                if (vcfFile > -1)
+                {
+                    File vcf = ctx.getSequenceSupport().getCachedData(vcfFile);
+                    if (vcf == null || !vcf.exists())
+                    {
+                        throw new PipelineJobException("Unable to find file with ID: " + vcfFile);
+                    }
+
+                    cellsnp.add("-R");
+                    cellsnp.add(vcf.getPath());
+                }
+                else
+                {
+                    String contigs = ctx.getParams().optString("contigs", "");
+                    if (!StringUtils.isEmpty(contigs))
+                    {
+                        cellsnp.add("--chrom");
+                        cellsnp.add(contigs);
+                    }
+                }
+
+                new SimpleScriptWrapper(ctx.getLogger()).execute(cellsnp);
+
                 try
                 {
-                    FileUtils.deleteDirectory(cellsnpDir);
+                    SequenceAnalysisService.get().ensureVcfIndex(cellsnpVcf, ctx.getLogger());
+
+                    File cellsVcf = new File(cellsnpDir, "cellSNP.cells.vcf.gz");
+                    SequenceAnalysisService.get().ensureVcfIndex(cellsVcf, ctx.getLogger());
                 }
                 catch (IOException e)
                 {
                     throw new PipelineJobException(e);
                 }
             }
-
-            cellsnp.add("-O");
-            cellsnp.add(cellsnpDir.getPath());
-
-            Integer maxThreads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
-            if (maxThreads != null)
-            {
-                cellsnp.add("-p");
-                cellsnp.add(maxThreads.toString());
-            }
-
-            cellsnp.add("--minMAF");
-            cellsnp.add("0.1");
-
-            cellsnp.add("--minCOUNT");
-            cellsnp.add("100");
-
-            String maxDepth = StringUtils.trimToNull(ctx.getParams().optString("maxDepth"));
-            if (maxDepth != null)
-            {
-                cellsnp.add("--maxDEPTH");
-                cellsnp.add(maxDepth);
-            }
-
-            cellsnp.add("--gzip");
-
-            ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(inputFiles.get(0).getLibrary_id());
-
-            cellsnp.add("--refseq");
-            cellsnp.add(genome.getWorkingFastaFile().getPath());
-
-            int vcfFile = ctx.getParams().optInt(REF_VCF, -1);
-            if (vcfFile > -1)
-            {
-                File vcf = ctx.getSequenceSupport().getCachedData(vcfFile);
-                if (vcf == null || ! vcf.exists())
-                {
-                    throw new PipelineJobException("Unable to find file with ID: " + vcfFile);
-                }
-
-                cellsnp.add("-R");
-                cellsnp.add(vcf.getPath());
-            }
-            else
-            {
-                String contigs = ctx.getParams().optString("contigs", "");
-                if (!StringUtils.isEmpty(contigs))
-                {
-                    cellsnp.add("--chrom");
-                    cellsnp.add(contigs);
-                }
-            }
-
-            new SimpleScriptWrapper(ctx.getLogger()).execute(cellsnp);
 
             List<String> vireo = new ArrayList<>();
             vireo.add("vireo");

@@ -30,20 +30,21 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
+import org.labkey.api.sequenceanalysis.run.LiftoverBcfToolsWrapper;
 import org.labkey.api.sequenceanalysis.run.SelectVariantsWrapper;
 import org.labkey.api.util.FileType;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
-import org.labkey.api.sequenceanalysis.run.LiftoverBcfToolsWrapper;
+import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
 import org.labkey.sequenceanalysis.run.util.LiftoverVcfWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.LinkedHashSet;
@@ -52,11 +53,10 @@ import java.util.List;
 /**
  * Created by bimber on 8/26/2014.
  */
-public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, VariantProcessingStep.SupportsScatterGather
+public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>, VariantProcessingStep.SupportsScatterGather, SequenceOutputHandler.TracksVCF
 {
-    private final FileType _bedFileType = new FileType(".bed", false);
-    //private FileType _gffFileType = new FileType("gff", false);
-    private final FileType _vcfFileType = new FileType(Arrays.asList(".vcf", ".bcf"), ".vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
+    private static final FileType _bedFileType = new FileType(".bed", false);
+    private static final FileType _vcfFileType = new FileType(Arrays.asList(".vcf", ".bcf"), ".vcf", false, FileType.gzSupportLevel.SUPPORT_GZ);
 
     public LiftoverHandler()
     {
@@ -131,6 +131,30 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
                 _vcfFileType.isType(f.getFile()));
     }
 
+    private static File getUnmappedOutputFile(File liftedVcfFile)
+    {
+        return new File(liftedVcfFile.getParentFile(), liftedVcfFile.getName().replaceAll(".lifted-", ".unmapped-"));
+    }
+
+    private static String getOutputExtension(File inputFile)
+    {
+        String ext = null;
+        if (_bedFileType.isType(inputFile))
+        {
+            ext = ".bed";
+        }
+        else if (_vcfFileType.isType(inputFile))
+        {
+            ext = ".vcf.gz";
+        }
+        else
+        {
+            throw new UnsupportedOperationException("Unsupported file type: " + inputFile.getName());
+        }
+
+        return ext;
+    }
+
     @Override
     public SequenceOutputProcessor getProcessor()
     {
@@ -140,7 +164,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
     @Override
     public boolean doSplitJobs()
     {
-        return false;
+        return true;
     }
 
     public class Processor implements SequenceOutputProcessor
@@ -175,150 +199,123 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
             PipelineJob job = ctx.getJob();
             JSONObject params = ctx.getParams();
 
+            List<Interval> intervals = ProcessVariantsHandler.getIntervals(ctx);
+
             boolean dropGenotypes = params.optBoolean("dropGenotypes", false);
             boolean useBcfTools = params.optBoolean("useBcfTools", false);
-            boolean doNotRetainUnmapped = params.optBoolean("doNotRetainUnmapped", false);
-            if (!doNotRetainUnmapped && !useBcfTools)
-            {
-                ctx.getLogger().debug("Picard LiftoverVcf requires an output file for rejected sites, so setting doNotRetainUnmapped to true");
-                doNotRetainUnmapped = true;
-            }
+            boolean retainUnmapped = params.optBoolean("retainUnmapped", false);
 
             int chainFileId = params.getInt("chainFileId");
             File chainFile = ctx.getSequenceSupport().getCachedData(chainFileId);
             int targetGenomeId = params.getInt("targetGenomeId");
 
-            for (SequenceOutputFile f : inputFiles)
+            if (inputFiles.size() > 1)
             {
-                job.getLogger().info("processing output: " + f.getFile().getName());
+                throw new PipelineJobException("Expected single input file");
+            }
 
-                RecordedAction action = new RecordedAction(getName());
-                action.setStartTime(new Date());
+            SequenceOutputFile f = inputFiles.get(0);
+            job.getLogger().info("processing output: " + f.getFile().getName());
 
-                boolean isGzip = f.getFile().getPath().toLowerCase().endsWith("gz");
-                int dots = isGzip ? 2 : 1;
-                String baseName = FileUtil.getBaseName(f.getFile(), dots);
+            RecordedAction action = new RecordedAction(getName());
+            action.setStartTime(new Date());
 
-                double pct = params.has("pct") ? params.getDouble("pct") : 0.95;
-                job.getLogger().info("using minimum percent match: " + pct);
+            double pct = params.has("pct") ? params.getDouble("pct") : 0.95;
+            job.getLogger().info("using minimum percent match: " + pct);
 
-                action.addInput(f.getFile(), "Input File");
-                action.addInput(chainFile, "Chain File");
+            action.addInput(f.getFile(), "Input File");
+            action.addInput(chainFile, "Chain File");
 
-                File outDir = ((FileAnalysisJobSupport) job).getAnalysisDirectory();
-                String ext = null;
+            File outDir = ((FileAnalysisJobSupport) job).getAnalysisDirectory();
+            String baseName = SequenceAnalysisService.get().getUnzippedBaseName(f.getFile().getName());
+            File lifted = new File(outDir, baseName + ".lifted-" + targetGenomeId + getOutputExtension(f.getFile()));
+            File unmappedOutput = retainUnmapped ? getUnmappedOutputFile(lifted) : null;
+
+            try
+            {
                 if (_bedFileType.isType(f.getFile()))
                 {
-                    ext = ".bed";
+                    liftOverBed(chainFile, f.getFile(), lifted, unmappedOutput, job, pct);
                 }
                 else if (_vcfFileType.isType(f.getFile()))
                 {
-                    ext = ".vcf.gz";
+                    ReferenceGenome targetGenome = ctx.getSequenceSupport().getCachedGenome(targetGenomeId);
+                    ReferenceGenome sourceGenome = ctx.getSequenceSupport().getCachedGenome(f.getLibrary_id());
+                    liftOverVcf(ctx, targetGenome, sourceGenome, chainFile, f.getFile(), lifted, unmappedOutput, job, pct, dropGenotypes, useBcfTools, intervals);
                 }
-                else
-                {
-                    throw new UnsupportedOperationException("Unsupported file type: " + f.getFile().getName());
-                }
-
-                File lifted = new File(outDir, baseName + ".lifted-" + targetGenomeId + ext);
-                File unmappedOutput = doNotRetainUnmapped ? null : new File(outDir, baseName + ".unmapped-" + targetGenomeId + ext);
-
-                try
-                {
-                    if (_bedFileType.isType(f.getFile()))
-                    {
-                        liftOverBed(chainFile, f.getFile(), lifted, unmappedOutput, job, pct);
-                    }
-                    else if (_vcfFileType.isType(f.getFile()))
-                    {
-                        ReferenceGenome targetGenome = ctx.getSequenceSupport().getCachedGenome(targetGenomeId);
-                        ReferenceGenome sourceGenome = ctx.getSequenceSupport().getCachedGenome(f.getLibrary_id());
-                        liftOverVcf(ctx, targetGenome, sourceGenome, chainFile, f.getFile(), lifted, unmappedOutput, job, pct, dropGenotypes, useBcfTools);
-                    }
-                }
-                catch (Exception e)
-                {
-                    throw new PipelineJobException(e);
-                }
-
-                job.getLogger().info("adding outputs");
-                action.addOutput(lifted, "Lifted Features", lifted.exists(), true);
-                if (lifted.exists())
-                {
-                    job.getLogger().info("adding lifted features: " + lifted.getName());
-
-                    SequenceOutputFile so1 = new SequenceOutputFile();
-                    so1.setName(f.getName() + " (lifted)");
-                    so1.setDescription("Contains features from " + f.getName() + " after liftover");
-                    //ExpData liftedData = ExperimentService.get().createData(job.getContainer(), new DataType("Liftover Output"));
-                    //liftedData.setDataFileURI(lifted.toURI());
-                    //liftedData.setName(lifted.getName());
-                    //liftedData.save(job.getUser());
-                    //so1.setDataId(liftedData.getRowId());
-                    so1.setFile(lifted);
-                    so1.setLibrary_id(targetGenomeId);
-                    so1.setReadset(f.getReadset());
-                    so1.setAnalysis_id(f.getAnalysis_id());
-                    so1.setCategory(f.getCategory());
-                    so1.setContainer(job.getContainerId());
-                    so1.setCreated(new Date());
-                    so1.setModified(new Date());
-
-                    ctx.addSequenceOutput(so1);
-                }
-
-                if (unmappedOutput == null)
-                {
-                    // skip
-                }
-                else if (!unmappedOutput.exists())
-                {
-                    job.getLogger().info("no unmapped intervals");
-                }
-                else if (!SequenceUtil.hasLineCount(unmappedOutput))
-                {
-                    job.getLogger().info("no unmapped intervals");
-                    unmappedOutput.delete();
-                }
-                else
-                {
-                    job.getLogger().info("adding unmapped features: " + unmappedOutput.getName());
-
-                    action.addOutput(unmappedOutput, "Unmapped features", false, true);
-
-                    SequenceOutputFile so2 = new SequenceOutputFile();
-                    so2.setName(f.getName() + " (lifted/unmapped)");
-                    so2.setDescription("Contains the unmapped features after attempted liftover of " + f.getName());
-
-                    //ExpData unmappedData = ExperimentService.get().createData(job.getContainer(), new DataType("Liftover Output"));
-                    //unmappedData.setName(unmappedOutput.getName());
-                    //unmappedData.setDataFileURI(unmappedOutput.toURI());
-                    //unmappedData.save(job.getUser());
-                    //so2.setDataId(unmappedData.getRowId());
-                    so2.setFile(unmappedOutput);
-                    so2.setLibrary_id(f.getLibrary_id());
-                    so2.setReadset(f.getReadset());
-                    so2.setAnalysis_id(f.getAnalysis_id());
-                    so2.setCategory(f.getCategory());
-                    so2.setContainer(job.getContainerId());
-                    so2.setCreated(new Date());
-                    so2.setModified(new Date());
-
-                    ctx.addSequenceOutput(so2);
-                }
-
-                action.setEndTime(new Date());
-                ctx.addActions(action);
             }
+            catch (Exception e)
+            {
+                throw new PipelineJobException(e);
+            }
+
+            job.getLogger().info("adding outputs");
+            action.addOutput(lifted, "Lifted Features", lifted.exists(), true);
+            if (lifted.exists())
+            {
+                job.getLogger().info("adding lifted features: " + lifted.getName());
+
+                SequenceOutputFile so1 = new SequenceOutputFile();
+                so1.setName(f.getName() + " (lifted)");
+                so1.setDescription("Contains features from " + f.getName() + " after liftover");
+                so1.setFile(lifted);
+                so1.setLibrary_id(targetGenomeId);
+                so1.setReadset(f.getReadset());
+                so1.setAnalysis_id(f.getAnalysis_id());
+                so1.setCategory(f.getCategory());
+                so1.setContainer(job.getContainerId());
+                so1.setCreated(new Date());
+                so1.setModified(new Date());
+
+                ctx.addSequenceOutput(so1);
+            }
+
+            if (unmappedOutput == null)
+            {
+                // skip
+            }
+            else if (!unmappedOutput.exists())
+            {
+                job.getLogger().info("no unmapped intervals");
+            }
+            else if (!SequenceUtil.hasLineCount(unmappedOutput))
+            {
+                job.getLogger().info("no unmapped intervals");
+                unmappedOutput.delete();
+            }
+            else
+            {
+                job.getLogger().info("adding unmapped features: " + unmappedOutput.getName());
+
+                action.addOutput(unmappedOutput, "Unmapped features", false, true);
+
+                SequenceOutputFile so2 = new SequenceOutputFile();
+                so2.setName(f.getName() + " (lifted/unmapped)");
+                so2.setDescription("Contains the unmapped features after attempted liftover of " + f.getName());
+
+                so2.setFile(unmappedOutput);
+                so2.setLibrary_id(f.getLibrary_id());
+                so2.setReadset(f.getReadset());
+                so2.setAnalysis_id(f.getAnalysis_id());
+                so2.setCategory(f.getCategory());
+                so2.setContainer(job.getContainerId());
+                so2.setCreated(new Date());
+                so2.setModified(new Date());
+
+                ctx.addSequenceOutput(so2);
+            }
+
+            action.setEndTime(new Date());
+            ctx.addActions(action);
         }
     }
 
-    public void liftOverVcf(JobContext ctx, ReferenceGenome targetGenome, ReferenceGenome sourceGenome, File chain, File input, File output, @Nullable File unmappedOutput, PipelineJob job, double pct, boolean dropGenotypes, boolean useBcfTools) throws IOException, PipelineJobException
+    public void liftOverVcf(JobContext ctx, ReferenceGenome targetGenome, ReferenceGenome sourceGenome, File chain, File input, File output, @Nullable File unmappedOutput, PipelineJob job, double pct, boolean dropGenotypes, boolean useBcfTools, @Nullable List<Interval> intervals) throws IOException, PipelineJobException
     {
         File currentVCF = input;
-        if (dropGenotypes)
+        if (dropGenotypes || intervals != null)
         {
-            ctx.getLogger().info("creating VCF wihtout genotypes");
+            ctx.getLogger().info("subsetting VCF");
             File outputFile = new File(output.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(currentVCF.getName()) + ".noGenotypes.vcf.gz");
             if (new File(outputFile.getPath() + ".tbi").exists())
             {
@@ -326,8 +323,28 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
             }
             else
             {
+                List<String> extraArgs = new ArrayList<>();
+                if (dropGenotypes)
+                {
+                    extraArgs.add("--sites-only-vcf-output");
+                }
+
+                if (intervals != null)
+                {
+                    intervals.forEach(interval -> {
+                        extraArgs.add("-L");
+                        extraArgs.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                    });
+
+                    extraArgs.add("--variant-output-filtering");
+                    extraArgs.add("STARTS_IN");
+                }
+
                 SelectVariantsWrapper wrapper = new SelectVariantsWrapper(job.getLogger());
-                wrapper.execute(sourceGenome.getWorkingFastaFile(), currentVCF, outputFile, List.of("--sites-only-vcf-output"));
+                wrapper.execute(sourceGenome.getWorkingFastaFile(), currentVCF, outputFile, extraArgs);
+
+                ctx.getFileManager().addIntermediateFile(outputFile);
+                ctx.getFileManager().addIntermediateFile(new File(outputFile.getPath() + ".tbi"));
             }
             currentVCF = outputFile;
 
@@ -344,8 +361,21 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
         }
         else
         {
+            File unmappedOutputFile = unmappedOutput;
+            if (unmappedOutputFile == null)
+            {
+                unmappedOutputFile = new File(currentVCF.getParentFile(), "liftoverRejects.vcf.gz");
+            }
+
             LiftoverVcfWrapper wrapper = new LiftoverVcfWrapper(job.getLogger());
             wrapper.doLiftover(currentVCF, chain, targetGenome.getWorkingFastaFile(), unmappedOutput, output, pct);
+
+            if (unmappedOutput == null)
+            {
+                ctx.getLogger().debug("Deleting liftover rejects VCF");
+                new File(unmappedOutputFile.getPath() + ".tbi").delete();
+                unmappedOutputFile.delete();
+            }
         }
 
         Long mapped = null;
@@ -358,7 +388,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
             SequenceAnalysisService.get().ensureVcfIndex(output, job.getLogger());
         }
 
-        Long unmapped = 0L;
+        long unmapped = 0L;
         if (unmappedOutput != null && unmappedOutput.exists())
         {
             String unmappedStr = ProcessVariantsHandler.getVCFLineCount(unmappedOutput, job.getLogger(), false, true);
@@ -370,9 +400,30 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
 
         if (mapped != null)
         {
-            Double fraction = (double)mapped / (mapped + unmapped);
+            double fraction = (double)mapped / (mapped + unmapped);
             job.getLogger().info("fraction mapped of total: " + fraction);
         }
+    }
+
+    @Override
+    public File getScatterJobOutput(JobContext ctx) throws PipelineJobException
+    {
+        if (ctx.getJob() instanceof SequenceOutputHandlerJob sj)
+        {
+            SequenceOutputFile so = sj.getFiles().get(0);
+
+            return ProcessVariantsHandler.getScatterOutputByCategory(ctx, so.getCategory());
+        }
+        else
+        {
+            throw new IllegalStateException("Expected job to be instanceof SequenceOutputHandlerJob , was " + ctx.getJob().getClass().getName());
+        }
+    }
+
+    @Override
+    public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles) throws PipelineJobException
+    {
+        return ProcessVariantsHandler.createSequenceOutput(job, processed, inputFiles, inputFiles.get(0).getCategory());
     }
 
     public void liftOverBed(File chain, File input, File output, @Nullable File unmappedOutput, PipelineJob job, double pct) throws IOException, PipelineJobException
@@ -419,5 +470,51 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
 
         //sort resulting file
         SequenceUtil.sortROD(output, job.getLogger(), 2);
+    }
+
+    @Override
+    public void performAdditionalMergeTasks(JobContext ctx, PipelineJob job, ReferenceGenome genome, List<File> orderedScatterOutputs, List<String> orderedJobDirs) throws PipelineJobException
+    {
+        boolean retainUnmapped = ctx.getParams().optBoolean("retainUnmapped", true);
+        if (retainUnmapped)
+        {
+            job.getLogger().info("Merging liftOver reject VCFs");
+            List<File> toConcat = orderedScatterOutputs.stream().map(vcfFile -> {
+                File f = getUnmappedOutputFile(vcfFile);
+                if (!f.exists())
+                {
+                    throw new IllegalStateException("Missing file: " + f.getPath());
+                }
+
+                ctx.getFileManager().addIntermediateFile(f);
+                ctx.getFileManager().addIntermediateFile(new File(f.getPath() + ".tbi"));
+
+                return f;
+            }).toList();
+
+            job.getLogger().debug("Total VCFs to merge: " + toConcat.size());
+            if (toConcat.isEmpty())
+            {
+                throw new PipelineJobException("No unmapped VCF found");
+            }
+
+            File combined = getUnmappedOutputFile(orderedScatterOutputs.get(0));
+            File combinedIdx = new File(combined.getPath() + ".tbi");
+            if (combinedIdx.exists())
+            {
+                job.getLogger().info("VCF exists, will not recreate: " + combined.getPath());
+            }
+            else
+            {
+                combined = SequenceAnalysisService.get().combineVcfs(toConcat, combined, genome, job.getLogger(), true, null);
+            }
+
+            SequenceOutputFile so = new SequenceOutputFile();
+            so.setName(orderedScatterOutputs.get(0).getName() + ": Lifted/Unmapped");
+            so.setFile(combined);
+            so.setCategory("VCF File");
+            so.setLibrary_id(genome.getGenomeId());
+            ctx.getFileManager().addSequenceOutput(so);
+        }
     }
 }

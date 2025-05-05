@@ -94,6 +94,7 @@ import org.labkey.singlecell.pipeline.singlecell.RunSDA;
 import org.labkey.singlecell.pipeline.singlecell.RunScGate;
 import org.labkey.singlecell.pipeline.singlecell.RunScGateBuiltin;
 import org.labkey.singlecell.pipeline.singlecell.RunSingleR;
+import org.labkey.singlecell.pipeline.singlecell.RunTricycle;
 import org.labkey.singlecell.pipeline.singlecell.RunVision;
 import org.labkey.singlecell.pipeline.singlecell.ScoreCellCycle;
 import org.labkey.singlecell.pipeline.singlecell.SeuratPrototype;
@@ -297,6 +298,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new RunDecoupler.Provider());
         SequencePipelineService.get().registerPipelineStep(new PerformDefaultNimbleAppend.Provider());
         SequencePipelineService.get().registerPipelineStep(new PerformMhcDimRedux.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunTricycle.Provider());
 
         SequenceAnalysisService.get().registerReadsetListener(new SingleCellReadsetListener());
     }

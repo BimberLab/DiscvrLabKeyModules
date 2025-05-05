@@ -62,4 +62,12 @@ function beforeUpsert(row, oldRow, errors){
     if (['Lung R', 'Lung Right', 'Lung-Right'].indexOf(row.tissue) !== -1){
         row.tissue = 'Lung-R';
     }
+
+    if (['Bulk', 'bulk'].indexOf(row.assaytype) !== -1){
+        row.assaytype = 'Bulk cells';
+    }
+
+    if (['Peptide Stim-BFA', 'Peptide stim-BFA'].indexOf(row.assaytype) !== -1){
+        row.assaytype = 'Peptide Stim - BFA';
+    }
 }

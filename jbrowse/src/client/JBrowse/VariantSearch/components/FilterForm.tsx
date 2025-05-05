@@ -2,13 +2,15 @@ import React, { useState } from 'react';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import Select from '@mui/material/Select';
+import ReactSelect from 'react-select';
 import AsyncSelect from 'react-select/async';
 import MenuItem from '@mui/material/MenuItem';
 import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import CardActions from '@mui/material/CardActions';
 import Card from '@mui/material/Card';
-import { FieldModel, Filter, getOperatorsForField, searchStringToInitialFilters } from '../../utils';
+import { FieldModel, Filter, searchStringToInitialFilters } from '../../utils';
+import { OperatorKey, OperatorRegistry } from '../operators';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import { Box, Menu } from '@mui/material';
 import { styled } from '@mui/material/styles';
@@ -76,19 +78,22 @@ const SubmitAndExternal = styled('div')(({ theme }) => ({
 
 const FilterForm = (props: FilterFormProps ) => {
     const { handleQuery, setFilters, handleClose, fieldTypeInfo, allowedGroupNames, promotedFilters } = props
-    const [filters, localSetFilters] = useState<Filter[]>(searchStringToInitialFilters(fieldTypeInfo.map((x) => x.name)));
+    const initial = searchStringToInitialFilters(fieldTypeInfo.map(x => x.name))
+    const [filters, localSetFilters] = useState<Filter[]>(
+        initial.length ? initial : [ new Filter('', OperatorKey.None, '') ]
+    )
     const [highlightedInputs, setHighlightedInputs] = useState<{ [index: number]: { field: boolean, operator: boolean, value: boolean } }>({});
     const [commonFilterMenuOpen, setCommonFilterMenuOpen] = useState<boolean>(false)
     const buttonRef = React.useRef(null);
 
     const handleAddFilter = () => {
-        localSetFilters([...filters, new Filter()]);
+        localSetFilters([...filters, new Filter('', OperatorKey.None, '')]);
     };
 
     const handleRemoveFilter = (index) => {
         // If it's the last filter, just reset its values to default empty values
         if (filters.length === 1) {
-            localSetFilters([new Filter()]);
+            localSetFilters([new Filter('', OperatorKey.None, '')]);
         } else {
             // Otherwise, remove the filter normally
             localSetFilters(
@@ -99,64 +104,81 @@ const FilterForm = (props: FilterFormProps ) => {
         }
     };
 
-    const handleFilterChange = (index, key, value) => {
-        const newFilters = filters.map((filter, i) => {
-            if (i === index) {
-                const updatedFilter = Object.assign(new Filter(), { ...filter, [key]: value });
+    const handleFilterChange = (
+      index: number,
+      key: 'field' | 'operator' | 'value',
+      value: any
+    ) => {
+      const newFilters = filters.map((filter, i) => {
+        if (i !== index) return filter;
 
-                if (key === "operator") {
-                    if (value === "is empty" || value === "is not empty") {
-                        updatedFilter.value = '';
-                    }
+        const updatedFilter = Object.assign(
+          new Filter('', OperatorKey.None, ''),
+          { ...filter, [key]: value }
+        );
 
-                    if (value === "in set" || filter.operator === "in set") {
-                        updatedFilter.value = ''; 
-                    }
-                }
+        if (key === 'field') {
+          const fieldInfo = fieldTypeInfo.find(f => f.name === value);
+          const defaultOp = fieldInfo?.getDefaultOperator() ?? OperatorRegistry[OperatorKey.None];
+          updatedFilter.operator = defaultOp;
+          updatedFilter.value = '';
+        }
+        else if (key === 'operator') {
+          updatedFilter.operator = OperatorRegistry[value as OperatorKey];
+          updatedFilter.value = '';
+        }
 
-                return updatedFilter;
-            }
-            return filter;
-        });
+        return updatedFilter;
+      });
 
-        localSetFilters(newFilters);
+      localSetFilters(newFilters);
     };
+
 
     const handleSubmit = (event) => {
-        event.preventDefault();
-        const highlightedInputs = {};
+      event.preventDefault()
+      const highlighted: Record<number, { field: boolean; operator: boolean; value: boolean }> = {}
 
-        filters.forEach((filter, index) => {
-            highlightedInputs[index] = { field: false, operator: false, value: false };
+      filters.forEach((filter, i) => {
+        highlighted[i] = { field: false, operator: false, value: false }
 
-            filter.field = filter.field ?? '';
-            filter.operator = filter.operator ?? '';
-            filter.value = filter.value ?? '';
+        filter.field = filter.field ?? ''
+        filter.value = filter.value ?? ''
 
-            if (filter.field === '') {
-                highlightedInputs[index].field = true;
-            }
-
-            if (filter.operator === '') {
-                highlightedInputs[index].operator = true;
-            }
-
-            if (filter.operator === 'is empty' || filter.operator === 'is not empty') {
-                filter.value = '';
-            } else if (filter.value === '') {
-                highlightedInputs[index].value = true;
-            }
-        });
-
-        const isSingleEmptyFilter = filters.length === 1 && !filters[0].field && !filters[0].operator && !filters[0].value;
-
-        setHighlightedInputs(highlightedInputs);
-        if (isSingleEmptyFilter || !Object.values(highlightedInputs).some(v => (v as any).field || (v as any).operator || (v as any).value)) {
-            handleQuery(filters);
-            setFilters(filters);
-            handleClose();
+        if (!filter.field) {
+          highlighted[i].field = true
         }
-    };
+
+        if (!filter.operator.key) {
+          highlighted[i].operator = true
+        }
+
+        if (
+          filter.operator.key === OperatorKey.IsEmpty ||
+          filter.operator.key === OperatorKey.IsNotEmpty
+        ) {
+          filter.value = ''
+        } else if (!filter.value) {
+          highlighted[i].value = true
+        }
+      })
+
+      const isSingleEmpty =
+        filters.length === 1 &&
+        !filters[0].field &&
+        !filters[0].operator.key &&
+        !filters[0].value
+
+      setHighlightedInputs(highlighted)
+      if (
+        isSingleEmpty ||
+        !Object.values(highlighted).some(v => v.field || v.operator || v.value)
+      ) {
+        handleQuery(filters)
+        setFilters(filters)
+        handleClose?.()
+      }
+    }
 
     const handleMenuClose = () => {
         setCommonFilterMenuOpen(false)
@@ -211,55 +233,62 @@ const FilterForm = (props: FilterFormProps ) => {
                     <FormScroll>
                         {filters.map((filter, index) => (
                             <FilterRow key={index} >
-                                <FormControlMinWidth sx={ highlightedInputs[index]?.field ? highlightedSx : null }>
-                                  <InputLabel id="field-label">Field</InputLabel>
+                                <FormControlMinWidth sx={highlightedInputs[index]?.field ? highlightedSx : null}>
+                                    <ReactSelect
+                                        inputId={`field-select-${index}`}
+                                        aria-labelledby={`field-label`}
+                                        placeholder="Select field..."
+                                        menuPortalTarget={document.body}
+                                        menuPosition="fixed"
+                                        styles={{
+                                            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                                        }}
+                                        options={fieldTypeInfo.map(field => ({
+                                            value: field.name,
+                                            label: field.label ?? field.name,
+                                        }))}
+                                        onChange={(selected) =>
+                                            handleFilterChange(index, 'field', selected?.value ?? '')
+                                        }
+                                        value={
+                                            filter.field
+                                                ? {
+                                                    value: filter.field,
+                                                    label: fieldTypeInfo.find(f => f.name === filter.field)?.label ?? filter.field
+                                                }
+                                                : null
+                                        }
+                                        isClearable
+                                    />
+                                </FormControlMinWidth>
+
+                                <FormControlMinWidth sx={highlightedInputs[index]?.operator ? highlightedSx : null}>
+                                  <InputLabel id="operator-label">Operator</InputLabel>
                                   <Select
-                                        labelId="field-label"
-                                        label = 'Field'
-                                        value={filter.field}
-                                        onChange={(event) =>
-                                            handleFilterChange(index, "field", event.target.value)
-                                        }
-                                    >
-                                        <MenuItem value="" style={{ display: 'none' }}>
-                                            <em>None</em>
-                                        </MenuItem>
-                                        {fieldTypeInfo.map((field) => (
-                                            <MenuItem key={field.name} value={field.name}>
-                                                {field.label ?? field.name}
+                                    labelId="operator-label"
+                                    label="Operator"
+                                    value={filter.operator.key}
+                                    onChange={event =>
+                                      handleFilterChange(index, "operator", event.target.value as OperatorKey)
+                                    }
+                                  >
+                                    <MenuItem value={OperatorKey.None}>
+                                      <em>None</em>
+                                    </MenuItem>
+                                    {(() => {
+                                      const ops = fieldTypeInfo.find(f => f.name === filter.field)?.getOperators() ?? [];
+                                      return ops.length > 0
+                                        ? ops.map(op => (
+                                            <MenuItem key={op.key} value={op.key}>
+                                              {op.label}
                                             </MenuItem>
-                                        ))}
-                                    </Select>
+                                          ))
+                                        : <MenuItem />;
+                                    })()}
+                                  </Select>
                                 </FormControlMinWidth>
 
-                                <FormControlMinWidth sx={ highlightedInputs[index]?.operator ? highlightedSx : null } >
-                                    <InputLabel id="operator-label">Operator</InputLabel>
-                                    <Select
-                                        labelId="operator-label"
-                                        label="Operator"
-                                        value={filter.operator}
-                                        onChange={(event) =>
-                                            handleFilterChange(index, "operator", event.target.value)
-                                        }
-                                    >
-                                        <MenuItem value="None" style={{ display: 'none' }}>
-                                            <em>None</em>
-                                        </MenuItem>
-
-                                        {getOperatorsForField(fieldTypeInfo.find(obj => obj.name === filter.field)) ? (
-                                            getOperatorsForField(fieldTypeInfo.find(obj => obj.name === filter.field)).map((operator) => (
-                                                <MenuItem key={operator} value={operator}>
-                                                    {operator}
-                                                </MenuItem>
-                                            ))
-                                        ) : (
-                                            <MenuItem></MenuItem>
-                                        )}
-
-                                    </Select>
-                                </FormControlMinWidth>
-
-                                {filter.operator === "in set" ? (
+                                {filter.operator.key === OperatorKey.EqualsOneOf ? (
                                     <FormControlMinWidth sx={ highlightedInputs[index]?.value ? highlightedSx : null } >
                                         <InputLabel id="value-select-label">Value</InputLabel>
                                         <Select
@@ -279,13 +308,14 @@ const FilterForm = (props: FilterFormProps ) => {
                                 ) : fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length > 1 ? (
                                     <FormControlMinWidth sx={ highlightedInputs[index]?.value ? highlightedSx : null } >
                                         <AsyncSelect
+                                            key={`async-${index}-${filter.operator.key}`}
                                             id={`value-select-${index}`}
                                             inputId={`value-select-${index}`}
                                             aria-labelledby={`value-select-${index}`}
                                             noOptionsMessage={() => 'Type to search...'}
                                             menuPortalTarget={document.body}
                                             menuPosition={'fixed'}
-                                            isDisabled={filter.operator === "is empty" || filter.operator === "is not empty"}
+                                            isDisabled={filter.operator.key === OperatorKey.IsEmpty || filter.operator.key === OperatorKey.IsNotEmpty}
                                             menuShouldBlockScroll={true}
                                             // See here: https://stackoverflow.com/questions/77625507/my-react-project-with-react-18-2-0-version-and-react-select-5-4-0-v
                                             styles={{ menuPortal: (base: any) => ({ ...base, zIndex: 9999 }) }}
@@ -300,8 +330,16 @@ const FilterForm = (props: FilterFormProps ) => {
                                                     .map(value => ({label: value, value}))
                                                 );
                                             }}
-                                            onChange={(selected) => handleFilterChange(index, "value", selected?.length > 0 ? selected.map(s => s.value).join(',') : undefined)}
-                                            value={filter.value ? filter.value.split(',').map(value => ({label: value, value})) : undefined}
+                                            onChange={(selected) => {
+                                                const arr = Array.isArray(selected) ? selected : [selected].filter(Boolean)
+                                                const val = arr.map(s => s.value).join(',')
+                                                handleFilterChange(index, 'value', val)
+                                            }}
+                                            value={
+                                                filter.value
+                                                  ? (filter.value as string).split(',').map(v => ({ label: v, value: v }))
+                                                  : null
+                                              }
                                         />
                                     </FormControlMinWidth>
                                 ) : fieldTypeInfo.find(obj => obj.name === filter.field)?.allowableValues?.length > 0 ? (
@@ -312,7 +350,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                             label="Value"
                                             id={`value-select-${index}`}
                                             value={filter.value}
-                                            disabled={filter.operator === "is empty" || filter.operator === "is not empty"}
+                                            disabled={filter.operator.key === OperatorKey.IsEmpty || filter.operator.key === OperatorKey.IsNotEmpty}
                                             onChange={(event) =>
                                                 handleFilterChange(index, "value", event.target.value)
                                             }
@@ -331,7 +369,7 @@ const FilterForm = (props: FilterFormProps ) => {
                                         sx={ highlightedInputs[index]?.value ? highlightedSx : null }
                                         variant="outlined"
                                         value={filter.value}
-                                        disabled={filter.operator === "is empty" || filter.operator === "is not empty"}
+                                        disabled={filter.operator.key === OperatorKey.IsEmpty || filter.operator.key === OperatorKey.IsNotEmpty}
                                         onChange={(event) =>
                                             handleFilterChange(index, 'value', event.target.value)
                                         }

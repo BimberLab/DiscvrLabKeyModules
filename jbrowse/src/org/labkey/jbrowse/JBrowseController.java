@@ -20,6 +20,7 @@ import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.Genotype;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -78,6 +79,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -892,6 +895,55 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
+    public static class LuceneCSVExportAction extends ReadOnlyApiAction<LuceneQueryForm>
+    {
+        @Override
+        public ApiResponse execute(LuceneQueryForm form, BindException errors)
+        {
+            try
+            {
+                JBrowseLuceneSearch searcher = JBrowseLuceneSearch.create(form.getSessionId(), form.getTrackId(), getUser());
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
+                String timestamp = LocalDateTime.now().format(formatter);
+                String filename = "mGAP_results_" + timestamp + ".csv";
+
+                HttpServletResponse response = getViewContext().getResponse();
+                response.setContentType("text/csv");
+                response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+
+                searcher.doSearchCSV(
+                        getUser(),
+                        PageFlowUtil.decode(form.getSearchString()),
+                        form.getSortField(),
+                        form.getSortReverse(),
+                        response
+                );
+
+                return null;
+            }
+            catch (Exception e)
+            {
+                _log.error("Error in JBrowse lucene query", e);
+                errors.reject(ERROR_MSG, e.getMessage());
+                return null;
+            }
+        }
+
+        @Override
+        public void validateForm(LuceneQueryForm form, Errors errors)
+        {
+            if ((form.getSearchString() == null || form.getSessionId() == null || form.getTrackId() == null))
+            {
+                errors.reject(ERROR_MSG, "Must provide search string, track ID, and the JBrowse session ID");
+            }
+            else if (!isValidUUID(form.getTrackId()))
+            {
+                errors.reject(ERROR_MSG, "Invalid track ID: " + form.getTrackId());
+            }
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
     public static class LuceneQueryAction extends ReadOnlyApiAction<LuceneQueryForm>
     {
         @Override
@@ -910,7 +962,14 @@ public class JBrowseController extends SpringActionController
 
             try
             {
-                return new ApiSimpleResponse(searcher.doSearch(getUser(), PageFlowUtil.decode(form.getSearchString()), form.getPageSize(), form.getOffset(), form.getSortField(), form.getSortReverse()));
+                return new ApiSimpleResponse(searcher.doSearchJSON(
+                        getUser(),
+                        PageFlowUtil.decode(form.getSearchString()),
+                        form.getPageSize(),
+                        form.getOffset(),
+                        form.getSortField(),
+                        form.getSortReverse()
+                ));
             }
             catch (Exception e)
             {

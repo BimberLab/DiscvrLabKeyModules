@@ -538,7 +538,7 @@ public class NimbleHelper
         reportArgs.add("-o");
         reportArgs.add(reportResultsGz.getPath());
 
-        runUsingDocker(reportArgs, output, null, ctx);
+        runUsingDocker(reportArgs, output, "nimble.report." + genomeId, ctx);
 
         if (!reportResultsGz.exists())
         {
@@ -566,7 +566,7 @@ public class NimbleHelper
             plotArgs.add("--output_file");
             plotArgs.add(plotResultsHtml.getPath());
 
-            runUsingDocker(plotArgs, output, null, ctx);
+            runUsingDocker(plotArgs, output, "nimble.plot." + genomeId, ctx);
 
             if (!plotResultsHtml.exists())
             {
