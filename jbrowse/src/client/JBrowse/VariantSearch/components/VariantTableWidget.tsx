@@ -76,6 +76,13 @@ const VariantTableWidget = observer(props => {
         session.hideWidget(widget)
     }
 
+    function resetPaginationToFirstPage() {
+      setPageSizeModel(prev => ({
+        page: 0,
+        pageSize: prev.pageSize,
+      }));
+    }
+
     function handleQuery(passedFilters, pushToHistory, pageQueryModel = pageSizeModel, sortQueryModel = sortModel) {
         const { page = pageSizeModel.page, pageSize = pageSizeModel.pageSize } = pageQueryModel;
         const { field = "genomicPosition", sort = false } = sortQueryModel[0] ?? {};
@@ -461,7 +468,7 @@ const VariantTableWidget = observer(props => {
             columnVisibilityModel={columnVisibilityModel}
             pageSizeOptions={[10,25,50,100]}
             paginationModel={ pageSizeModel }
-            rowCount={ totalHits }
+            rowCount={ -1 }
             paginationMode="server"
             onPaginationModelChange = {(newModel) => {
                 setPageSizeModel(newModel)
@@ -485,6 +492,7 @@ const VariantTableWidget = observer(props => {
             onSortModelChange={(newModel) => {
                 setSortModel(newModel)
                 handleQuery(filters, true, { page: 0, pageSize: pageSizeModel.pageSize }, newModel);
+                resetPaginationToFirstPage()
             }}
             localeText={{
                 MuiTablePagination: {
@@ -515,7 +523,10 @@ const VariantTableWidget = observer(props => {
                 fieldTypeInfo: fieldTypeInfo,
                 allowedGroupNames: allowedGroupNames,
                 promotedFilters: promotedFilters,
-                handleQuery: (filters) => handleQuery(filters, true, { page: 0, pageSize: pageSizeModel.pageSize}, sortModel)
+                handleQuery: (filters) => {
+                    handleQuery(filters, true, { page: 0, pageSize: pageSizeModel.pageSize}, sortModel)
+                    resetPaginationToFirstPage()
+                }
             }}
         />
     );
