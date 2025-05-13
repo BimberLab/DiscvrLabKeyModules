@@ -366,7 +366,7 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pa
             successCallback(jsonRes)
         },
         failure: function(res) {
-            console.log("There was an error: " + res.status + "\n Status Body: " + res.responseText + "\n Session ID:" + sessionId)
+            console.error("There was an error: " + res.status + "\n Status Body: " + res.responseText + "\n Session ID:" + sessionId)
             failureCallback("There was an error: status " + res.status)
         },
         params: {
