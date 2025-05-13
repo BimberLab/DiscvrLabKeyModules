@@ -113,6 +113,11 @@ public class JBrowseLuceneSearch
     private static synchronized CacheEntry getCacheEntryForSession(String trackObjectId, File indexPath) throws IOException {
         CacheEntry cacheEntry = _cache.get(trackObjectId);
 
+        if (SEARCH_EXECUTOR.isShutdown() || SEARCH_EXECUTOR.isTerminated())
+        {
+            throw new IllegalStateException("The server is shutting down!");
+        }
+
         // Open directory of lucene path, get a directory reader, and create the index search manager
         if (cacheEntry == null)
         {
@@ -690,16 +695,19 @@ public class JBrowseLuceneSearch
         }
 
         @Override
-        public void shutdownPre()
-        {
-
-        }
-
-        @Override
         public void shutdownStarted()
         {
             _log.info("Clearing all open JBrowse/Lucene cached readers");
             JBrowseLuceneSearch.emptyCache();
+
+            try
+            {
+                SEARCH_EXECUTOR.shutdown();
+            }
+            catch (Exception e)
+            {
+                _log.error("Error shutting down SEARCH_EXECUTOR", e);
+            }
         }
     }
 
