@@ -16,6 +16,7 @@ import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.queryparser.flexible.standard.config.PointsConfig;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.ConstantScoreQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.LRUQueryCache;
 import org.apache.lucene.search.MatchAllDocsQuery;
@@ -24,6 +25,7 @@ import org.apache.lucene.search.QueryCachingPolicy;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
+import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.search.UsageTrackingQueryCachingPolicy;
 import org.apache.lucene.store.Directory;
@@ -65,6 +67,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -75,6 +79,7 @@ import static org.labkey.jbrowse.JBrowseFieldUtils.getTrack;
 public class JBrowseLuceneSearch
 {
     private static final Logger _log = LogHelper.getLogger(JBrowseLuceneSearch.class, "Logger related to JBrowse/Lucene indexing and queries");
+    private static final ExecutorService SEARCH_EXECUTOR = Executors.newFixedThreadPool(JBrowseServiceImpl.get().getCoresForLuceneSearches());
     private final JBrowseSession _session;
     private final JsonFile _jsonFile;
     private final User _user;
@@ -108,6 +113,11 @@ public class JBrowseLuceneSearch
     private static synchronized CacheEntry getCacheEntryForSession(String trackObjectId, File indexPath) throws IOException {
         CacheEntry cacheEntry = _cache.get(trackObjectId);
 
+        if (SEARCH_EXECUTOR.isShutdown() || SEARCH_EXECUTOR.isTerminated())
+        {
+            throw new IllegalStateException("The server is shutting down!");
+        }
+
         // Open directory of lucene path, get a directory reader, and create the index search manager
         if (cacheEntry == null)
         {
@@ -116,7 +126,7 @@ public class JBrowseLuceneSearch
                 Directory indexDirectory = FSDirectory.open(indexPath.toPath());
                 LRUQueryCache queryCache = new LRUQueryCache(maxCachedQueries, maxRamBytesUsed);
                 IndexReader indexReader = DirectoryReader.open(indexDirectory);
-                IndexSearcher indexSearcher = new IndexSearcher(indexReader);
+                IndexSearcher indexSearcher = new IndexSearcher(indexReader, SEARCH_EXECUTOR);
                 indexSearcher.setQueryCache(queryCache);
                 indexSearcher.setQueryCachingPolicy(new ForceMatchAllDocsCachingPolicy());
                 cacheEntry = new CacheEntry(queryCache, indexSearcher, indexPath);
@@ -252,7 +262,7 @@ public class JBrowseLuceneSearch
 
         if (searchString.equals(ALL_DOCS))
         {
-            booleanQueryBuilder.add(new MatchAllDocsQuery(), BooleanClause.Occur.MUST);
+            booleanQueryBuilder.add(new ConstantScoreQuery(new MatchAllDocsQuery()), BooleanClause.Occur.MUST);
         }
 
         // Split input into tokens, 1 token per query separated by &
@@ -321,41 +331,46 @@ public class JBrowseLuceneSearch
     }
 
     private JSONObject paginateJSON(SearchConfig c) throws IOException, ParseException {
-        // Get chunks of size {pageSize}. Default to 1 chunk -- add to the offset to get more.
-        // We then iterate over the range of documents we want based on the offset. This does grow in memory
-        // linearly with the number of documents, but my understanding is that these are just score,id pairs
-        // rather than full documents, so mem usage *should* still be pretty low.
-        // Perform the search with sorting
-        TopFieldDocs topDocs = c.cacheEntry.indexSearcher.search(c.query, c.pageSize * (c.offset + 1), c.sort);
-        JSONObject results = new JSONObject();
+        IndexSearcher searcher = c.cacheEntry.indexSearcher;
+        TopDocs topDocs;
 
-        // Iterate over the doc list, (either to the total end or until the page ends) grab the requested docs,
-        // and add to returned results
-        List<JSONObject> data = new ArrayList<>();
-        for (int i = c.pageSize * c.offset; i < Math.min(c.pageSize * (c.offset + 1), topDocs.scoreDocs.length); i++)
-        {
-            JSONObject elem = new JSONObject();
-            Document doc = c.cacheEntry.indexSearcher.storedFields().document(topDocs.scoreDocs[i].doc);
+        if (c.offset == 0) {
+            topDocs = searcher.search(c.query, c.pageSize, c.sort);
+        } else {
+            TopFieldDocs prev = searcher.search(c.query, c.pageSize * c.offset, c.sort);
+            long totalHits = prev.totalHits.value;
+            ScoreDoc[] prevHits = prev.scoreDocs;
 
-            for (IndexableField field : doc.getFields())
+            if (prevHits.length < c.pageSize * c.offset)
             {
-                String fieldName = field.name();
-                String[] fieldValues = doc.getValues(fieldName);
-                if (fieldValues.length > 1)
-                {
-                    elem.put(fieldName, fieldValues);
-                }
-                else
-                {
-                    elem.put(fieldName, fieldValues[0]);
-                }
+                JSONObject results = new JSONObject();
+                results.put("data", Collections.emptyList());
+                results.put("totalHits", totalHits);
+                return results;
+            }
+
+            ScoreDoc lastDoc = prevHits[c.pageSize * c.offset - 1];
+            topDocs = searcher.searchAfter(lastDoc, c.query, c.pageSize, c.sort);
+        }
+
+        JSONObject results = new JSONObject();
+        List<JSONObject> data = new ArrayList<>(topDocs.scoreDocs.length);
+
+        for (ScoreDoc sd : topDocs.scoreDocs)
+        {
+            Document doc = searcher.storedFields().document(sd.doc);
+            JSONObject elem = new JSONObject();
+            for (IndexableField f : doc.getFields())
+            {
+                String name = f.name();
+                String[] vals = doc.getValues(name);
+                elem.put(name, vals.length > 1 ? Arrays.asList(vals) : vals[0]);
             }
             data.add(elem);
         }
 
         results.put("data", data);
         results.put("totalHits", topDocs.totalHits.value);
-
         return results;
     }
 
@@ -680,16 +695,19 @@ public class JBrowseLuceneSearch
         }
 
         @Override
-        public void shutdownPre()
-        {
-
-        }
-
-        @Override
         public void shutdownStarted()
         {
             _log.info("Clearing all open JBrowse/Lucene cached readers");
             JBrowseLuceneSearch.emptyCache();
+
+            try
+            {
+                SEARCH_EXECUTOR.shutdown();
+            }
+            catch (Exception e)
+            {
+                _log.error("Error shutting down SEARCH_EXECUTOR", e);
+            }
         }
     }
 

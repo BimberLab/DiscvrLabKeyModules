@@ -435,4 +435,8 @@ public class JBrowseServiceImpl extends JBrowseService
             return c.getActiveModules().contains(ModuleLoader.getInstance().getModule(JBrowseModule.class));
         }
     }
+
+    public int getCoresForLuceneSearches() {
+        return Runtime.getRuntime().availableProcessors();
+    }
 }
