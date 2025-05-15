@@ -962,14 +962,18 @@ public class JBrowseController extends SpringActionController
 
             try
             {
-                return new ApiSimpleResponse(searcher.doSearchJSON(
+                HttpServletResponse response = getViewContext().getResponse();
+                response.setContentType("application/x-ndjson");
+                searcher.doSearchJSON(
                         getUser(),
                         PageFlowUtil.decode(form.getSearchString()),
                         form.getPageSize(),
                         form.getOffset(),
                         form.getSortField(),
-                        form.getSortReverse()
-                ));
+                        form.getSortReverse(),
+                        response
+                );
+                return null;
             }
             catch (Exception e)
             {

@@ -68,7 +68,6 @@ const VariantTableWidget = observer(props => {
 
             return obj
         }))
-        setTotalHits(data.totalHits)
         setDataLoaded(true)
     }
 
@@ -96,12 +95,35 @@ const VariantTableWidget = observer(props => {
         currentUrl.searchParams.set("sortDirection", sort.toString());
 
         if (pushToHistory) {
-          window.history.pushState(null, "", currentUrl.toString());
+            window.history.pushState(null, "", currentUrl.toString());
         }
 
         setFilters(passedFilters);
-        setDataLoaded(false)
-        fetchLuceneQuery(passedFilters, sessionId, trackGUID, page, pageSize, field, sort, (json)=>{handleSearch(json)}, (error) => {setDataLoaded(true); setError(error)});
+        setDataLoaded(false);
+        setFeatures([]);
+
+        fetchLuceneQuery(
+            passedFilters,
+            sessionId,
+            trackGUID,
+            page,
+            pageSize,
+            field,
+            sort,
+            (row) => {
+                setFeatures(prev => {
+                    row.id = prev.length;
+                    row.trackId = trackId;
+                    return [...prev, row];
+                });
+            },
+            () => setDataLoaded(true),
+            (error) => {
+                console.error("Stream error:", error);
+                setError(error);
+                setDataLoaded(true);
+            }
+        );
     }
 
     const handleExport = () => {
@@ -274,7 +296,6 @@ const VariantTableWidget = observer(props => {
 
     const [filterModalOpen, setFilterModalOpen] = useState(false);
     const [filters, setFilters] = useState([]);
-    const [totalHits, setTotalHits] = useState(0);
     const [fieldTypeInfo, setFieldTypeInfo] = useState<FieldModel[]>([]);
     const [allowedGroupNames, setAllowedGroupNames] = useState<string[]>([]);
     const [promotedFilters, setPromotedFilters] = useState<Map<string, Filter[]>>(null);

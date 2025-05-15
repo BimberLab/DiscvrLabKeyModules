@@ -1,6 +1,7 @@
 package org.labkey.jbrowse;
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.catalina.connector.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
@@ -202,9 +203,9 @@ public class JBrowseLuceneSearch
         return parts.length > 0 ? parts[0].trim() : null;
     }
 
-    public JSONObject doSearchJSON(User u, String searchString, final int pageSize, final int offset, String sortField, boolean sortReverse) throws IOException, ParseException {
+    public void doSearchJSON(User u, String searchString, final int pageSize, final int offset, String sortField, boolean sortReverse, HttpServletResponse response) throws IOException, ParseException {
         SearchConfig searchConfig = createSearchConfig(u, searchString, pageSize, offset, sortField, sortReverse);
-        return paginateJSON(searchConfig);
+        paginateJSON(searchConfig, response);
     }
 
     public void doSearchCSV(User u, String searchString, String sortField, boolean sortReverse, HttpServletResponse response) throws IOException, ParseException {
@@ -330,31 +331,25 @@ public class JBrowseLuceneSearch
         return new SearchConfig(cacheEntry, query, pageSize, offset, sort, fieldsList);
     }
 
-    private JSONObject paginateJSON(SearchConfig c) throws IOException, ParseException {
+    private void paginateJSON(SearchConfig c, HttpServletResponse response) throws IOException, ParseException {
         IndexSearcher searcher = c.cacheEntry.indexSearcher;
         TopDocs topDocs;
+        PrintWriter writer = response.getWriter();
 
         if (c.offset == 0) {
             topDocs = searcher.search(c.query, c.pageSize, c.sort);
         } else {
             TopFieldDocs prev = searcher.search(c.query, c.pageSize * c.offset, c.sort);
-            long totalHits = prev.totalHits.value;
             ScoreDoc[] prevHits = prev.scoreDocs;
 
             if (prevHits.length < c.pageSize * c.offset)
             {
-                JSONObject results = new JSONObject();
-                results.put("data", Collections.emptyList());
-                results.put("totalHits", totalHits);
-                return results;
+                return;
             }
 
             ScoreDoc lastDoc = prevHits[c.pageSize * c.offset - 1];
             topDocs = searcher.searchAfter(lastDoc, c.query, c.pageSize, c.sort);
         }
-
-        JSONObject results = new JSONObject();
-        List<JSONObject> data = new ArrayList<>(topDocs.scoreDocs.length);
 
         for (ScoreDoc sd : topDocs.scoreDocs)
         {
@@ -366,12 +361,10 @@ public class JBrowseLuceneSearch
                 String[] vals = doc.getValues(name);
                 elem.put(name, vals.length > 1 ? Arrays.asList(vals) : vals[0]);
             }
-            data.add(elem);
-        }
 
-        results.put("data", data);
-        results.put("totalHits", topDocs.totalHits.value);
-        return results;
+            writer.println(elem);
+            writer.flush();
+        }
     }
 
     private void exportCSV(SearchConfig c, HttpServletResponse response) throws IOException
@@ -648,8 +641,9 @@ public class JBrowseLuceneSearch
     {
         try
         {
+            HttpServletResponse response = new Response();
             JBrowseLuceneSearch.clearCache(_jsonFile.getObjectId());
-            doSearchJSON(_user, ALL_DOCS, 100, 0, GENOMIC_POSITION, false);
+            doSearchJSON(_user, ALL_DOCS, 100, 0, GENOMIC_POSITION, false, response);
         }
         catch (ParseException | IOException e)
         {
