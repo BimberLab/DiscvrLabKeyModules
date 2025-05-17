@@ -94,6 +94,12 @@ public class BBMapWrapper extends AbstractCommandWrapper
             File refDir = new File(getPipelineCtx().getWorkingDirectory(), "ref");
             try
             {
+                if (refDir.exists())
+                {
+                    getPipelineCtx().getLogger().debug("Deleting existing ref dir: " + refDir);
+                    FileUtils.deleteDirectory(refDir);
+                }
+
                 FileUtils.moveDirectory(localIdx, refDir);
             }
             catch (IOException e)
