@@ -58,7 +58,7 @@ public class MosaikWrapper extends AbstractCommandWrapper
 
     public static class MosaikAlignmentStep extends AbstractAlignmentPipelineStep<MosaikWrapper> implements AlignmentStep
     {
-        public MosaikAlignmentStep(AlignmentStepProvider provider, PipelineContext ctx)
+        public MosaikAlignmentStep(AlignmentStepProvider<?> provider, PipelineContext ctx)
         {
             super(provider, ctx, new MosaikWrapper(ctx.getLogger()));
         }
