@@ -315,6 +315,7 @@ then
     tar -xf BBMap_39.25.tar.gz
 
     mv bbmap $LKTOOLS_DIR/
+    ln -s $LKTOOLS_DIR/bbmap/bbmap.sh $LKTOOLS_DIR/bbmap.sh
 else
     echo "Already installed"
 fi
