@@ -105,7 +105,7 @@ public class BBMapWrapper extends AbstractCommandWrapper
 
             List<String> params = new ArrayList<>();
 
-            String ambig = StringUtils.trimToNull(getProvider().getParameterByName("ambig").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
+            String ambig = StringUtils.trimToNull(getProvider().getParameterByName("ambiguous").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
             if (ambig != null)
             {
                 params.add("ambig=" + ambig);
