@@ -283,6 +283,11 @@ public class BBMapWrapper extends AbstractCommandWrapper
 
     public File buildIndex(File inputFasta, File outDir) throws PipelineJobException
     {
+        if (!outDir.exists())
+        {
+            outDir.mkdirs();
+        }
+
         List<String> args = new ArrayList<>();
         args.add(getExe().getPath());
         args.add("k=7");
