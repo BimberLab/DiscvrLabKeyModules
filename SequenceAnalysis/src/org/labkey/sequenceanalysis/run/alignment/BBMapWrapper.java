@@ -130,10 +130,10 @@ public class BBMapWrapper extends AbstractCommandWrapper
                 }
             }
 
-            if (getProvider().getParameterByName("midin").hasValueInJson(getPipelineCtx().getJob(), getProvider(), getStepIdx()))
+            if (getProvider().getParameterByName("minid").hasValueInJson(getPipelineCtx().getJob(), getProvider(), getStepIdx()))
             {
-                Double val = getProvider().getParameterByName("midin").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class);
-                params.add("midin=" + val);
+                Double val = getProvider().getParameterByName("minid").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Double.class);
+                params.add("minid=" + val);
             }
 
             File bam = getWrapper().doAlignment(inputFastq1, inputFastq2, outputDirectory, basename, params);
@@ -186,7 +186,7 @@ public class BBMapWrapper extends AbstractCommandWrapper
                     {{
                         put("checked", true);
                     }}, true),
-                    ToolParameterDescriptor.create("midin", "Minimum Identity", "Approximate minimum alignment identity to look for. Higher is faster and less sensitive", "ldk-numberfield", new JSONObject()
+                    ToolParameterDescriptor.create("minid", "Minimum Identity", "Approximate minimum alignment identity to look for. Higher is faster and less sensitive", "ldk-numberfield", new JSONObject()
                     {{
                         put("minValue", 0);
                         put("maxValue", 1);
@@ -246,7 +246,7 @@ public class BBMapWrapper extends AbstractCommandWrapper
         Integer maxRam = SequencePipelineService.get().getMaxRam();
         if (maxRam != null)
         {
-            args.add("-Xmx=" + maxRam + "g");
+            args.add("-Xmx" + maxRam + "g");
         }
 
         Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
