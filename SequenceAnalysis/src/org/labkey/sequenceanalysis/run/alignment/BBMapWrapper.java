@@ -246,7 +246,7 @@ public class BBMapWrapper extends AbstractCommandWrapper
         Integer maxRam = SequencePipelineService.get().getMaxRam();
         if (maxRam != null)
         {
-            args.add("-Xmx=" + maxRam);
+            args.add("-Xmx=" + maxRam + "g");
         }
 
         Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
