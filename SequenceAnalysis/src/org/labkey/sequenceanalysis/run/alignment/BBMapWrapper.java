@@ -227,7 +227,7 @@ public class BBMapWrapper extends AbstractCommandWrapper
         args.add("overwrite=t");
 
         // Maximum number of total alignments to print per read. Only relevant when secondary=t.
-        args.add("maxsites=-1");
+        args.add("maxsites=50");
 
         // Only print secondary alignments for ambiguously-mapped reads.
         args.add("secondary=t");
