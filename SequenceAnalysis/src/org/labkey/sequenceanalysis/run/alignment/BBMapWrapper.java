@@ -91,7 +91,7 @@ public class BBMapWrapper extends AbstractCommandWrapper
                 throw new PipelineJobException("ref dir not found: " + localIdx);
             }
 
-            File refDir = new File(getPipelineCtx().getWorkingDirectory(), "ref");
+            File refDir = new File(outputDirectory, "ref");
             try
             {
                 if (refDir.exists())
