@@ -113,29 +113,30 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
             for (SequenceOutputFile so : inputFiles)
             {
                 ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id());
-                File cram = new File(so.getFile().getParentFile(), FileUtil.getBaseName(so.getFile()) + ".cram");
-                File cramIdx = SamtoolsCramConverter.getExpectedCramIndex(cram);
+               File outputFile = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(so.getFile()) + ".cram");
                 if (!so.getFile().exists())
                 {
-                    if (replaceOriginal && cramIdx.exists())
+                    File inputAsCram = new File(so.getFile().getParentFile(), FileUtil.getBaseName(so.getFile()) + ".cram");
+                    File inputAsCramIdx = SamtoolsCramConverter.getExpectedCramIndex(inputAsCram);
+                    if (replaceOriginal && SequenceUtil.FILETYPE.bam.getFileType().isType(so.getFile()) && inputAsCram.exists() && inputAsCramIdx.exists())
                     {
                         ctx.getLogger().debug("BAM does not exist, but CRAM index does. Proceeding on the assumption this is a resume of a failed job.");
                     }
                     else
                     {
-                        throw new PipelineJobException("Unable to find BAM: " + so.getFile().getPath());
+                        throw new PipelineJobException("Unable to find input CRAM/BAM: " + so.getFile().getPath());
                     }
                 }
                 else
                 {
-                    new SamtoolsCramConverter(ctx.getLogger()).convert(so.getFile(), cram, genome.getWorkingFastaFileGzipped(), true, threads, doCramArchivalMode);
+                    new SamtoolsCramConverter(ctx.getLogger()).convert(so.getFile(), outputFile, genome.getWorkingFastaFileGzipped(), true, threads, doCramArchivalMode);
                 }
 
                 checkCramAndIndex(so);
 
                 if (replaceOriginal)
                 {
-                    ctx.getLogger().info("Deleting original BAM: " + so.getFile().getPath());
+                    ctx.getLogger().info("Deleting original BAM/CRAM: {}", so.getFile().getPath());
                     if (so.getFile().exists())
                     {
                         SequenceAnalysisService.get().getExpectedBamOrCramIndex(so.getFile()).delete();
@@ -174,6 +175,7 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
                 return(row);
             }).collect(Collectors.toList());
 
+            boolean doCramArchivalMode = ctx.getParams().optBoolean("doCramArchivalMode", false);
             for (SequenceOutputFile so : inputs)
             {
                 File cram = new File(so.getFile().getParentFile(), FileUtil.getBaseName(so.getFile()) + ".cram");
@@ -185,26 +187,43 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
                 d.setName(cram.getName());
                 d.save(ctx.getJob().getUser());
 
+                Map<String, Object> row = new CaseInsensitiveHashMap<>();
+                row.put("rowid", so.getRowid());
+                row.put("container", so.getContainer());
+                boolean doUpdate = false;
+                String description = so.getDescription();
                 if (so.getName().contains(".bam"))
                 {
-                    Map<String, Object> row = new CaseInsensitiveHashMap<>();
-                    row.put("rowid", so.getRowid());
-                    row.put("container", so.getContainer());
                     row.put("name", so.getName().replaceAll("\\.bam", "\\.cram"));
-                    row.put("description", (so.getDescription() == null ? "" : so.getDescription() + "\n") + "Converted from BAM to CRAM");
+                    description = (description == null ? "" : description + "\n") + "Converted from BAM to CRAM";
+                    row.put("description", description);
+                    doUpdate = true;
+                }
+
+                if (doCramArchivalMode)
+                {
+                    description = (description == null ? "" : description + "\n") + "CRAM Archival Mode";
+                    row.put("description", description);
+                    doUpdate = true;
+                }
+
+                if (doUpdate)
+                {
                     toUpdate.add(row);
                 }
             }
 
-            try
+            if (!toUpdate.isEmpty())
             {
-                Container target = ctx.getJob().getContainer().isWorkbook() ? ctx.getJob().getContainer().getParent() : ctx.getJob().getContainer();
-                QueryService.get().getUserSchema(ctx.getJob().getUser(), target, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES).getUpdateService().updateRows(ctx.getJob().getUser(), target, toUpdate, oldKeys, null, null);
-            }
-            catch (QueryUpdateServiceException | InvalidKeyException | BatchValidationException | SQLException e)
-            {
-                throw new PipelineJobException(e);
-
+                try
+                {
+                    Container target = ctx.getJob().getContainer().isWorkbook() ? ctx.getJob().getContainer().getParent() : ctx.getJob().getContainer();
+                    QueryService.get().getUserSchema(ctx.getJob().getUser(), target, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES).getUpdateService().updateRows(ctx.getJob().getUser(), target, toUpdate, oldKeys, null, null);
+                }
+                catch (QueryUpdateServiceException | InvalidKeyException | BatchValidationException | SQLException e)
+                {
+                    throw new PipelineJobException(e);
+                }
             }
         }
     }

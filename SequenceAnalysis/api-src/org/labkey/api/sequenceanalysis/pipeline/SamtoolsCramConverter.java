@@ -21,6 +21,10 @@ public class SamtoolsCramConverter extends SamtoolsRunner
     public File convert(File inputBam, File outputCram, File gzippedFasta, boolean doIndex, @Nullable Integer threads, boolean archivalMode) throws PipelineJobException
     {
         getLogger().info("Converting SAM/BAM to CRAM: " + inputBam.getPath());
+        if (inputBam.equals(outputCram))
+        {
+            throw new PipelineJobException("Input/output files are the same");
+        }
 
         List<String> params = new ArrayList<>();
         params.add(getSamtoolsPath().getPath());
