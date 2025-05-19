@@ -82,11 +82,19 @@ public interface AlignmentStep extends PipelineStep
     boolean supportsGzipFastqs();
 
     @Override
-    AlignmentStepProvider getProvider();
+    AlignmentStepProvider<?> getProvider();
 
     default String getAlignmentDescription()
     {
-        return "Aligner: " + getProvider().getName();
+        ToolParameterDescriptor cramArchivalParam = getProvider().getParameterByName(AbstractAlignmentStepProvider.CRAM_ARCHIVAL_MODE);
+        boolean doArchival = cramArchivalParam != null && cramArchivalParam.extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        String ret = "Aligner: " + getProvider().getName();
+        if (doArchival)
+        {
+            ret = ret + "\nCRAM Archival Mode";
+        }
+
+        return ret;
     }
 
     interface AlignmentOutput extends PipelineStepOutput
