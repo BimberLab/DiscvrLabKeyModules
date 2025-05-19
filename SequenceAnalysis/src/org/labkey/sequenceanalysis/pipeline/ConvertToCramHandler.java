@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Container;
@@ -27,6 +28,7 @@ import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,16 +41,16 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
     public ConvertToCramHandler()
     {
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Convert To Cram", "This will convert a BAM file to CRAM, replacing the original", null, Arrays.asList(
-                ToolParameterDescriptor.create("replaceOriginal", "Replace Original File", "If selected, the input BAM will be deleted and the database record will be switched to use this filepath.", "checkbox", new JSONObject(){{
-                    put("checked", true);
-                }}, true),
-                ToolParameterDescriptor.create("doCramArchivalMode", "CRAM Archival Mode", "If selected, the CRAM will undergo additional compression to save space. This is lossy and may not be compatible with all downstream tools. See samtools view --output-fmt-option archive", "checkbox", new JSONObject(){{
-                    put("checked", false);
-                }}, false),
-                ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
-                    put("checked", true);
-                }}, true)
-            )
+                        ToolParameterDescriptor.create("replaceOriginal", "Replace Original File", "If selected, the input BAM will be deleted and the database record will be switched to use this filepath.", "checkbox", new JSONObject(){{
+                            put("checked", true);
+                        }}, true),
+                        ToolParameterDescriptor.create("doCramArchivalMode", "CRAM Archival Mode", "If selected, the CRAM will undergo additional compression to save space. This is lossy and may not be compatible with all downstream tools. See samtools view --output-fmt-option archive", "checkbox", new JSONObject(){{
+                            put("checked", false);
+                        }}, false),
+                        ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
+                            put("checked", true);
+                        }}, true)
+                )
         );
     }
 
@@ -94,7 +96,7 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
         return new Processor();
     }
 
-    public class Processor implements SequenceOutputProcessor
+    public static class Processor implements SequenceOutputProcessor
     {
         @Override
         public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
@@ -113,7 +115,7 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
             for (SequenceOutputFile so : inputFiles)
             {
                 ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id());
-               File outputFile = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(so.getFile()) + ".cram");
+                File outputFile = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(so.getFile()) + ".cram");
                 if (!so.getFile().exists())
                 {
                     File inputAsCram = new File(so.getFile().getParentFile(), FileUtil.getBaseName(so.getFile()) + ".cram");
@@ -137,15 +139,43 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
                 if (replaceOriginal)
                 {
                     ctx.getLogger().info("Deleting original BAM/CRAM: {}", so.getFile().getPath());
-                    if (so.getFile().exists())
+                    if (SequenceUtil.FILETYPE.bam.getFileType().isType(so.getFile()))
                     {
-                        SequenceAnalysisService.get().getExpectedBamOrCramIndex(so.getFile()).delete();
-                        so.getFile().delete();
+                        if (so.getFile().exists())
+                        {
+                            SequenceAnalysisService.get().getExpectedBamOrCramIndex(so.getFile()).delete();
+                            so.getFile().delete();
+                        }
+                        else
+                        {
+                            ctx.getLogger().debug("Input BAM not found, possibly deleted in earlier job iteration?");
+                        }
                     }
-                    else
+                    else if (SequenceUtil.FILETYPE.cram.getFileType().isType(so.getFile()))
                     {
-                        ctx.getLogger().debug("Input BAM not found, possibly deleted in earlier job iteration?");
+                        try
+                        {
+                            if (!so.getFile().exists())
+                            {
+                                throw new PipelineJobException("Unable to find input CRAM/BAM: " + so.getFile().getPath());
+                            }
+
+                            SequenceAnalysisService.get().getExpectedBamOrCramIndex(so.getFile()).delete();
+                            so.getFile().delete();
+
+                            FileUtils.moveFile(outputFile, so.getFile());
+                            FileUtils.moveFile(new File(outputFile.getPath() + ".crai"), new File(so.getFile() + ".crai"));
+                        }
+                        catch (IOException e)
+                        {
+                            throw new PipelineJobException(e);
+                        }
                     }
+                }
+                else
+                {
+                    String description = (so.getDescription() == null ? "" : so.getDescription() + "\n") + "CRAM Archival Mode";
+                    ctx.getFileManager().addSequenceOutput(outputFile, so.getName(), so.getCategory(), so.getReadset(), null, so.getLibrary_id(), description);
                 }
             }
         }
@@ -175,41 +205,45 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
                 return(row);
             }).collect(Collectors.toList());
 
+            boolean replaceOriginal = ctx.getParams().optBoolean("replaceOriginal", false);
             boolean doCramArchivalMode = ctx.getParams().optBoolean("doCramArchivalMode", false);
             for (SequenceOutputFile so : inputs)
             {
                 File cram = new File(so.getFile().getParentFile(), FileUtil.getBaseName(so.getFile()) + ".cram");
                 checkCramAndIndex(so);
 
-                ctx.getJob().getLogger().info("Updating ExpData record with new filepath: " + cram.getPath());
-                ExpData d = so.getExpData();
-                d.setDataFileURI(cram.toURI());
-                d.setName(cram.getName());
-                d.save(ctx.getJob().getUser());
-
-                Map<String, Object> row = new CaseInsensitiveHashMap<>();
-                row.put("rowid", so.getRowid());
-                row.put("container", so.getContainer());
-                boolean doUpdate = false;
-                String description = so.getDescription();
-                if (so.getName().contains(".bam"))
+                if (replaceOriginal)
                 {
-                    row.put("name", so.getName().replaceAll("\\.bam", "\\.cram"));
-                    description = (description == null ? "" : description + "\n") + "Converted from BAM to CRAM";
-                    row.put("description", description);
-                    doUpdate = true;
-                }
+                    ctx.getJob().getLogger().info("Updating ExpData record with new filepath: " + cram.getPath());
+                    ExpData d = so.getExpData();
+                    d.setDataFileURI(cram.toURI());
+                    d.setName(cram.getName());
+                    d.save(ctx.getJob().getUser());
 
-                if (doCramArchivalMode)
-                {
-                    description = (description == null ? "" : description + "\n") + "CRAM Archival Mode";
-                    row.put("description", description);
-                    doUpdate = true;
-                }
+                    Map<String, Object> row = new CaseInsensitiveHashMap<>();
+                    row.put("rowid", so.getRowid());
+                    row.put("container", so.getContainer());
+                    boolean doUpdate = false;
+                    String description = so.getDescription();
+                    if (so.getName().contains(".bam"))
+                    {
+                        row.put("name", so.getName().replaceAll("\\.bam", "\\.cram"));
+                        description = (description == null ? "" : description + "\n") + "Converted from BAM to CRAM";
+                        row.put("description", description);
+                        doUpdate = true;
+                    }
 
-                if (doUpdate)
-                {
-                    toUpdate.add(row);
+                    if (doCramArchivalMode)
+                    {
+                        description = (description == null ? "" : description + "\n") + "CRAM Archival Mode";
+                        row.put("description", description);
+                        doUpdate = true;
+                    }
+
+                    if (doUpdate)
+                    {
+                        toUpdate.add(row);
+                    }
                 }
             }
 

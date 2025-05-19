@@ -149,7 +149,15 @@ public class BamIterator
                     if (r.getAlignmentEnd() < start || r.getAlignmentStart() > stop)
                         continue;
 
-                    processAlignment(r, indexedRef);
+                    try
+                    {
+                        processAlignment(r, indexedRef);
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.error("Unable to parse alignment: " + r.toString() + " / " + r.getCigarString());
+                        throw e;
+                    }
 
                     if (i % 10000 == 0)
                     {
