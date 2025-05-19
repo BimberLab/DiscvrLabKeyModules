@@ -209,10 +209,6 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         @Override
         public boolean isJobComplete(PipelineJob job)
         {
-            FileAnalysisJobSupport support = (FileAnalysisJobSupport) job;
-            String baseName = support.getBaseName();
-            File dirAnalysis = support.getAnalysisDirectory();
-
             return false;
         }
     }
@@ -469,6 +465,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 actions.add(action);
 
                 referenceGenome.setWorkingFasta(new File(targetDir, refFasta.getName()));
+
+                getTaskFileManagerImpl().addIntermediateFile(targetDir);
             }
             catch (IOException e)
             {

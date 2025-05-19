@@ -57,6 +57,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper.SHARED_SUBFOLDER_NAME;
+
 public class OrphanFilePipelineJob extends PipelineJob
 {
     // Default constructor for serialization
@@ -371,6 +373,16 @@ public class OrphanFilePipelineJob extends PipelineJob
                             {
                                 probableDeletes.add(subdir);
                                 unexpectedPipelineDirs.add(subdir);
+                            }
+
+                            File sharedDir = new File(subdir, SHARED_SUBFOLDER_NAME);
+                            if (sharedDir.exists())
+                            {
+                                long size = FileUtils.sizeOfDirectory(sharedDir);
+                                if (size > 1e6)
+                                {
+                                    getJob().getLogger().warn("Large Shared folder: " + sharedDir.getPath());
+                                }
                             }
 
                             getOrphanFilesForDirectory(knownExpDatas, dataMap, subdir, orphanFiles, orphanIndexes);
