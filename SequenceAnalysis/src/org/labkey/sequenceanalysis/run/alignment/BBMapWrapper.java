@@ -20,7 +20,6 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractAlignmentPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
-import org.labkey.api.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -147,17 +146,6 @@ public class BBMapWrapper extends AbstractCommandWrapper
             output.setBAM(bam);
             output.addCommandsExecuted(getWrapper().getCommandsExecuted());
 
-            if (retainUnmapped)
-            {
-                File unmappedBam = getWrapper().getUnmappedFilename(bam);
-                if (!unmappedBam.exists())
-                {
-                    throw new PipelineJobException("Unable to find file: " + unmappedBam.getPath());
-                }
-
-                output.addSequenceOutput(unmappedBam, rs.getName() + ": BBmap unmapped reads", "Alignment", rs.getReadsetId(), null, referenceGenome.getGenomeId(), "BBMap Unmapped Reads");
-            }
-
             return output;
         }
 
@@ -209,7 +197,7 @@ public class BBMapWrapper extends AbstractCommandWrapper
                     {{
                         put("checked", false);
                     }}, false)
-               ), null, "https://prost.readthedocs.io/en/latest/bbmap.html", true, true);
+               ), null, "https://prost.readthedocs.io/en/latest/bbmap.html", true, false);
         }
 
         @Override
@@ -219,18 +207,12 @@ public class BBMapWrapper extends AbstractCommandWrapper
         }
     }
 
-    protected File getUnmappedFilename(File mappedSamOrBam)
-    {
-        String fn = FileUtil.getBaseName(mappedSamOrBam.getName()) + ".unmapped." + FileUtil.getExtension(mappedSamOrBam.getName());
-        return new File(mappedSamOrBam.getParentFile(), fn);
-    }
-
     protected File getExe()
     {
         return SequencePipelineService.get().getExeForPackage("BBMAPPATH", "bbmap.sh");
     }
 
-    public File doAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, String basename, List<String> options, boolean retainUnmaped) throws PipelineJobException
+    public File doAlignment(File inputFastq1, @Nullable File inputFastq2, File outputDirectory, String basename, List<String> options, boolean retainUnmapped) throws PipelineJobException
     {
         List<String> args = new ArrayList<>();
         args.add(getExe().getPath());
@@ -259,27 +241,13 @@ public class BBMapWrapper extends AbstractCommandWrapper
         // NOTE: this will increase BAM size. Consider whether really needed:
         args.add("saa=t");
 
-        // CONSIDER: mappedonly=f If true, treats 'out' like 'outm'
-        // CONSIDER: outu=<file> Write only unmapped reads to this file.  Does not include unmapped paired reads with a mapped mate.
         File outputSam = new File(outputDirectory, basename + ".bbmap.sam");
         if (outputSam.exists())
         {
             outputSam.delete();
         }
 
-        args.add("outm=" + outputSam.getPath());
-
-        File outputUnmappedSam = null;
-        if (retainUnmaped)
-        {
-            outputUnmappedSam = getUnmappedFilename(outputSam);
-            if (outputUnmappedSam.exists())
-            {
-                outputUnmappedSam.delete();
-            }
-
-            args.add("outu=" + outputUnmappedSam.getPath());
-        }
+        args.add((retainUnmapped ? "out=" : "outm=") + outputSam.getPath());
 
         Integer maxRam = SequencePipelineService.get().getMaxRam();
         if (maxRam != null)
@@ -321,32 +289,6 @@ public class BBMapWrapper extends AbstractCommandWrapper
         }
 
         outputSam.delete();
-
-        // repeat for unmapped:
-        if (outputUnmappedSam != null)
-        {
-            File outputUnmappedBam = getUnmappedFilename(outputBam);
-            if (outputUnmappedBam != null && outputUnmappedBam.exists())
-            {
-                outputUnmappedBam.delete();
-            }
-
-            samtoolsRunner = new SamtoolsRunner(getLogger());
-            stArgs = new ArrayList<>();
-            stArgs.add(samtoolsRunner.getSamtoolsPath().getPath());
-            stArgs.add("view");
-            stArgs.add("-o");
-            stArgs.add(outputUnmappedBam.getPath());
-            stArgs.add(outputUnmappedSam.getPath());
-            samtoolsRunner.execute(stArgs);
-
-            if (!outputUnmappedBam.exists())
-            {
-                throw new PipelineJobException("File not found: " + outputBam.getPath());
-            }
-
-            outputUnmappedSam.delete();
-        }
 
         return outputBam;
     }
