@@ -18,7 +18,7 @@ public class SamtoolsCramConverter extends SamtoolsRunner
         super(log);
     }
 
-    public File convert(File inputBam, File outputCram, File gzippedFasta, boolean doIndex, @Nullable Integer threads) throws PipelineJobException
+    public File convert(File inputBam, File outputCram, File gzippedFasta, boolean doIndex, @Nullable Integer threads, boolean archivalMode) throws PipelineJobException
     {
         getLogger().info("Converting SAM/BAM to CRAM: " + inputBam.getPath());
 
@@ -26,17 +26,32 @@ public class SamtoolsCramConverter extends SamtoolsRunner
         params.add(getSamtoolsPath().getPath());
         params.add("view");
 
-        params.add("-C");
+        params.add("--output-fmt");
+        params.add("cram,version=3.0");
 
         params.add("-o");
         params.add(outputCram.getPath());
 
+        // CRAM does, however, have an optional archive settings mode (samtools view  ...)
+        // which is a lossy compression, doing things like removing read names, removing additional accessory fields, and additional compression of quality scores.
+        // In all cases, the base sequence of the reads is preserved: https://www.htslib.org/doc/samtools.html
+        if (archivalMode)
+        {
+            params.add("--output-fmt-option");
+            params.add("archive");
+        }
+
         params.add("-T");
         params.add(gzippedFasta.getPath());
 
+        if (doIndex)
+        {
+            params.add("--write-index");
+        }
+
         if (threads != null)
         {
-            params.add("--threads");
+            params.add("-@");
             params.add(String.valueOf(threads));
         }
 
@@ -47,11 +62,6 @@ public class SamtoolsCramConverter extends SamtoolsRunner
         if (!outputCram.exists())
         {
             throw new PipelineJobException("Missing output: " + outputCram.getPath());
-        }
-
-        if (doIndex)
-        {
-            doIndex(outputCram, threads);
         }
 
         return outputCram;

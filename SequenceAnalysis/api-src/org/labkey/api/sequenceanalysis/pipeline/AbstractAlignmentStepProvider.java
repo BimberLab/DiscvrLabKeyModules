@@ -34,6 +34,7 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
     public static String SUPPORT_MERGED_UNALIGNED = "supportsMergeUnaligned";
     public static String COLLECT_WGS_METRICS = "collectWgsMetrics";
     public static String CONVERT_TO_CRAM = "convertToCram";
+    public static String CRAM_ARCHIVAL_MODE = "doCramArchivalMode";
     public static String COLLECT_WGS_METRICS_NON_ZERO = "collectWgsMetricsNonZero";
     public static String DISCARD_BAM = "discardBam";
 
@@ -113,6 +114,10 @@ abstract public class AbstractAlignmentStepProvider<StepType extends AlignmentSt
         }}, false));
 
         parameters.add(ToolParameterDescriptor.create(CONVERT_TO_CRAM, "Convert to CRAM", "If checked, the final step of the pipeline will convert the BAM file to CRAM to save space.", "checkbox", new JSONObject(){{
+            put("checked", false);
+        }}, false));
+
+        parameters.add(ToolParameterDescriptor.create("doCramArchivalMode", "CRAM Archival Mode", "If selected, the CRAM will undergo additional compression to save space. This is lossy and may not be compatible with all downstream tools. See samtools view --output-fmt-option archive", "checkbox", new JSONObject(){{
             put("checked", false);
         }}, false));
 

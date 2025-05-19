@@ -42,6 +42,9 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
                 ToolParameterDescriptor.create("replaceOriginal", "Replace Original File", "If selected, the input BAM will be deleted and the database record will be switched to use this filepath.", "checkbox", new JSONObject(){{
                     put("checked", true);
                 }}, true),
+                ToolParameterDescriptor.create("doCramArchivalMode", "CRAM Archival Mode", "If selected, the CRAM will undergo additional compression to save space. This is lossy and may not be compatible with all downstream tools. See samtools view --output-fmt-option archive", "checkbox", new JSONObject(){{
+                    put("checked", false);
+                }}, false),
                 ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
                     put("checked", true);
                 }}, true)
@@ -103,6 +106,7 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
             boolean replaceOriginal = ctx.getParams().optBoolean("replaceOriginal", false);
+            boolean doCramArchivalMode = ctx.getParams().optBoolean("doCramArchivalMode", false);
             ctx.getLogger().info("Replace input BAM: " + replaceOriginal);
 
             Integer threads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
@@ -124,7 +128,7 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
                 }
                 else
                 {
-                    new SamtoolsCramConverter(ctx.getLogger()).convert(so.getFile(), cram, genome.getWorkingFastaFileGzipped(), true, threads);
+                    new SamtoolsCramConverter(ctx.getLogger()).convert(so.getFile(), cram, genome.getWorkingFastaFileGzipped(), true, threads, doCramArchivalMode);
                 }
 
                 checkCramAndIndex(so);
