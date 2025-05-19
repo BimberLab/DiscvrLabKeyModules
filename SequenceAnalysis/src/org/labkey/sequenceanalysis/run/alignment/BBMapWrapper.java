@@ -239,7 +239,7 @@ public class BBMapWrapper extends AbstractCommandWrapper
         args.add("ssao=t");
 
         // NOTE: this will increase BAM size. Consider whether really needed:
-        args.add("saa=t");
+        args.add("saa=f");
 
         File outputSam = new File(outputDirectory, basename + ".bbmap.sam");
         if (outputSam.exists())
