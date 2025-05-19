@@ -256,6 +256,9 @@ public class BBMapWrapper extends AbstractCommandWrapper
         args.add("secondary=t");
         args.add("ssao=t");
 
+        // NOTE: this will increase BAM size. Consider whether really needed:
+        args.add("saa=t");
+
         // CONSIDER: mappedonly=f If true, treats 'out' like 'outm'
         // CONSIDER: outu=<file> Write only unmapped reads to this file.  Does not include unmapped paired reads with a mapped mate.
         File outputSam = new File(outputDirectory, basename + ".bbmap.sam");
