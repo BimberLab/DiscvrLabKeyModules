@@ -359,7 +359,7 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pa
         sortReverse = false
     }
 
-    const params = new URLSearchParams({
+    const params = {
         searchString: encoded,
         sessionId,
         trackId: trackGUID,
@@ -367,10 +367,11 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pa
         pageSize: pageSize,
         sortField: sortField ?? "genomicPosition",
         sortReverse: sortReverse,
-    });
+    };
 
     try {
-        const response = await fetch(`/jbrowse/luceneQuery.api?${params.toString()}`);
+        const url = ActionURL.buildURL('jbrowse', 'luceneQuery.api', null, params);
+        const response = await fetch(url);
         if (!response.ok || !response.body) {
             throw new Error(`HTTP error ${response.status}`);
         }

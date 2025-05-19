@@ -363,8 +363,9 @@ public class JBrowseLuceneSearch
             }
 
             writer.println(elem);
-            writer.flush();
         }
+
+        writer.flush();
     }
 
     private void exportCSV(SearchConfig c, HttpServletResponse response) throws IOException
