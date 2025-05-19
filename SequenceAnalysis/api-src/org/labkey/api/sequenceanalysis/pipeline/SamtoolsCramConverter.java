@@ -31,7 +31,7 @@ public class SamtoolsCramConverter extends SamtoolsRunner
         params.add("view");
 
         params.add("--output-fmt");
-        params.add("cram,version=3.0");
+        params.add("cram,version=3.0" + (archivalMode ? ",lossy_names=1" : ""));
 
         params.add("-o");
         params.add(outputCram.getPath());
