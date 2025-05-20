@@ -155,7 +155,7 @@ public class CigarPositionIterable implements Iterable<CigarPositionIterable.Pos
         {
             _record = record;
             _pos = pos;
-            _op = CigarOperator.valueOf(Character.toString(ops[pos]));
+            _op = CigarOperator.characterToEnum(ops[pos]);
             _readPos = readPos[pos];
             _refPos = refPos[pos];
 
