@@ -81,7 +81,7 @@ public class CigarPositionIterable implements Iterable<CigarPositionIterable.Pos
             int i = 0;
             for (char el : _explodedCigar)
             {
-                CigarOperator op = CigarOperator.valueOf(Character.toString(el));
+                CigarOperator op = CigarOperator.characterToEnum(el);
                 if (op.consumesReadBases())
                 {
                     _readPositions[i] = readPos;
