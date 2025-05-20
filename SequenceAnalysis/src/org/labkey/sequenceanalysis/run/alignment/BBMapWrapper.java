@@ -101,6 +101,7 @@ public class BBMapWrapper extends AbstractCommandWrapper
                 }
 
                 FileUtils.moveDirectory(localIdx, refDir);
+                output.addIntermediateFile(refDir);
             }
             catch (IOException e)
             {
