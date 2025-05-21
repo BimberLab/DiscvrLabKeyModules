@@ -161,6 +161,7 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
                             SequenceAnalysisService.get().getExpectedBamOrCramIndex(so.getFile()).delete();
                             so.getFile().delete();
 
+                            ctx.getLogger().debug("Replacing original file:  " + so.getFile().getPath());
                             FileUtils.moveFile(outputFile, so.getFile());
                             FileUtils.moveFile(new File(outputFile.getPath() + ".crai"), new File(so.getFile() + ".crai"));
                         }
@@ -168,6 +169,10 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
                         {
                             throw new PipelineJobException(e);
                         }
+                    }
+                    else
+                    {
+                        throw new PipelineJobException("Unknown file type: " + so.getFile().getPath());
                     }
                 }
                 else
