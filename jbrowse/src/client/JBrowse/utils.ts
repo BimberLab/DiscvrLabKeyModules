@@ -328,23 +328,24 @@ export function serializeLocationToEncodedSearchString(contig, start, end) {
     return createEncodedFilterString(filters)
 }
 
-export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pageSize, sortField, sortReverseString, successCallback, failureCallback) {
+export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pageSize, sortField, sortReverseString,
+    handleRow, handleComplete, handleError) {
     if (!offset) {
         offset = 0
     }
 
     if (!sessionId) {
-        failureCallback("There was an error: " + "Lucene query: no session ID")
+        handleError("There was an error: " + "Lucene query: no session ID")
         return
     }
 
     if (!trackGUID) {
-        failureCallback("There was an error: " + "Lucene query: no track ID")
+        handleError("There was an error: " + "Lucene query: no track ID")
         return
     }
 
     if (!filters) {
-        failureCallback("There was an error: " + "Lucene query: no filters")
+        handleError("There was an error: " + "Lucene query: no filters")
         return
     }
 
@@ -358,27 +359,60 @@ export async function fetchLuceneQuery(filters, sessionId, trackGUID, offset, pa
         sortReverse = false
     }
 
-    return Ajax.request({
-        url: ActionURL.buildURL('jbrowse', 'luceneQuery.api'),
-        method: 'GET',
-        success: async function(res){
-            let jsonRes = JSON.parse(res.response);
-            successCallback(jsonRes)
-        },
-        failure: function(res) {
-            console.error("There was an error: " + res.status + "\n Status Body: " + res.responseText + "\n Session ID:" + sessionId)
-            failureCallback("There was an error: status " + res.status)
-        },
-        params: {
-            "searchString": encoded,
-            "sessionId": sessionId,
-            "trackId": trackGUID,
-            "offset": offset,
-            "pageSize": pageSize,
-            "sortField": sortField ?? "genomicPosition",
-            "sortReverse": sortReverse 
-        },
-    });
+    const params = {
+        searchString: encoded,
+        sessionId,
+        trackId: trackGUID,
+        offset: offset,
+        pageSize: pageSize,
+        sortField: sortField ?? "genomicPosition",
+        sortReverse: sortReverse,
+    };
+
+    try {
+        const url = ActionURL.buildURL('jbrowse', 'luceneQuery.api', null, params);
+        const response = await fetch(url);
+        if (!response.ok || !response.body) {
+            throw new Error(`HTTP error ${response.status}`);
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        let buffer = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+
+            let boundary;
+            while ((boundary = buffer.indexOf('\n')) >= 0) {
+                const line = buffer.slice(0, boundary).trim();
+                buffer = buffer.slice(boundary + 1);
+                if (line) {
+                    try {
+                        const parsed = JSON.parse(line);
+                        handleRow(parsed);
+                    } catch (err) {
+                        console.error('Failed to parse line:', line, err);
+                    }
+                }
+            }
+        }
+
+        if (buffer.trim()) {
+            try {
+                handleRow(JSON.parse(buffer));
+            } catch (err) {
+                console.error('Final line parse error:', buffer, err);
+            }
+        }
+
+        handleComplete();
+    } catch (error) {
+        handleError(error.toString());
+    }
 }
 
 export class FieldModel {

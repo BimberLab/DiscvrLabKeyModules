@@ -28,6 +28,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
+import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.MutatingApiAction;
 import org.labkey.api.action.ReadOnlyApiAction;
 import org.labkey.api.action.SimpleApiJsonForm;
@@ -944,10 +945,10 @@ public class JBrowseController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public static class LuceneQueryAction extends ReadOnlyApiAction<LuceneQueryForm>
+    public static class LuceneQueryAction extends ExportAction<LuceneQueryForm>
     {
         @Override
-        public ApiResponse execute(LuceneQueryForm form, BindException errors)
+        public void export(LuceneQueryForm form, HttpServletResponse response, BindException errors) throws Exception
         {
             JBrowseLuceneSearch searcher;
             try
@@ -957,30 +958,31 @@ public class JBrowseController extends SpringActionController
             catch (IllegalArgumentException e)
             {
                 errors.reject(ERROR_MSG, e.getMessage());
-                return null;
+                return;
             }
 
             try
             {
-                return new ApiSimpleResponse(searcher.doSearchJSON(
+                response.setContentType("application/x-ndjson");
+                searcher.doSearchJSON(
                         getUser(),
                         PageFlowUtil.decode(form.getSearchString()),
                         form.getPageSize(),
                         form.getOffset(),
                         form.getSortField(),
-                        form.getSortReverse()
-                ));
+                        form.getSortReverse(),
+                        response
+                );
             }
             catch (Exception e)
             {
                 _log.error("Error in JBrowse lucene query", e);
                 errors.reject(ERROR_MSG, e.getMessage());
-                return null;
             }
         }
 
         @Override
-        public void validateForm(LuceneQueryForm form, Errors errors)
+        public void validate(LuceneQueryForm form, BindException errors)
         {
             if ((form.getSearchString() == null || form.getSessionId() == null || form.getTrackId() == null))
             {
