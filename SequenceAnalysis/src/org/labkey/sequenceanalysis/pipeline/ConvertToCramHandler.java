@@ -134,6 +134,11 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
                     new SamtoolsCramConverter(ctx.getLogger()).convert(so.getFile(), outputFile, genome.getWorkingFastaFileGzipped(), true, threads, doCramArchivalMode);
                 }
 
+                if (!outputFile.exists())
+                {
+                    throw new PipelineJobException("Missing CRAM: " + outputFile.getPath());
+                }
+
                 if (replaceOriginal)
                 {
                     ctx.getLogger().info("Deleting original BAM/CRAM: {}", so.getFile().getPath());
@@ -147,6 +152,31 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
                         else
                         {
                             ctx.getLogger().debug("Input BAM not found, possibly deleted in earlier job iteration?");
+                        }
+
+                        ctx.getLogger().debug("Moving CRAM to replace original BAM file:  " + so.getFile().getPath());
+                        try
+                        {
+                            File targetCram = new File(so.getFile().getParentFile(), outputFile.getName());
+                            if (targetCram.exists())
+                            {
+                                ctx.getLogger().debug("Deleting file: " + targetCram.getPath());
+                                targetCram.delete();
+                            }
+
+                            File targetCramIdx = new File(so.getFile().getParentFile(), outputFile.getName() + ".crai");
+                            if (targetCramIdx.exists())
+                            {
+                                ctx.getLogger().debug("Deleting file: " + targetCramIdx.getPath());
+                                targetCramIdx.delete();
+                            }
+
+                            FileUtils.moveFile(outputFile, targetCram);
+                            FileUtils.moveFile(new File(outputFile.getPath() + ".crai"), targetCramIdx);
+                        }
+                        catch (IOException e)
+                        {
+                            throw new PipelineJobException(e);
                         }
                     }
                     else if (SequenceUtil.FILETYPE.cram.getFileType().isType(so.getFile()))
