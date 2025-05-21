@@ -134,8 +134,6 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
                     new SamtoolsCramConverter(ctx.getLogger()).convert(so.getFile(), outputFile, genome.getWorkingFastaFileGzipped(), true, threads, doCramArchivalMode);
                 }
 
-                checkCramAndIndex(so);
-
                 if (replaceOriginal)
                 {
                     ctx.getLogger().info("Deleting original BAM/CRAM: {}", so.getFile().getPath());
@@ -180,21 +178,6 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
             }
         }
 
-        private void checkCramAndIndex(SequenceOutputFile so) throws PipelineJobException
-        {
-            File cram = new File(so.getFile().getParentFile(), FileUtil.getBaseName(so.getFile()) + ".cram");
-            if (!cram.exists())
-            {
-                throw new PipelineJobException("Unable to find file: " + cram.getPath());
-            }
-
-            File cramIdx = new File(cram.getPath() + ".crai");
-            if (!cramIdx.exists())
-            {
-                throw new PipelineJobException("Unable to find file: " + cramIdx.getPath());
-            }
-        }
-
         @Override
         public void complete(JobContext ctx, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
         {
@@ -210,8 +193,6 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
             for (SequenceOutputFile so : inputs)
             {
                 File cram = new File(so.getFile().getParentFile(), FileUtil.getBaseName(so.getFile()) + ".cram");
-                checkCramAndIndex(so);
-
                 if (replaceOriginal)
                 {
                     ctx.getJob().getLogger().info("Updating ExpData record with new filepath: " + cram.getPath());
