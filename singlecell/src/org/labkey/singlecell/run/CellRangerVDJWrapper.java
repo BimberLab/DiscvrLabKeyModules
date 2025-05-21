@@ -3,7 +3,6 @@ package org.labkey.singlecell.run;
 import au.com.bytecode.opencsv.CSVReader;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.stream.IntStreams;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -524,9 +523,26 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 {
                     throw new PipelineJobException("Unable to find file: " + outputVloupe.getPath());
                 }
+                else
+                {
+                    if (isPrimaryDir)
+                    {
+                        try
+                        {
+
+                            getPipelineCtx().getLogger().debug("Creating empty vloupe file as placeholder: " + outputVloupe.getPath());
+                            FileUtils.touch(outputVloupe);
+                        }
+                        catch (IOException e)
+                        {
+                            throw new PipelineJobException(e);
+                        }
+                    }
+                }
             }
+
             // NOTE: only tag the vloupe file for a/b:
-            else if (isPrimaryDir)
+            if (isPrimaryDir)
             {
                 String versionString = "Version: " + getWrapper().getVersionString();
                 output.addSequenceOutput(outputVloupe, rs.getName() + " 10x VLoupe", VLOUPE_CATEGORY, rs.getRowId(), null, referenceGenome.getGenomeId(), versionString);

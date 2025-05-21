@@ -5293,4 +5293,62 @@ public class SequenceAnalysisController extends SpringActionController
             _doNotRequireSra = doNotRequireSra;
         }
     }
+
+    @RequiresSiteAdmin
+    public static class CreateExpDataForFileAction extends ConfirmAction<CreateExpDataForFileForm>
+    {
+        @Override
+        public void validateCommand(CreateExpDataForFileForm form, Errors errors)
+        {
+
+        }
+
+        @Override
+        public URLHelper getSuccessURL(CreateExpDataForFileForm form)
+        {
+            return getContainer().getStartURL(getUser());
+        }
+
+        @Override
+        public ModelAndView getConfirmView(CreateExpDataForFileForm form, BindException errors) throws Exception
+        {
+            return new HtmlView(HtmlString.unsafe("This will create a new ExpData with a DataFileUrl pointing to the provided URI. This should be a full URI, such as file:///my/path/myFile.txt." +
+                    "<br><br>" +
+                    "<label>DataFileUrl </label><input name=\"dataFileUrl\" value = \"" + HtmlString.of(form.getDataFileUrl()) + "\"><br>"));
+        }
+
+        @Override
+        public boolean handlePost(CreateExpDataForFileForm form, BindException errors) throws Exception
+        {
+            URI newUri = URI.create(form.getDataFileUrl());
+            File f = new File(newUri);
+            if (!f.exists())
+            {
+                throw new PipelineJobException("Missing file: " + form.getDataFileUrl());
+            }
+
+            DataType dataType = new DataType("File");
+
+            ExpData d = ExperimentService.get().createData(getContainer(), dataType, f.getName());
+            d.setDataFileURI(newUri);
+            d.save(getUser());
+
+            return true;
+        }
+    }
+
+    public static class CreateExpDataForFileForm
+    {
+        private String _dataFileUrl;
+
+        public String getDataFileUrl()
+        {
+            return _dataFileUrl;
+        }
+
+        public void setDataFileUrl(String dataFileUrl)
+        {
+            _dataFileUrl = dataFileUrl;
+        }
+    }
 }
