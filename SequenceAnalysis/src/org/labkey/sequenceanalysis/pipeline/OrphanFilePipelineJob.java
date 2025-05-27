@@ -48,6 +48,7 @@ import java.net.URISyntaxException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -55,7 +56,9 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper.SHARED_SUBFOLDER_NAME;
 
@@ -451,7 +454,16 @@ public class OrphanFilePipelineJob extends PipelineJob
                 }
             }
 
-            for (Container child : ContainerManager.getChildren(c))
+            List<Container> children = ContainerManager.getChildren(c);
+
+            // Check for unexpected subfolders:
+            Set<String> allowableSubfolders = children.stream().map(Container::getName).collect(Collectors.toSet());
+            Set<File> unknownFolders = Arrays.stream(Objects.requireNonNull(root.getRootPath().getParentFile().listFiles())).filter(fn -> !fn.getName().startsWith("@") & !allowableSubfolders.contains(fn.getName())).collect(Collectors.toSet());
+            if (!unknownFolders.isEmpty()) {
+                unknownFolders.forEach(x -> getJob().getLogger().warn("Folder does not match expected child: " + x.getPath()));
+            }
+
+            for (Container child : children)
             {
                 if (child.isWorkbook())
                 {
