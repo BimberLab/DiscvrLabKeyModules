@@ -80,11 +80,6 @@ import static org.labkey.jbrowse.JBrowseFieldUtils.getTrack;
 public class JBrowseLuceneSearch
 {
     private static final Logger _log = LogHelper.getLogger(JBrowseLuceneSearch.class, "Logger related to JBrowse/Lucene indexing and queries");
-    private static final ExecutorService SEARCH_EXECUTOR = Executors.newFixedThreadPool(JBrowseServiceImpl.get().getCoresForLuceneSearches());
-    private final JBrowseSession _session;
-    private final JsonFile _jsonFile;
-    private final User _user;
-    private final String[] specialStartPatterns = {"*:* -", "+", "-"};
     private static final String ALL_DOCS = "all";
     private static final String GENOMIC_POSITION = "genomicPosition";
     private static final int maxCachedQueries = 1000;
@@ -92,11 +87,28 @@ public class JBrowseLuceneSearch
 
     private static final Cache<String, CacheEntry> _cache = new LuceneIndexCache();
 
+    private static ExecutorService _executor = null;
+
+    private final JBrowseSession _session;
+    private final JsonFile _jsonFile;
+    private final User _user;
+    private final String[] specialStartPatterns = {"*:* -", "+", "-"};
+
     private JBrowseLuceneSearch(final JBrowseSession session, final JsonFile jsonFile, User u)
     {
         _session = session;
         _jsonFile = jsonFile;
         _user = u;
+    }
+
+    private static synchronized ExecutorService getSearchExecutor()
+    {
+        if (_executor == null)
+        {
+            _executor = Executors.newFixedThreadPool(JBrowseServiceImpl.get().getCoresForLuceneSearches());
+        }
+
+        return _executor;
     }
 
     private Container getContainer()
@@ -114,7 +126,7 @@ public class JBrowseLuceneSearch
     private static synchronized CacheEntry getCacheEntryForSession(String trackObjectId, File indexPath) throws IOException {
         CacheEntry cacheEntry = _cache.get(trackObjectId);
 
-        if (SEARCH_EXECUTOR.isShutdown() || SEARCH_EXECUTOR.isTerminated())
+        if (getSearchExecutor().isShutdown() || getSearchExecutor().isTerminated())
         {
             throw new IllegalStateException("The server is shutting down!");
         }
@@ -127,7 +139,7 @@ public class JBrowseLuceneSearch
                 Directory indexDirectory = FSDirectory.open(indexPath.toPath());
                 LRUQueryCache queryCache = new LRUQueryCache(maxCachedQueries, maxRamBytesUsed);
                 IndexReader indexReader = DirectoryReader.open(indexDirectory);
-                IndexSearcher indexSearcher = new IndexSearcher(indexReader, SEARCH_EXECUTOR);
+                IndexSearcher indexSearcher = new IndexSearcher(indexReader, getSearchExecutor());
                 indexSearcher.setQueryCache(queryCache);
                 indexSearcher.setQueryCachingPolicy(new ForceMatchAllDocsCachingPolicy());
                 cacheEntry = new CacheEntry(queryCache, indexSearcher, indexPath);
@@ -697,7 +709,10 @@ public class JBrowseLuceneSearch
 
             try
             {
-                SEARCH_EXECUTOR.shutdown();
+                if (_executor != null)
+                {
+                    _executor.shutdown();
+                }
             }
             catch (Exception e)
             {
@@ -706,7 +721,8 @@ public class JBrowseLuceneSearch
         }
     }
 
-    private class SearchConfig {
+    private static class SearchConfig
+    {
         CacheEntry cacheEntry;
         Query query;
         int pageSize;
@@ -714,7 +730,8 @@ public class JBrowseLuceneSearch
         Sort sort;
         List<String> fields;
 
-        public SearchConfig(CacheEntry cacheEntry, Query query, int pageSize, int offset, Sort sort, List<String> fields) {
+        public SearchConfig(CacheEntry cacheEntry, Query query, int pageSize, int offset, Sort sort, List<String> fields)
+        {
             this.cacheEntry = cacheEntry;
             this.query = query;
             this.pageSize = pageSize;
