@@ -1,0 +1,8 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Studies Admin">
+    <requiresPermissions>
+        <permissionClass name="org.labkey.studies.security.StudiesDataAdminPermission"/>
+    </requiresPermissions>
+    <dependencies>
+        <dependency path="studies.context" />
+    </dependencies>
+</view>

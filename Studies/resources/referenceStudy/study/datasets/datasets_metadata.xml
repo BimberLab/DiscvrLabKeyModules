@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tables xmlns="http://labkey.org/data/xml">
+    <table tableName="flags" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <datatype>varchar</datatype>
+                <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+            </column>
+            <column columnName="date">
+                <datatype>timestamp</datatype>
+                <conceptURI>http://cpas.labkey.com/laboratory#sampleDate</conceptURI>
+            </column>
+            <column columnName="objectid">
+                <datatype>entityid</datatype>
+                <isKeyField>true</isKeyField>
+            </column>
+
+            <column columnName="enddate">
+                <datatype>timestamp</datatype>
+            </column>
+            <column columnName="flag">
+                <datatype>varchar</datatype>
+            </column>
+        </columns>
+        <tableTitle>Flags/Misc Information</tableTitle>
+    </table>
+    <table tableName="treatments" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <datatype>varchar</datatype>
+                <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+            </column>
+            <column columnName="date">
+                <datatype>timestamp</datatype>
+                <conceptURI>http://cpas.labkey.com/laboratory#sampleDate</conceptURI>
+            </column>
+            <column columnName="objectid">
+                <datatype>entityid</datatype>
+                <isKeyField>true</isKeyField>
+            </column>
+
+            <column columnName="enddate">
+                <datatype>timestamp</datatype>
+            </column>
+            <column columnName="category">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="treatment">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="volume">
+                <datatype>double</datatype>
+            </column>
+            <column columnName="vol_units">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="concentration">
+                <datatype>double</datatype>
+            </column>
+            <column columnName="conc_units">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="amount">
+                <datatype>double</datatype>
+            </column>
+            <column columnName="amount_units">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="route">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="frequency">
+                <datatype>integer</datatype>
+            </column>
+            <column columnName="dosage">
+                <datatype>double</datatype>
+            </column>
+            <column columnName="dosage_units">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="reason">
+                <datatype>varchar</datatype>
+            </column>
+        </columns>
+        <tableTitle>Medications/Treatments</tableTitle>
+    </table>
+    <table tableName="immunizations" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <datatype>varchar</datatype>
+                <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+            </column>
+            <column columnName="date">
+                <datatype>timestamp</datatype>
+                <conceptURI>http://cpas.labkey.com/laboratory#sampleDate</conceptURI>
+            </column>
+            <column columnName="objectid">
+                <datatype>entityid</datatype>
+                <isKeyField>true</isKeyField>
+            </column>
+
+            <column columnName="category">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="treatment">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="route">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="quantity">
+                <datatype>double</datatype>
+            </column>
+            <column columnName="quantity_units">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="reason">
+                <datatype>varchar</datatype>
+            </column>
+        </columns>
+        <tableTitle>Immunizations</tableTitle>
+    </table>
+    <table tableName="weight" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <datatype>varchar</datatype>
+                <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+            </column>
+            <column columnName="date">
+                <datatype>timestamp</datatype>
+                <conceptURI>http://cpas.labkey.com/laboratory#sampleDate</conceptURI>
+            </column>
+            <column columnName="objectid">
+                <datatype>entityid</datatype>
+                <isKeyField>true</isKeyField>
+            </column>
+
+            <column columnName="weight">
+                <datatype>double</datatype>
+            </column>
+        </columns>
+        <tableTitle>Weight</tableTitle>
+    </table>
+    <table tableName="viralloads" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <datatype>varchar</datatype>
+                <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+            </column>
+            <column columnName="date">
+                <datatype>timestamp</datatype>
+                <conceptURI>http://cpas.labkey.com/laboratory#sampleDate</conceptURI>
+            </column>
+            <column columnName="objectid">
+                <datatype>entityid</datatype>
+                <isKeyField>true</isKeyField>
+            </column>
+
+            <column columnName="sampleType">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="target">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="assayType">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="lod">
+                <datatype>double</datatype>
+            </column>
+            <column columnName="result">
+                <datatype>double</datatype>
+            </column>
+            <column columnName="resultOORIndicator">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="units">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="qualresult">
+                <datatype>varchar</datatype>
+            </column>
+        </columns>
+        <tableTitle>Viral Loads</tableTitle>
+    </table>
+    <table tableName="labwork" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <datatype>varchar</datatype>
+                <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+            </column>
+            <column columnName="date">
+                <datatype>timestamp</datatype>
+                <conceptURI>http://cpas.labkey.com/laboratory#sampleDate</conceptURI>
+            </column>
+            <column columnName="objectid">
+                <datatype>entityid</datatype>
+                <isKeyField>true</isKeyField>
+            </column>
+
+            <column columnName="test">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="result">
+                <datatype>double</datatype>
+            </column>
+            <column columnName="resultOORIndicator">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="units">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="qualresult">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="method">
+                <datatype>varchar</datatype>
+            </column>
+        </columns>
+        <tableTitle>Lab Results</tableTitle>
+    </table>
+    <table tableName="demographics" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <datatype>varchar</datatype>
+                <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+            </column>
+            <column columnName="date">
+                <datatype>timestamp</datatype>
+                <conceptURI>http://cpas.labkey.com/laboratory#sampleDate</conceptURI>
+            </column>
+            <column columnName="objectid">
+                <datatype>entityid</datatype>
+                <isKeyField>false</isKeyField>
+            </column>
+
+            <column columnName="sex">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="geographic_origin">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="birth">
+                <datatype>timestamp</datatype>
+            </column>
+            <column columnName="death">
+                <datatype>timestamp</datatype>
+            </column>
+            <column columnName="species">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="mother">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="father">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="calculated_status">
+                <datatype>varchar</datatype>
+            </column>
+        </columns>
+        <tableTitle>Demographics</tableTitle>
+    </table>
+    <table tableName="assignment" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <datatype>varchar</datatype>
+                <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+            </column>
+            <column columnName="date">
+                <datatype>timestamp</datatype>
+                <conceptURI>http://cpas.labkey.com/laboratory#sampleDate</conceptURI>
+            </column>
+            <column columnName="objectid">
+                <datatype>entityid</datatype>
+                <isKeyField>true</isKeyField>
+            </column>
+
+            <column columnName="enddate">
+                <datatype>timestamp</datatype>
+            </column>
+            <column columnName="study">
+                <datatype>varchar</datatype>
+            </column>
+        </columns>
+        <tableTitle>Project Assignment</tableTitle>
+    </table>
+    <table tableName="samples" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <datatype>varchar</datatype>
+                <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+            </column>
+            <column columnName="date">
+                <datatype>timestamp</datatype>
+                <conceptURI>http://cpas.labkey.com/laboratory#sampleDate</conceptURI>
+            </column>
+            <column columnName="objectid">
+                <datatype>entityid</datatype>
+                <isKeyField>true</isKeyField>
+            </column>
+
+            <column columnName="sampleId">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="sampleType">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="preservation">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="quantity">
+                <datatype>double</datatype>
+            </column>
+            <column columnName="quantity_units">
+                <datatype>varchar</datatype>
+            </column>
+        </columns>
+        <tableTitle>Samples</tableTitle>
+    </table>
+</tables>

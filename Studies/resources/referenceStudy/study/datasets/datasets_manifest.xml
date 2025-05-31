@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<datasets metaDataFile="datasets_metadata.xml" xmlns="http://labkey.org/study/xml">
+    <datasets>
+        <dataset name="flags" category="Research" type="Standard" id="1">
+            <tags/>
+        </dataset>
+        <dataset name="treatments" showByDefault="false" category="Research" type="Standard" id="2">
+            <tags/>
+        </dataset>
+        <dataset name="weight" showByDefault="true" category="Research" type="Standard" id="3">
+            <tags/>
+        </dataset>
+        <dataset name="labwork" showByDefault="false" category="Research" type="Standard" id="4">
+            <tags/>
+        </dataset>
+        <dataset name="demographics" category="Research" demographicData="true" type="Standard" id="5">
+            <tags/>
+        </dataset>
+        <dataset name="assignment" category="Research" type="Standard" id="6">
+            <tags/>
+        </dataset>
+        <dataset name="samples" showByDefault="true" category="Research" type="Standard" id="7">
+            <tags/>
+        </dataset>
+        <dataset name="viralloads" showByDefault="true" category="Research" type="Standard" id="8">
+            <tags/>
+        </dataset>
+        <dataset name="samples" showByDefault="true" category="Research" type="Standard" id="9">
+            <tags/>
+        </dataset>
+        <dataset name="immunizations" showByDefault="true" category="Research" type="Standard" id="10">
+            <tags/>
+        </dataset>
+    </datasets>
+</datasets>

@@ -1,0 +1,10 @@
+common	scientific_name	id_prefix	mhc_prefix	blood_per_kg	max_draw_pct	blood_draw_interval	cites_code	dateDisabled
+Baboon				60	0.2	30
+Cotton-top Tamarin	Saguinus oedipus	so	Saoe	60	0.2	30
+Cynomolgus	Macaca fascicularis	cy	Mafa	60	0.2	30
+Marmoset	Callithrix jacchus	cj	Caja	60	0.15	30
+Pigtail	Macaca Nemestrina		Mane	60	0.2	30
+Rhesus	Macaca mulatta	r|rh	Mamu	60	0.2	30
+Sooty Mangabey	Cercocebus atys		Ceat	60	0.2	30
+Stump Tailed	Macaca Arctoides		Maar	60	0.2	30
+Vervet	Chlorocebus sabaeus	ag	Chsa	60	0.2	30

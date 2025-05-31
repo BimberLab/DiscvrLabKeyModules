@@ -1,0 +1,12 @@
+reportname	category	reporttype	reporttitle	visible	containerpath	schemaname	queryname	viewname	report	datefieldname	todayonly	queryhaslocation	sort_order	QCStateLabelFieldName	description
+activeAssignments	Assignments and Groups	query	Active Assignments	true		study	Assignment	Active Assignments		date	false	false		qcstate/publicdata	This report shows the active assignments for each animal
+assignmentHistory	Assignments and Groups	query	Assignment History	true		study	Assignment			date	false	false		qcstate/publicdata	This report shows all assignments records for the animals
+activeGroups	Assignments and Groups	query	Active Groups	true		study	animal_group_members	Active Members		date	false	false		qcstate/publicdata	This report shows the active assignments for each animal
+groupHistory	Assignments and Groups	query	Group History	true		study	animal_group_members			date	false	false		qcstate/publicdata	This report shows all assignments records for the animals
+microbiology	Lab Results	query	Microbiology	true		study	Microbiology Results			date	false	false		qcstate/publicdata	
+biochemistry	Lab Results	js	Biochemistry	true		study	bloodChemistry			date	false	false			Contains results of chemistry panels.  Can be displayed either by panel, or showing reference ranges
+clinPathRuns	Lab Results	query	Lab Runs	true		study	Clinpath Runs			date	false	false		qcstate/publicdata	Contains all clinpath requests
+iStat	Lab Results	js	iStat	true		study	iStat			date	false	false		qcstate/publicdata	Contains iStat results
+hematology	Lab Results	js	Hematology	true		study	hematology			date	false	false			Contains hematology data showing cell subsets
+parasitology	Lab Results	query	Parasitology	true		study	Parasitology Results			date	false	false		qcstate/publicdata	Contains results of parasitology testing
+urinalysis	Lab Results	js	Urinalysis	true		study	urinalysisResults			date	false	false			Contains urinalysis results

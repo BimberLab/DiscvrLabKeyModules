@@ -1,0 +1,13 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="" tableDbType="TABLE" useColumnOrder="true">
+                <javaCustomizer class="org.labkey.studies.query.StudiesCustomizer"/>
+                <columns>
+                    <column columnName="Id"/>
+                    <column columnName="date"/>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

@@ -1,0 +1,33 @@
+<script type="text/javascript" nonce="<%=scriptNonce%>">
+
+Ext4.onReady(function (){
+    var webpart = <%=webpartContext%>;
+
+    Ext4.create('Ext.panel.Panel', {
+        renderTo: webpart.wrapperDivId,
+        border: false,
+        items: [{
+            xtype: 'panel',
+            border: false,
+            defaults: {
+                border: false
+            },
+            items: [{
+                html: 'This page contains information related to the setup and administration of this folder'
+            }]
+        },{
+            xtype: 'ldk-navpanel',
+            style: 'padding-top: 20px;',
+            border: false,
+            sections: [{
+                header: 'Configuration/Data Management',
+                items: [{
+                    name: 'Import/Re-import MCC Study',
+                    url: LABKEY.ActionURL.buildURL('studies', 'importStudy.view')
+                }]
+            }]
+        }]
+    });
+});
+
+</script>
