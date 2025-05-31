@@ -425,8 +425,7 @@ public class OrphanFilePipelineJob extends PipelineJob
                     @Override
                     public boolean accept(File pathname)
                     {
-                        //50mb
-                        return (pathname.length() >= 5e7);
+                        return (pathname.length() >= 5e3);
                     }
                 });
 
