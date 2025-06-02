@@ -380,32 +380,38 @@ public class JBrowseLuceneSearch
         writer.flush();
     }
 
-    private void exportCSV(SearchConfig c, HttpServletResponse response) throws IOException
-    {
+    private void exportCSV(SearchConfig c, HttpServletResponse response) throws IOException {
         PrintWriter writer = response.getWriter();
         IndexSearcher searcher = c.cacheEntry.indexSearcher;
-        TopFieldDocs topDocs = searcher.search(c.query, Integer.MAX_VALUE, c.sort);
-
         writer.println(String.join(",", c.fields));
 
-        for (ScoreDoc scoreDoc : topDocs.scoreDocs)
-        {
-            Document doc = searcher.storedFields().document(scoreDoc.doc);
-            List<String> rowValues = new ArrayList<>();
+        ScoreDoc lastDoc = null;
+        int batchSize = 1000;
 
-            for (String fieldName : c.fields)
-            {
-                String[] values = doc.getValues(fieldName);
-                String value = values.length > 0
-                        ? String.join(",", values)
-                        : "";
+        while (true) {
+            TopDocs topDocs = searcher.searchAfter(lastDoc, c.query, batchSize, c.sort);
+            ScoreDoc[] hits = topDocs.scoreDocs;
 
-                // Escape strings
-                value = "\"" + value.replace("\"", "\"\"") + "\"";
-                rowValues.add(value);
+            if (hits.length == 0) {
+                break;
             }
 
-            writer.println(String.join(",", rowValues));
+            for (ScoreDoc scoreDoc : hits) {
+                Document doc = searcher.storedFields().document(scoreDoc.doc);
+                List<String> rowValues = new ArrayList<>();
+
+                for (String fieldName : c.fields) {
+                    String[] values = doc.getValues(fieldName);
+                    String value = values.length > 0
+                            ? String.join(",", values)
+                            : "";
+                    value = "\"" + value.replace("\"", "\"\"") + "\"";
+                    rowValues.add(value);
+                }
+
+                writer.println(String.join(",", rowValues));
+            }
+            lastDoc = hits[hits.length - 1];
         }
 
         writer.flush();
