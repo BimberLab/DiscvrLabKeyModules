@@ -4,13 +4,13 @@
         <dataset name="flags" category="Research" type="Standard" id="1">
             <tags/>
         </dataset>
-        <dataset name="treatments" showByDefault="false" category="Research" type="Standard" id="2">
+        <dataset name="treatments" showByDefault="true" category="Research" type="Standard" id="2">
             <tags/>
         </dataset>
         <dataset name="weight" showByDefault="true" category="Research" type="Standard" id="3">
             <tags/>
         </dataset>
-        <dataset name="labwork" showByDefault="false" category="Research" type="Standard" id="4">
+        <dataset name="labwork" showByDefault="true" category="Research" type="Standard" id="4">
             <tags/>
         </dataset>
         <dataset name="demographics" category="Research" demographicData="true" type="Standard" id="5">

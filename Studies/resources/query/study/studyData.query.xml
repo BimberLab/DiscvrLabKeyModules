@@ -4,8 +4,19 @@
             <table tableName="" tableDbType="TABLE" useColumnOrder="true">
                 <javaCustomizer class="org.labkey.studies.query.StudiesCustomizer"/>
                 <columns>
-                    <column columnName="Id"/>
-                    <column columnName="date"/>
+                    <column columnName="Id">
+
+                    </column>
+                    <column columnName="date">
+                        <columnTitle>Date</columnTitle>
+                    </column>
+                    <column columnName="enddate">
+                        <columnTitle>End Date</columnTitle>
+                    </column>
+                    <column columnName="objectid">
+                        <columnTitle>Key</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
                 </columns>
             </table>
         </tables>

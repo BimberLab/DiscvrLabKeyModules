@@ -279,7 +279,16 @@
             <column columnName="enddate">
                 <datatype>timestamp</datatype>
             </column>
+            <column columnName="category">
+                <datatype>varchar</datatype>
+            </column>
             <column columnName="study">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="subgroup">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="description">
                 <datatype>varchar</datatype>
             </column>
         </columns>

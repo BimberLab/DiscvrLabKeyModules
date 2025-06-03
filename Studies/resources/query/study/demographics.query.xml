@@ -2,6 +2,7 @@
     <metadata>
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="Demographics" tableDbType="TABLE" useColumnOrder="true">
+                <javaCustomizer class="org.labkey.studies.query.StudiesCustomizer"/>
                 <columns>
                     <column columnName="Id">
                         <url />
