@@ -19,6 +19,7 @@ import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.exp.property.Domain;
 import org.labkey.api.exp.property.DomainProperty;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
@@ -201,10 +202,11 @@ public class AuditSummaryUserSchema extends SimpleUserSchema
             Dataset d1 = StudyService.get().createDataset(getContainer(true), TestContext.get().getUser(), name, null, isDemographics);
             d1.setKeyManagementType(Dataset.KeyManagementType.GUID);
             d1.setKeyPropertyName("objectId");
-            DomainProperty objectId1 = d1.getDomain().addProperty();
+            Domain domain = d1.getDomain(true);
+            DomainProperty objectId1 = domain.addProperty();
             objectId1.setName("objectId");
             objectId1.setPropertyURI(AuditSummaryUserSchema.class.getName() + ":ObjectId");
-            d1.getDomain().save(TestContext.get().getUser());
+            domain.save(TestContext.get().getUser());
             d1.save(TestContext.get().getUser());
 
             return d1;
