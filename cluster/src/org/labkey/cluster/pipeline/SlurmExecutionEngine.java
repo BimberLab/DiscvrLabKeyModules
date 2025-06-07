@@ -497,7 +497,16 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
 
         int end = start + fieldWidths.get(idx).length();
 
-        return StringUtils.trimToNull(line.substring(start, end));
+        try
+        {
+            return StringUtils.trimToNull(line.substring(start, end));
+        }
+        catch (Exception e)
+        {
+            _log.error("Unable to parse slurm field at idx: " + idx + ". Line: [" + line + "]");
+            _log.error("fieldWidths: " + StringUtils.join(fieldWidths, "|"), e);
+            return null;
+        }
     }
 
     @Override
