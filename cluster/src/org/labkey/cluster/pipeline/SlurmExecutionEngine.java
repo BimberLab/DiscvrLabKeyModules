@@ -133,8 +133,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             int stateIdx = -1;
             int hostnameIdx = -1;
             int reasonIdx = -1;
-            int elapsedIdx = -1;
-            int resourcesIdx = -1;
+
             for (String line : ret)
             {
                 line = StringUtils.trimToNull(line);
@@ -151,8 +150,6 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     stateIdx = header.indexOf("STATE");
                     hostnameIdx = header.indexOf("NODELIST");
                     reasonIdx = header.indexOf("REASON");
-                    elapsedIdx = header.indexOf("ELAPSEDRAW");
-                    resourcesIdx = header.indexOf("ALLOCTRES");
 
                     if (stateIdx == -1)
                     {
@@ -207,30 +204,6 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                                         }
 
                                         status.second = "Reason: " + reason;
-                                    }
-                                }
-
-                                if (resourcesIdx > -1)
-                                {
-                                    j.setCpuUsed(findIntValue(tokens[resourcesIdx], "cpu"));
-                                    if (j.getCpuUsed() != null)
-                                    {
-                                        propsToUpdate.put("cpuUsed", j.getCpuUsed());
-                                    }
-
-                                    j.setGpuUsed(findIntValue(tokens[resourcesIdx], "gpu"));
-                                    if (j.getGpuUsed() != null)
-                                    {
-                                        propsToUpdate.put("gpuUsed", j.getGpuUsed());
-                                    }
-                                }
-
-                                if (elapsedIdx > -1)
-                                {
-                                    j.setDuration(Integer.parseInt(tokens[elapsedIdx]));
-                                    if (j.getDuration() != null)
-                                    {
-                                        propsToUpdate.put("duration", j.getDuration());
                                     }
                                 }
 
@@ -293,6 +266,8 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
 
     private void updateClusterSubmission(ClusterJob j, Map<String, Object> toUpdate)
     {
+        _log.debug("Updating job: " + j.getJobId() + ", " + toUpdate.keySet().stream().map(x -> x + "=" + toUpdate.get(x)).collect(Collectors.joining(", ")));
+
         toUpdate.put("rowid", j.getRowId());
         Table.update(null, ClusterSchema.getInstance().getSchema().getTable(ClusterSchema.CLUSTER_JOBS), toUpdate, j.getRowId());
     }
@@ -315,6 +290,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             //verify success
             boolean headerFound = false;
             boolean foundJobLine = false;
+            List<String> fieldWidths = new ArrayList<>();
             LinkedHashSet<String> statuses = new LinkedHashSet<>();
             List<String> header;
             int jobIdx = -1;
@@ -360,24 +336,24 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                 }
                 else if (foundJobLine && line.startsWith("------------"))
                 {
+                    fieldWidths.addAll(Arrays.asList(line.split(" ")));
                     headerFound = true;
                 }
                 else if (headerFound)
                 {
                     try
                     {
-                        String[] tokens = line.split("( )+");
-                        String id = StringUtils.trimToNull(tokens[jobIdx]);
+                        String id = StringUtils.trimToNull(extractField(line, fieldWidths, jobIdx));
                         if (id.equals(job.getClusterId()))
                         {
-                            statuses.add(StringUtils.trimToNull(tokens[stateIdx]));
+                            statuses.add(StringUtils.trimToNull(extractField(line, fieldWidths, stateIdx)));
                         }
 
                         Map<String, Object> propsToUpdate = new HashMap<>();
 
                         if (hostnameIdx > -1)
                         {
-                            String hostname = tokens.length > hostnameIdx ? StringUtils.trimToNull(tokens[hostnameIdx]) : null;
+                            String hostname = StringUtils.trimToNull(extractField(line, fieldWidths, hostnameIdx));
                             if (hostname != null)
                             {
                                 if (job.getHostname() == null || !job.getHostname().equals(hostname))
@@ -388,9 +364,9 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                             }
                         }
 
-                        if (reqMemIdx > -1 && reqMemIdx < tokens.length)
+                        if (reqMemIdx > -1)
                         {
-                            String val = StringUtils.trimToNull(tokens[reqMemIdx]);
+                            String val = StringUtils.trimToNull(extractField(line, fieldWidths, reqMemIdx));
                             if (val != null)
                             {
                                 reqMem = val;
@@ -400,13 +376,13 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
 
                         if (resourcesIdx > -1)
                         {
-                            job.setCpuUsed(findIntValue(tokens[resourcesIdx], "cpu"));
+                            job.setCpuUsed(findIntValue(extractField(line, fieldWidths, resourcesIdx), "cpu"));
                             if (job.getCpuUsed() != null)
                             {
                                 propsToUpdate.put("cpuUsed", job.getCpuUsed());
                             }
 
-                            job.setGpuUsed(findIntValue(tokens[resourcesIdx], "gpu"));
+                            job.setGpuUsed(findIntValue(extractField(line, fieldWidths, resourcesIdx), "gpu"));
                             if (job.getGpuUsed() != null)
                             {
                                 propsToUpdate.put("gpuUsed", job.getGpuUsed());
@@ -415,7 +391,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
 
                         if (elapsedIdx > -1)
                         {
-                            job.setDuration(Integer.parseInt(tokens[elapsedIdx]));
+                            job.setDuration(Integer.parseInt(extractField(line, fieldWidths, elapsedIdx)));
                             if (job.getDuration() != null)
                             {
                                 propsToUpdate.put("duration", job.getDuration());
@@ -428,11 +404,11 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                         }
 
                         // NOTE: if the line has blank ending columns, trimmed lines might lack that value
-                        if ((job.getClusterId() + ".0").equals(id) && maxRssIdx > -1 && maxRssIdx < tokens.length)
+                        if ((job.getClusterId() + ".0").equals(id) && maxRssIdx > -1)
                         {
                             try
                             {
-                                String maxRSS = StringUtils.trimToNull(tokens[maxRssIdx]);
+                                String maxRSS = StringUtils.trimToNull(extractField(line, fieldWidths, maxRssIdx));
                                 if (maxRSS != null)
                                 {
                                     double bytes = FileSizeFormatter.convertStringRepresentationToBytes(maxRSS);
@@ -471,7 +447,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     }
                     catch (Exception e)
                     {
-                        _log.error("Error parsing line: " + line, e);
+                        _log.error("Error parsing line: [" + line + "]", e);
                         throw e;
                     }
                 }
@@ -505,6 +481,19 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         _log.error(StringUtils.join(ret, "\n"));
 
         return null;
+    }
+
+    private String extractField(String line, List<String> fieldWidths, int idx)
+    {
+        int start = 0;
+        for (int i = 0; i < idx; i++)
+        {
+            start += fieldWidths.get(i).length() + 1;
+        }
+
+        int end = start + fieldWidths.get(idx).length();
+
+        return line.substring(start, end);
     }
 
     @Override
@@ -836,8 +825,6 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
             int jobIdx = -1;
             int stateIdx = -1;
             int hostnameIdx = -1;
-            int elapsedIdx = -1;
-            int resourcesIdx = -1;
 
             for (String line : ret)
             {
@@ -854,8 +841,6 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                     jobIdx = header.indexOf("JOBID");
                     stateIdx = header.indexOf("STATE");
                     hostnameIdx = header.indexOf("NODELIST");
-                    elapsedIdx = header.indexOf("ELAPSEDRAW");
-                    resourcesIdx = header.indexOf("ALLOCTRES");
 
                     if (stateIdx == -1)
                     {
@@ -889,30 +874,6 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                                 {
                                     job.setHostname(hostname);
                                     propsToUpdate.put("hostname", hostname);
-                                }
-                            }
-
-                            if (resourcesIdx > -1)
-                            {
-                                job.setCpuUsed(findIntValue(tokens[resourcesIdx], "cpu"));
-                                if (job.getCpuUsed() != null)
-                                {
-                                    propsToUpdate.put("cpuUsed", job.getCpuUsed());
-                                }
-
-                                job.setGpuUsed(findIntValue(tokens[resourcesIdx], "gpu"));
-                                if (job.getGpuUsed() != null)
-                                {
-                                    propsToUpdate.put("gpuUsed", job.getGpuUsed());
-                                }
-                            }
-
-                            if (elapsedIdx > -1)
-                            {
-                                job.setDuration(Integer.parseInt(tokens[elapsedIdx]));
-                                if (job.getDuration() != null)
-                                {
-                                    propsToUpdate.put("duration", job.getDuration());
                                 }
                             }
 
