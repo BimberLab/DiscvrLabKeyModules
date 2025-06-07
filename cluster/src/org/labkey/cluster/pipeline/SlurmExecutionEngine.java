@@ -343,17 +343,17 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                 {
                     try
                     {
-                        String id = StringUtils.trimToNull(extractField(line, fieldWidths, jobIdx));
-                        if (id.equals(job.getClusterId()))
+                        String id =extractField(line, fieldWidths, jobIdx);
+                        if (id != null && id.equals(job.getClusterId()))
                         {
-                            statuses.add(StringUtils.trimToNull(extractField(line, fieldWidths, stateIdx)));
+                            statuses.add(extractField(line, fieldWidths, stateIdx));
                         }
 
                         Map<String, Object> propsToUpdate = new HashMap<>();
 
                         if (hostnameIdx > -1)
                         {
-                            String hostname = StringUtils.trimToNull(extractField(line, fieldWidths, hostnameIdx));
+                            String hostname = extractField(line, fieldWidths, hostnameIdx);
                             if (hostname != null)
                             {
                                 if (job.getHostname() == null || !job.getHostname().equals(hostname))
@@ -366,7 +366,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
 
                         if (reqMemIdx > -1)
                         {
-                            String val = StringUtils.trimToNull(extractField(line, fieldWidths, reqMemIdx));
+                            String val = extractField(line, fieldWidths, reqMemIdx);
                             if (val != null)
                             {
                                 reqMem = val;
@@ -391,10 +391,14 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
 
                         if (elapsedIdx > -1)
                         {
-                            job.setDuration(Integer.parseInt(extractField(line, fieldWidths, elapsedIdx)));
-                            if (job.getDuration() != null)
+                            String durationString = extractField(line, fieldWidths, elapsedIdx);
+                            if (durationString != null)
                             {
-                                propsToUpdate.put("duration", job.getDuration());
+                                job.setDuration(Integer.parseInt(durationString));
+                                if (job.getDuration() != null)
+                                {
+                                    propsToUpdate.put("duration", job.getDuration());
+                                }
                             }
                         }
 
@@ -408,7 +412,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
                         {
                             try
                             {
-                                String maxRSS = StringUtils.trimToNull(extractField(line, fieldWidths, maxRssIdx));
+                                String maxRSS = extractField(line, fieldWidths, maxRssIdx);
                                 if (maxRSS != null)
                                 {
                                     double bytes = FileSizeFormatter.convertStringRepresentationToBytes(maxRSS);
@@ -493,7 +497,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
 
         int end = start + fieldWidths.get(idx).length();
 
-        return line.substring(start, end);
+        return StringUtils.trimToNull(line.substring(start, end));
     }
 
     @Override
