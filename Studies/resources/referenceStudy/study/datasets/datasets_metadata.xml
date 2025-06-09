@@ -173,6 +173,10 @@
             </column>
             <column columnName="resultOORIndicator">
                 <datatype>varchar</datatype>
+                <isHidden>true</isHidden>
+                <displayColumnFactory>
+                    <className>org.labkey.studies.query.ResultsOOODisplayColumn</className>
+                </displayColumnFactory>
             </column>
             <column columnName="units">
                 <datatype>varchar</datatype>
@@ -287,6 +291,9 @@
             </column>
             <column columnName="subgroup">
                 <datatype>varchar</datatype>
+            </column>
+            <column columnName="cohortId">
+                <columnTitle>Cohort ID</columnTitle>
             </column>
             <column columnName="description">
                 <datatype>varchar</datatype>
