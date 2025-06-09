@@ -334,4 +334,36 @@
         </columns>
         <tableTitle>Samples</tableTitle>
     </table>
+    <table tableName="genetics" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <datatype>varchar</datatype>
+                <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+            </column>
+            <column columnName="date">
+                <datatype>timestamp</datatype>
+                <conceptURI>http://cpas.labkey.com/laboratory#sampleDate</conceptURI>
+            </column>
+            <column columnName="objectid">
+                <datatype>entityid</datatype>
+                <isKeyField>true</isKeyField>
+            </column>
+            <column columnName="category">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="assayType">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="marker">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="result">
+                <datatype>varchar</datatype>
+            </column>
+            <column columnName="score">
+                <datatype>double</datatype>
+            </column>
+        </columns>
+        <tableTitle>Genetic Data</tableTitle>
+    </table>
 </tables>

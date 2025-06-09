@@ -1,0 +1,30 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="flags" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Id"/>
+                    <column columnName="date">
+                        <columnTitle>Date Added</columnTitle>
+                        <formatString>Date</formatString>
+                    </column>
+                    <column columnName="category">
+                        <columnTitle>Category</columnTitle>
+                    </column>
+                    <column columnName="assayType">
+                        <columnTitle>Assay Type</columnTitle>
+                    </column>
+                    <column columnName="marker">
+                        <columnTitle>Marker/Allele</columnTitle>
+                    </column>
+                    <column columnName="result">
+                        <columnTitle>Result</columnTitle>
+                    </column>
+                    <column columnName="score">
+                        <columnTitle>Score</columnTitle>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>
