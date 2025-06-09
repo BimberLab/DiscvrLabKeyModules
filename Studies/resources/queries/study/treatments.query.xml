@@ -1,0 +1,65 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="treatments" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Id"/>
+                    <column columnName="date">
+                        <columnTitle>Date</columnTitle>
+                        <formatString>Date</formatString>
+                    </column>
+                    <column columnName="enddate">
+                        <columnTitle>End Date</columnTitle>
+                        <formatString>Date</formatString>
+                    </column>
+                    <column columnName="category">
+                        <columnTitle>Category</columnTitle>
+                    </column>
+                    <column columnName="treatment">
+                        <columnTitle>Treatment</columnTitle>
+                    </column>
+                    <column columnName="route">
+                        <columnTitle>Route</columnTitle>
+                    </column>
+                    <column columnName="frequency">
+                        <columnTitle>Frequency</columnTitle>
+                    </column>
+                    <column columnName="amount">
+                        <columnTitle>Amount</columnTitle>
+                    </column>
+                    <column columnName="amountUnits">
+                        <columnTitle>Amount Units</columnTitle>
+                    </column>
+                    <column columnName="volume">
+                        <columnTitle>Volume</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="vol_units">
+                        <columnTitle>Volume Units</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="concentration">
+                        <columnTitle>Concentration</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="conc_units">
+                        <columnTitle>Conc. Units</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="dosage">
+                        <columnTitle>Dosage</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="dosage_units">
+                        <columnTitle>Dosage Units</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="reason">
+                        <columnTitle>Reason</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

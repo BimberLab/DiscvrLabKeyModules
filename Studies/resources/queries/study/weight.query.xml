@@ -3,6 +3,12 @@
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="weight" tableDbType="TABLE">
                 <columns>
+                    <column columnName="Id">
+                        <url />
+                    </column>
+                    <column columnName="date">
+                        <isHidden>true</isHidden>
+                    </column>
                     <column columnName="weight">
                         <columnTitle>Weight (kg)</columnTitle>
                         <formatString>0.####</formatString>
