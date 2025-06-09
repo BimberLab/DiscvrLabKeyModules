@@ -309,6 +309,10 @@ then
     unzip gatk-4.6.1.0.zip
 
     cp ./gatk-4.6.1.0/gatk-package-4.6.1.0-local.jar $LKTOOLS_DIR/GenomeAnalysisTK4.jar
+
+    wget $WGET_OPTS https://github.com/GenomicsDB/GenomicsDB/releases/download/v1.4.3/consolidate_genomicsdb_array
+    chmod +x consolidate_genomicsdb_array
+    cp consolidate_genomicsdb_array $LKTOOLS_DIR/consolidate_genomicsdb_array
 else
     echo "Already installed"
 fi
