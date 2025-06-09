@@ -31,5 +31,11 @@
         <dataset name="immunizations" showByDefault="true" category="Research" type="Standard" id="10">
             <tags/>
         </dataset>
+        <dataset name="genetics" showByDefault="true" category="Research" type="Standard" id="11">
+            <tags/>
+        </dataset>
+        <dataset name="procedures" showByDefault="true" category="Research" type="Standard" id="12">
+            <tags/>
+        </dataset>
     </datasets>
 </datasets>
