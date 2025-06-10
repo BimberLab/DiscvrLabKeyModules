@@ -29,9 +29,11 @@
                     <column columnName="qualResult">
                         <columnTitle>Qualitative Result</columnTitle>
                         <isHidden>true</isHidden>
+                        <shownInDetailsView>false</shownInDetailsView>
                     </column>
                     <column columnName="resultOORIndicator">
                         <isHidden>true</isHidden>
+                        <shownInDetailsView>false</shownInDetailsView>
                     </column>
                 </columns>
             </table>

@@ -23,6 +23,7 @@
                     <column columnName="qualResult">
                         <columnTitle>Qualitative Result</columnTitle>
                         <isHidden>true</isHidden>
+                        <shownInDetailsView>false</shownInDetailsView>
                     </column>
                     <column columnName="method">
                         <columnTitle>Method</columnTitle>

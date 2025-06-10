@@ -9,6 +9,7 @@
                     </column>
                     <column columnName="date">
                         <isHidden>true</isHidden>
+                        <shownInDetailsView>false</shownInDetailsView>
                     </column>
                     <column columnName="birth">
                         <formatString>Date</formatString>
@@ -30,6 +31,7 @@
                     </column>
                     <column columnName="objectId">
                         <isHidden>true</isHidden>
+                        <shownInDetailsView>false</shownInDetailsView>
                         <isKeyField>true</isKeyField>
                     </column>
                     <column columnName="sex">

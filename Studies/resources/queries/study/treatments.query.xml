@@ -27,36 +27,43 @@
                     <column columnName="amount">
                         <columnTitle>Amount</columnTitle>
                     </column>
-                    <column columnName="amountUnits">
+                    <column columnName="amount_units">
                         <columnTitle>Amount Units</columnTitle>
                     </column>
                     <column columnName="volume">
                         <columnTitle>Volume</columnTitle>
                         <isHidden>true</isHidden>
+                        <shownInDetailsView>false</shownInDetailsView>
                     </column>
                     <column columnName="vol_units">
                         <columnTitle>Volume Units</columnTitle>
                         <isHidden>true</isHidden>
+                        <shownInDetailsView>false</shownInDetailsView>
                     </column>
                     <column columnName="concentration">
                         <columnTitle>Concentration</columnTitle>
                         <isHidden>true</isHidden>
+                        <shownInDetailsView>false</shownInDetailsView>
                     </column>
                     <column columnName="conc_units">
                         <columnTitle>Conc. Units</columnTitle>
                         <isHidden>true</isHidden>
+                        <shownInDetailsView>false</shownInDetailsView>
                     </column>
                     <column columnName="dosage">
                         <columnTitle>Dosage</columnTitle>
                         <isHidden>true</isHidden>
+                        <shownInDetailsView>false</shownInDetailsView>
                     </column>
                     <column columnName="dosage_units">
                         <columnTitle>Dosage Units</columnTitle>
                         <isHidden>true</isHidden>
+                        <shownInDetailsView>false</shownInDetailsView>
                     </column>
                     <column columnName="reason">
                         <columnTitle>Reason</columnTitle>
                         <isHidden>true</isHidden>
+                        <shownInDetailsView>false</shownInDetailsView>
                     </column>
                 </columns>
             </table>

@@ -16,6 +16,7 @@
                     <column columnName="objectid">
                         <columnTitle>Key</columnTitle>
                         <isHidden>true</isHidden>
+                        <shownInDetailsView>false</shownInDetailsView>
                     </column>
                 </columns>
             </table>
