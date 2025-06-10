@@ -293,7 +293,7 @@
                 <datatype>varchar</datatype>
             </column>
             <column columnName="cohortId">
-                <columnTitle>Cohort ID</columnTitle>
+                <datatype>varchar</datatype>
             </column>
             <column columnName="description">
                 <datatype>varchar</datatype>

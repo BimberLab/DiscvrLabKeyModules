@@ -18,6 +18,9 @@
                     <column columnName="subgroup">
                         <columnTitle>Sub-Group</columnTitle>
                     </column>
+                    <column columnName="cohortId">
+                        <columnTitle>Cohort ID</columnTitle>
+                    </column>
                     <column columnName="category">
                         <columnTitle>Category</columnTitle>
                     </column>
