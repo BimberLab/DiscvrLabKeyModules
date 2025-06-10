@@ -19,7 +19,7 @@ import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.studies.StudiesSchema;
-import org.labkey.studies.security.StudiesDataAdminPermission;
+import org.labkey.api.studies.security.StudiesDataAdminPermission;
 
 import java.util.Collections;
 import java.util.Map;

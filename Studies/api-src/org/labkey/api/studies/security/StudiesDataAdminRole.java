@@ -1,4 +1,4 @@
-package org.labkey.studies.security;
+package org.labkey.api.studies.security;
 
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.security.permissions.DeletePermission;

@@ -11,7 +11,7 @@ import org.labkey.api.query.QuerySchema;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.studies.StudiesService;
 import org.labkey.studies.query.StudiesUserSchema;
-import org.labkey.studies.security.StudiesDataAdminRole;
+import org.labkey.api.studies.security.StudiesDataAdminRole;
 
 import java.util.Collection;
 import java.util.Collections;

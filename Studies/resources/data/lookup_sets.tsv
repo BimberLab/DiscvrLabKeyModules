@@ -1,9 +1,0 @@
-setname	label	keyfield	titleColumn
-amount_units	Amount Units	unit
-calculated_status_codes	Calculated Status Codes	code
-conc_units 	Concentraiton Units	unit
-dosage_units	Dosage Units	unit
-gender_codes	Gender Codes
-geographic_origins	Geographic Origins	origin
-routes	Routes	route
-volume_units	Volume Units	unit
