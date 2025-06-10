@@ -7,9 +7,9 @@ import java.util.Collection;
 import java.util.List;
 
 public interface JBrowseFieldCustomizer {
-    public void customizeField(JBrowseFieldDescriptor field, Container c, User u);
+    void customizeField(JBrowseFieldDescriptor field, Container c, User u);
 
-    public List<String> getPromotedFilters(Collection<String> indexedFields, Container c, User u);
+    List<String> getPromotedFilters(Collection<String> indexedFields, Container c, User u);
 
-    public boolean isAvailable(Container c, User u);
+    boolean isAvailable(Container c, User u);
 }

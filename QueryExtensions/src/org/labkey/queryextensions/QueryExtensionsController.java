@@ -16,14 +16,7 @@
 
 package org.labkey.queryextensions;
 
-import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
-import org.labkey.api.security.RequiresPermission;
-import org.labkey.api.security.permissions.ReadPermission;
-import org.labkey.api.view.JspView;
-import org.labkey.api.view.NavTree;
-import org.springframework.validation.BindException;
-import org.springframework.web.servlet.ModelAndView;
 
 public class QueryExtensionsController extends SpringActionController
 {

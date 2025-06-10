@@ -110,8 +110,8 @@ public class ExportOverlappingReadsAnalysis extends AbstractPipelineStep impleme
                 }
 
                 String refName = m.group(1);
-                Integer start = Integer.parseInt(m.group(2));
-                Integer stop = Integer.parseInt(m.group(3));
+                int start = Integer.parseInt(m.group(2));
+                int stop = Integer.parseInt(m.group(3));
 
                 getPipelineCtx().getLogger().info("calculating bases over " + refName + ": " + start + "-" + stop);
                 int added = calculateForInterval(inputBam, refName, start, stop, distinctReadNames);

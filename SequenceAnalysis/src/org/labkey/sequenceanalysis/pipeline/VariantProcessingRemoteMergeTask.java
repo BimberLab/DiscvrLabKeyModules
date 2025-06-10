@@ -17,7 +17,6 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.util.FileType;
-import org.labkey.sequenceanalysis.run.variant.OutputVariantsStartingInIntervalsStep;
 
 import java.io.File;
 import java.io.IOException;

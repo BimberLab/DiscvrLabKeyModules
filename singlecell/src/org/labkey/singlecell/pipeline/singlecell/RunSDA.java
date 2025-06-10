@@ -9,7 +9,6 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
-import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
@@ -129,7 +128,7 @@ public class RunSDA extends AbstractCellMembraneStep
 
                 final String datasetId = line[0];
                 Set<SeuratObjectWrapper> wrappers = inputObjects.stream().filter(x -> datasetId.equals(x.getDatasetId())).collect(Collectors.toSet());
-                if (wrappers.size() == 0)
+                if (wrappers.isEmpty())
                 {
                     throw new PipelineJobException("Unable to find seurat object wrapper for: " + datasetId);
                 }

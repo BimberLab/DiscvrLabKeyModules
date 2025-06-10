@@ -113,10 +113,10 @@ abstract public class SequenceAnalysisService
 
     abstract public void registerReadsetListener(ReadsetListener listener);
 
-    public static interface ReadsetListener
+    public interface ReadsetListener
     {
-        public void onReadsetCreate(User u, Readset rs, @Nullable Readset replacedReadset, @Nullable PipelineJob job);
+        void onReadsetCreate(User u, Readset rs, @Nullable Readset replacedReadset, @Nullable PipelineJob job);
 
-        public boolean isAvailable(Container c, User u);
+        boolean isAvailable(Container c, User u);
     }
 }

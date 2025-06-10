@@ -94,7 +94,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
         for (SeuratObjectWrapper wrapper : inputObjects)
         {
             File localCopyUmiCountDir = null;
-            File localAggregateCountFile = null;
+            File localAggregateCountFile;
             if (wrapper.getSequenceOutputFileId() == null)
             {
                 throw new PipelineJobException("Append CITE-seq is only support using seurat objects will a single input dataset. Consider moving this step easier in your pipeline, before merging or subsetting");

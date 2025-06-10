@@ -136,7 +136,6 @@ public interface SequenceOutputHandler<T>
 
     /**
      * Provides the opportunity for the handler to validate parameters prior to running
-     * @param params
      * @return List of error messages.  Null or empty list indicates no errors.
      */
     default List<String> validateParameters(List<SequenceOutputFile> outputFiles, JSONObject params)
@@ -174,8 +173,6 @@ public interface SequenceOutputHandler<T>
          * Allows handlers to perform setup on the webserver prior to remote running.  This will be run in the background as a pipeline job.
          * @param ctx Provides context about the active pipeline job
          * @param inputFiles      The list of input files to process
-         * @param actions
-         * @param outputsToCreate
          */
         default void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
@@ -189,10 +186,6 @@ public interface SequenceOutputHandler<T>
          *
          * @param support Provides context about the active pipeline job
          * @param inputFiles The list of input files to process
-         * @param params
-         * @param outputDir
-         * @param actions
-         * @param outputsToCreate
          */
         void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException;
 
@@ -211,10 +204,6 @@ public interface SequenceOutputHandler<T>
          * @param job             The pipeline job running this task
          * @param support Provides context about the active pipeline job
          * @param readsets      The list of readsets to process
-         * @param params
-         * @param outputDir
-         * @param actions
-         * @param outputsToCreate
          */
         void init(PipelineJob job, SequenceAnalysisJobSupport support, List<Readset> readsets, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException;
 
@@ -222,10 +211,6 @@ public interface SequenceOutputHandler<T>
          *
          * @param support Provides context about the active pipeline job
          * @param readsets The list of readsets to process
-         * @param params
-         * @param outputDir
-         * @param actions
-         * @param outputsToCreate
          */
         void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<Readset> readsets, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException;
 

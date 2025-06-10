@@ -35,7 +35,6 @@ public interface AlignmentStep extends PipelineStep
 {
     /**
      * Creates any indexes needed by this aligner if not already present.
-     * @throws PipelineJobException
      */
     IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException;
 
@@ -49,7 +48,6 @@ public interface AlignmentStep extends PipelineStep
      * @param inputFastqs1 The forward FASTQ file(s). In most cases this is a single FASTQ. The aligner must return true for canAlignMultiplePairsAtOnce() otherwise.
      * @param inputFastqs2 The second FASTQ(s), if using paired end data
      * @param basename The basename to use as the output
-     * @throws PipelineJobException
      */
     AlignmentOutput performAlignment(Readset rs, List<File> inputFastqs1, @Nullable List<File> inputFastqs2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException;
 
@@ -102,7 +100,6 @@ public interface AlignmentStep extends PipelineStep
     /**
      * Optional.  Allows this analysis to gather any information from the server required to execute the alignment.  This information needs to be serialized
      * to run remotely, which could be as simple as writing to a text file.
-     * @throws PipelineJobException
      */
     default void init(SequenceAnalysisJobSupport support) throws PipelineJobException
     {

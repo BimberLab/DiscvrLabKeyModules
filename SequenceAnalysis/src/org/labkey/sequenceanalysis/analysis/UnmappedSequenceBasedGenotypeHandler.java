@@ -35,7 +35,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -95,7 +94,7 @@ public class UnmappedSequenceBasedGenotypeHandler extends AbstractParameterizedO
         {
             String[] tokens = header.split("-");
 
-            Integer count = Integer.parseInt(tokens[tokens.length - 1]);
+            int count = Integer.parseInt(tokens[tokens.length - 1]);
             Integer c = _sampleMap.getOrDefault(sampleName, 0);
             c += count;
             _totalReads += count;

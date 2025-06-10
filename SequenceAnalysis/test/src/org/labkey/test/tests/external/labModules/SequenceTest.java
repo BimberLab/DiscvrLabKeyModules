@@ -361,7 +361,6 @@ public class SequenceTest extends BaseWebDriverTest
      * created properly.  It also exercises various features associated with the readset grid, including
      * the FASTQC report and downloading of results
      *
-     * @throws Exception
      */
     private void readsetFeaturesTest() throws IOException
     {
@@ -1675,7 +1674,7 @@ public class SequenceTest extends BaseWebDriverTest
         sr.setColumns(Arrays.asList("dataid/DataFileUrl", "rowid"));
         SelectRowsResponse srr = sr.execute(cn, getProjectName());
         File existing = new File(URI.create(srr.getRows().get(0).get("dataid/DataFileUrl").toString()));
-        Integer rowId = Integer.valueOf(srr.getRows().get(0).get("rowid").toString());
+        int rowId = Integer.parseInt(srr.getRows().get(0).get("rowid").toString());
 
         Assert.assertTrue("File does not exist: " + existing.getPath(), existing.exists());
         Assert.assertEquals("Expected one row", 1, srr.getRowCount().intValue());
@@ -1707,7 +1706,7 @@ public class SequenceTest extends BaseWebDriverTest
         SelectRowsResponse srr2 = sr2.execute(cn, getProjectName());
         if (srr2.getRowCount().intValue() > 0)
         {
-            Integer rowId2 = Integer.valueOf(srr.getRows().get(0).get("rowid").toString());
+            int rowId2 = Integer.parseInt(srr.getRows().get(0).get("rowid").toString());
             log("initial rowId: " + rowId + ", after: " + rowId2);
         }
 

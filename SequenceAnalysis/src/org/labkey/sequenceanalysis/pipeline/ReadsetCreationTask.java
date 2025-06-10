@@ -254,7 +254,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
                     File f2 = rd.getFile2();
 
                     getJob().getLogger().debug("Total exp data files: " + datas.size());
-                    if (datas.size() > 0)
+                    if (!datas.isEmpty())
                     {
                         boolean found = false;
                         boolean found2 = false;

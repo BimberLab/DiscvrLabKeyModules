@@ -37,7 +37,6 @@ public class NTSnp
 
     /**
      * 0-based, -1 indicates an insertion
-     * @return
      */
     public int getReferencePosition()
     {
@@ -46,7 +45,6 @@ public class NTSnp
 
     /**
      * 0-based, -1 indicates a deletion
-     * @return
      */
     public int getReadPosition()
     {
@@ -79,7 +77,6 @@ public class NTSnp
     /**
      * Returns the last reference position that was overlapped (0-based).  Primarily used for insertions relative to the reference,
      * in order to find the previous reference position.  For non-insertions, this will return the same value as getRefPosition()
-     * @return
      */
     public int getLastRefPosition()
     {

@@ -196,7 +196,7 @@ public class ParagraphStep extends AbstractParameterizedOutputHandler<SequenceOu
                 //    id  path    depth   read length
                 //    IB18  ../IB18.cram 29.77   150
                 File coverageFile = new File(ctx.getWorkingDirectory(), "coverage.txt");
-                String rgId = null;
+                String rgId;
                 try (PrintWriter writer = PrintWriters.getPrintWriter(coverageFile); SamReader reader = SamReaderFactory.makeDefault().open(so.getFile()))
                 {
                     SAMFileHeader header = reader.getFileHeader();

@@ -673,8 +673,8 @@ public class GenotypeGVCFHandler implements SequenceOutputHandler<SequenceOutput
 
                 // See: https://gatk.broadinstitute.org/hc/en-us/articles/4418054384027-GenotypeGVCFs#--genomicsdb-max-alternate-alleles
                 // "A typical value is 3 more than the --max-alternate-alleles value that's used by GenotypeGVCFs and larger differences result in more robustness to PCR-related indel errors"
-                Integer maxAlt = ctx.getParams().getInt("variantCalling.GenotypeGVCFs.max_alternate_alleles") + 3;
-                toolParams.add(maxAlt.toString());
+                int maxAlt = ctx.getParams().getInt("variantCalling.GenotypeGVCFs.max_alternate_alleles") + 3;
+                toolParams.add(Integer.toString(maxAlt));
             }
 
             if (ctx.getParams().optBoolean("variantCalling.GenotypeGVCFs.includeNonVariantSites"))

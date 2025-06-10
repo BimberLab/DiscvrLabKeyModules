@@ -261,7 +261,7 @@ public class JBrowseLuceneSearch
         while (tokenizer.hasMoreTokens() && !searchString.equals(ALL_DOCS))
         {
             String queryString = tokenizer.nextToken();
-            Query query = null;
+            Query query;
 
             String fieldName = extractFieldName(queryString);
 
@@ -693,7 +693,7 @@ public class JBrowseLuceneSearch
         }
     }
 
-    private class SearchConfig {
+    private static class SearchConfig {
         CacheEntry cacheEntry;
         Query query;
         int pageSize;

@@ -138,7 +138,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
 
     private static String getOutputExtension(File inputFile)
     {
-        String ext = null;
+        String ext;
         if (_bedFileType.isType(inputFile))
         {
             ext = ".bed";
@@ -172,7 +172,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
         @Override
         public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
-            Integer chainFileId = ctx.getParams().getInt("chainFileId");
+            int chainFileId = ctx.getParams().getInt("chainFileId");
             ExpData chainData = ExperimentService.get().getExpData(chainFileId);
             if (chainData == null || !chainData.getFile().exists())
             {

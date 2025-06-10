@@ -14,7 +14,6 @@ import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.RuntimeSQLException;
-import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -1058,7 +1057,7 @@ public class LdapSyncRunner implements Job
         }
 
         // This can be used to return LdapEntry objects to support some degree of automated testing without needing a functional LDAP Server
-        public class DummyConnectionWrapper extends LdapConnectionWrapper
+        public static class DummyConnectionWrapper extends LdapConnectionWrapper
         {
             private final List<LdapEntry> _users = new ArrayList<>();
             private final Map<String, MockLdapEntry> _groupMap = new HashMap<>();

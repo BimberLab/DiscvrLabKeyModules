@@ -913,7 +913,7 @@ public class CellHashingServiceImpl extends CellHashingService
                         description.append(StringUtils.trimToNull(so.getDescription()));
                     }
 
-                    String delim = description.length() > 0 ? "\n" : "";
+                    String delim = !description.isEmpty() ? "\n" : "";
 
                     DecimalFormat fmt = new DecimalFormat("##.##%");
                     List<String> metricNames = new ArrayList<>(Arrays.asList("PassingCellBarcodes", "TotalLowCounts", "TotalSinglet", "FractionCalled", "FractionSinglet", "FractionDoublet", "FractionDiscordant", "UniqueHtos"));

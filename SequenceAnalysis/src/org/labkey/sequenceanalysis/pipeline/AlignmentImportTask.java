@@ -27,7 +27,6 @@ import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -107,7 +106,7 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
         Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
         ExpRun run = ExperimentService.get().getExpRun(runId);
         List<? extends ExpData> datas = run.getInputDatas(SequenceAlignmentTask.FINAL_BAM_ROLE, ExpProtocol.ApplicationType.ExperimentRunOutput);
-        if (datas.size() > 0)
+        if (!datas.isEmpty())
         {
             for (ExpData d : datas)
             {

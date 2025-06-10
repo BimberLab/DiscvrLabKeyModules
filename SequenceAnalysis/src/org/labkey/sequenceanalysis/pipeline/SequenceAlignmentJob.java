@@ -61,7 +61,7 @@ public class SequenceAlignmentJob extends SequenceJob
         List<SequenceAlignmentJob> ret = new ArrayList<>();
         for (int i=0;i<readsetIds.length();i++)
         {
-            Integer readsetId = readsetIds.getInt(i);
+            int readsetId = readsetIds.getInt(i);
             SequenceReadsetImpl readset = SequenceAnalysisServiceImpl.get().getReadset(readsetId, u);
             if (readset == null)
             {

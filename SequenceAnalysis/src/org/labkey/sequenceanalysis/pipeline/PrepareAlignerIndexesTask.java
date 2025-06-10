@@ -16,7 +16,6 @@ import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 

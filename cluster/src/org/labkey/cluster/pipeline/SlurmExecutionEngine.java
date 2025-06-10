@@ -124,7 +124,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         {
             //verify success
             boolean headerFound = false;
-            List<String> header = null;
+            List<String> header;
             int jobIdx = -1;
             int stateIdx = -1;
             int hostnameIdx = -1;
@@ -721,7 +721,7 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
         if (ret != null)
         {
             boolean headerFound = false;
-            List<String> header = null;
+            List<String> header;
             int jobIdx = -1;
             int stateIdx = -1;
             int hostnameIdx = -1;

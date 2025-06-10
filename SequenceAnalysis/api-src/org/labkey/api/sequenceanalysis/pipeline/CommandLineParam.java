@@ -29,7 +29,7 @@ import java.util.List;
 public class CommandLineParam
 {
     private final String _argName;
-    protected boolean _isSwitch = false;
+    protected boolean _isSwitch;
 
     private CommandLineParam(String argName, boolean isSwitch)
     {

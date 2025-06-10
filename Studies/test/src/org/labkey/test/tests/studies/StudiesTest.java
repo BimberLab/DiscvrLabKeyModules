@@ -23,7 +23,7 @@ public class StudiesTest extends BaseWebDriverTest
     @BeforeClass
     public static void setupProject()
     {
-        StudiesTest init = (StudiesTest)getCurrentTest();
+        StudiesTest init = getCurrentTest();
 
         init.doSetup();
     }

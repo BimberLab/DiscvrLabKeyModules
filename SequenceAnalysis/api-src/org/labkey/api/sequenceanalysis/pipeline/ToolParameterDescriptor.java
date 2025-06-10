@@ -27,7 +27,6 @@ import org.labkey.api.pipeline.PipelineJobException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * User: bimber

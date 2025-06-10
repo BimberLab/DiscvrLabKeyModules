@@ -139,7 +139,7 @@ public class CigarPositionIterable implements Iterable<CigarPositionIterable.Pos
      * Describes a specific position in an alignment, including the position relative to the start of both the reference and read
      * sequences.
      */
-    public class PositionInfo
+    public static class PositionInfo
     {
         private final SAMRecord _record;
         private final CigarOperator _op;

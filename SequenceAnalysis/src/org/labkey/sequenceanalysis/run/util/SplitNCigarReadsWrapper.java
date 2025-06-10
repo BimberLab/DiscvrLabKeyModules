@@ -2,7 +2,6 @@ package org.labkey.sequenceanalysis.run.util;
 
 import htsjdk.samtools.SAMFileHeader;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.pipeline.SamSorter;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;

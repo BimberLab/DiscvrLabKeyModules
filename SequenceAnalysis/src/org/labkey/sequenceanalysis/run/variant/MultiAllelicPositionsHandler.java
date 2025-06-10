@@ -111,11 +111,11 @@ public class MultiAllelicPositionsHandler extends AbstractParameterizedOutputHan
             File outputFile = new File(ctx.getOutputDir(), basename + ".bed");
 
             List<String> options = new ArrayList<>();
-            Integer minDepth = ctx.getParams().optInt("minDepth", 0);
+            int minDepth = ctx.getParams().optInt("minDepth", 0);
             if (minDepth > 0)
             {
                 options.add("-minDepth");
-                options.add(minDepth.toString());
+                options.add(Integer.toString(minDepth));
             }
 
             MultiAllelicPositionWrapper wrapper = new MultiAllelicPositionWrapper(ctx.getLogger());
@@ -125,7 +125,7 @@ public class MultiAllelicPositionsHandler extends AbstractParameterizedOutputHan
                 throw new PipelineJobException("Unable to find expected file:" + outputFile.getPath());
             }
 
-            Integer callThreshold = ctx.getParams().optInt("callThreshold", 0);
+            int callThreshold = ctx.getParams().optInt("callThreshold", 0);
             if (callThreshold > 0)
             {
                 ctx.getLogger().info("will only report sites present in at least " + callThreshold + " samples");
@@ -140,7 +140,7 @@ public class MultiAllelicPositionsHandler extends AbstractParameterizedOutputHan
                         while ((line = reader.readNext()) != null)
                         {
                             totalLines++;
-                            Integer val = Integer.parseInt(line[4]);
+                            int val = Integer.parseInt(line[4]);
                             if (val < callThreshold)
                             {
                                 linesFiltered++;

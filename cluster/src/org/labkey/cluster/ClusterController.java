@@ -107,7 +107,7 @@ public class ClusterController extends SpringActionController
     }
 
     @RequiresSiteAdmin
-    public class ForcePipelineCancelAction extends ConfirmAction<JobIdsForm>
+    public static class ForcePipelineCancelAction extends ConfirmAction<JobIdsForm>
     {
         @Override
         public void validateCommand(JobIdsForm form, Errors errors)
@@ -213,7 +213,7 @@ public class ClusterController extends SpringActionController
     }
 
     @RequiresSiteAdmin
-    public class ResetPipelineJobLogFileAction extends ConfirmAction<ResetPipelineJobLogFileForm>
+    public static class ResetPipelineJobLogFileAction extends ConfirmAction<ResetPipelineJobLogFileForm>
     {
         @Override
         public void validateCommand(ResetPipelineJobLogFileForm form, Errors errors)

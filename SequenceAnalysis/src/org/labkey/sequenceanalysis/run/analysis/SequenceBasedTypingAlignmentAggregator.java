@@ -187,7 +187,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
                 return;
             }
 
-            Integer numSnps = getNumMismatches(record, snps);
+            int numSnps = getNumMismatches(record, snps);
             String key = getKey(record);
             if (numSnps <= _maxSNPs)
             {
@@ -352,7 +352,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
             List<String> refNames2 = null;
 
             //if this read has an aligned mate, we find the intersect between its alignments
-            Boolean hasMate = false;
+            boolean hasMate = false;
             if (_alignmentsByReadM2.containsKey(readName))
             {
                 refNames2 = new ArrayList<>(_alignmentsByReadM2.get(readName));
@@ -383,11 +383,11 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
 
                 for (String refName : names)
                 {
-                    writer.writeNext(new String[]{"Forward", readName, String.valueOf(_alignmentsByReadM1.get(readName).size()), String.valueOf(refNames.size()), refName, String.valueOf(refNames.contains(refName)), hasMate.toString()});
+                    writer.writeNext(new String[]{"Forward", readName, String.valueOf(_alignmentsByReadM1.get(readName).size()), String.valueOf(refNames.size()), refName, String.valueOf(refNames.contains(refName)), Boolean.toString(hasMate)});
                 }
             }
 
-            if (refNames.size() > 0)
+            if (!refNames.isEmpty())
             {
                 if (!_onlyImportValidPairs || hasMate)
                 {
@@ -434,7 +434,7 @@ public class SequenceBasedTypingAlignmentAggregator extends AbstractAlignmentAgg
             List<String> refNames = new ArrayList(_alignmentsByReadM2.get(mateName));
             if (!_onlyImportValidPairs)
             {
-                if (refNames.size() > 0)
+                if (!refNames.isEmpty())
                 {
                     appendReadToTotals(mateName, refNames, totals, false, true);
                     _singletonCalls++;

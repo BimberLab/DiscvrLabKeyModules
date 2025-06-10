@@ -192,7 +192,7 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             }
         }
 
-        ret.getButtonBarConfig().setScriptIncludes(scriptIncludes.toArray(new String[scriptIncludes.size()]));
+        ret.getButtonBarConfig().setScriptIncludes(scriptIncludes.toArray(new String[0]));
 
         if (ret.getColumn("analysisSets") == null)
         {

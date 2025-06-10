@@ -466,7 +466,6 @@ public class LdapSettings
 
     /**
      * Provides a brief sanity check of the settings, designed to identify problems if a sync will run.
-     * @throws LdapException
      */
     public void validateSettings() throws LdapException
     {
@@ -495,7 +494,7 @@ public class LdapSettings
 
         if (LdapSyncMode.groupWhitelist.equals(mode))
         {
-            if (getGroupWhiteList().size() == 0)
+            if (getGroupWhiteList().isEmpty())
             {
                 throw new LdapException("Cannot choose to sync based on specific groups unless you provide a list of groups to sync");
             }

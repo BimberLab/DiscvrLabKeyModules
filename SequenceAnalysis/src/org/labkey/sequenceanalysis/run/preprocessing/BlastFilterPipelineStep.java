@@ -174,7 +174,7 @@ public class BlastFilterPipelineStep extends AbstractPipelineStep implements Pre
         try (CSVReader reader = new CSVReader(Readers.getReader(blastOutput), '\t'))
         {
             String[] line;
-            while ((line = reader.readNext()) != null)
+            while (reader.readNext() != null)
             {
 
             }

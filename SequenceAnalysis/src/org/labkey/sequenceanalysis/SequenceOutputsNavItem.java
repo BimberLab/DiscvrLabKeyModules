@@ -89,7 +89,7 @@ public class SequenceOutputsNavItem extends AbstractNavItem implements SummaryNa
             SQLFragment sql = new SQLFragment("SELECT t.category, count(*) as total FROM ").append(ti.getFromSQL("t")).append(" GROUP BY t.category");
             SqlSelector ss = new SqlSelector(ti.getSchema(), sql);
             final TreeMap<String, Long> categories = new TreeMap<>();
-            ss.forEach(new Selector.ForEachBlock<ResultSet>()
+            ss.forEach(new Selector.ForEachBlock<>()
             {
                 @Override
                 public void exec(ResultSet object) throws SQLException

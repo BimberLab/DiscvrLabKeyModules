@@ -13,7 +13,6 @@ import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -84,7 +83,7 @@ public class RunVision extends AbstractCellMembraneStep
 
                 final String datasetId = line[0];
                 Set<SeuratObjectWrapper> wrappers = inputObjects.stream().filter(x -> datasetId.equals(x.getDatasetId())).collect(Collectors.toSet());
-                if (wrappers.size() == 0)
+                if (wrappers.isEmpty())
                 {
                     throw new PipelineJobException("Unable to find seurat object wrapper for: " + datasetId);
                 }

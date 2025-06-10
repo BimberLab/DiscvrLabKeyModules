@@ -43,8 +43,8 @@ import java.util.Map;
  */
 public class SequenceTriggerHelper
 {
-    private Container _container = null;
-    private User _user = null;
+    private Container _container;
+    private User _user;
     private static final Logger _log = LogManager.getLogger(SequenceTriggerHelper.class);
     private TableInfo _refNts = null;
 

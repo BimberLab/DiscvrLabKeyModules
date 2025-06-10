@@ -132,7 +132,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
 
         private static final double NO_DATA_VAL = -1.0;
 
-        private class SiteAndAlleles
+        private static class SiteAndAlleles
         {
             private final String _contig;
             private final int _start;

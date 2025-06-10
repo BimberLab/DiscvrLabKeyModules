@@ -18,7 +18,6 @@ package org.labkey.sequenceanalysis.run.analysis;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SimpleFilter;
@@ -388,7 +387,7 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
                         for (char base : _baseMap.keySet())
                         {
                             String fieldSuffix = _baseMap.get(base);
-                            Integer baseTotal = getValueForPositionAndBase(refName, position, index, base, _totalCoverageByBase);
+                            int baseTotal = getValueForPositionAndBase(refName, position, index, base, _totalCoverageByBase);
 
                             row.put("total_" + fieldSuffix, baseTotal);
 
@@ -397,7 +396,7 @@ public class NtCoverageAggregator extends AbstractAlignmentAggregator
                                 n_total += baseTotal;
 
                             double totalQual = getValueForPositionAndBase(refName, position, index, base, _totalQualByBase);
-                            double avgQual = baseTotal == 0 ? 0 : totalQual / baseTotal.doubleValue();
+                            double avgQual = baseTotal == 0 ? 0 : totalQual / (double) baseTotal;
                             row.put("avgqual_" + fieldSuffix, avgQual);
 
                             if (index == 0 && base == wtBase)

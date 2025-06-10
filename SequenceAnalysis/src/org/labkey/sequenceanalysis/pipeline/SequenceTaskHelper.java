@@ -346,6 +346,7 @@ public class SequenceTaskHelper implements PipelineContext
         }
     }
 
+    @Override
     public Collection<String> getDockerVolumes()
     {
         return _job.getDockerVolumes();

@@ -289,7 +289,7 @@ public class OrphanFilePipelineJob extends PipelineJob
             TableInfo dataTable = ExperimentService.get().getTinfoData();
             TableSelector ts = new TableSelector(dataTable, PageFlowUtil.set("RowId", "DataFileUrl"), dataFilter, null);
             final Map<URI, Set<Integer>> dataMap = new HashMap<>();
-            ts.forEach(new Selector.ForEachBlock<ResultSet>()
+            ts.forEach(new Selector.ForEachBlock<>()
             {
                 @Override
                 public void exec(ResultSet rs) throws SQLException

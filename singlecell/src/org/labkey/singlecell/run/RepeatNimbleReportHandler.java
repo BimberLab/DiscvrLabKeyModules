@@ -196,7 +196,7 @@ public class RepeatNimbleReportHandler extends AbstractParameterizedOutputHandle
                     {
                         throw new PipelineJobException(e);
                     }
-;                }
+                }
                 else
                 {
                     ctx.getLogger().debug("Plot file output exists, will not re-create");

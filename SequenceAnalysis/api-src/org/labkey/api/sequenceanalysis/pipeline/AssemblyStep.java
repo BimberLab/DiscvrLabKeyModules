@@ -3,7 +3,6 @@ package org.labkey.api.sequenceanalysis.pipeline;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
-import org.labkey.api.util.Pair;
 
 import java.io.File;
 

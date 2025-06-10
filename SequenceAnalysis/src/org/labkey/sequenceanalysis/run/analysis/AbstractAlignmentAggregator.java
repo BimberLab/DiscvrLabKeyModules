@@ -19,7 +19,6 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
 import org.labkey.sequenceanalysis.run.util.AASnp;
@@ -28,7 +27,6 @@ import org.labkey.sequenceanalysis.util.ReferenceLibraryHelperImpl;
 import org.labkey.sequenceanalysis.util.TranslatingReferenceSequence;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -320,7 +318,7 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
         _minDipQual = minDipQual;
     }
 
-    protected class CacheKeyInfo
+    protected static class CacheKeyInfo
     {
         private final String _refName;
         private final Integer _refPosition;

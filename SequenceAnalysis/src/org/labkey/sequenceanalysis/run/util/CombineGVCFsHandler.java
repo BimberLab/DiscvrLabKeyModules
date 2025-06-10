@@ -170,7 +170,7 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
                     }
                 }
 
-                wrapper.execute(genome.getWorkingFastaFile(), outputFile, options, vcfsToProcess.toArray(new File[vcfsToProcess.size()]));
+                wrapper.execute(genome.getWorkingFastaFile(), outputFile, options, vcfsToProcess.toArray(new File[0]));
             }
 
             if (!outputFile.exists())

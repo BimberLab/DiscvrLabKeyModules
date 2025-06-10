@@ -6,7 +6,6 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class AppendTcr extends AbstractRDiscvrStep

@@ -20,19 +20,15 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.util.FileType;
-import org.labkey.api.util.Pair;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by bimber on 11/3/2016.
@@ -153,7 +149,7 @@ public class SequenceConcatTask extends PipelineJob.Task<SequenceConcatTask.Fact
         {
             d.append(description);
         }
-        if (d.length() > 0)
+        if (!d.isEmpty())
         {
             d.append(", ");
         }

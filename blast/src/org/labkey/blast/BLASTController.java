@@ -88,7 +88,7 @@ public class BLASTController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class GetSettingsAction extends ReadOnlyApiAction<Object>
+    public static class GetSettingsAction extends ReadOnlyApiAction<Object>
     {
         @Override
         public ApiResponse execute(Object form, BindException errors)
@@ -104,7 +104,7 @@ public class BLASTController extends SpringActionController
     }
 
     @RequiresSiteAdmin
-    public class SetSettingsAction extends MutatingApiAction<SettingsForm>
+    public static class SetSettingsAction extends MutatingApiAction<SettingsForm>
     {
         @Override
         public ApiResponse execute(SettingsForm form, BindException errors)
@@ -150,7 +150,7 @@ public class BLASTController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class CreateDatabaseAction extends MutatingApiAction<DatabaseForm>
+    public static class CreateDatabaseAction extends MutatingApiAction<DatabaseForm>
     {
         @Override
         public ApiResponse execute(DatabaseForm form, BindException errors)
@@ -179,7 +179,7 @@ public class BLASTController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class RunBlastAction extends AbstractFileUploadAction<RunBlastForm>
+    public static class RunBlastAction extends AbstractFileUploadAction<RunBlastForm>
     {
         @Override
         protected void setContentType(HttpServletResponse response)
@@ -467,7 +467,7 @@ public class BLASTController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class RecreateDatabaseAction extends MutatingApiAction<RecreateDatabaseForm>
+    public static class RecreateDatabaseAction extends MutatingApiAction<RecreateDatabaseForm>
     {
         @Override
         public ApiResponse execute(RecreateDatabaseForm form, BindException errors)
@@ -530,7 +530,7 @@ public class BLASTController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class JobDetailsAction extends SimpleViewAction<BlastResultForm>
+    public static class JobDetailsAction extends SimpleViewAction<BlastResultForm>
     {
         @Override
         public ModelAndView getView(BlastResultForm form, BindException errors) throws Exception
@@ -571,7 +571,7 @@ public class BLASTController extends SpringActionController
 
     @RequiresPermission(ReadPermission.class)
     @IgnoresTermsOfUse
-    public class DownloadBlastResultsAction extends ExportAction<DownloadBlastResultsForm>
+    public static class DownloadBlastResultsAction extends ExportAction<DownloadBlastResultsForm>
     {
         @Override
         public void export(DownloadBlastResultsForm form, HttpServletResponse response, BindException errors) throws Exception

@@ -1,7 +1,6 @@
 package org.labkey.sequenceanalysis.model;
 
 import org.labkey.api.data.BeanObjectFactory;
-import org.labkey.api.data.ObjectFactory;
 
 /**
  * Created by bimber on 2/20/2015.

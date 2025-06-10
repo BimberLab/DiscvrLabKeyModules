@@ -299,10 +299,10 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
                 throw new PipelineJobException("Expected variant for AA position: " + aaName + " " + pos);
             }
 
-            Double depth;
-            Double alleleDepth;
-            Double af;
-            Double dp;
+            double depth;
+            double alleleDepth;
+            double af;
+            double dp;
 
             List<String> ntPositions = new ArrayList<>();
             if (vcList.size() == 1)

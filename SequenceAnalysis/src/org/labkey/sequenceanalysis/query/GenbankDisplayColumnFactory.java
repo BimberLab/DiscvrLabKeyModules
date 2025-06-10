@@ -6,12 +6,7 @@ import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.util.LinkBuilder;
-import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.util.URLHelper;
 import org.labkey.api.writer.HtmlWriter;
-
-import java.io.IOException;
-import java.io.Writer;
 
 /**
  * Created by bimber on 2/8/2017.

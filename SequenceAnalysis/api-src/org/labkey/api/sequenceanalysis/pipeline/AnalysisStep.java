@@ -31,7 +31,6 @@ public interface AnalysisStep extends PipelineStep
     /**
      * Optional.  Allows this analysis to gather any information from the server required to execute the analysis.  This information needs to be serialized
      * to run remotely, which could be as simple as writing to a text file.
-     * @throws PipelineJobException
      */
     default void init(SequenceAnalysisJobSupport support) throws PipelineJobException
     {

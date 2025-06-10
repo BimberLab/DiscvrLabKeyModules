@@ -16,7 +16,6 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.util.Pair;
 
 import java.io.File;
@@ -34,15 +33,11 @@ public interface PipelineStepOutput extends PipelineOutputTracker
 {
     /**
      * Add an experiment input to this pipeline step
-     * @param input
-     * @param role
      */
     void addInput(File input, String role);
 
     /**
      * Add an experiment output to this pipeline step
-     * @param output
-     * @param role
      */
     void addOutput(File output, String role);
 
@@ -65,8 +60,6 @@ public interface PipelineStepOutput extends PipelineOutputTracker
     /**
      * Add an intermediate file.  If the user selected 'delete intermediates', this will be deleted on job success.
      * This will also be recorded as a step output with this role.
-     * @param file
-     * @param role
      */
     void addIntermediateFile(File file, String role);
 

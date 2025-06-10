@@ -18,7 +18,7 @@ public class JBrowseFieldDescriptor {
     private List<String> _allowableValues = null;
     private boolean _isHidden = false;
     private String _colWidth = null;
-    private Integer _orderKey = 8;
+    private Integer _orderKey;
 
     // NOTE: this should support "jexl:xxxxxx" syntax, like other JBrowse formatting
     private String _formatString = null;

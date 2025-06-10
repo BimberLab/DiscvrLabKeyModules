@@ -375,7 +375,7 @@ public class BlastJob implements Serializable
                 }
             }
 
-            class Alignment
+            static class Alignment
             {
                 final int qLength;
                 final int sLength;

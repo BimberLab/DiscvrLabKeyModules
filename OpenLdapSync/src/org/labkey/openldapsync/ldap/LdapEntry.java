@@ -75,8 +75,8 @@ public class LdapEntry
 
         try
         {
-            Integer value = Integer.parseInt(a);
-            return (value.intValue() & 2) == 0;
+            int value = Integer.parseInt(a);
+            return (value & 2) == 0;
         }
         catch (NumberFormatException e)
         {

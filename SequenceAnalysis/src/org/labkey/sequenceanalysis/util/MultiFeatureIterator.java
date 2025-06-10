@@ -34,7 +34,7 @@ public class MultiFeatureIterator<TYPE extends Feature> implements AutoCloseable
 
         for (FeatureReader<TYPE> reader : readers)
         {
-            _queue.add(new ComparableFeatureIterator<TYPE>(reader.iterator(), comparator));
+            _queue.add(new ComparableFeatureIterator<>(reader.iterator(), comparator));
         }
     }
 
@@ -52,7 +52,7 @@ public class MultiFeatureIterator<TYPE extends Feature> implements AutoCloseable
 
         for (final Iterator<TYPE> iterator : _iterators)
         {
-            addIfNotEmpty(new ComparableFeatureIterator<TYPE>(iterator, _comparator));
+            addIfNotEmpty(new ComparableFeatureIterator<>(iterator, _comparator));
         }
 
         _initialized = true;

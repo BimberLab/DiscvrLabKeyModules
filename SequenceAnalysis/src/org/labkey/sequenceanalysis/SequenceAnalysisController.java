@@ -311,7 +311,7 @@ public class SequenceAnalysisController extends SpringActionController
                 }
             }
 
-            if (files.size() == 0)
+            if (files.isEmpty())
             {
                 return HtmlView.of("Error: either no files provided or the files did not exist on the server");
             }
@@ -1100,7 +1100,7 @@ public class SequenceAnalysisController extends SpringActionController
                     }
                 }
 
-                if (datas.size() > 0)
+                if (!datas.isEmpty())
                 {
                     for (ExpData d : datas)
                     {
@@ -2910,7 +2910,7 @@ public class SequenceAnalysisController extends SpringActionController
                 public void exec(ResultSet object) throws SQLException
                 {
                     Results rs = new ResultsImpl(object, cols);
-                    Integer rowId = rs.getInt(FieldKey.fromString("rowid"));
+                    int rowId = rs.getInt(FieldKey.fromString("rowid"));
                     String header = se.eval(rs.getFieldKeyRowMap());
                     RefNtSequenceModel model = new RefNtSequenceModel();
                     if (rs.getObject(FieldKey.fromString("sequenceFile")) != null)
@@ -2920,7 +2920,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                     try
                     {
-                        if (intervalMap.has(rowId.toString()))
+                        if (intervalMap.has(Integer.toString(rowId)))
                         {
                             String wholeSequence = model.getSequence();
                             if (wholeSequence == null)
@@ -2929,7 +2929,7 @@ public class SequenceAnalysisController extends SpringActionController
                                 return;
                             }
 
-                            for (String t : intervalMap.getString(rowId.toString()).split(","))
+                            for (String t : intervalMap.getString(Integer.toString(rowId)).split(","))
                             {
                                 String[] coordinates = t.split("-");
                                 if (coordinates.length != 2)
@@ -3396,7 +3396,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
         }
 
-        if (resourceSettings.length() > 0)
+        if (!resourceSettings.isEmpty())
         {
             JSONObject json = new JSONObject();
             json.put("name", "resourceSettings");
@@ -4487,9 +4487,9 @@ public class SequenceAnalysisController extends SpringActionController
 
         private static SequenceMatch doCheck(String name, String seq, String refSeq, RefNtSequenceModel match, DNASequence fastaSequence, boolean isRC)
         {
-            boolean sequencesMatch = refSeq.length() > 0 && seq.length() > 0 && seq.equals(refSeq);
-            boolean fastaSequenceIsSubsetOfReference = refSeq.length() > 0 && seq.length() > 0 && refSeq.contains(seq);
-            boolean referenceSequenceIsSubsetOfFasta = refSeq.length() > 0 && seq.length() > 0 && seq.contains(refSeq);
+            boolean sequencesMatch = !refSeq.isEmpty() && !seq.isEmpty() && seq.equals(refSeq);
+            boolean fastaSequenceIsSubsetOfReference = !refSeq.isEmpty() && !seq.isEmpty() && refSeq.contains(seq);
+            boolean referenceSequenceIsSubsetOfFasta = !refSeq.isEmpty() && !seq.isEmpty() && seq.contains(refSeq);
 
             if (name.equals(match.getName()) || sequencesMatch || fastaSequenceIsSubsetOfReference || referenceSequenceIsSubsetOfFasta)
             {

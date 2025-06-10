@@ -71,8 +71,6 @@ public class TranslatingReferenceSequence
 
     /**
      *
-     * @param readSnps
-     * @return
      */
     public List<AASnp> translateSnpsForRead(Map<Integer, List<NTSnp>> readSnps)
     {
@@ -233,7 +231,7 @@ public class TranslatingReferenceSequence
                     StringBuilder codon = new StringBuilder();
 
                     //to track the SNPs that comprise this codon, 0-based
-                    Map<Integer, NTSnp> snpMap = new HashMap<Integer, NTSnp>();
+                    Map<Integer, NTSnp> snpMap = new HashMap<>();
                     Integer positionInCodon = null; //0-based
                     for (Integer p : positions) //1-based
                     {
@@ -242,7 +240,7 @@ public class TranslatingReferenceSequence
                         {
                             StringBuilder thisSegment = new StringBuilder();
                             int positionInSegment = 0;
-                            Map<Integer, NTSnp> snpMapForSegment = new HashMap<Integer, NTSnp>(); //0-based
+                            Map<Integer, NTSnp> snpMapForSegment = new HashMap<>(); //0-based
 
                             //force sorting by idx
                             List<NTSnp> otherSnps = readSnps.get(position);
@@ -300,7 +298,7 @@ public class TranslatingReferenceSequence
                     assert positionInCodon != null;
                     if (codon.length() <= 4)
                     {
-                        List<NTSnp> snpList = new ArrayList<NTSnp>(snpMap.values());
+                        List<NTSnp> snpList = new ArrayList<>(snpMap.values());
                         snps.add(new AASnp(pi, model, aaPosInProtein, 0, codon.toString(), frame, snpList, _nt.getSequenceBases()));
                     }
                     else
@@ -309,7 +307,7 @@ public class TranslatingReferenceSequence
                         int start = aaInsertIndex * 3;
                         int stop = (codon.length() - start) <= 4 ? codon.length() : start + 3;
                         String tmpCodon = codon.substring(start, stop);
-                        List<NTSnp> snpList = new ArrayList<NTSnp>();
+                        List<NTSnp> snpList = new ArrayList<>();
                         for (int j = start; j<stop; j++)
                         {
                             if (snpMap.containsKey(j))

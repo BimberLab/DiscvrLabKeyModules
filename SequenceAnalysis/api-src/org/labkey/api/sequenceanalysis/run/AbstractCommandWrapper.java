@@ -43,7 +43,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
 {
     private File _outputDir = null;
     private File _workingDir = null;
-    private Logger _log = null;
+    private Logger _log;
     private Level _logLevel = Level.DEBUG;
     private boolean _warnNonZeroExits = true;
     private boolean _throwNonZeroExits = true;
@@ -221,7 +221,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
             // If the command has a path, then prepend its parent directory to the PATH
             // environment variable as well.
             String exePath = pb.command().get(0);
-            if (exePath != null && !"".equals(exePath) && exePath.indexOf(File.separatorChar) != -1)
+            if (exePath != null && !exePath.isEmpty() && exePath.indexOf(File.separatorChar) != -1)
             {
                 File fileExe = new File(exePath);
                 String exeDir = fileExe.getParent();

@@ -510,17 +510,17 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
     public Set<Class> getIntegrationTests()
     {
         @SuppressWarnings({"unchecked"})
-        Set<Class> testClasses = new HashSet<Class>(Arrays.asList(
-            Barcoder.TestCase.class,
-            BamIterator.TestCase.class,
-            SequenceIntegrationTests.SequenceImportPipelineTestCase.class,
-            //SequenceIntegrationTests.SequenceAnalysisPipelineTestCase3.class,
-            SequenceIntegrationTests.SequenceAnalysisPipelineTestCase1.class,
-            SequenceIntegrationTests.SequenceAnalysisPipelineTestCase2.class,
-            OutputIntegrationTests.VariantProcessingTest.class,
-            SequenceRemoteIntegrationTests.class,
-            SequenceTriggerHelper.TestCase.class,
-            SequencePipelineServiceImpl.TestCase.class
+        Set<Class> testClasses = new HashSet<>(Arrays.asList(
+                Barcoder.TestCase.class,
+                BamIterator.TestCase.class,
+                SequenceIntegrationTests.SequenceImportPipelineTestCase.class,
+                //SequenceIntegrationTests.SequenceAnalysisPipelineTestCase3.class,
+                SequenceIntegrationTests.SequenceAnalysisPipelineTestCase1.class,
+                SequenceIntegrationTests.SequenceAnalysisPipelineTestCase2.class,
+                OutputIntegrationTests.VariantProcessingTest.class,
+                SequenceRemoteIntegrationTests.class,
+                SequenceTriggerHelper.TestCase.class,
+                SequencePipelineServiceImpl.TestCase.class
         ));
 
         return testClasses;

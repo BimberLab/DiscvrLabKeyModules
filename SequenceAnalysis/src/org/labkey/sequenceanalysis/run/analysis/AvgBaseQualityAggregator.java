@@ -48,7 +48,7 @@ public class AvgBaseQualityAggregator
     private final File _bai;
     private final File _ref;
     private Map<Integer, Map<String, Double>> _quals = null;
-    private List<SamRecordFilter> _filters = null;
+    private List<SamRecordFilter> _filters;
 
     public AvgBaseQualityAggregator(Logger log, File bam, File refFasta) throws FileNotFoundException
     {

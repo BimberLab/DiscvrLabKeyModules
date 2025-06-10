@@ -14,7 +14,6 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.view.ActionURL;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -100,7 +99,7 @@ public class JBrowseSequenceOutputHandler implements SequenceOutputHandler<Seque
         return false;
     }
 
-    public class Processor implements SequenceOutputProcessor
+    public static class Processor implements SequenceOutputProcessor
     {
         @Override
         public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException

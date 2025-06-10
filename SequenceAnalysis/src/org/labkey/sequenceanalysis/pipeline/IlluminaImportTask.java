@@ -49,7 +49,6 @@ import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -130,7 +129,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         String prefix = job.getParameters().get("fastqPrefix");
 
         List<File> inputFiles = getSupport().getInputFiles();
-        if (inputFiles.size() == 0)
+        if (inputFiles.isEmpty())
             throw new PipelineJobException("No input files");
 
         DbSchema schema = SequenceAnalysisSchema.getInstance().getSchema();
@@ -336,7 +335,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
             Map<String, Integer> sampleMap = new HashMap<>();
             sampleMap.put("S0", 0); //placeholder for control and unmapped reads
 
-            Boolean inSamples = false;
+            boolean inSamples = false;
             int sampleIdx = 0;
             while ((nextLine = reader.readNext()) != null)
             {

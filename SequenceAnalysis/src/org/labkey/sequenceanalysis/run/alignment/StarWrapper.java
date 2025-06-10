@@ -405,15 +405,15 @@ public class StarWrapper extends AbstractCommandWrapper
                         getPipelineCtx().getLogger().info("reference has " + refNumber + " contigs, adjusting parameters");
                         getPipelineCtx().getLogger().info("genome length: " + genomeLength);
 
-                        Double scale = Math.min(18.0, (Math.log((genomeLength / refNumber)) / Math.log(2)));
+                        double scale = Math.min(18.0, (Math.log((genomeLength / refNumber)) / Math.log(2)));
                         args.add("--genomeChrBinNbits");
-                        args.add(String.valueOf(scale.intValue()));
+                        args.add(String.valueOf((int) scale));
                     }
 
                     //and small genomes may require this
-                    Double genomeSAindexNbases = Math.min(14.0, ((Math.log(genomeLength) / Math.log(2)) / 2) - 1);
+                    double genomeSAindexNbases = Math.min(14.0, ((Math.log(genomeLength) / Math.log(2)) / 2) - 1);
                     args.add("--genomeSAindexNbases");
-                    args.add(String.valueOf(genomeSAindexNbases.intValue()));
+                    args.add(String.valueOf((int) genomeSAindexNbases));
                 }
                 catch (IOException e)
                 {

@@ -22,7 +22,6 @@ import htsjdk.samtools.fastq.FastqReader;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileType;
@@ -133,7 +132,7 @@ public class IlluminaFastqSplitter<SampleIdType>
                             FastqRecord fq = reader.next();
                             String header = fq.getReadHeader();
                             IlluminaReadHeader parsedHeader = new IlluminaReadHeader(header);
-                            String illuminaSampleId = null;
+                            String illuminaSampleId;
                             if (parsedHeader.getIndexSequenceString() != null)
                             {
                                 illuminaSampleId = parsedHeader.getIndexSequenceString();

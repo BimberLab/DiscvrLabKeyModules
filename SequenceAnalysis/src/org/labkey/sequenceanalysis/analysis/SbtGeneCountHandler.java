@@ -17,7 +17,6 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 

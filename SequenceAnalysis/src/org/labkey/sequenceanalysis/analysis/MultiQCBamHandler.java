@@ -20,7 +20,6 @@ import org.labkey.sequenceanalysis.run.MultiQcRunner;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;

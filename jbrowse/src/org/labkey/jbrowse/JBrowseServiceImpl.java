@@ -178,10 +178,6 @@ public class JBrowseServiceImpl extends JBrowseService
     }
 
     /***
-     * @param groupName
-     * @param u
-     * @param c
-     * @return
      */
     public List<String> resolveGroups(String trackId, String groupName, User u, Container c)
     {

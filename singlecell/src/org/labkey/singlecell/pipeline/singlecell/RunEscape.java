@@ -7,7 +7,6 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 public class RunEscape extends AbstractCellMembraneStep
 {

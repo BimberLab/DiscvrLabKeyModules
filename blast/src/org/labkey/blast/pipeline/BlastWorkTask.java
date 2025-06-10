@@ -25,7 +25,6 @@ import org.labkey.api.util.FileType;
 import org.labkey.blast.BLASTWrapper;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 

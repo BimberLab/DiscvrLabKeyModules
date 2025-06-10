@@ -23,7 +23,6 @@ import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -65,7 +64,7 @@ public class AlignmentAnalysisJob extends SequenceJob
         List<AlignmentAnalysisJob> ret = new ArrayList<>();
         for (int i=0;i<analysisIds.length();i++)
         {
-            Integer analysisId = analysisIds.getInt(i);
+            int analysisId = analysisIds.getInt(i);
             AnalysisModelImpl model = AnalysisModelImpl.getFromDb(analysisId, u);
             if (model == null)
             {

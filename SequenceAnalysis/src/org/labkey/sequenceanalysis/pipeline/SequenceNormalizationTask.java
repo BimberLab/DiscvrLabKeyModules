@@ -156,7 +156,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
     {
         SequencePipelineSettings settings = new SequencePipelineSettings(job.getParameters());
 
-        return settings.isRunFastqc() || getFilesToNormalize(job, ((FileAnalysisJobSupport) job).getInputFiles(), true).size() > 0;
+        return settings.isRunFastqc() || !getFilesToNormalize(job, ((FileAnalysisJobSupport) job).getInputFiles(), true).isEmpty();
     }
 
     private ReadsetImportJob getPipelineJob()
@@ -517,7 +517,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                         }
                     }
 
-                    if (outputs.size() > 0)
+                    if (!outputs.isEmpty())
                     {
                         for (FileGroup.FilePair fp : fg.filePairs)
                         {
@@ -772,7 +772,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             barcoder.setCreateDetailedLog(true);
         }
 
-        if (getBarcodeGroupsToScan(getHelper().getSettings()).size() > 0)
+        if (!getBarcodeGroupsToScan(getHelper().getSettings()).isEmpty())
             barcoder.setScanAll(true);
 
         return barcoder;
@@ -887,7 +887,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         workingDir.mkdirs();
 
         FileType gz = new FileType("gz");
-        File output = null;
+        File output;
         //NOTE: if the file is ASCII33 FASTQ, it should not reach this stage, unless we're doing barcoding or merging
         if (type.equals(SequenceUtil.FILETYPE.fastq))
         {

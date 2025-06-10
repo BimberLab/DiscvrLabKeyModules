@@ -56,7 +56,7 @@ public interface TaskFileManager extends PipelineOutputTracker
 
     boolean isDeleteIntermediateFiles();
 
-    public boolean performCleanupAfterEachStep();
+    boolean performCleanupAfterEachStep();
 
     boolean isCopyInputsLocally();
 

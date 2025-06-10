@@ -5,7 +5,6 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**

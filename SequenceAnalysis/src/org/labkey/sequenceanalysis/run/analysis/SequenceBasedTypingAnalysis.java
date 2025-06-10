@@ -35,7 +35,6 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
-import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
@@ -184,7 +183,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                 log.info("writing lineage map file");
                 SQLFragment sql = new SQLFragment("SELECT r.name, r.lineage FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES + " r WHERE r.rowid IN (SELECT ref_nt_id FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS + " WHERE library_id = ?)", genome.getGenomeId());
                 SqlSelector ss = new SqlSelector(DbScope.getLabKeyScope(), sql);
-                ss.forEach(new Selector.ForEachBlock<ResultSet>()
+                ss.forEach(new Selector.ForEachBlock<>()
                 {
                     @Override
                     public void exec(ResultSet rs) throws SQLException

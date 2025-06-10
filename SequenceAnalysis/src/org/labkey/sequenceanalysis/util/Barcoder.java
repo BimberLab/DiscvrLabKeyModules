@@ -35,7 +35,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -277,7 +276,7 @@ public class Barcoder extends AbstractSequenceMatcher
             _logger.info("\tNo matches found");
         }
 
-        if (_otherMatches.size() > 0)
+        if (!_otherMatches.isEmpty())
         {
             _logger.info("Reads Not Matching A Readset:");
             for (String key : _otherMatches.keySet())
@@ -657,13 +656,13 @@ public class Barcoder extends AbstractSequenceMatcher
                     String mid5 = readname[0].split("-")[0];
                     String mid3 = readname[1].split("-")[0];
 
-                    Integer editDist5 = Integer.parseInt(readname[0].split("-")[1].substring(0, 1));
-                    Integer offset5 = Integer.parseInt(readname[0].split("-")[1].substring(1, 2));
-                    Integer deletion5 = Integer.parseInt(readname[0].split("-")[1].substring(2, 3));
+                    int editDist5 = Integer.parseInt(readname[0].split("-")[1].substring(0, 1));
+                    int offset5 = Integer.parseInt(readname[0].split("-")[1].substring(1, 2));
+                    int deletion5 = Integer.parseInt(readname[0].split("-")[1].substring(2, 3));
 
-                    Integer editDist3 = Integer.parseInt(readname[1].split("-")[1].substring(0, 1));
-                    Integer offset3 = Integer.parseInt(readname[1].split("-")[1].substring(1, 2));
-                    Integer deletion3 = Integer.parseInt(readname[1].split("-")[1].substring(2, 3));
+                    int editDist3 = Integer.parseInt(readname[1].split("-")[1].substring(0, 1));
+                    int offset3 = Integer.parseInt(readname[1].split("-")[1].substring(1, 2));
+                    int deletion3 = Integer.parseInt(readname[1].split("-")[1].substring(2, 3));
 
                     boolean shouldFindMid5 = editDist5 <= editDistance && offset5 <= offset && deletion5 <= deletions;
 
@@ -672,8 +671,8 @@ public class Barcoder extends AbstractSequenceMatcher
                     Assert.assertEquals("Incorrect 5' barcode on line: " + lineNum, (shouldFindMid5 ? mid5 : ""), line[2]);
                     Assert.assertEquals("Incorrect 3' barcode on line: " + lineNum, (shouldFindMid3 ? mid3 : ""), line[3]);
 
-                    Assert.assertEquals("Incorrect 5' editDistance on line: " + lineNum, (shouldFindMid5 ? editDist5.toString() : ""), line[4]);
-                    Assert.assertEquals("Incorrect 3' editDistance on line: " + lineNum, (shouldFindMid3 ? editDist3.toString() : ""), line[5]);
+                    Assert.assertEquals("Incorrect 5' editDistance on line: " + lineNum, (shouldFindMid5 ? Integer.toString(editDist5) : ""), line[4]);
+                    Assert.assertEquals("Incorrect 3' editDistance on line: " + lineNum, (shouldFindMid3 ? Integer.toString(editDist3) : ""), line[5]);
 
                     Integer barcodeLength = 10; //all barcodes are 10bp in this test
 
@@ -768,7 +767,7 @@ public class Barcoder extends AbstractSequenceMatcher
                     names.add(rs.getBarcode3());
             }
 
-            return BarcodeModel.getByNames(names.toArray(new String[names.size()]));
+            return BarcodeModel.getByNames(names.toArray(new String[0]));
         }
 
         private List<Readset> getReadsets()

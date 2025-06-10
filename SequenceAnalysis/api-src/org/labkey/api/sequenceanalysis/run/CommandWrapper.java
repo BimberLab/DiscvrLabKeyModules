@@ -30,8 +30,6 @@ public interface CommandWrapper
     /**
      *
      * @param params A list of params used to create the command.  This will be passed directly to ProcessBuilder()
-     * @return The output of this command.
-     * @throws PipelineJobException
      */
     void execute(List<String> params) throws PipelineJobException;
 

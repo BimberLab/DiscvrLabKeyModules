@@ -229,7 +229,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
             knownChrs.put(m.getName(), m.getName());
         }
 
-        SAMSequenceDictionary dict = null;
+        SAMSequenceDictionary dict;
         if (!genome.getSequenceDictionary().exists())
         {
             SequencePipelineService.get().ensureSequenceDictionaryExists(genome.getWorkingFastaFile(), getJob().getLogger(), false);
@@ -410,12 +410,12 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
                     try
                     {
                         String strPart = m.getName().toLowerCase().replaceAll("^chr", "");
-                        Integer number = Integer.parseInt(strPart);
-                        ret.put(number.toString(), Pair.of(m.getName(), 0));
+                        String number = Integer.toString(Integer.parseInt(strPart));
+                        ret.put(number, Pair.of(m.getName(), 0));
 
-                        if (strPart.length() != number.toString().length())
+                        if (strPart.length() != number.length())
                         {
-                            for (String t : Arrays.asList(number.toString(), StringUtils.leftPad(number.toString(), 2, "0")))
+                            for (String t : Arrays.asList(number, StringUtils.leftPad(number, 2, "0")))
                             {
                                 String i = "chr" + t;
                                 if (!i.equalsIgnoreCase(m.getName()))
@@ -435,8 +435,8 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
                 {
                     try
                     {
-                        Integer number = Integer.parseInt(m.getName());
-                        for (String t : Arrays.asList(number.toString(), StringUtils.leftPad(number.toString(), 2, "0")))
+                        String number = Integer.toString(Integer.parseInt(m.getName()));
+                        for (String t : Arrays.asList(number, StringUtils.leftPad(number, 2, "0")))
                         {
                             String i = "chr" + t;
                             ret.put(i, Pair.of(m.getName(), 0));

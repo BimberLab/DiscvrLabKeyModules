@@ -1,17 +1,13 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.WorkDirectory;
-import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
 /**
  * Created by bimber on 9/6/2014.

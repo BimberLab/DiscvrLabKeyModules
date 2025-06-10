@@ -113,7 +113,7 @@ public class TestCase extends Assert
 
     public static class TestRunner implements ClusterService.ClusterRemoteTask
     {
-        public long _sleep = 0l;
+        public long _sleep;
 
         public TestRunner(long sleep)
         {

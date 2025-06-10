@@ -74,7 +74,7 @@ public class MergeBamAlignmentWrapper extends PicardWrapper
             try (SamReader reader = fact.open(alignedBam))
             {
                 SAMFileHeader header = reader.getFileHeader();
-                if (header.getReadGroups().size() == 0)
+                if (header.getReadGroups().isEmpty())
                 {
                     getLogger().warn("No read groups found in input BAM");
                 }

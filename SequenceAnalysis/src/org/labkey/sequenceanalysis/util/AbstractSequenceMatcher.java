@@ -5,7 +5,6 @@ import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.model.SequenceTag;
 
@@ -223,7 +222,7 @@ abstract public class AbstractSequenceMatcher
                 }
                 i++;
 
-                if (matches5.size() > 0)
+                if (!matches5.isEmpty())
                     break;
             }
         }
@@ -240,7 +239,7 @@ abstract public class AbstractSequenceMatcher
                 }
                 i++;
 
-                if (matches5.size() > 0)
+                if (!matches5.isEmpty())
                     break;
             }
         }
@@ -280,7 +279,7 @@ abstract public class AbstractSequenceMatcher
                 }
                 i++;
 
-                if (matches3.size() > 0)
+                if (!matches3.isEmpty())
                     break;
             }
         }
@@ -297,7 +296,7 @@ abstract public class AbstractSequenceMatcher
                 }
                 i++;
 
-                if (matches3.size() > 0)
+                if (!matches3.isEmpty())
                     break;
             }
         }
@@ -306,7 +305,7 @@ abstract public class AbstractSequenceMatcher
     protected SequenceMatch findBestMatch(Map<Integer, Map<String, SequenceMatch>> matchesMap, Map<String, Integer> counter)
     {
         SequenceMatch bestMatch = null;
-        if (matchesMap.size() > 0)
+        if (!matchesMap.isEmpty())
         {
             //get the match w/ the lowest edit distance
             Map<String, SequenceMatch> matches = matchesMap.get(matchesMap.keySet().iterator().next());
@@ -335,7 +334,7 @@ abstract public class AbstractSequenceMatcher
         return _createSummaryLog ? _summaryLog : null;
     }
 
-    protected class SequenceMatch
+    protected static class SequenceMatch
     {
         private final FastqRecord _rec;
         private final SequenceTag _tag;

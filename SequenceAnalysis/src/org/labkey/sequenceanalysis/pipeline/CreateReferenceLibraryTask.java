@@ -62,7 +62,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -199,7 +198,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                 libraryRow.put("description", getPipelineJob().getLibraryDescription());
 
                 BatchValidationException errors = new BatchValidationException();
-                List<Map<String, Object>> inserted = libraryTable.getUpdateService().insertRows(getJob().getUser(), getJob().getContainer(), List.of(libraryRow), errors, null, new HashMap<String, Object>());
+                List<Map<String, Object>> inserted = libraryTable.getUpdateService().insertRows(getJob().getUser(), getJob().getContainer(), List.of(libraryRow), errors, null, new HashMap<>());
                 if (errors.hasErrors())
                 {
                     throw errors;
@@ -419,7 +418,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                 getJob().getLogger().info("updating database");
                 BatchValidationException errors = new BatchValidationException();
                 TableInfo libraryMembersTable = QueryService.get().getUserSchema(getJob().getUser(), getJob().getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS);
-                libraryMembersTable.getUpdateService().insertRows(getJob().getUser(), getJob().getContainer(), toInsert, errors, null, new HashMap<String, Object>());
+                libraryMembersTable.getUpdateService().insertRows(getJob().getUser(), getJob().getContainer(), toInsert, errors, null, new HashMap<>());
                 if (errors.hasErrors())
                 {
                     throw errors;

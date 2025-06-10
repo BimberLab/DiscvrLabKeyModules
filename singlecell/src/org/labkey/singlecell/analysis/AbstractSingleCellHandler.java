@@ -36,7 +36,6 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.AbstractSingleCellPipelineStep;
-import org.labkey.api.singlecell.pipeline.AbstractSingleCellStep;
 import org.labkey.api.singlecell.pipeline.SingleCellRawDataStep;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 import org.labkey.api.util.FileUtil;

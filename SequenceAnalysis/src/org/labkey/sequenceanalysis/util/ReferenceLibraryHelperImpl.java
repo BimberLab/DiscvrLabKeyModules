@@ -1,7 +1,6 @@
 package org.labkey.sequenceanalysis.util;
 
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
@@ -21,7 +20,7 @@ import java.util.Map;
 public class ReferenceLibraryHelperImpl implements ReferenceLibraryHelper
 {
     private final File _refFasta;
-    private Logger _log = null;
+    private Logger _log;
     private final Map<String, Integer> _cachedIds = new HashMap<>();
     private final Map<String, String> _cachedAccessions = new HashMap<>();
 

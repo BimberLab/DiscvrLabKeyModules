@@ -23,13 +23,11 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
-import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
-import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.TestContext;
@@ -149,7 +147,7 @@ public class OutputIntegrationTests
                 throw new RuntimeException("Problem creating pipeline job: " + responseJson.getString("exception"));
 
             JSONArray guidList = responseJson.getJSONArray("jobGUIDs");
-            assert guidList.length() >= 1;
+            assert !guidList.isEmpty();
 
             Set<PipelineJob> ret = new HashSet<>();
             for (int i = 0; i < guidList.length(); i++)

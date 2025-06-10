@@ -27,8 +27,6 @@ import org.labkey.test.categories.InDevelopment;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.*;
-
 @Category({InDevelopment.class})
 public class SingleCellTest extends BaseWebDriverTest
 {
@@ -41,7 +39,7 @@ public class SingleCellTest extends BaseWebDriverTest
     @BeforeClass
     public static void setupProject()
     {
-        SingleCellTest init = (SingleCellTest)getCurrentTest();
+        SingleCellTest init = getCurrentTest();
 
         init.doSetup();
     }

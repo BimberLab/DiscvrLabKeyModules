@@ -97,7 +97,7 @@ public class AASnp
                     _log.error("unable to translate string: " + _codon, e);
                 }
 
-                if (_residueString == null || "".equals(_residueString))
+                if (_residueString == null || _residueString.isEmpty())
                 {
                     _residueString = "*";
                 }

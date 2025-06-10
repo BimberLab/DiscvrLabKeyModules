@@ -152,7 +152,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
         @Override
         public Double getThreshold(PipelineContext ctx, int stepIdx)
         {
-            Double ret = 0.0;
+            double ret = 0.0;
             for (Pair<AbstractTrimmomaticProvider, Integer> provider : _providers)
             {
                 Double val = provider.first.getParameterByName(MIN_PCT_RETAINED).extractValue(ctx.getJob(), this, stepIdx, Double.class);
@@ -795,8 +795,8 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
                         }
                     }
 
-                    Double avgBasesTrimmed = totalReadsTrimmed == 0 ? 0 : (double)totalBasesTrimmed / (double)totalReadsTrimmed;
-                    Double avgReadLength = totalReadsTrimmed == 0 ? 0 : (double)totalLength / (double)totalReadsRetained;
+                    double avgBasesTrimmed = totalReadsTrimmed == 0 ? 0 : (double)totalBasesTrimmed / (double)totalReadsTrimmed;
+                    double avgReadLength = totalReadsTrimmed == 0 ? 0 : (double)totalLength / (double)totalReadsRetained;
                     Double pctRetained =(double)totalReadsRetained / totalInspected;
                     results.add(pctRetained);
                     StringBuilder summary = new StringBuilder();

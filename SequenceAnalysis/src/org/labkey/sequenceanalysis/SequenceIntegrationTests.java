@@ -509,7 +509,7 @@ public class SequenceIntegrationTests
                 throw new RuntimeException("Problem creating pipeline job: " + responseJson.getString("exception"));
 
             JSONArray guidList = responseJson.getJSONArray("jobGUIDs");
-            assert guidList.length() >= 1;
+            assert !guidList.isEmpty();
 
             Set<PipelineJob> ret = new HashSet<>();
             for (int i = 0; i < guidList.length(); i++)
@@ -763,7 +763,6 @@ public class SequenceIntegrationTests
         /**
          * This is the most basic test of readset import and creation.  A single FASTQ is provided, which can be normalized on the webserver
          * without external tools.
-         * @throws Exception
          */
         @Test
         public void basicTest() throws Exception
@@ -909,7 +908,7 @@ public class SequenceIntegrationTests
             waitForJobs(jobsUnsorted);
 
             List<PipelineJob> jobs = new ArrayList<>(jobsUnsorted);
-            Collections.sort(jobs, new Comparator<PipelineJob>()
+            Collections.sort(jobs, new Comparator<>()
             {
                 @Override
                 public int compare(PipelineJob o1, PipelineJob o2)
@@ -1005,7 +1004,6 @@ public class SequenceIntegrationTests
         /**
          * This test takes 2 input files: a FASTQ and an SFF.  The SFF should be converted to FASTQ, and the files merged into a single
          * FASTQ output.  This pipeline is configured to retain intermediate files.
-         * @throws Exception
          */
         @Test
         public void mergeTest() throws Exception
@@ -1022,7 +1020,6 @@ public class SequenceIntegrationTests
 
         /**
          * This is a variation on mergeTest, except intermediate files are deleting and input file are compressed.
-         * @throws Exception
          */
         @Test
         public void mergeTestDeletingIntermediates() throws Exception
@@ -1104,7 +1101,6 @@ public class SequenceIntegrationTests
 
         /**
          * This test uses a barcoded input
-         * @throws Exception
          */
         @Test
         public void barcodeTest() throws Exception
@@ -1151,7 +1147,6 @@ public class SequenceIntegrationTests
 
         /**
          * This is an extension of barcodeTest(), except intermediate files are deleted and inputs compressed
-         * @throws Exception
          */
         @Test
         public void barcodeTestDeletingIntermediates() throws Exception
@@ -1211,7 +1206,6 @@ public class SequenceIntegrationTests
 
         /**
          * This imports a readset from two paired end inputs
-         * @throws Exception
          */
         @Test
         public void pairedEndTest() throws Exception
@@ -1260,7 +1254,6 @@ public class SequenceIntegrationTests
 
         /**
          * An extension of pairedEndTest(), except input files are moved to the analysis folder
-         * @throws Exception
          */
         @Test
         public void pairedEndTestMovingInputs() throws Exception
@@ -1317,7 +1310,6 @@ public class SequenceIntegrationTests
 
         /**
          * An extension of pairedEndTest(), except input files are deleted on completion
-         * @throws Exception
          */
         @Test
         public void pairedEndTestDeletingInputs() throws Exception
@@ -1684,7 +1676,7 @@ public class SequenceIntegrationTests
                 }
             }
 
-            return files.toArray(new String[files.size()]);
+            return files.toArray(new String[0]);
         }
 
         protected void appendSamplesForAlignment(JSONObject config, List<SequenceReadsetImpl> readsets)
@@ -1818,6 +1810,7 @@ public class SequenceIntegrationTests
             doCleanup(PROJECT_NAME);
         }
 
+        @Override
         protected String getProjectName()
         {
             return PROJECT_NAME;

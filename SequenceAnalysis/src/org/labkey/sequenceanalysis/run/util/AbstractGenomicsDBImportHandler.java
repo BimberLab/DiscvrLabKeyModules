@@ -629,7 +629,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
                     }
 
                     Integer maxRam = SequencePipelineService.get().getMaxRam();
-                    Integer nativeMemoryBuffer = ctx.getParams().optInt("nativeMemoryBuffer", 0);
+                    int nativeMemoryBuffer = ctx.getParams().optInt("nativeMemoryBuffer", 0);
                     if (maxRam != null && nativeMemoryBuffer > 0)
                     {
                         ctx.getLogger().info("Adjusting RAM based on memory buffer (" + nativeMemoryBuffer + "), from: " + maxRam);

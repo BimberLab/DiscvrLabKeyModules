@@ -230,7 +230,7 @@ abstract public class AbstractCombineGeneCountsHandler extends AbstractParameter
         action.setStartTime(new Date());
 
         String name = params.getString("name");
-        Boolean doSkipGenesWithoutData = params.optBoolean("skipGenesWithoutData", false);
+        boolean doSkipGenesWithoutData = params.optBoolean("skipGenesWithoutData", false);
         ctx.getLogger().debug("skip genes without data: " + doSkipGenesWithoutData);
 
         int gtf = params.optInt("gtf");

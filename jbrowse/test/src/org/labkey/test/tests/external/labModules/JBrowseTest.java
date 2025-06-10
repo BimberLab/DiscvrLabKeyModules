@@ -1954,25 +1954,25 @@ public class JBrowseTest extends BaseWebDriverTest
             switch(elem.getAttribute("aria-colindex"))
             {
                 case "1":
-                    Assert.assertEquals(value, "1");
+                    Assert.assertEquals("1", value);
                     break;
                 case "2":
-                    Assert.assertEquals(value, "2");
+                    Assert.assertEquals("2", value);
                     break;
                 case "3":
-                    Assert.assertEquals(value, "A");
+                    Assert.assertEquals("A", value);
                     break;
                 case "4":
-                    Assert.assertEquals(value, "T");
+                    Assert.assertEquals("T", value);
                     break;
                 case "6":
-                    Assert.assertEquals(value, "0.029");
+                    Assert.assertEquals("0.029", value);
                     break;
                 case "7":
-                    Assert.assertEquals(value, "7.292");
+                    Assert.assertEquals("7.292", value);
                     break;
                 case "8":
-                    Assert.assertEquals(value, "HIGH");
+                    Assert.assertEquals("HIGH", value);
                     break;
             }
         }
@@ -1997,19 +1997,19 @@ public class JBrowseTest extends BaseWebDriverTest
         parentOfCaddScoreToggle.click();
 
         String colVisModelString = "%257B%2522contig%2522%253Atrue%252C%2522start%2522%253Atrue%252C%2522ref%2522%253Atrue%252C%2522alt%2522%253Atrue%252C%2522variableSamples%2522%253Atrue%252C%2522AF%2522%253Atrue%252C%2522CADD_PH%2522%253Atrue%252C%2522IMPACT%2522%253Atrue%257D";
-        Assert.assertEquals(getUrlParam("colVisModel"), colVisModelString);
+        Assert.assertEquals(colVisModelString, getUrlParam("colVisModel"));
 
         getDriver().navigate().refresh();
 
         waitForElement(TOP_ROW);
-        Assert.assertEquals(getUrlParam("colVisModel"), colVisModelString);
+        Assert.assertEquals(colVisModelString, getUrlParam("colVisModel"));
         testLuceneColumnSerializationFirstRow();
 
         waitAndClick(Locator.tagWithText("button", "Search"));
         waitAndClick(Locator.tagWithClass("button", "filter-form-select-button"));
 
         waitForElement(TOP_ROW);
-        Assert.assertEquals(getUrlParam("colVisModel"), colVisModelString);
+        Assert.assertEquals(colVisModelString, getUrlParam("colVisModel"));
         testLuceneColumnSerializationFirstRow();
     }
 }

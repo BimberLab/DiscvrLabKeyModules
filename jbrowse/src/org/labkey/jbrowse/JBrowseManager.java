@@ -48,7 +48,6 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.jbrowse.model.JBrowseSession;
-import org.labkey.jbrowse.model.JsonFile;
 import org.labkey.jbrowse.pipeline.JBrowseSessionPipelineJob;
 
 import java.io.File;
@@ -58,7 +57,6 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class JBrowseManager
 {
@@ -187,7 +185,7 @@ public class JBrowseManager
             throw new PipelineJobException("Unable to find expected folder: " + toolDir.getPath());
         }
 
-        File exe = null;
+        File exe;
         if (SystemUtils.IS_OS_WINDOWS)
         {
             exe = new File(toolDir, "cli-win.exe");

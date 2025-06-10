@@ -77,7 +77,7 @@ public class ChainFileValidator
             List<String> errors = new ArrayList<>();
             while ((line = reader.readLine()) != null)
             {
-                if (line.equals("") || line.startsWith("#"))
+                if (line.isEmpty() || line.startsWith("#"))
                 {
                     continue;
                 }
@@ -292,7 +292,7 @@ public class ChainFileValidator
         {
             final Map<String, String> cachedReferences = new CaseInsensitiveHashMap<>();
             SqlSelector ss = new SqlSelector(DbScope.getLabKeyScope(), new SQLFragment("SELECT r.rowid, r.name, r.genbank, r.refSeqId, r.aliases FROM sequenceanalysis.ref_nt_sequences r WHERE r.rowid IN (SELECT ref_nt_id FROM sequenceanalysis.reference_library_members m WHERE m.library_id = ?) ", genomeId));
-            ss.forEach(new Selector.ForEachBlock<ResultSet>()
+            ss.forEach(new Selector.ForEachBlock<>()
             {
                 @Override
                 public void exec(ResultSet rs) throws SQLException
@@ -340,16 +340,16 @@ public class ChainFileValidator
             TableSelector ts = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS), PageFlowUtil.set("ref_nt_id", "alias"), filter, null);
             if (ts.exists())
             {
-                ts.forEachResults(new Selector.ForEachBlock<Results>()
-               {
-                   @Override
-                   public void exec(Results rs) throws SQLException
-                   {
-                       String name = RefNtSequenceModel.getForRowId(rs.getInt(FieldKey.fromString("ref_nt_id"))).getName();
-                       String alias = rs.getString(FieldKey.fromString("alias"));
-                       cachedReferences.put(alias, name);
-                   }
-               });
+                ts.forEachResults(new Selector.ForEachBlock<>()
+                {
+                    @Override
+                    public void exec(Results rs) throws SQLException
+                    {
+                        String name = RefNtSequenceModel.getForRowId(rs.getInt(FieldKey.fromString("ref_nt_id"))).getName();
+                        String alias = rs.getString(FieldKey.fromString("alias"));
+                        cachedReferences.put(alias, name);
+                    }
+                });
             }
 
             _cachedReferencesByGenome.put(genomeId, cachedReferences);

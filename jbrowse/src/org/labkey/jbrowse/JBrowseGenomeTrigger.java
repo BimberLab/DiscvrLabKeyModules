@@ -3,7 +3,6 @@ package org.labkey.jbrowse;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.module.ModuleLoader;
-import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.GenomeTrigger;
 

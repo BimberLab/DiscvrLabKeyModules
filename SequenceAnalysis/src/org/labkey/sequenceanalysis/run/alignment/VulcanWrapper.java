@@ -20,7 +20,6 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 //// vulcan -i $FASTQ -clr -t 12 -r $REF -w $WORK_DIR -o $OUT_DIR/${OUT}.bam

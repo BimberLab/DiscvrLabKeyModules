@@ -105,7 +105,7 @@ public class BamHaplotypeHandler implements SequenceOutputHandler<SequenceOutput
         return false;
     }
 
-    public class Processor implements SequenceOutputProcessor
+    public static class Processor implements SequenceOutputProcessor
     {
         @Override
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException

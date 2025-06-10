@@ -1060,7 +1060,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         //NOTE: because we can initate runs on readsets from different containers, we cannot rely on dataDirectory() to be consistent
         //b/c inputs are always copied to the root of the analysis folder, we will use relative paths
         FileType gz = new FileType(".gz");
-        File unzipped = null;
+        File unzipped;
         if (gz.isType(i))
         {
             RecordedAction action = new RecordedAction(SequenceAlignmentTask.DECOMPRESS_ACTIONNAME);

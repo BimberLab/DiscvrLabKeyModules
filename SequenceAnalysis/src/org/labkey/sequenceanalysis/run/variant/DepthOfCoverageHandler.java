@@ -131,20 +131,20 @@ public class DepthOfCoverageHandler extends AbstractParameterizedOutputHandler<S
                 extraArgs.addAll(DepthOfCoverageWrapper.generateIntervalArgsForFullGenome(rg, intervalList));
             }
 
-            Integer mmq = ctx.getParams().optInt("mmq");
+            int mmq = ctx.getParams().optInt("mmq");
             if (mmq > 0)
             {
                 extraArgs.add("--read-filter");
                 extraArgs.add("MappingQualityReadFilter");
                 extraArgs.add("--minimum-mapping-quality");
-                extraArgs.add(mmq.toString());
+                extraArgs.add(Integer.toString(mmq));
             }
 
-            Integer mbq = ctx.getParams().optInt("mbq");
+            int mbq = ctx.getParams().optInt("mbq");
             if (mbq > 0)
             {
                 extraArgs.add("--min-base-quality");
-                extraArgs.add(mbq.toString());
+                extraArgs.add(Integer.toString(mbq));
             }
 
             extraArgs.add("--omit-locus-table");

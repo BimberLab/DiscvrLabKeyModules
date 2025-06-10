@@ -65,7 +65,7 @@ public class AASnpByReadAggregator extends AASnpByCodonAggregator
             highQualitySnpsByPos.put(pos, highQualitySnps);
         }
 
-        if (highQualitySnpsByPos.size() > 0)
+        if (!highQualitySnpsByPos.isEmpty())
         {
             for (AASnp snp : translateSnpsForRead(record, highQualitySnpsByPos))
             {

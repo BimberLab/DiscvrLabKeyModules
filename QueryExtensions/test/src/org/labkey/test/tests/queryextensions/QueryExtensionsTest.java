@@ -39,7 +39,7 @@ public class QueryExtensionsTest extends BaseWebDriverTest
     @BeforeClass
     public static void setupProject()
     {
-        QueryExtensionsTest init = (QueryExtensionsTest)getCurrentTest();
+        QueryExtensionsTest init = getCurrentTest();
 
         init.doSetup();
     }

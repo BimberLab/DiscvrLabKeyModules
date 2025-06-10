@@ -57,7 +57,7 @@ public class OpenLdapSyncController extends SpringActionController
     }
 
     @RequiresPermission(AdminOperationsPermission.class)
-    public class InitiateLdapSyncAction extends MutatingApiAction<InitiateLdapSyncForm>
+    public static class InitiateLdapSyncAction extends MutatingApiAction<InitiateLdapSyncForm>
     {
         @Override
         public ApiResponse execute(InitiateLdapSyncForm form, BindException errors) throws Exception
@@ -100,7 +100,7 @@ public class OpenLdapSyncController extends SpringActionController
     }
 
     @RequiresPermission(AdminPermission.class)
-    public class ListLdapGroupsAction extends ReadOnlyApiAction<LdapForm>
+    public static class ListLdapGroupsAction extends ReadOnlyApiAction<LdapForm>
     {
         @Override
         public ApiResponse execute(LdapForm form, BindException errors) throws Exception
@@ -495,7 +495,7 @@ public class OpenLdapSyncController extends SpringActionController
     }
 
     @RequiresPermission(AdminOperationsPermission.class)
-    public class TestLdapConnectionAction extends MutatingApiAction<Object>
+    public static class TestLdapConnectionAction extends MutatingApiAction<Object>
     {
         @Override
         public ApiResponse execute(Object form, BindException errors) throws Exception
@@ -545,7 +545,7 @@ public class OpenLdapSyncController extends SpringActionController
     }
 
     @RequiresPermission(AdminOperationsPermission.class)
-    public class GetLdapSettingsAction extends ReadOnlyApiAction<Object>
+    public static class GetLdapSettingsAction extends ReadOnlyApiAction<Object>
     {
         @Override
         public ApiResponse execute(Object form, BindException errors)
@@ -569,7 +569,7 @@ public class OpenLdapSyncController extends SpringActionController
 
     @Marshal(Marshaller.Jackson)
     @RequiresPermission(AdminOperationsPermission.class)
-    public class SetLdapSettingsAction extends MutatingApiAction<LdapForm>
+    public static class SetLdapSettingsAction extends MutatingApiAction<LdapForm>
     {
         @Override
         public ApiResponse execute(LdapForm form, BindException errors)
@@ -668,7 +668,7 @@ public class OpenLdapSyncController extends SpringActionController
             if (form.getSyncMode() != null)
                 props.put(LdapSettings.SYNC_MODE_PROP, form.getSyncMode());
 
-            if (form.getAllowedDn() != null && form.getAllowedDn().length() > 0)
+            if (form.getAllowedDn() != null && !form.getAllowedDn().isEmpty())
             {
                 String allowed = StringUtils.join(form.getAllowedDn().toList(), LdapSettings.DELIM);
                 props.put(LdapSettings.ALLOWED_DN_PROP, allowed);

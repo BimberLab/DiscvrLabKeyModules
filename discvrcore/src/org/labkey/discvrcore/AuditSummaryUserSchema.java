@@ -236,13 +236,13 @@ public class AuditSummaryUserSchema extends SimpleUserSchema
             TableInfo qa = QueryService.get().getUserSchema(TestContext.get().getUser(), c, NAME).getTable(DATASET_AUDIT);
 
             TableSelector ts1 = new TableSelector(qa, PageFlowUtil.set("primaryKey"));
-            assertEquals("Incorrect row count", ts1.getRowCount(), 2L);
+            assertEquals("Incorrect row count", 2L, ts1.getRowCount());
 
             assertEquals("Incorrect PK", new TableSelector(qa, PageFlowUtil.set("primaryKey"), new SimpleFilter(FieldKey.fromString("Comment"), "inserted", CompareType.CONTAINS).addCondition(FieldKey.fromString("DatasetId"), d1.getDatasetId()), null).getObject(String.class), guid1);
-            assertEquals("Incorrect PK", new TableSelector(qa, PageFlowUtil.set("primaryKey"), new SimpleFilter(FieldKey.fromString("Comment"), "inserted", CompareType.CONTAINS).addCondition(FieldKey.fromString("DatasetId"), d2.getDatasetId()), null).getObject(String.class), "P1");
+            assertEquals("Incorrect PK", "P1", new TableSelector(qa, PageFlowUtil.set("primaryKey"), new SimpleFilter(FieldKey.fromString("Comment"), "inserted", CompareType.CONTAINS).addCondition(FieldKey.fromString("DatasetId"), d2.getDatasetId()), null).getObject(String.class));
 
             assertEquals("Incorrect PK", new TableSelector(qa, PageFlowUtil.set("primaryKey"), new SimpleFilter(FieldKey.fromString("Comment"), "inserted", CompareType.CONTAINS).addCondition(FieldKey.fromString("DatasetId/Name"), d1.getName()), null).getObject(String.class), guid1);
-            assertEquals("Incorrect PK", new TableSelector(qa, PageFlowUtil.set("primaryKey"), new SimpleFilter(FieldKey.fromString("Comment"), "inserted", CompareType.CONTAINS).addCondition(FieldKey.fromString("DatasetId/Name"), d2.getName()), null).getObject(String.class), "P1");
+            assertEquals("Incorrect PK", "P1", new TableSelector(qa, PageFlowUtil.set("primaryKey"), new SimpleFilter(FieldKey.fromString("Comment"), "inserted", CompareType.CONTAINS).addCondition(FieldKey.fromString("DatasetId/Name"), d2.getName()), null).getObject(String.class));
 
             t1.getUpdateService().deleteRows(TestContext.get().getUser(), c, Collections.singletonList(new CaseInsensitiveHashMap<>(Map.of("ObjectId", guid1))), null, null);
             assertEquals("Incorrect PK", new TableSelector(qa, PageFlowUtil.set("primaryKey"), new SimpleFilter(FieldKey.fromString("Comment"), "deleted", CompareType.CONTAINS), null).getObject(String.class), guid1);
@@ -251,7 +251,7 @@ public class AuditSummaryUserSchema extends SimpleUserSchema
             User reader = getReaderUser(true);
             qa = QueryService.get().getUserSchema(reader, c, NAME).getTable(DATASET_AUDIT);
             assertEquals("Incorrect PK", new TableSelector(qa, PageFlowUtil.set("primaryKey"), new SimpleFilter(FieldKey.fromString("Comment"), "inserted", CompareType.CONTAINS).addCondition(FieldKey.fromString("DatasetId/Name"), d1.getName()), null).getObject(String.class), guid1);
-            assertEquals("Incorrect PK", new TableSelector(qa, PageFlowUtil.set("primaryKey"), new SimpleFilter(FieldKey.fromString("Comment"), "inserted", CompareType.CONTAINS).addCondition(FieldKey.fromString("DatasetId/Name"), d2.getName()), null).getObject(String.class), "P1");
+            assertEquals("Incorrect PK", "P1", new TableSelector(qa, PageFlowUtil.set("primaryKey"), new SimpleFilter(FieldKey.fromString("Comment"), "inserted", CompareType.CONTAINS).addCondition(FieldKey.fromString("DatasetId/Name"), d2.getName()), null).getObject(String.class));
         }
 
         @AfterClass

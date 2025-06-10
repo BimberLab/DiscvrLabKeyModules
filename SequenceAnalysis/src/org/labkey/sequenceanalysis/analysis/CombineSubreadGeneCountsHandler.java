@@ -76,7 +76,7 @@ public class CombineSubreadGeneCountsHandler extends AbstractCombineGeneCountsHa
 
                     results.distinctGenes.add(geneId);
 
-                    Double count = Double.parseDouble(cells[6]);
+                    double count = Double.parseDouble(cells[6]);
 
                     Map<String, Double> countMap = results.counts.get(so.getRowid());
                     if (countMap == null)

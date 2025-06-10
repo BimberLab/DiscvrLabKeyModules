@@ -20,7 +20,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.labkey.api.view.template.ClientDependency;
 
-import java.lang.reflect.ParameterizedType;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -39,7 +38,7 @@ abstract public class AbstractPipelineStepProvider<StepType extends PipelineStep
     private final String _websiteURL;
     private final String _description;
     private final LinkedHashSet<String> _clientDependencyPaths;
-    private List<ToolParameterDescriptor> _parameters;
+    private final List<ToolParameterDescriptor> _parameters;
 
     public AbstractPipelineStepProvider(String name, String label, @Nullable String toolName, String description, @Nullable List<ToolParameterDescriptor> parameters, @Nullable Collection<String> clientDependencyPaths, @Nullable String websiteURL)
     {

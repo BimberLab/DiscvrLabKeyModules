@@ -32,7 +32,6 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -123,8 +122,8 @@ public class SnpCountAnalysis extends AbstractPipelineStep implements AnalysisSt
                 }
 
                 String refName = m.group(1);
-                Integer start = Integer.parseInt(m.group(2));
-                Integer stop = Integer.parseInt(m.group(3));
+                int start = Integer.parseInt(m.group(2));
+                int stop = Integer.parseInt(m.group(3));
 
                 getPipelineCtx().getLogger().info("calculating bases over " + refName + ": " + start + "-" + stop);
                 calculateForInterval(writer, inputBam, indexFile, indexedFastaSequenceFile, inputBam.getName(), rs.getName(), refName, start, stop);

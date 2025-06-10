@@ -22,7 +22,6 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.reader.Readers;
-import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
@@ -313,7 +312,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                 if (ctx.getParams().optBoolean("useGEX", false))
                 {
                     description = description + "\n" + "HTO and GEX Counts";
-                };
+                }
                 output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x " + rs.getApplication() + " Summary", "10x Run Summary", rs.getRowId(), null, null, description);
 
                 File rawCounts = new File(outsdir, "raw_feature_bc_matrix/matrix.mtx.gz");

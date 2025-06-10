@@ -164,7 +164,7 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
 
             if (depth != null && !info.getReadResidue().equals(":"))
             {
-                Double adj_depth = info.calculateNtDepth(true);
+                double adj_depth = info.calculateNtDepth(true);
                 double pct = depth == 0 ? 0 : ((double) readCount / adj_depth ) * 100.0;
                 row.put("adj_depth", adj_depth);
                 row.put("pct", pct);
@@ -322,7 +322,7 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
             String ntPosString = snp.getNtPositionString();
             if (!_readnamesByPos.containsKey(ntPosString))
             {
-                _readnamesByPos.put(ntPosString, new HashSet<String>());
+                _readnamesByPos.put(ntPosString, new HashSet<>());
             }
 
             if (_readnamesByPos.get(ntPosString).contains(snp.getNtSnp().getReadname()))

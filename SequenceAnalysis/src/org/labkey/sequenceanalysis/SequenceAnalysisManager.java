@@ -82,7 +82,6 @@ import java.io.InputStream;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -162,7 +161,7 @@ public class SequenceAnalysisManager
         {
             _platforms = new ArrayList<>();
             TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_SEQUENCE_PLATFORMS));
-            ts.forEach(new TableSelector.ForEachBlock<ResultSet>()
+            ts.forEach(new TableSelector.ForEachBlock<>()
             {
                 @Override
                 public void exec(ResultSet rs) throws SQLException

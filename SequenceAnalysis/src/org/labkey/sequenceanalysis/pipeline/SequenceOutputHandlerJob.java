@@ -111,7 +111,9 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
             try (InputStream is = IOUtil.maybeBufferInputStream(IOUtil.openFileForReading(xml)))
             {
                 ObjectMapper objectMapper = createObjectMapper();
-                List<SequenceOutputFile> ret = objectMapper.readValue(is, new TypeReference<List<SequenceOutputFile>>(){});
+                List<SequenceOutputFile> ret = objectMapper.readValue(is, new TypeReference<>()
+                {
+                });
                 getLogger().debug("read SequenceOutputFiles from file, total: " + ret.size());
 
                 for (SequenceOutputFile so : ret)

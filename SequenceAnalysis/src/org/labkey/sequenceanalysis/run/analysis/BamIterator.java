@@ -164,7 +164,6 @@ public class BamIterator
 
     /**
      * Iterates all reads in the alignment
-     * @return
      */
     public void iterateReads() throws IOException, PipelineJobException
     {
@@ -206,7 +205,7 @@ public class BamIterator
                 }
             }
 
-            if (snps.size() > 0)
+            if (!snps.isEmpty())
                 snpPositions.put(pi.getLastRefPosition(), snps);
         }
 
@@ -218,7 +217,7 @@ public class BamIterator
             {
                 Integer pos1 = snp1.getLastRefPosition();
                 Integer idx1 = snp1.getInsertIndex();
-                Integer compare1 = pos1.compareTo(snp2.getLastRefPosition());
+                int compare1 = pos1.compareTo(snp2.getLastRefPosition());
 
                 return compare1 != 0 ? compare1 : idx1.compareTo(snp2.getInsertIndex());
             });

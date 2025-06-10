@@ -208,7 +208,7 @@ public class GenotypeConcordanceStep extends AbstractCommandPipelineStep<Variant
         }
     }
 
-    private class DiscordantTracker
+    private static class DiscordantTracker
     {
         long totalCompared = 0L;
         long totalDiscordant = 0L;
