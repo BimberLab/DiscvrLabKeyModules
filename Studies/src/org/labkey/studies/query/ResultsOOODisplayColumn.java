@@ -31,16 +31,16 @@ public class ResultsOOODisplayColumn extends DataColumn
             return null;
         }
 
-        String oor = ctx.get(getOOR(), String.class);
-        if (StringUtils.isEmpty(oor))
-        {
-            return result;
-        }
-
         if (getBoundColumn().getFormat() != null)
         {
             DecimalFormat fmt = new DecimalFormat(getBoundColumn().getFormat());
             result = fmt.format(result);
+        }
+
+        String oor = ctx.get(getOOR(), String.class);
+        if (StringUtils.isEmpty(oor))
+        {
+            return result;
         }
 
         return oor + result;
