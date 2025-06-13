@@ -499,6 +499,14 @@ public class SlurmExecutionEngine extends AbstractClusterExecutionEngine<SlurmEx
 
         try
         {
+            if (end > line.length())
+            {
+                _log.debug("Encountered slurm line shorter than expected. Slurm field at idx: " + idx + ". Line: [" + line + "]");
+                _log.debug("fieldWidths: " + StringUtils.join(fieldWidths, "|"));
+
+                return null;
+            }
+
             return StringUtils.trimToNull(line.substring(start, end));
         }
         catch (Exception e)
