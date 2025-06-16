@@ -384,87 +384,27 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
             List<SingleCellStep.SeuratObjectWrapper> currentFiles;
             Set<File> originalInputs = inputFiles.stream().map(SequenceOutputFile::getFile).collect(Collectors.toSet());
-            Map<File, File> localCopyToOrig = new HashMap<>();
+            Map<String, File> inputFileMap = new HashMap<>();
             if (_doProcessRawCounts)
             {
                 currentFiles = processRawCounts(ctx, inputFiles, basename);
             }
             else
             {
-                try
-                {
-                    Set<String> distinctIds = new HashSet<>();
-                    Set<String> copiedFiles = new HashSet<>();
+                Set<String> distinctIds = new HashSet<>();
 
-                    currentFiles = new ArrayList<>();
-                    for (SequenceOutputFile so : inputFiles)
+                currentFiles = new ArrayList<>();
+                for (SequenceOutputFile so : inputFiles)
+                {
+                    String datasetId = FileUtil.makeLegalName(so.getReadset() != null ? ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName() : so.getName());
+                    if (distinctIds.contains(datasetId))
                     {
-                        String datasetId = FileUtil.makeLegalName(so.getReadset() != null ? ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName() : so.getName());
-                        if (distinctIds.contains(datasetId))
-                        {
-                            throw new PipelineJobException("Duplicate dataset Ids in input data: " + datasetId);
-                        }
-                        distinctIds.add(datasetId);
-
-                        //ensure local copy:
-                        if (copiedFiles.contains(so.getFile().getName()))
-                        {
-                            throw new PipelineJobException("Duplicate files names in input data: " + so.getFile().getName());
-                        }
-                        copiedFiles.add(so.getFile().getName());
-
-                        File local = new File(ctx.getOutputDir(), so.getFile().getName());
-                        if (local.exists())
-                        {
-                            local.delete();
-                        }
-
-                        FileUtils.copyFile(so.getFile(), local);
-                        _resumer.getFileManager().addIntermediateFile(local);
-
-                        File cellBarcodes = CellHashingServiceImpl.get().getCellBarcodesFromSeurat(so.getFile(), false);
-                        if (cellBarcodes.exists())
-                        {
-                            ctx.getLogger().debug("Also making local copy of cellBarcodes TSV: " + cellBarcodes.getPath());
-                            File cellBarcodesLocal = new File(ctx.getOutputDir(), cellBarcodes.getName());
-                            if (cellBarcodesLocal.exists())
-                            {
-                                cellBarcodesLocal.delete();
-                            }
-
-                            FileUtils.copyFile(cellBarcodes, cellBarcodesLocal);
-                            _resumer.getFileManager().addIntermediateFile(cellBarcodesLocal);
-                        }
-                        else
-                        {
-                            ctx.getLogger().debug("cellBarcodes TSV not found, expected: " + cellBarcodes.getPath());
-                        }
-
-                        File metadataFile = CellHashingServiceImpl.get().getMetaTableFromSeurat(so.getFile(), false);
-                        if (metadataFile.exists())
-                        {
-                            ctx.getLogger().debug("Also making local copy of metadata TSV: " + metadataFile.getPath());
-                            File metadataFileLocal = new File(ctx.getOutputDir(), metadataFile.getName());
-                            if (metadataFileLocal.exists())
-                            {
-                                metadataFileLocal.delete();
-                            }
-
-                            FileUtils.copyFile(metadataFile, metadataFileLocal);
-                            _resumer.getFileManager().addIntermediateFile(metadataFileLocal);
-                        }
-                        else
-                        {
-                            ctx.getLogger().warn("metadataFile TSV not found, expected: " + metadataFile.getPath());
-                        }
-                        
-                        currentFiles.add(new SingleCellStep.SeuratObjectWrapper(datasetId, datasetId, local, so));
-                        localCopyToOrig.put(local, so.getFile());
+                        throw new PipelineJobException("Duplicate dataset Ids in input data: " + datasetId);
                     }
-                }
-                catch (IOException e)
-                {
-                    throw new PipelineJobException(e);
+                    distinctIds.add(datasetId);
+
+                    currentFiles.add(new SingleCellStep.SeuratObjectWrapper(datasetId, datasetId, so.getFile(), so));
+                    inputFileMap.put(so.getName(), so.getFile());
                 }
             }
 
@@ -670,14 +610,14 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
                 //This indicates the job processed an input file, but did not create a new object (like running FindMarkers)
                 boolean skipOutput = false;
-                if (localCopyToOrig.containsKey(output.getFile()))
+                if (inputFileMap.containsKey(output.getFile().getName()))
                 {
                     try
                     {
-                        ctx.getLogger().debug("Comparing file context of output to determine if it matches input: "+ output.getFile().getName());
-                        ctx.getLogger().debug("Original file: " + localCopyToOrig.get(output.getFile()));
+                        ctx.getLogger().debug("Comparing file context of output to determine if it matches input: " + output.getFile().getName());
+                        ctx.getLogger().debug("Original file: " + inputFileMap.get(output.getFile().getName()));
                         ctx.getLogger().debug("Pipeline output file: " + output.getFile());
-                        if (FileUtils.contentEquals(localCopyToOrig.get(output.getFile()), output.getFile()))
+                        if (FileUtils.contentEquals(inputFileMap.get(output.getFile().getName()), output.getFile()))
                         {
                             ctx.getLogger().info("Sequence output is the same as an input, will not re-create output for seurat object: " + output.getFile().getPath());
                             skipOutput = true;

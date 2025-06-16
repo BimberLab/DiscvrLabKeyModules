@@ -48,6 +48,7 @@ import java.net.URISyntaxException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -55,7 +56,11 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
+
+import static org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper.SHARED_SUBFOLDER_NAME;
 
 public class OrphanFilePipelineJob extends PipelineJob
 {
@@ -373,6 +378,16 @@ public class OrphanFilePipelineJob extends PipelineJob
                                 unexpectedPipelineDirs.add(subdir);
                             }
 
+                            File sharedDir = new File(subdir, SHARED_SUBFOLDER_NAME);
+                            if (sharedDir.exists())
+                            {
+                                long size = FileUtils.sizeOfDirectory(sharedDir);
+                                if (size > 1e6)
+                                {
+                                    getJob().getLogger().warn("Large Shared folder: " + sharedDir.getPath());
+                                }
+                            }
+
                             getOrphanFilesForDirectory(knownExpDatas, dataMap, subdir, orphanFiles, orphanIndexes);
                         }
                     }
@@ -410,8 +425,7 @@ public class OrphanFilePipelineJob extends PipelineJob
                     @Override
                     public boolean accept(File pathname)
                     {
-                        //50mb
-                        return (pathname.length() >= 5e7);
+                        return (pathname.length() >= 5e3);
                     }
                 });
 
@@ -439,7 +453,16 @@ public class OrphanFilePipelineJob extends PipelineJob
                 }
             }
 
-            for (Container child : ContainerManager.getChildren(c))
+            List<Container> children = ContainerManager.getChildren(c);
+
+            // Check for unexpected subfolders:
+            Set<String> allowableSubfolders = children.stream().map(Container::getName).collect(Collectors.toSet());
+            Set<File> unknownFolders = Arrays.stream(Objects.requireNonNull(root.getRootPath().getParentFile().listFiles())).filter(fn -> !fn.getName().startsWith("@") & !allowableSubfolders.contains(fn.getName())).collect(Collectors.toSet());
+            if (!unknownFolders.isEmpty()) {
+                unknownFolders.forEach(x -> getJob().getLogger().warn("Folder does not match expected child: " + x.getPath()));
+            }
+
+            for (Container child : children)
             {
                 if (child.isWorkbook())
                 {

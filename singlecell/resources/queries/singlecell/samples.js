@@ -23,6 +23,15 @@ function beforeUpsert(row, oldRow, errors){
     else if (['No stim', 'No Stim'].indexOf(row.stim) !== -1){
         row.stim = 'NoStim';
     }
+    else if (['Infected cells: SIV+', 'Infected Cells: SIV+'].indexOf(row.stim) !== -1){
+        row.stim = 'SIV-Infected CD4s';
+    }
+    else if (['Infected cells: SIV-', 'Infected Cells: SIV-'].indexOf(row.stim) !== -1){
+        row.stim = 'SIV-Infected CD4s / SIV-';
+    }
+    else if (['Infected cells: Mock', 'Infected Cells: Mock'].indexOf(row.stim) !== -1){
+        row.stim = 'Mock-Infected CD4s';
+    }
 
     var lookupFields = ['stim'];
     for (var i=0;i<lookupFields.length;i++){

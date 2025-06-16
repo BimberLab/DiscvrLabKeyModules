@@ -1,3 +1,127 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <tables xsi:schemaLocation="http://labkey.org/data/xml ..\..\..\..\schemas\tableInfo.xsd"
-        xmlns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+        xmlns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <table tableName="lookup_sets" tableDbType="TABLE" useColumnOrder="true">
+        <description>Each lookup set is exposed as a separate virtual table in the studies schema, making it easy to add simple value tables without having to create discrete tables in the underlying database</description>
+        <tableTitle>Lookup Sets</tableTitle>
+        <auditLogging>DETAILED</auditLogging>
+        <pkColumnName>rowid</pkColumnName>
+        <importUrl></importUrl>
+        <insertUrl></insertUrl>
+        <updateUrl></updateUrl>
+        <deleteUrl></deleteUrl>
+        <columns>
+            <column columnName="rowid">
+
+            </column>
+            <column columnName="setname">
+                <columnTitle>Set Name</columnTitle>
+            </column>
+            <column columnName="label">
+                <columnTitle>Label</columnTitle>
+            </column>
+            <column columnName="description">
+                <columnTitle>Description</columnTitle>
+            </column>
+            <column columnName="keyField">
+                <columnTitle>Key Field</columnTitle>
+            </column>
+            <column columnName="titleColumn">
+                <columnTitle>Title Column</columnTitle>
+            </column>
+            <column columnName="container">
+
+            </column>
+            <column columnName="createdby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+    <table tableName="lookups" tableDbType="TABLE" useColumnOrder="true">
+        <tableTitle>Lookup Values</tableTitle>
+        <auditLogging>DETAILED</auditLogging>
+        <importUrl></importUrl>
+        <insertUrl></insertUrl>
+        <updateUrl></updateUrl>
+        <deleteUrl></deleteUrl>
+        <columns>
+            <column columnName="rowid">
+                <isAutoInc>true</isAutoInc>
+                <shownInUpdateView>false</shownInUpdateView>
+                <shownInInsertView>false</shownInInsertView>
+                <isKeyField>true</isKeyField>
+            </column>
+            <column columnName="setname">
+                <columnTitle>Set Name</columnTitle>
+            </column>
+            <column columnName="value">
+                <columnTitle>Value</columnTitle>
+            </column>
+            <column columnName="title">
+                <columnTitle>Title</columnTitle>
+            </column>
+            <column columnName="category">
+                <columnTitle>Category</columnTitle>
+            </column>
+            <column columnName="description">
+                <columnTitle>Description</columnTitle>
+            </column>
+            <column columnName="sort_order">
+                <columnTitle>Sort Order</columnTitle>
+            </column>
+            <column columnName="date_disabled">
+                <columnTitle>Date Disabled</columnTitle>
+            </column>
+            <column columnName="objectid">
+                <columnTitle>Key</columnTitle>
+                <shownInDetailsView>false</shownInDetailsView>
+                <shownInInsertView>false</shownInInsertView>
+                <shownInUpdateView>false</shownInUpdateView>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="container">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+</tables>

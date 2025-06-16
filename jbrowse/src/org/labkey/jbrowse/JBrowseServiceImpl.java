@@ -1,11 +1,13 @@
 package org.labkey.jbrowse;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -17,7 +19,9 @@ import org.labkey.api.jbrowse.GroupsProvider;
 import org.labkey.api.jbrowse.JBrowseFieldCustomizer;
 import org.labkey.api.jbrowse.JBrowseFieldDescriptor;
 import org.labkey.api.jbrowse.JBrowseService;
+import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
@@ -430,5 +434,25 @@ public class JBrowseServiceImpl extends JBrowseService
         {
             return c.getActiveModules().contains(ModuleLoader.getInstance().getModule(JBrowseModule.class));
         }
+    }
+
+    private static final String JBrowseLuceneCoresProp = "JBrowseLuceneCores";
+
+    public int getCoresForLuceneSearches() {
+        Module m = ModuleLoader.getInstance().getModule(JBrowseModule.NAME);
+        ModuleProperty mp = m.getModuleProperties().get(JBrowseLuceneCoresProp);
+        String nCores = StringUtils.trimToNull(mp.getEffectiveValue(ContainerManager.getRoot()));
+        if (nCores == null)
+        {
+            return 1;
+        }
+        else if (!NumberUtils.isCreatable(nCores))
+        {
+            _log.error("Improper value for " + JBrowseLuceneCoresProp + ": " + nCores);
+        }
+
+        Number n = NumberUtils.createNumber(nCores);
+
+        return n.intValue();
     }
 }

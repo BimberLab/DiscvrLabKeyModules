@@ -91,6 +91,7 @@ import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 import org.labkey.sequenceanalysis.query.SequenceAnalysisUserSchema;
 import org.labkey.sequenceanalysis.query.SequenceTriggerHelper;
 import org.labkey.sequenceanalysis.run.RestoreSraDataHandler;
+import org.labkey.sequenceanalysis.run.alignment.BBMapWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWAMem2Wrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWAMemWrapper;
 import org.labkey.sequenceanalysis.run.alignment.BWASWWrapper;
@@ -157,8 +158,6 @@ import org.labkey.sequenceanalysis.run.reference.SavedReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.reference.VirusReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.util.CombineGVCFsHandler;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
-import org.labkey.sequenceanalysis.run.util.GenomicsDBAppendHandler;
-import org.labkey.sequenceanalysis.run.util.GenomicsDBImportHandler;
 import org.labkey.sequenceanalysis.run.util.SVAnnotateStep;
 import org.labkey.sequenceanalysis.run.variant.DepthOfCoverageHandler;
 import org.labkey.sequenceanalysis.run.variant.GenotypeConcordanceStep;
@@ -309,6 +308,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new StarWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new Pbmm2Wrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new VulcanWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new BBMapWrapper.Provider());
 
         //de novo assembly
         SequencePipelineService.get().registerPipelineStep(new TrinityRunner.Provider());
@@ -395,8 +395,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new RecalculateSequenceMetricsHandler());
         SequenceAnalysisService.get().registerFileHandler(new ListVcfSamplesHandler());
         SequenceAnalysisService.get().registerFileHandler(new MultiQCBamHandler());
-        SequenceAnalysisService.get().registerFileHandler(new GenomicsDBImportHandler());
-        SequenceAnalysisService.get().registerFileHandler(new GenomicsDBAppendHandler());
         SequenceAnalysisService.get().registerFileHandler(new MergeLoFreqVcfHandler());
         SequenceAnalysisService.get().registerFileHandler(new PangolinHandler());
         SequenceAnalysisService.get().registerFileHandler(new NextCladeHandler());

@@ -1,0 +1,5 @@
+<module xmlns="http://labkey.org/moduleProperties/xml/">
+    <clientDependencies>
+        <dependency path="LDK.context"/>
+    </clientDependencies>
+</module>

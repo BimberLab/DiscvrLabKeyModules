@@ -209,10 +209,6 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         @Override
         public boolean isJobComplete(PipelineJob job)
         {
-            FileAnalysisJobSupport support = (FileAnalysisJobSupport) job;
-            String baseName = support.getBaseName();
-            File dirAnalysis = support.getAnalysisDirectory();
-
             return false;
         }
     }
@@ -469,6 +465,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 actions.add(action);
 
                 referenceGenome.setWorkingFasta(new File(targetDir, refFasta.getName()));
+
+                getTaskFileManagerImpl().addIntermediateFile(targetDir);
             }
             catch (IOException e)
             {
@@ -1145,7 +1143,9 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         // optional convert to CRAM:
         ToolParameterDescriptor cramParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.CONVERT_TO_CRAM);
+        ToolParameterDescriptor cramArchivalParam = alignmentStep.getProvider().getParameterByName(AbstractAlignmentStepProvider.CRAM_ARCHIVAL_MODE);
         boolean doCramConvert = cramParam != null && cramParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
+        boolean doArchival = cramArchivalParam != null && cramArchivalParam.extractValue(getJob(), alignmentStep.getProvider(), alignmentStep.getStepIdx(), Boolean.class, false);
         if (doCramConvert)
         {
             getJob().getLogger().info("BAM will be converted to CRAM");
@@ -1154,7 +1154,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             Integer threads = SequenceTaskHelper.getMaxThreads(getJob());
             if (!cramFileIdx.exists())
             {
-                new SamtoolsCramConverter(getJob().getLogger()).convert(renamedBam, cramFile, referenceGenome.getWorkingFastaFileGzipped(), true, threads);
+                new SamtoolsCramConverter(getJob().getLogger()).convert(renamedBam, cramFile, referenceGenome.getWorkingFastaFileGzipped(), true, threads, doArchival);
             }
             else
             {

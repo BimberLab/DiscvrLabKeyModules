@@ -3,9 +3,17 @@ package org.labkey.studies;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.admin.ImportOptions;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.module.Module;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.query.BatchValidationException;
+import org.labkey.api.query.DuplicateKeyException;
+import org.labkey.api.query.QueryService;
+import org.labkey.api.query.QueryUpdateService;
+import org.labkey.api.query.QueryUpdateServiceException;
+import org.labkey.api.reader.DataLoader;
+import org.labkey.api.reader.TabLoader;
 import org.labkey.api.resource.DirectoryResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
@@ -19,6 +27,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.sql.SQLException;
+import java.util.List;
+import java.util.Map;
 
 public class StudiesServiceImpl extends StudiesService
 {
@@ -89,6 +100,34 @@ public class StudiesServiceImpl extends StudiesService
             {
                 FileUtil.copyData(in, out);
             }
+        }
+    }
+
+    @Override
+    public void loadTsv(Resource tsv, String schemaName, User u, Container c)
+    {
+        try (DataLoader loader = DataLoader.get().createLoader(tsv, true, null, TabLoader.TSV_FILE_TYPE))
+        {
+            TableInfo ti = QueryService.get().getUserSchema(u, c, schemaName).getTable(FileUtil.getBaseName(tsv.getName()));
+            if (ti == null)
+            {
+                throw new IllegalStateException("Missing table: " + tsv.getName());
+            }
+
+            List<Map<String, Object>> rows = loader.load();
+
+            QueryUpdateService qus = ti.getUpdateService();
+            qus.setBulkLoad(true);
+
+            qus.truncateRows(u, c, null, null);
+            qus.insertRows(u, c, rows, new BatchValidationException(), null, null);
+        }
+        catch (IOException | SQLException | BatchValidationException | QueryUpdateServiceException |
+               DuplicateKeyException e)
+        {
+            _log.error("Error populating TSV", e);
+
+            throw new RuntimeException(e);
         }
     }
 }

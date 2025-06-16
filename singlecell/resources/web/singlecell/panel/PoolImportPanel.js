@@ -334,7 +334,14 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         },
 
         expt: function(val, panel){
-            return val || panel.EXPERIMENT;
+            val = val || panel.EXPERIMENT;
+
+            // Remove leading characters:
+            if (val && !Ext4.isNumeric(val)) {
+                val = val.replace(/[^0-9]+/, '');
+            }
+
+            return val;
         },
 
         celltype: function(val, panel){

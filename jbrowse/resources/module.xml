@@ -1,0 +1,15 @@
+<module xmlns="http://labkey.org/moduleProperties/xml/">
+    <properties>
+        <propertyDescriptor name="JBrowseLuceneCores">
+            <canSetPerContainer>false</canSetPerContainer>
+            <defaultValue>1</defaultValue>
+            <description>The number of cores to allow for lucene searches</description>
+            <editPermissions>
+                <permission>ADMIN</permission>
+            </editPermissions>
+        </propertyDescriptor>
+    </properties>
+    <clientDependencies>
+
+    </clientDependencies>
+</module>
