@@ -24,7 +24,7 @@ public class CalculateGeneComponentScores extends AbstractRiraStep
             super("CalculateGeneComponentScores", "Calculate Gene Module Scores", "RIRA", "This will generate UCell scores for a set of pre-defined gene modules", Collections.singletonList(
                     SeuratToolParameter.create("savedComponent", "Saved Component(s)", "This is the name of the saved component (from RIRA) to apply", "ldk-simplecombo", new JSONObject()
                     {{
-                        put("storeValues", "Tcell_EffectorDifferentiation;TCR_EarlyStimulationComponent;TCR_StimulationComponent1");
+                        put("storeValues", "Tcell_EffectorDifferentiation;TCR_EarlyStimulationComponent;TCR_StimulationComponent1;PLS_Score_1;PLS_Score_2;PLS_Score_3;PLS_Score_4;PLS_Score_5;PLS_Score_6");
                         put("multiSelect", true);
                         put("allowBlank", false);
                         put("joinReturnValue", true);

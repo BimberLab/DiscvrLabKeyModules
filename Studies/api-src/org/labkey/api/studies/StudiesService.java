@@ -2,6 +2,7 @@ package org.labkey.api.studies;
 
 import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
+import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.util.Path;
 
@@ -25,4 +26,6 @@ abstract public class StudiesService
     }
 
     abstract public void importFolderDefinition(Container container, User user, Module m, Path sourceFolderDirPath) throws IOException;
+
+    abstract public void loadTsv(Resource tsv, String schemaName, User u, Container c);
 }

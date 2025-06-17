@@ -59,6 +59,18 @@
             <column columnName="lastStatusCheck">
                 <formatString>yyyy-MM-dd HH:mm</formatString>
             </column>
+            <column columnName="clusterAccount">
+                <columnTitle>Cluster Account</columnTitle>
+            </column>
+            <column columnName="duration">
+                <columnTitle>Duration (seconds)</columnTitle>
+            </column>
+            <column columnName="cpuUsed">
+                <columnTitle>CPU Used</columnTitle>
+            </column>
+            <column columnName="gpuUsed">
+                <columnTitle>GPU Used</columnTitle>
+            </column>
             <column columnName="container"/>
             <column columnName="created"/>
             <column columnName="createdBy"/>

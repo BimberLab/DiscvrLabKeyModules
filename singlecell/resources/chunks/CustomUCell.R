@@ -23,7 +23,13 @@ for (datasetId in names(seuratObjects)) {
     toCalculate[[vals[1]]] <- geneList
   }
 
-  seuratObj <- UCell::AddModuleScore_UCell(seuratObj, features = toCalculate, storeRanks = storeRanks, assay = assayName)
+  if (Sys.getenv('SEURAT_MAX_THREADS') != '') {
+    nCores <- Sys.getenv('SEURAT_MAX_THREADS')
+  } else {
+    nCores <- 1
+  }
+
+  seuratObj <- UCell::AddModuleScore_UCell(seuratObj, features = toCalculate, storeRanks = storeRanks, assay = assayName, ncores = nCores)
   corData <- RIRA::PlotUcellCorrelation(seuratObj, toCalculate)
 
   for (n in names(toCalculate)) {

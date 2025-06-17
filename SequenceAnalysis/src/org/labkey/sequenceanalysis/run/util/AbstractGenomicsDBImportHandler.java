@@ -644,7 +644,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
                     wrapper.execute(genome, vcfsToProcess, workingDestinationWorkspaceFolder, intervals, options, _append);
 
-                    if (ctx.getParams().optBoolean("consolidate", true))
+                    if (ctx.getParams().optBoolean("consolidate", false))
                     {
                         ctx.getLogger().info("Will consolidate the workspace using consolidate_genomicsdb_array");
                         doConsolidate(ctx, workingDestinationWorkspaceFolder, genome);

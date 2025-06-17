@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.Container;
@@ -27,6 +28,7 @@ import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,20 +41,23 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
     public ConvertToCramHandler()
     {
         super(ModuleLoader.getInstance().getModule(SequenceAnalysisModule.class), "Convert To Cram", "This will convert a BAM file to CRAM, replacing the original", null, Arrays.asList(
-                ToolParameterDescriptor.create("replaceOriginal", "Replace Original File", "If selected, the input BAM will be deleted and the database record will be switched to use this filepath.", "checkbox", new JSONObject(){{
-                    put("checked", true);
-                }}, true),
-                ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
-                    put("checked", true);
-                }}, true)
-            )
+                        ToolParameterDescriptor.create("replaceOriginal", "Replace Original File", "If selected, the input BAM will be deleted and the database record will be switched to use this filepath.", "checkbox", new JSONObject(){{
+                            put("checked", true);
+                        }}, true),
+                        ToolParameterDescriptor.create("doCramArchivalMode", "CRAM Archival Mode", "If selected, the CRAM will undergo additional compression to save space. This is lossy and may not be compatible with all downstream tools. See samtools view --output-fmt-option archive", "checkbox", new JSONObject(){{
+                            put("checked", false);
+                        }}, false),
+                        ToolParameterDescriptor.create("useOutputFileContainer", "Submit to Source File Workbook", "If checked, each job will be submitted to the same workbook as the input file, as opposed to submitting all jobs to the same workbook.  This is primarily useful if submitting a large batch of files to process separately. This only applies if 'Run Separately' is selected.", "checkbox", new JSONObject(){{
+                            put("checked", true);
+                        }}, true)
+                )
         );
     }
 
     @Override
     public boolean canProcess(SequenceOutputFile o)
     {
-        return o.getFile() != null && o.getFile().exists() && SequenceUtil.FILETYPE.bam.getFileType().isType(o.getFile());
+        return o.getFile() != null && o.getFile().exists() && SequenceUtil.FILETYPE.bamOrCram.getFileType().isType(o.getFile());
     }
 
     @Override
@@ -103,60 +108,108 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
         public void processFilesRemote(List<SequenceOutputFile> inputFiles, JobContext ctx) throws UnsupportedOperationException, PipelineJobException
         {
             boolean replaceOriginal = ctx.getParams().optBoolean("replaceOriginal", false);
+            boolean doCramArchivalMode = ctx.getParams().optBoolean("doCramArchivalMode", false);
             ctx.getLogger().info("Replace input BAM: " + replaceOriginal);
 
             Integer threads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
             for (SequenceOutputFile so : inputFiles)
             {
                 ReferenceGenome genome = ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id());
-                File cram = new File(so.getFile().getParentFile(), FileUtil.getBaseName(so.getFile()) + ".cram");
-                File cramIdx = SamtoolsCramConverter.getExpectedCramIndex(cram);
+                File outputFile = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(so.getFile()) + ".cram");
                 if (!so.getFile().exists())
                 {
-                    if (replaceOriginal && cramIdx.exists())
+                    File inputAsCram = new File(so.getFile().getParentFile(), FileUtil.getBaseName(so.getFile()) + ".cram");
+                    File inputAsCramIdx = SamtoolsCramConverter.getExpectedCramIndex(inputAsCram);
+                    if (replaceOriginal && SequenceUtil.FILETYPE.bam.getFileType().isType(so.getFile()) && inputAsCram.exists() && inputAsCramIdx.exists())
                     {
                         ctx.getLogger().debug("BAM does not exist, but CRAM index does. Proceeding on the assumption this is a resume of a failed job.");
                     }
                     else
                     {
-                        throw new PipelineJobException("Unable to find BAM: " + so.getFile().getPath());
+                        throw new PipelineJobException("Unable to find input CRAM/BAM: " + so.getFile().getPath());
                     }
                 }
                 else
                 {
-                    new SamtoolsCramConverter(ctx.getLogger()).convert(so.getFile(), cram, genome.getWorkingFastaFileGzipped(), true, threads);
+                    new SamtoolsCramConverter(ctx.getLogger()).convert(so.getFile(), outputFile, genome.getWorkingFastaFileGzipped(), true, threads, doCramArchivalMode);
                 }
 
-                checkCramAndIndex(so);
+                if (!outputFile.exists())
+                {
+                    throw new PipelineJobException("Missing CRAM: " + outputFile.getPath());
+                }
 
                 if (replaceOriginal)
                 {
-                    ctx.getLogger().info("Deleting original BAM: " + so.getFile().getPath());
-                    if (so.getFile().exists())
+                    ctx.getLogger().info("Deleting original BAM/CRAM: {}", so.getFile().getPath());
+                    if (SequenceUtil.FILETYPE.bam.getFileType().isType(so.getFile()))
                     {
-                        SequenceAnalysisService.get().getExpectedBamOrCramIndex(so.getFile()).delete();
-                        so.getFile().delete();
+                        if (so.getFile().exists())
+                        {
+                            SequenceAnalysisService.get().getExpectedBamOrCramIndex(so.getFile()).delete();
+                            so.getFile().delete();
+                        }
+                        else
+                        {
+                            ctx.getLogger().debug("Input BAM not found, possibly deleted in earlier job iteration?");
+                        }
+
+                        ctx.getLogger().debug("Moving CRAM to replace original BAM file:  " + so.getFile().getPath());
+                        try
+                        {
+                            File targetCram = new File(so.getFile().getParentFile(), outputFile.getName());
+                            if (targetCram.exists())
+                            {
+                                ctx.getLogger().debug("Deleting file: " + targetCram.getPath());
+                                targetCram.delete();
+                            }
+
+                            File targetCramIdx = new File(so.getFile().getParentFile(), outputFile.getName() + ".crai");
+                            if (targetCramIdx.exists())
+                            {
+                                ctx.getLogger().debug("Deleting file: " + targetCramIdx.getPath());
+                                targetCramIdx.delete();
+                            }
+
+                            FileUtils.moveFile(outputFile, targetCram);
+                            FileUtils.moveFile(new File(outputFile.getPath() + ".crai"), targetCramIdx);
+                        }
+                        catch (IOException e)
+                        {
+                            throw new PipelineJobException(e);
+                        }
+                    }
+                    else if (SequenceUtil.FILETYPE.cram.getFileType().isType(so.getFile()))
+                    {
+                        try
+                        {
+                            if (!so.getFile().exists())
+                            {
+                                throw new PipelineJobException("Unable to find input CRAM/BAM: " + so.getFile().getPath());
+                            }
+
+                            SequenceAnalysisService.get().getExpectedBamOrCramIndex(so.getFile()).delete();
+                            so.getFile().delete();
+
+                            ctx.getLogger().debug("Replacing original file:  " + so.getFile().getPath());
+                            FileUtils.moveFile(outputFile, so.getFile());
+                            FileUtils.moveFile(new File(outputFile.getPath() + ".crai"), new File(so.getFile() + ".crai"));
+                        }
+                        catch (IOException e)
+                        {
+                            throw new PipelineJobException(e);
+                        }
                     }
                     else
                     {
-                        ctx.getLogger().debug("Input BAM not found, possibly deleted in earlier job iteration?");
+                        throw new PipelineJobException("Unknown file type: " + so.getFile().getPath());
                     }
                 }
-            }
-        }
-
-        private void checkCramAndIndex(SequenceOutputFile so) throws PipelineJobException
-        {
-            File cram = new File(so.getFile().getParentFile(), FileUtil.getBaseName(so.getFile()) + ".cram");
-            if (!cram.exists())
-            {
-                throw new PipelineJobException("Unable to find file: " + cram.getPath());
-            }
-
-            File cramIdx = new File(cram.getPath() + ".crai");
-            if (!cramIdx.exists())
-            {
-                throw new PipelineJobException("Unable to find file: " + cramIdx.getPath());
+                else
+                {
+                    String description = (so.getDescription() == null ? "" : so.getDescription() + "\n") + "CRAM Archival Mode";
+                    ctx.getFileManager().addSequenceOutput(outputFile, so.getName(), so.getCategory(), so.getReadset(), null, so.getLibrary_id(), description);
+                }
             }
         }
 
@@ -170,37 +223,57 @@ public class ConvertToCramHandler extends AbstractParameterizedOutputHandler<Seq
                 return(row);
             }).collect(Collectors.toList());
 
+            boolean replaceOriginal = ctx.getParams().optBoolean("replaceOriginal", false);
+            boolean doCramArchivalMode = ctx.getParams().optBoolean("doCramArchivalMode", false);
             for (SequenceOutputFile so : inputs)
             {
                 File cram = new File(so.getFile().getParentFile(), FileUtil.getBaseName(so.getFile()) + ".cram");
-                checkCramAndIndex(so);
-
-                ctx.getJob().getLogger().info("Updating ExpData record with new filepath: " + cram.getPath());
-                ExpData d = so.getExpData();
-                d.setDataFileURI(cram.toURI());
-                d.setName(cram.getName());
-                d.save(ctx.getJob().getUser());
-
-                if (so.getName().contains(".bam"))
+                if (replaceOriginal)
                 {
+                    ctx.getJob().getLogger().info("Updating ExpData record with new filepath: " + cram.getPath());
+                    ExpData d = so.getExpData();
+                    d.setDataFileURI(cram.toURI());
+                    d.setName(cram.getName());
+                    d.save(ctx.getJob().getUser());
+
                     Map<String, Object> row = new CaseInsensitiveHashMap<>();
                     row.put("rowid", so.getRowid());
                     row.put("container", so.getContainer());
-                    row.put("name", so.getName().replaceAll("\\.bam", "\\.cram"));
-                    row.put("description", (so.getDescription() == null ? "" : so.getDescription() + "\n") + "Converted from BAM to CRAM");
-                    toUpdate.add(row);
+                    boolean doUpdate = false;
+                    String description = so.getDescription();
+                    if (so.getName().contains(".bam"))
+                    {
+                        row.put("name", so.getName().replaceAll("\\.bam", "\\.cram"));
+                        description = (description == null ? "" : description + "\n") + "Converted from BAM to CRAM";
+                        row.put("description", description);
+                        doUpdate = true;
+                    }
+
+                    if (doCramArchivalMode)
+                    {
+                        description = (description == null ? "" : description + "\n") + "CRAM Archival Mode";
+                        row.put("description", description);
+                        doUpdate = true;
+                    }
+
+                    if (doUpdate)
+                    {
+                        toUpdate.add(row);
+                    }
                 }
             }
 
-            try
+            if (!toUpdate.isEmpty())
             {
-                Container target = ctx.getJob().getContainer().isWorkbook() ? ctx.getJob().getContainer().getParent() : ctx.getJob().getContainer();
-                QueryService.get().getUserSchema(ctx.getJob().getUser(), target, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES).getUpdateService().updateRows(ctx.getJob().getUser(), target, toUpdate, oldKeys, null, null);
-            }
-            catch (QueryUpdateServiceException | InvalidKeyException | BatchValidationException | SQLException e)
-            {
-                throw new PipelineJobException(e);
-
+                try
+                {
+                    Container target = ctx.getJob().getContainer().isWorkbook() ? ctx.getJob().getContainer().getParent() : ctx.getJob().getContainer();
+                    QueryService.get().getUserSchema(ctx.getJob().getUser(), target, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES).getUpdateService().updateRows(ctx.getJob().getUser(), target, toUpdate, oldKeys, null, null);
+                }
+                catch (QueryUpdateServiceException | InvalidKeyException | BatchValidationException | SQLException e)
+                {
+                    throw new PipelineJobException(e);
+                }
             }
         }
     }

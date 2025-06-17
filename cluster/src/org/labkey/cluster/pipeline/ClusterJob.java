@@ -22,6 +22,9 @@ public class ClusterJob
     private String _location;
     private String _activeTaskId;
     private String _clusterUser;
+    private Integer _duration;
+    private Integer _cpuUsed;
+    private Integer _gpuUsed;
 
     private String _hostname;
     private Date _logModified;
@@ -194,5 +197,35 @@ public class ClusterJob
     public void setLogModified(Date logModified)
     {
         _logModified = logModified;
+    }
+
+    public Integer getDuration()
+    {
+        return _duration;
+    }
+
+    public void setDuration(Integer duration)
+    {
+        _duration = duration;
+    }
+
+    public Integer getCpuUsed()
+    {
+        return _cpuUsed;
+    }
+
+    public void setCpuUsed(Integer cpuUsed)
+    {
+        _cpuUsed = cpuUsed;
+    }
+
+    public Integer getGpuUsed()
+    {
+        return _gpuUsed;
+    }
+
+    public void setGpuUsed(Integer gpuUsed)
+    {
+        _gpuUsed = gpuUsed;
     }
 }

@@ -305,3 +305,17 @@ then
 else
     echo "Already installed"
 fi
+
+if [[ ! -e ${LKTOOLS_DIR}/bbmap || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf $LKTOOLS_DIR/bbmap
+
+    wget https://sourceforge.net/projects/bbmap/files/BBMap_39.25.tar.gz
+    tar -xf BBMap_39.25.tar.gz
+
+    mv bbmap $LKTOOLS_DIR/
+    ln -s $LKTOOLS_DIR/bbmap/bbmap.sh $LKTOOLS_DIR/bbmap.sh
+else
+    echo "Already installed"
+fi

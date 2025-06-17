@@ -3,16 +3,21 @@ package org.labkey.studies;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
-import org.labkey.api.module.DefaultModule;
+import org.labkey.api.ldk.ExtendedSimpleModule;
+import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.query.DefaultSchema;
+import org.labkey.api.query.QuerySchema;
+import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.studies.StudiesService;
-import org.labkey.api.view.WebPartFactory;
+import org.labkey.studies.query.StudiesUserSchema;
+import org.labkey.api.studies.security.StudiesDataAdminRole;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-public class StudiesModule extends DefaultModule
+public class StudiesModule extends ExtendedSimpleModule
 {
     public static final String NAME = "Studies";
 
@@ -25,20 +30,7 @@ public class StudiesModule extends DefaultModule
     @Override
     public @Nullable Double getSchemaVersion()
     {
-        return 23.000;
-    }
-
-    @Override
-    public boolean hasScripts()
-    {
-        return true;
-    }
-
-    @Override
-    @NotNull
-    protected Collection<WebPartFactory> createWebPartFactories()
-    {
-        return Collections.emptyList();
+        return 23.001;
     }
 
     @Override
@@ -47,10 +39,11 @@ public class StudiesModule extends DefaultModule
         addController(StudiesController.NAME, StudiesController.class);
 
         StudiesService.setInstance(StudiesServiceImpl.get());
+        RoleManager.registerRole(new StudiesDataAdminRole());
     }
 
     @Override
-    public void doStartup(ModuleContext moduleContext)
+    public void doStartupAfterSpringConfig(ModuleContext moduleContext)
     {
 
     }
@@ -67,5 +60,18 @@ public class StudiesModule extends DefaultModule
     public Set<String> getSchemaNames()
     {
         return Collections.singleton(StudiesSchema.NAME);
+    }
+
+    @Override
+    public void registerSchemas()
+    {
+        DefaultSchema.registerProvider(StudiesSchema.NAME, new DefaultSchema.SchemaProvider(this)
+        {
+            @Override
+            public QuerySchema createSchema(final DefaultSchema schema, Module module)
+            {
+                return new StudiesUserSchema(schema.getUser(), schema.getContainer(), StudiesSchema.getInstance().getSchema());
+            }
+        });
     }
 }

@@ -529,16 +529,20 @@ public class NimbleHelper
         reportArgs.add("-i");
         reportArgs.add(alignResultsGz.getPath());
 
+        String resumeString = "nimble.report." + genomeId;
+        File doneFile = getNimbleDoneFile(ctx.getWorkingDirectory(), resumeString);
+
         File reportResultsGz = new File(ctx.getWorkingDirectory(), "reportResults." + genomeId + ".txt.gz");
-        if (reportResultsGz.exists())
+        if (reportResultsGz.exists() && !doneFile.exists())
         {
+            ctx.getLogger().debug("Deleting existing result file: " + reportResultsGz.getPath());
             reportResultsGz.delete();
         }
 
         reportArgs.add("-o");
         reportArgs.add(reportResultsGz.getPath());
 
-        runUsingDocker(reportArgs, output, "nimble.report." + genomeId, ctx);
+        runUsingDocker(reportArgs, output, resumeString, ctx);
 
         if (!reportResultsGz.exists())
         {

@@ -478,9 +478,9 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
         return Collections.emptySet();
     }
 
-    protected String printInputFile(SeuratObjectWrapper so)
+    private String printInputFile(SeuratObjectWrapper so)
     {
-        return "'" + so.getFile().getName() + "'";
+        return "'" + so.getFile().getPath() + "'";
     }
 
     protected Chunk createFinalChunk() throws PipelineJobException

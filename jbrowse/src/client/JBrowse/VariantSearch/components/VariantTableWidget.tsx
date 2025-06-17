@@ -68,12 +68,18 @@ const VariantTableWidget = observer(props => {
 
             return obj
         }))
-        setTotalHits(data.totalHits)
         setDataLoaded(true)
     }
 
     function handleModalClose(widget) {
         session.hideWidget(widget)
+    }
+
+    function resetPaginationToFirstPage() {
+      setPageSizeModel(prev => ({
+        page: 0,
+        pageSize: prev.pageSize,
+      }));
     }
 
     function handleQuery(passedFilters, pushToHistory, pageQueryModel = pageSizeModel, sortQueryModel = sortModel) {
@@ -89,12 +95,35 @@ const VariantTableWidget = observer(props => {
         currentUrl.searchParams.set("sortDirection", sort.toString());
 
         if (pushToHistory) {
-          window.history.pushState(null, "", currentUrl.toString());
+            window.history.pushState(null, "", currentUrl.toString());
         }
 
         setFilters(passedFilters);
-        setDataLoaded(false)
-        fetchLuceneQuery(passedFilters, sessionId, trackGUID, page, pageSize, field, sort, (json)=>{handleSearch(json)}, (error) => {setDataLoaded(true); setError(error)});
+        setDataLoaded(false);
+        setFeatures([]);
+
+        fetchLuceneQuery(
+            passedFilters,
+            sessionId,
+            trackGUID,
+            page,
+            pageSize,
+            field,
+            sort,
+            (row) => {
+                setFeatures(prev => {
+                    row.id = prev.length;
+                    row.trackId = trackId;
+                    return [...prev, row];
+                });
+            },
+            () => setDataLoaded(true),
+            (error) => {
+                console.error("Stream error:", error);
+                setError(error);
+                setDataLoaded(true);
+            }
+        );
     }
 
     const handleExport = () => {
@@ -267,7 +296,6 @@ const VariantTableWidget = observer(props => {
 
     const [filterModalOpen, setFilterModalOpen] = useState(false);
     const [filters, setFilters] = useState([]);
-    const [totalHits, setTotalHits] = useState(0);
     const [fieldTypeInfo, setFieldTypeInfo] = useState<FieldModel[]>([]);
     const [allowedGroupNames, setAllowedGroupNames] = useState<string[]>([]);
     const [promotedFilters, setPromotedFilters] = useState<Map<string, Filter[]>>(null);
@@ -461,7 +489,7 @@ const VariantTableWidget = observer(props => {
             columnVisibilityModel={columnVisibilityModel}
             pageSizeOptions={[10,25,50,100]}
             paginationModel={ pageSizeModel }
-            rowCount={ totalHits }
+            rowCount={ -1 }
             paginationMode="server"
             onPaginationModelChange = {(newModel) => {
                 setPageSizeModel(newModel)
@@ -485,6 +513,7 @@ const VariantTableWidget = observer(props => {
             onSortModelChange={(newModel) => {
                 setSortModel(newModel)
                 handleQuery(filters, true, { page: 0, pageSize: pageSizeModel.pageSize }, newModel);
+                resetPaginationToFirstPage()
             }}
             localeText={{
                 MuiTablePagination: {
@@ -515,7 +544,10 @@ const VariantTableWidget = observer(props => {
                 fieldTypeInfo: fieldTypeInfo,
                 allowedGroupNames: allowedGroupNames,
                 promotedFilters: promotedFilters,
-                handleQuery: (filters) => handleQuery(filters, true, { page: 0, pageSize: pageSizeModel.pageSize}, sortModel)
+                handleQuery: (filters) => {
+                    handleQuery(filters, true, { page: 0, pageSize: pageSizeModel.pageSize}, sortModel)
+                    resetPaginationToFirstPage()
+                }
             }}
         />
     );
