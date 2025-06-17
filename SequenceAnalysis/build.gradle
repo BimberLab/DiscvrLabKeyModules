@@ -1,9 +1,11 @@
+import org.labkey.gradle.plugin.TeamCity
 import org.labkey.gradle.plugin.extension.ServerDeployExtension
 import org.labkey.gradle.plugin.extension.TeamCityExtension
 import org.labkey.gradle.task.DoThenSetup
 import org.labkey.gradle.util.BuildUtils
 import org.labkey.gradle.util.GroupNames
 import org.labkey.gradle.util.PropertiesUtils
+import org.labkey.gradle.util.ExternalDependency
 
 import java.util.regex.Matcher
 
