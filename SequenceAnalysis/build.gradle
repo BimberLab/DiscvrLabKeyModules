@@ -1,23 +1,21 @@
-import org.labkey.gradle.plugin.TeamCity
 import org.labkey.gradle.plugin.extension.ServerDeployExtension
 import org.labkey.gradle.plugin.extension.TeamCityExtension
 import org.labkey.gradle.task.DoThenSetup
 import org.labkey.gradle.util.BuildUtils
 import org.labkey.gradle.util.GroupNames
 import org.labkey.gradle.util.PropertiesUtils
-import org.labkey.gradle.util.ExternalDependency
 
 import java.util.regex.Matcher
 
-repositories {
-    mavenCentral()
-    maven {
-        url "https://maven.scijava.org/content/groups/public/"
-        content {
-            includeGroup "cisd" //jhdf5
-        }
-    }
-}
+//repositories {
+//    mavenCentral()
+//    maven {
+//        url "https://maven.scijava.org/content/groups/public/"
+//        content {
+//            includeGroup "cisd" //jhdf5
+//        }
+//    }
+//}
 
 configurations.all {
     resolutionStrategy {
@@ -91,18 +89,18 @@ dependencies {
             )
     )
 
-    BuildUtils.addExternalDependency(
-            project,
-            new ExternalDependency(
-                    'cisd:jhdf5:19.04.1',
-                    'JHDF5',
-                    'JHDF5',
-                    'https://unlimited.ethz.ch/display/JHDF/',
-                    ExternalDependency.BSD_LICENSE_NAME,
-                    ExternalDependency.BSD_LICENSE_URL,
-                    'JHDF5 is a Java binding for HDF5. Used by FastQC'
-            )
-    )
+//    BuildUtils.addExternalDependency(
+//            project,
+//            new ExternalDependency(
+//                    'cisd:jhdf5:19.04.1',
+//                    'JHDF5',
+//                    'JHDF5',
+//                    'https://unlimited.ethz.ch/display/JHDF/',
+//                    ExternalDependency.BSD_LICENSE_NAME,
+//                    ExternalDependency.BSD_LICENSE_URL,
+//                    'JHDF5 is a Java binding for HDF5. Used by FastQC'
+//            )
+//    )
 
     BuildUtils.addExternalDependency(
             project,
