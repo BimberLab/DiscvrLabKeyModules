@@ -217,14 +217,20 @@ public class SequenceProvider extends AbstractSequenceDataProvider
     @Override
     public List<TabbedReportItem> getTabbedReportItems(Container c, User u)
     {
+        if (!c.getActiveModules().contains(getOwningModule()))
+        {
+            return Collections.emptyList();
+        }
+
         List<TabbedReportItem> items = new ArrayList<>();
 
-        NavItem owner = getDataNavItems(c, u).get(0);
+        NavItem owner = getReportItems(c, u).get(0);
         String category = "Sequence Data";
         QueryCache cache = new QueryCache();
 
         TabbedReportItem readsets = new QueryTabbedReportItem(cache, this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_READSETS, "Sequence Readsets", category);
         readsets.setOwnerKey(owner.getPropertyManagerKey());
+        readsets.setVisible(owner.isVisible(c, u));
         items.add(readsets);
 
         TabbedReportItem analyses = new QueryTabbedReportItem(cache, this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_ANALYSES, "Sequence Analyses", category);
@@ -233,6 +239,7 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         analyses.setAllProjectsFieldKey(FieldKey.fromString("readset/allProjectsPivot"));
         analyses.setOverlappingProjectsFieldKey(FieldKey.fromString("readset/overlappingProjectsPivot"));
         analyses.setOwnerKey(owner.getPropertyManagerKey());
+        analyses.setVisible(owner.isVisible(c, u));
         items.add(analyses);
 
         TabbedReportItem outputs = new QueryTabbedReportItem(cache, this, SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_OUTPUTFILES, "Sequence Outputs", category);
@@ -241,6 +248,7 @@ public class SequenceProvider extends AbstractSequenceDataProvider
         outputs.setAllProjectsFieldKey(FieldKey.fromString("readset/allProjectsPivot"));
         outputs.setOverlappingProjectsFieldKey(FieldKey.fromString("readset/overlappingProjectsPivot"));
         outputs.setOwnerKey(owner.getPropertyManagerKey());
+        outputs.setVisible(owner.isVisible(c, u));
         items.add(outputs);
 
         return items;
