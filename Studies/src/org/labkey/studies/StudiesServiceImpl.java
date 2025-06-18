@@ -120,7 +120,12 @@ public class StudiesServiceImpl extends StudiesService
             qus.setBulkLoad(true);
 
             qus.truncateRows(u, c, null, null);
-            qus.insertRows(u, c, rows, new BatchValidationException(), null, null);
+            BatchValidationException bve = new BatchValidationException();
+            qus.insertRows(u, c, rows, bve, null, null);
+            if (bve.hasErrors())
+            {
+                throw bve;
+            }
         }
         catch (IOException | SQLException | BatchValidationException | QueryUpdateServiceException |
                DuplicateKeyException e)
