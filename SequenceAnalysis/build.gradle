@@ -91,18 +91,18 @@ dependencies {
             )
     )
 
-//    BuildUtils.addExternalDependency(
-//            project,
-//            new ExternalDependency(
-//                    'cisd:jhdf5:19.04.1',
-//                    'JHDF5',
-//                    'JHDF5',
-//                    'https://unlimited.ethz.ch/display/JHDF/',
-//                    ExternalDependency.BSD_LICENSE_NAME,
-//                    ExternalDependency.BSD_LICENSE_URL,
-//                    'JHDF5 is a Java binding for HDF5. Used by FastQC'
-//            )
-//    )
+    BuildUtils.addExternalDependency(
+            project,
+            new ExternalDependency(
+                    'cisd:jhdf5:19.04.1',
+                    'JHDF5',
+                    'JHDF5',
+                    'https://unlimited.ethz.ch/display/JHDF/',
+                    ExternalDependency.BSD_LICENSE_NAME,
+                    ExternalDependency.BSD_LICENSE_URL,
+                    'JHDF5 is a Java binding for HDF5. Used by FastQC'
+            )
+    )
 
     BuildUtils.addExternalDependency(
             project,
