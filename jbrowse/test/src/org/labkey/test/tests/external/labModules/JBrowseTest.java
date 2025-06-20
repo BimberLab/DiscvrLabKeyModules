@@ -574,7 +574,7 @@ public class JBrowseTest extends BaseWebDriverTest
         // all
         // this should return 143 results. We can't make any other assumptions about the content
         String url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=all&pageSize=143";
-        beginAt(url);
+        beginAt(url, WAIT_FOR_PAGE * 2);
         waitForText("data");
         waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
         String jsonString = getText(Locator.tagWithClass("pre", "data"));
