@@ -1,0 +1,5 @@
+<view xmlns="http://labkey.org/data/xml/view" title="Overview of Studies">
+    <dependencies>
+        <dependency path="laboratory.context"/>
+    </dependencies>
+</view>
