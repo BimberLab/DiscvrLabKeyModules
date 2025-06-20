@@ -12,6 +12,7 @@ import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.studies.StudiesService;
 import org.labkey.studies.query.StudiesUserSchema;
 import org.labkey.api.studies.security.StudiesDataAdminRole;
+import org.labkey.studies.study.StudyEnrollmentEventProvider;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -30,7 +31,7 @@ public class StudiesModule extends ExtendedSimpleModule
     @Override
     public @Nullable Double getSchemaVersion()
     {
-        return 23.001;
+        return 23.002;
     }
 
     @Override
@@ -39,6 +40,7 @@ public class StudiesModule extends ExtendedSimpleModule
         addController(StudiesController.NAME, StudiesController.class);
 
         StudiesService.setInstance(StudiesServiceImpl.get());
+        StudiesService.get().registerEventProvider(new StudyEnrollmentEventProvider());
         RoleManager.registerRole(new StudiesDataAdminRole());
     }
 

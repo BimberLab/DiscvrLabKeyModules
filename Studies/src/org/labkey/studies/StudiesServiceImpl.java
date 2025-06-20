@@ -18,6 +18,8 @@ import org.labkey.api.resource.DirectoryResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.studies.StudiesService;
+import org.labkey.api.studies.study.EventProvider;
+import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.logging.LogHelper;
@@ -28,6 +30,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -134,5 +137,24 @@ public class StudiesServiceImpl extends StudiesService
 
             throw new RuntimeException(e);
         }
+    }
+
+    private final Map<String, EventProvider> _eventProviders = new HashMap<>();
+
+    @Override
+    public void registerEventProvider(EventProvider ep)
+    {
+        if (_eventProviders.containsKey(ep.getName()))
+        {
+            throw new ConfigurationException("There is already a provider registered with the name: " + ep.getName());
+        }
+
+        _eventProviders.put(ep.getName(), ep);
+    }
+
+    @Override
+    public List<EventProvider> getEventProviders(Container c)
+    {
+        return _eventProviders.values().stream().filter(ep -> ep.isAvailable(c)).toList();
     }
 }
