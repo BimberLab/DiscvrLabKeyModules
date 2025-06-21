@@ -1,6 +1,7 @@
 package org.labkey.api.studies;
 
 import org.labkey.api.data.Container;
+import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.module.Module;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
@@ -34,4 +35,6 @@ abstract public class StudiesService
     abstract public void registerEventProvider(EventProvider ep);
 
     abstract public List<EventProvider> getEventProviders(Container c);
+
+    abstract public TableCustomizer getStudiesTableCustomizer();
 }
