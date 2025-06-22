@@ -126,12 +126,10 @@
     </table>
 
     <table tableName="studies" tableDbType="TABLE" useColumnOrder="true">
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <tableTitle>Studies</tableTitle>
+        <tableUrl>/studies/manageStudy.view?studyId=${rowid}</tableUrl>
         <auditLogging>DETAILED</auditLogging>
-        <importUrl></importUrl>
-        <insertUrl></insertUrl>
-        <updateUrl></updateUrl>
-        <deleteUrl></deleteUrl>
         <columns>
             <column columnName="rowid">
                 <isAutoInc>true</isAutoInc>
@@ -192,12 +190,9 @@
     </table>
 
     <table tableName="studyCohorts" tableDbType="TABLE" useColumnOrder="true">
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <tableTitle>Study Cohorts</tableTitle>
         <auditLogging>DETAILED</auditLogging>
-        <importUrl></importUrl>
-        <insertUrl></insertUrl>
-        <updateUrl></updateUrl>
-        <deleteUrl></deleteUrl>
         <columns>
             <column columnName="rowid">
                 <isAutoInc>true</isAutoInc>
@@ -274,12 +269,9 @@
 
     <table tableName="anchorEvents" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>Study Anchor Events</tableTitle>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <description>This table contains the key event types that anchor relative dates in this study</description>
         <auditLogging>DETAILED</auditLogging>
-        <importUrl></importUrl>
-        <insertUrl></insertUrl>
-        <updateUrl></updateUrl>
-        <deleteUrl></deleteUrl>
         <columns>
             <column columnName="rowid">
                 <isAutoInc>true</isAutoInc>
@@ -342,12 +334,9 @@
 
     <table tableName="expectedTimepoints" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>Study Expected Timepoints</tableTitle>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <description>This table contains the expected timepoints within this study, by cohort</description>
         <auditLogging>DETAILED</auditLogging>
-        <importUrl></importUrl>
-        <insertUrl></insertUrl>
-        <updateUrl></updateUrl>
-        <deleteUrl></deleteUrl>
         <columns>
             <column columnName="rowid">
                 <isAutoInc>true</isAutoInc>
@@ -432,6 +421,7 @@
 
     <table tableName="timepointToDate" tableDbType="TABLE" useColumnOrder="true">
         <tableTitle>Timepoint to Date Range</tableTitle>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
         <description>Per subject, this table contains the allowable date ranges to map record to timepoint label. It is usually populated automatically, but can be manually overridden</description>
         <auditLogging>DETAILED</auditLogging>
         <importUrl></importUrl>

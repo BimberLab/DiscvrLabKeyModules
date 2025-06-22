@@ -3,16 +3,28 @@
 (function($, LABKEY) {
     $(function(){
         $( document ).ready(function() {
-            LABKEY.Query.selectRows({
+            // TODO: ultimately replace this page with a better card view of the data:
+            var webpart = <%=webpartContext%>;
+            $('#' + webpart.wrapperDivId).append('<div id="' + webpart.wrapperDivId + '-studies"></div>')
+            LDK.Utils.getBasicQWP({
+                frame: 'portal',
+                title: 'List of Studies',
+                name: 'query',
                 schemaName: 'studies',
                 queryName: 'studies',
-                scope: this,
-                failure: LDK.Utils.getErrorCallback(),
-                success: function (results) {
-                    // TODO: render some sort of card/tile view
-                    //console.log(results)
-                }
-            })
+                maxRows: 20
+            }).render(webpart.wrapperDivId + '-studies');
+
+            // LABKEY.Query.selectRows({
+            //     schemaName: 'studies',
+            //     queryName: 'studies',
+            //     scope: this,
+            //     failure: LDK.Utils.getErrorCallback(),
+            //     success: function (results) {
+            //         // TODO: render some sort of card/tile view
+            //         //console.log(results)
+            //     }
+            // })
 
             LABKEY.Query.selectRows({
                 schemaName: 'study',
@@ -42,7 +54,6 @@
                         div.append('</ul>')
                     })
 
-                    var webpart = <%=webpartContext%>;
                     $('#' + webpart.wrapperDivId).append(div)
                 }
             })
@@ -51,8 +62,4 @@
 }(jQuery, LABKEY));
 
 </script>
-
-Below is a list of the datasets managed in this folder.
-
-<br>
 
