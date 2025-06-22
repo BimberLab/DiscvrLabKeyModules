@@ -1,5 +1,5 @@
 <view xmlns="http://labkey.org/data/xml/view" title="Overview of Studies">
     <dependencies>
-        <dependency path="laboratory.context"/>
+        <dependency path="https://code.jquery.com/jquery-3.2.1.min.js"/>
     </dependencies>
 </view>

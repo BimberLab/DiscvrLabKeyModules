@@ -1,5 +1,58 @@
-Hello!
+<script type="text/javascript" nonce="<%=scriptNonce%>">
 
-TODO:
-- Query list of studies, perhaps tile/card view?
-- Query list of datasets
+(function($, LABKEY) {
+    $(function(){
+        $( document ).ready(function() {
+            LABKEY.Query.selectRows({
+                schemaName: 'studies',
+                queryName: 'studies',
+                scope: this,
+                failure: LDK.Utils.getErrorCallback(),
+                success: function (results) {
+                    // TODO: render some sort of card/tile view
+                    //console.log(results)
+                }
+            })
+
+            LABKEY.Query.selectRows({
+                schemaName: 'study',
+                queryName: 'datasets',
+                columns: 'Name,Label,CategoryId/Label',
+                scope: this,
+                failure: LDK.Utils.getErrorCallback(),
+                success: function (results) {
+                    let div = $('<div>')
+
+                    const dataByCategory = {}
+                    results.rows.sort((a, b) => a.Label.localeCompare(b.Label)).forEach(row => {
+                        const dsUrl = LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {
+                            schemaName: 'study',
+                            queryName: row.Name
+                        });
+
+                        dataByCategory[row['CategoryId/Label']] = dataByCategory[row['CategoryId/Label']] || []
+                        dataByCategory[row['CategoryId/Label']].push(`<li><a href="${dsUrl}">${row.Label}</a></li>`)
+                    })
+
+                    Object.keys(dataByCategory).sort().forEach(category => {
+                        div.append('<h4 style="font-weight: bold;">' + category + '</h4>').append('<ul>')
+                        dataByCategory[category].forEach(item => {
+                            div.append(item)
+                        })
+                        div.append('</ul>')
+                    })
+
+                    var webpart = <%=webpartContext%>;
+                    $('#' + webpart.wrapperDivId).append(div)
+                }
+            })
+        })
+    });
+}(jQuery, LABKEY));
+
+</script>
+
+Below is a list of the datasets managed in this folder.
+
+<br>
+
