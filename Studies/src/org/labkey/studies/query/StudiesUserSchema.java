@@ -11,7 +11,6 @@ import org.labkey.api.data.SchemaTableInfo;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.data.dialect.SqlDialect;
 import org.labkey.api.ldk.table.ContainerScopedTable;
 import org.labkey.api.ldk.table.CustomPermissionsTable;
 import org.labkey.api.query.FieldKey;
@@ -35,6 +34,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.labkey.studies.StudiesSchema.TABLE_ANCHOR_EVENTS;
+import static org.labkey.studies.StudiesSchema.TABLE_COHORTS;
+import static org.labkey.studies.StudiesSchema.TABLE_EXPECTED_TIMEPOINTS;
+import static org.labkey.studies.StudiesSchema.TABLE_STUDIES;
+import static org.labkey.studies.StudiesSchema.TABLE_TIMEPOINT_TO_DATE;
 import static org.labkey.studies.query.LookupSetsManager.TABLE_LOOKUPS;
 import static org.labkey.studies.query.LookupSetsManager.TABLE_LOOKUP_SETS;
 
@@ -118,6 +122,26 @@ public class StudiesUserSchema extends SimpleUserSchema
             ret.addPermissionMapping(ReadPermission.class, StudiesDataAdminPermission.class);
             return ret.init();
         }
+        else if (TABLE_STUDIES.equalsIgnoreCase(name))
+        {
+            return createStudyDesignTable(name, cf);
+        }
+        else if (TABLE_COHORTS.equalsIgnoreCase(name))
+        {
+            return createStudyDesignTable(name, cf);
+        }
+        else if (TABLE_ANCHOR_EVENTS.equalsIgnoreCase(name))
+        {
+            return createStudyDesignTable(name, cf);
+        }
+        else if (TABLE_EXPECTED_TIMEPOINTS.equalsIgnoreCase(name))
+        {
+            return createStudyDesignTable(name, cf);
+        }
+        else if (TABLE_TIMEPOINT_TO_DATE.equalsIgnoreCase(name))
+        {
+            return createStudyDesignTable(name, cf);
+        }
         else if (TABLE_EVENT_TYPES.equalsIgnoreCase(name))
         {
             return createEventTypesTable(getContainer());
@@ -129,6 +153,18 @@ public class StudiesUserSchema extends SimpleUserSchema
             return createForPropertySet(this, cf, name, nameMap.get(name));
 
         return super.createTable(name, cf);
+    }
+
+    private TableInfo createStudyDesignTable(String name, ContainerFilter cf)
+    {
+        CustomPermissionsTable<SimpleUserSchema> ret = new CustomPermissionsTable<>(this, createSourceTable(name), cf);
+        ret.addPermissionMapping(InsertPermission.class, StudiesDataAdminPermission.class);
+        ret.addPermissionMapping(UpdatePermission.class, StudiesDataAdminPermission.class);
+        ret.addPermissionMapping(DeletePermission.class, StudiesDataAdminPermission.class);
+        ret.addPermissionMapping(ReadPermission.class, StudiesDataAdminPermission.class);
+        ret.addTriggerFactory(new StudiesTriggerFactory());
+
+        return ret.init();
     }
 
     private LookupSetTable createForPropertySet(StudiesUserSchema us, ContainerFilter cf, String setName, Map<String, Object> map)

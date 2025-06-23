@@ -9,6 +9,12 @@ public class StudiesSchema
     private static final StudiesSchema _instance = new StudiesSchema();
     public static final String NAME = "studies";
 
+    public static final String TABLE_STUDIES = "studies";
+    public static final String TABLE_COHORTS = "studyCohorts";
+    public static final String TABLE_ANCHOR_EVENTS = "anchorEvents";
+    public static final String TABLE_EXPECTED_TIMEPOINTS = "expectedTimepoints";
+    public static final String TABLE_TIMEPOINT_TO_DATE = "timepointToDate";
+
     public static StudiesSchema getInstance()
     {
         return _instance;
