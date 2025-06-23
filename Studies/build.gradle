@@ -1,4 +1,5 @@
 import org.labkey.gradle.util.BuildUtils;
+import org.labkey.gradle.util.ExternalDependency;
 
 plugins {
     id 'org.labkey.build.module'
@@ -6,6 +7,7 @@ plugins {
 
 dependencies
 {
+    BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:DiscvrLabKeyModules:discvrcore", depProjectConfig: "apiJarFile")
     BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:LabDevKitModules:laboratory", depProjectConfig: "apiJarFile")
     BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "apiJarFile")
 
@@ -13,5 +15,18 @@ dependencies
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "published", depExtension: "module")
 
     BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:DiscvrLabKeyModules:discvrcore", depProjectConfig: "published", depExtension: "module")
+
+    BuildUtils.addExternalDependency(
+            project,
+            new ExternalDependency(
+                    "com.fasterxml.jackson.core:jackson-databind:${jacksonDatabindVersion}",
+                    "jackson-databind",
+                    "jackson-databind",
+                    "https://github.com/FasterXML/jackson-databind",
+                    ExternalDependency.APACHE_2_LICENSE_NAME,
+                    ExternalDependency.APACHE_2_LICENSE_URL,
+                    "Parsing JSON Data"
+            )
+    )
 }
 
