@@ -76,7 +76,7 @@ public class StudiesTriggerFactory implements TriggerFactory
                 if (!NumberUtils.isCreatable(row.get(sourceProperty).toString()))
                 {
                     Container target = c.isWorkbookOrTab() ? c.getParent() : c;
-                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString("container"), target.getEntityId()).addCondition(FieldKey.fromString("name"), row.get(sourceProperty));
+                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString("container"), target.getEntityId()).addCondition(FieldKey.fromString("studyName"), row.get(sourceProperty));
                     List<Integer> rowIds = new TableSelector(StudiesSchema.getInstance().getSchema().getTable(StudiesSchema.TABLE_STUDIES), PageFlowUtil.set("rowId"), filter, null).getArrayList(Integer.class);
                     if (rowIds.size() == 1)
                     {

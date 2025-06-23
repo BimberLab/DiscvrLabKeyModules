@@ -124,23 +124,23 @@ public class StudiesUserSchema extends SimpleUserSchema
         }
         else if (TABLE_STUDIES.equalsIgnoreCase(name))
         {
-            return createStudyDesignTable(name, cf);
+            return createStudyDesignTable(name, cf, false);
         }
         else if (TABLE_COHORTS.equalsIgnoreCase(name))
         {
-            return createStudyDesignTable(name, cf);
+            return createStudyDesignTable(name, cf, true);
         }
         else if (TABLE_ANCHOR_EVENTS.equalsIgnoreCase(name))
         {
-            return createStudyDesignTable(name, cf);
+            return createStudyDesignTable(name, cf, true);
         }
         else if (TABLE_EXPECTED_TIMEPOINTS.equalsIgnoreCase(name))
         {
-            return createStudyDesignTable(name, cf);
+            return createStudyDesignTable(name, cf, true);
         }
         else if (TABLE_TIMEPOINT_TO_DATE.equalsIgnoreCase(name))
         {
-            return createStudyDesignTable(name, cf);
+            return createStudyDesignTable(name, cf, true);
         }
         else if (TABLE_EVENT_TYPES.equalsIgnoreCase(name))
         {
@@ -155,14 +155,18 @@ public class StudiesUserSchema extends SimpleUserSchema
         return super.createTable(name, cf);
     }
 
-    private TableInfo createStudyDesignTable(String name, ContainerFilter cf)
+    private TableInfo createStudyDesignTable(String name, ContainerFilter cf, boolean addTriggers)
     {
         CustomPermissionsTable<SimpleUserSchema> ret = new CustomPermissionsTable<>(this, createSourceTable(name), cf);
         ret.addPermissionMapping(InsertPermission.class, StudiesDataAdminPermission.class);
         ret.addPermissionMapping(UpdatePermission.class, StudiesDataAdminPermission.class);
         ret.addPermissionMapping(DeletePermission.class, StudiesDataAdminPermission.class);
         ret.addPermissionMapping(ReadPermission.class, StudiesDataAdminPermission.class);
-        ret.addTriggerFactory(new StudiesTriggerFactory());
+
+        if (addTriggers)
+        {
+            ret.addTriggerFactory(new StudiesTriggerFactory());
+        }
 
         return ret.init();
     }
