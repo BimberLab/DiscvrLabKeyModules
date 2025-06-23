@@ -47,19 +47,19 @@ public interface ClusterResourceAllocator
     /**
      * Additional lines to include in the condor submit script.  These will be appended to the default script.
      */
-    @Nullable void addExtraSubmitScriptLines(PipelineJob job, RemoteExecutionEngine engine, List<String> existingExtraLines);
+    @Nullable void addExtraSubmitScriptLines(PipelineJob job, RemoteExecutionEngine<?> engine, List<String> existingExtraLines);
 
     /**
      * The memory, in GB, to use as -xmx for the LabKey java remote process
      */
     @Nullable
-    default void processJavaOpts(PipelineJob job, RemoteExecutionEngine engine, @NotNull List<String> existingJavaOpts)
+    default void processJavaOpts(PipelineJob job, RemoteExecutionEngine<?> engine, @NotNull List<String> existingJavaOpts)
     {
 
     }
 
     @NotNull
-    default Map<String, Object> getEnvironmentVars(PipelineJob job, RemoteExecutionEngine engine)
+    default Map<String, Object> getEnvironmentVars(PipelineJob job, RemoteExecutionEngine<?> engine)
     {
         return Collections.emptyMap();
     }
