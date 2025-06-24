@@ -31,7 +31,7 @@ public class StudiesModule extends ExtendedSimpleModule
     @Override
     public @Nullable Double getSchemaVersion()
     {
-        return 23.002;
+        return 23.003;
     }
 
     @Override
