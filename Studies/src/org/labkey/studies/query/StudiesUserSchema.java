@@ -161,7 +161,6 @@ public class StudiesUserSchema extends SimpleUserSchema
         ret.addPermissionMapping(InsertPermission.class, StudiesDataAdminPermission.class);
         ret.addPermissionMapping(UpdatePermission.class, StudiesDataAdminPermission.class);
         ret.addPermissionMapping(DeletePermission.class, StudiesDataAdminPermission.class);
-        ret.addPermissionMapping(ReadPermission.class, StudiesDataAdminPermission.class);
 
         if (addTriggers)
         {
