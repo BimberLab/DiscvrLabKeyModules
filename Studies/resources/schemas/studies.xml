@@ -523,6 +523,9 @@
                     <fkDisplayColumnName>label</fkDisplayColumnName>
                 </fk>
             </column>
+            <column columnName="dataSource">
+                <columnTitle>Data Source</columnTitle>
+            </column>
 
             <column columnName="container">
                 <isUserEditable>false</isUserEditable>
