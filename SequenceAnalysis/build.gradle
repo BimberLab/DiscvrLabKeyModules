@@ -116,7 +116,18 @@ dependencies {
                     'Library for Base64 encoding. Used by FastQC'
             )
     )
-    implementation "net.sf.opencsv:opencsv:${opencsvVersion}"
+    BuildUtils.addExternalDependency(
+            project,
+            new ExternalDependency(
+                    "net.sf.opencsv:opencsv:${opencsvVersion}",
+                    'Open CSV',
+                    'Open CSV',
+                    'http://opencsv.sf.net',
+                    ExternalDependency.APACHE_2_LICENSE_NAME,
+                    ExternalDependency.APACHE_2_LICENSE_URL,
+                    'A simple library for reading and writing CSV in Java'
+            )
+    )
 
     // picard brings in a version of servlet-api and a very old one at that, so we excluded it
     // Note: if changing this, we might need to match the htsjdk version set in gradle.properties
