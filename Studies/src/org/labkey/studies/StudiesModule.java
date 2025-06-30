@@ -3,6 +3,7 @@ package org.labkey.studies;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
+import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
@@ -13,6 +14,8 @@ import org.labkey.api.studies.StudiesService;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.studies.query.StudiesUserSchema;
 import org.labkey.api.studies.security.StudiesDataAdminRole;
+import org.labkey.studies.query.StudiesUserSchema;
+import org.labkey.studies.study.StudiesFilterProvider;
 import org.labkey.studies.study.StudyEnrollmentEventProvider;
 
 import java.util.Collection;
@@ -32,7 +35,7 @@ public class StudiesModule extends ExtendedSimpleModule
     @Override
     public @Nullable Double getSchemaVersion()
     {
-        return 23.002;
+        return 23.005;
     }
 
     @Override
@@ -43,6 +46,7 @@ public class StudiesModule extends ExtendedSimpleModule
         StudiesService.setInstance(StudiesServiceImpl.get());
         StudiesService.get().registerEventProvider(new StudyEnrollmentEventProvider());
         RoleManager.registerRole(new StudiesDataAdminRole());
+        LaboratoryService.get().registerTabbedReportFilterProvider(new StudiesFilterProvider());
     }
 
     @Override

@@ -485,4 +485,73 @@
             </column>
         </columns>
     </table>
+
+    <table tableName="subjectAnchorDates" tableDbType="TABLE" useColumnOrder="true">
+        <tableTitle>Timepoint to Date Range</tableTitle>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
+        <description>Per subject, this table contains the anchor dates, which are key dates that establish relative time within the study</description>
+        <auditLogging>DETAILED</auditLogging>
+        <importUrl></importUrl>
+        <insertUrl></insertUrl>
+        <updateUrl></updateUrl>
+        <deleteUrl></deleteUrl>
+        <columns>
+            <column columnName="rowid">
+                <isAutoInc>true</isAutoInc>
+                <shownInUpdateView>false</shownInUpdateView>
+                <shownInInsertView>false</shownInInsertView>
+                <isKeyField>true</isKeyField>
+            </column>
+            <column columnName="subjectId">
+                <columnTitle>Subject Id</columnTitle>
+                <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+                <nullable>false</nullable>
+            </column>
+            <column columnName="date">
+                <columnTitle>Date</columnTitle>
+                <nullable>false</nullable>
+            </column>
+            <column columnName="eventLabel">
+                <columnTitle>Event Label</columnTitle>
+            </column>
+            <column columnName="anchorEventId">
+                <columnTitle>Anchor Event Id</columnTitle>
+                <fk>
+                    <fkDbSchema>studies</fkDbSchema>
+                    <fkTable>anchorEvents</fkTable>
+                    <fkColumnName>rowId</fkColumnName>
+                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                </fk>
+            </column>
+            <column columnName="dataSource">
+                <columnTitle>Data Source</columnTitle>
+            </column>
+
+            <column columnName="container">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
 </tables>

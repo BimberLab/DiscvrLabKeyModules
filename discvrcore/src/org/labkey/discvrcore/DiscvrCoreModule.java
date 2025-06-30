@@ -18,8 +18,11 @@ package org.labkey.discvrcore;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.query.DetailsURL;
+import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
 
@@ -66,7 +69,7 @@ public class DiscvrCoreModule extends DefaultModule
     @Override
     public void doStartup(ModuleContext moduleContext)
     {
-
+        AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "site utility actions", DetailsURL.fromString("discvrcore/showUtilityActions.view", ContainerManager.getRoot()).getActionURL());
     }
 
     @Override

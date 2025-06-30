@@ -1,4 +1,4 @@
-package org.labkey.studies.query;
+package org.labkey.api.studies.query;
 
 import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.data.ColumnInfo;
@@ -9,9 +9,9 @@ import org.labkey.api.query.FieldKey;
 import java.text.DecimalFormat;
 import java.util.Set;
 
-public class ResultsOOODisplayColumn extends DataColumn
+public class ResultsOORDisplayColumn extends DataColumn
 {
-    public ResultsOOODisplayColumn(ColumnInfo col)
+    public ResultsOORDisplayColumn(ColumnInfo col)
     {
         super(col);
     }
@@ -48,15 +48,15 @@ public class ResultsOOODisplayColumn extends DataColumn
 
     private FieldKey getOOR()
     {
-        FieldKey oor = FieldKey.fromString("resultOOOIndicator");
-        if (getBoundColumn() != null)
+        ColumnInfo col = getBoundColumn();
+        if (col == null)
         {
-            return FieldKey.fromParts(getBoundColumn().getFieldKey().getParent(), oor);
+            return null;
         }
-        else
-        {
-            return oor;
-        }
+
+        FieldKey oor = FieldKey.fromString(col.getFieldKey().getName() + "OORIndicator");
+
+        return getBoundColumn().getFieldKey().getParent() == null ? oor : FieldKey.fromParts(getBoundColumn().getFieldKey().getParent(), oor);
     }
 
     @Override

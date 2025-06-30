@@ -3,6 +3,8 @@ package org.labkey.studies.query;
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.SetValuedMap;
 import org.apache.logging.log4j.Logger;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
+
 import org.labkey.api.collections.CaseInsensitiveKeyedHashSetValuedMap;
 import org.labkey.api.data.AbstractTableInfo;
 import org.labkey.api.data.TableCustomizer;
@@ -21,15 +23,26 @@ public class StudiesTableCustomizer implements TableCustomizer
         MultiValuedMap<String, String> props = new CaseInsensitiveKeyedHashSetValuedMap<>();
         if (tableInfo.getPkColumnNames().size() > 1)
         {
-            if (tableInfo.getPkColumnNames().contains("objectId"))
+            final CaseInsensitiveHashMap<String> keys = new CaseInsensitiveHashMap<>();
+            tableInfo.getPkColumnNames().forEach(x -> keys.put(x, x));
+
+            if (keys.containsKey("objectId"))
             {
-                props.put("primaryKeyField", "objectId");
+                props.put("primaryKeyField", keys.get("objectId"));
             }
             else if (tableInfo instanceof DatasetTable ds)
             {
                 if (ds.getDataset().isDemographicData())
                 {
-                    props.put("primaryKeyField", ds.getDataset().getStudy().getSubjectColumnName());
+                    String subjectCol = ds.getDataset().getStudy().getSubjectColumnName();
+                    if (keys.containsKey(subjectCol))
+                    {
+                        props.put("primaryKeyField", keys.get(subjectCol));
+                    }
+                    else
+                    {
+                        _log.error("Demographics dataset does not list subject col (" + subjectCol + ") as a PK. Table: " + tableInfo.getName());
+                    }
                 }
             }
         }
