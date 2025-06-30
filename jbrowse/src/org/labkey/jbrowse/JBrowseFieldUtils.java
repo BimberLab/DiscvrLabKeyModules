@@ -16,6 +16,7 @@ import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -80,7 +81,7 @@ public class JBrowseFieldUtils
                 fd.lock();
             }
 
-            _cache.put(key, ret);
+            _cache.put(key, Collections.unmodifiableMap(ret));
         }
 
         // Clone cached results:
@@ -150,7 +151,7 @@ public class JBrowseFieldUtils
                 fd.lock();
             }
 
-            _cache.put(key, ret);
+            _cache.put(key, Collections.unmodifiableMap(ret));
         }
 
         // Clone cached results:
