@@ -3,6 +3,7 @@ package org.labkey.studies;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
+import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
@@ -10,8 +11,10 @@ import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.studies.StudiesService;
-import org.labkey.studies.query.StudiesUserSchema;
 import org.labkey.api.studies.security.StudiesDataAdminRole;
+import org.labkey.studies.query.StudiesUserSchema;
+import org.labkey.studies.study.StudiesFilterProvider;
+import org.labkey.studies.study.StudyEnrollmentEventProvider;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -30,7 +33,7 @@ public class StudiesModule extends ExtendedSimpleModule
     @Override
     public @Nullable Double getSchemaVersion()
     {
-        return 23.001;
+        return 23.005;
     }
 
     @Override
@@ -39,7 +42,9 @@ public class StudiesModule extends ExtendedSimpleModule
         addController(StudiesController.NAME, StudiesController.class);
 
         StudiesService.setInstance(StudiesServiceImpl.get());
+        StudiesService.get().registerEventProvider(new StudyEnrollmentEventProvider());
         RoleManager.registerRole(new StudiesDataAdminRole());
+        LaboratoryService.get().registerTabbedReportFilterProvider(new StudiesFilterProvider());
     }
 
     @Override

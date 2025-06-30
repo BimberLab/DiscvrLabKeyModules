@@ -1,0 +1,65 @@
+<script type="text/javascript" nonce="<%=scriptNonce%>">
+
+(function($, LABKEY) {
+    $(function(){
+        $( document ).ready(function() {
+            // TODO: ultimately replace this page with a better card view of the data:
+            var webpart = <%=webpartContext%>;
+            $('#' + webpart.wrapperDivId).append('<div id="' + webpart.wrapperDivId + '-studies"></div>')
+            LDK.Utils.getBasicQWP({
+                frame: 'portal',
+                title: 'List of Studies',
+                name: 'query',
+                schemaName: 'studies',
+                queryName: 'studies',
+                maxRows: 20
+            }).render(webpart.wrapperDivId + '-studies');
+
+            // LABKEY.Query.selectRows({
+            //     schemaName: 'studies',
+            //     queryName: 'studies',
+            //     scope: this,
+            //     failure: LDK.Utils.getErrorCallback(),
+            //     success: function (results) {
+            //         // TODO: render some sort of card/tile view
+            //         //console.log(results)
+            //     }
+            // })
+
+            LABKEY.Query.selectRows({
+                schemaName: 'study',
+                queryName: 'datasets',
+                columns: 'Name,Label,CategoryId/Label',
+                scope: this,
+                failure: LDK.Utils.getErrorCallback(),
+                success: function (results) {
+                    let div = $('<div>')
+
+                    const dataByCategory = {}
+                    results.rows.sort((a, b) => a.Label.localeCompare(b.Label)).forEach(row => {
+                        const dsUrl = LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {
+                            schemaName: 'study',
+                            queryName: row.Name
+                        });
+
+                        dataByCategory[row['CategoryId/Label']] = dataByCategory[row['CategoryId/Label']] || []
+                        dataByCategory[row['CategoryId/Label']].push(`<li><a href="${dsUrl}">${row.Label}</a></li>`)
+                    })
+
+                    Object.keys(dataByCategory).sort().forEach(category => {
+                        div.append('<h4 style="font-weight: bold;">' + category + '</h4>').append('<ul>')
+                        dataByCategory[category].forEach(item => {
+                            div.append(item)
+                        })
+                        div.append('</ul>')
+                    })
+
+                    $('#' + webpart.wrapperDivId).append(div)
+                }
+            })
+        })
+    });
+}(jQuery, LABKEY));
+
+</script>
+

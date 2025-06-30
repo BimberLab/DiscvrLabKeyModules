@@ -26,8 +26,9 @@ public class FindClustersAndDimRedux extends AbstractCellMembraneStep
                     }}, 15),
                     SeuratToolParameter.create("useLeiden", "Use Leiden Clustering", "If true, FindClusters() will use algorith=4 (leiden), as opposed to the default (louvain)", "checkbox", new JSONObject(){{
 
-                    }}, false)
-            ), null, null);
+                    }}, false),
+                    SeuratToolParameter.create("clusterResolutions", "Cluster Resolutions", "A comma-separated list of resolution. If blank, it will default to 0.2, 0.4, 0.6, 0.8, 1.2", "textfield", null, null)
+                    ), null, "0.2,0.4,0.6,0.8,1.2");
         }
 
 
