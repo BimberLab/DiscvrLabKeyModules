@@ -41,7 +41,7 @@ import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.util.DOM;
 import org.labkey.api.util.GUID;
-import org.labkey.api.util.Link;
+import org.labkey.api.util.LinkBuilder;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.util.logging.LogHelper;
@@ -132,7 +132,7 @@ public class DiscvrCoreController extends SpringActionController
 
                             Class<? extends Controller> actionClass = (Class<? extends Controller>)x;
                             items.put(annot.label(), DOM.TR(
-                                DOM.TD(at(valign,"top"), new Link.LinkBuilder(annot.label()).href(new ActionURL(actionClass, getContainer())).build()),
+                                DOM.TD(at(valign,"top"), LinkBuilder.labkeyLink(annot.label(), new ActionURL(actionClass, getContainer())).build()),
                                 DOM.TD(at(valign,"top"), annot.description())
                             ));
                         }
