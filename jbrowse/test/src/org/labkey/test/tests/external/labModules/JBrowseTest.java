@@ -25,7 +25,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.remoteapi.CommandException;
+import org.labkey.remoteapi.CommandResponse;
 import org.labkey.remoteapi.Connection;
+import org.labkey.remoteapi.SimplePostCommand;
 import org.labkey.remoteapi.query.Filter;
 import org.labkey.remoteapi.query.InsertRowsCommand;
 import org.labkey.remoteapi.query.SelectRowsCommand;
@@ -53,6 +55,7 @@ import org.openqa.selenium.support.Color;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.http.HttpRequest;
 import java.util.List;
 import java.util.Map;
 
@@ -542,6 +545,18 @@ public class JBrowseTest extends BaseWebDriverTest
         ic.execute(cn, getProjectName());
     }
 
+    private JSONObject getSearchResults(Map<String, Object> queryParams) throws CommandException, IOException
+    {
+        Connection connection = createDefaultConnection();
+
+        SimplePostCommand command = new SimplePostCommand("jbrowse", "luceneQuery");
+        command.setParameters(queryParams);
+        command.setTimeout(1200000);
+        CommandResponse response = command.execute(connection, getProjectName());
+
+        return new JSONObject(response.getText());
+    }
+
     @Override
     public List<String> getAssociatedModules()
     {
@@ -573,22 +588,17 @@ public class JBrowseTest extends BaseWebDriverTest
 
         // all
         // this should return 143 results. We can't make any other assumptions about the content
-        String url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=all&pageSize=143";
-        beginAt(url, WAIT_FOR_PAGE * 2);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        String jsonString = getText(Locator.tagWithClass("pre", "data"));
-        JSONObject mainJsonObject = new JSONObject(jsonString);
+        JSONObject mainJsonObject = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "all", "pageSize", 43));
         JSONArray jsonArray = mainJsonObject.getJSONArray("data");
         Assert.assertEquals(143, jsonArray.length());
 
         // stringType:
         // ref equals A
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=ref%3AA";
+        String url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=ref%3AA";
         beginAt(url);
         waitForText("data");
         waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
+        String jsonString = getText(Locator.tagWithClass("pre", "data"));
         mainJsonObject = new JSONObject(jsonString);
         jsonArray = mainJsonObject.getJSONArray("data");
         Assert.assertEquals(100, jsonArray.length());
