@@ -558,7 +558,8 @@ public class JBrowseTest extends BaseWebDriverTest
         log("JBrowse search time: " + DurationFormatUtils.formatDurationWords(new Date().getTime() - start.getTime(), true, true));
         log(response.getText());
 
-        return new JSONArray("[" + response.getText() + "]");
+        // NOTE: the response is ndjson. This converts it into a more standard JSONArray form:
+        return new JSONArray("[" + StringUtils.join(response.getText().split("\n"), ",") + "]");
     }
 
     @Override
