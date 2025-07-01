@@ -17,6 +17,7 @@ package org.labkey.test.tests.external.labModules;
 
 import au.com.bytecode.opencsv.CSVReader;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -55,7 +56,7 @@ import org.openqa.selenium.support.Color;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.http.HttpRequest;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -549,10 +550,12 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         Connection connection = createDefaultConnection();
 
+        Date start = new Date();
         SimplePostCommand command = new SimplePostCommand("jbrowse", "luceneQuery");
         command.setParameters(queryParams);
-        command.setTimeout(1200000);
+        command.setTimeout(WAIT_FOR_PAGE * 3);
         CommandResponse response = command.execute(connection, getProjectName());
+        log("JBrowse search time: " + DurationFormatUtils.formatDurationWords(new Date().getTime() - start.getTime(), true, true));
 
         return new JSONObject(response.getText());
     }
@@ -589,6 +592,7 @@ public class JBrowseTest extends BaseWebDriverTest
         // all
         // this should return 143 results. We can't make any other assumptions about the content
         JSONObject mainJsonObject = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "all", "pageSize", 43));
+        log(mainJsonObject.toString());
         JSONArray jsonArray = mainJsonObject.getJSONArray("data");
         Assert.assertEquals(143, jsonArray.length());
 
