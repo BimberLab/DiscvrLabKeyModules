@@ -556,6 +556,7 @@ public class JBrowseTest extends BaseWebDriverTest
         command.setTimeout(WAIT_FOR_PAGE * 3);
         CommandResponse response = command.execute(connection, getProjectName());
         log("JBrowse search time: " + DurationFormatUtils.formatDurationWords(new Date().getTime() - start.getTime(), true, true));
+        log(response.getText());
 
         return new JSONObject(response.getText());
     }
@@ -591,10 +592,8 @@ public class JBrowseTest extends BaseWebDriverTest
 
         // all
         // this should return 143 results. We can't make any other assumptions about the content
-        JSONObject mainJsonObject = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "all", "pageSize", 43));
-        log(mainJsonObject.toString());
-        JSONArray jsonArray = mainJsonObject.getJSONArray("data");
-        Assert.assertEquals(143, jsonArray.length());
+        JSONObject searchJson = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "all", "pageSize", 43));
+        Assert.assertEquals(143, searchJson.length());
 
         // stringType:
         // ref equals A
@@ -603,8 +602,8 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForText("data");
         waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
         String jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        JSONObject mainJsonObject = new JSONObject(jsonString);
+        JSONArray jsonArray = mainJsonObject.getJSONArray("data");
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
