@@ -124,4 +124,434 @@
             </column>
         </columns>
     </table>
+
+    <table tableName="studies" tableDbType="TABLE" useColumnOrder="true">
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
+        <tableTitle>Studies</tableTitle>
+        <tableUrl>/studies/manageStudy.view?studyId=${rowid}</tableUrl>
+        <auditLogging>DETAILED</auditLogging>
+        <columns>
+            <column columnName="rowid">
+                <isAutoInc>true</isAutoInc>
+                <shownInUpdateView>false</shownInUpdateView>
+                <shownInInsertView>false</shownInInsertView>
+                <isKeyField>true</isKeyField>
+            </column>
+            <column columnName="studyName">
+                <columnTitle>Study Name</columnTitle>
+            </column>
+            <column columnName="label">
+                <columnTitle>Label</columnTitle>
+            </column>
+            <column columnName="category">
+                <columnTitle>Category</columnTitle>
+            </column>
+            <column columnName="description">
+                <columnTitle>Description</columnTitle>
+                <inputType>textarea</inputType>
+            </column>
+            <column columnName="lsid">
+                <datatype>lsidtype</datatype>
+                <isReadOnly>true</isReadOnly>
+                <isHidden>true</isHidden>
+                <isUserEditable>false</isUserEditable>
+                <fk>
+                    <fkColumnName>ObjectUri</fkColumnName>
+                    <fkTable>Object</fkTable>
+                    <fkDbSchema>exp</fkDbSchema>
+                </fk>
+            </column>
+            <column columnName="container">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+
+    <table tableName="studyCohorts" tableDbType="TABLE" useColumnOrder="true">
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
+        <tableTitle>Study Cohorts</tableTitle>
+        <auditLogging>DETAILED</auditLogging>
+        <columns>
+            <column columnName="rowid">
+                <isAutoInc>true</isAutoInc>
+                <shownInUpdateView>false</shownInUpdateView>
+                <shownInInsertView>false</shownInInsertView>
+                <isKeyField>true</isKeyField>
+            </column>
+            <column columnName="studyId">
+                <columnTitle>Study ID</columnTitle>
+                <fk>
+                    <fkDbSchema>studies</fkDbSchema>
+                    <fkTable>studies</fkTable>
+                    <fkColumnName>rowId</fkColumnName>
+                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                </fk>
+            </column>
+            <column columnName="cohortName">
+                <columnTitle>Cohort Name</columnTitle>
+            </column>
+            <column columnName="label">
+                <columnTitle>Label</columnTitle>
+            </column>
+            <column columnName="category">
+                <columnTitle>Category</columnTitle>
+            </column>
+            <column columnName="description">
+                <columnTitle>Description</columnTitle>
+                <inputType>textarea</inputType>
+            </column>
+            <column columnName="isControlGroup">
+                <columnTitle>Is Control Group?</columnTitle>
+            </column>
+            <column columnName="sortOrder">
+                <columnTitle>Sort Order</columnTitle>
+            </column>
+            <column columnName="lsid">
+                <datatype>lsidtype</datatype>
+                <isReadOnly>true</isReadOnly>
+                <isHidden>true</isHidden>
+                <isUserEditable>false</isUserEditable>
+                <fk>
+                    <fkColumnName>ObjectUri</fkColumnName>
+                    <fkTable>Object</fkTable>
+                    <fkDbSchema>exp</fkDbSchema>
+                </fk>
+            </column>
+            <column columnName="container">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+
+    <table tableName="anchorEvents" tableDbType="TABLE" useColumnOrder="true">
+        <tableTitle>Study Anchor Events</tableTitle>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
+        <description>This table contains the key event types that anchor relative dates in this study</description>
+        <auditLogging>DETAILED</auditLogging>
+        <columns>
+            <column columnName="rowid">
+                <isAutoInc>true</isAutoInc>
+                <shownInUpdateView>false</shownInUpdateView>
+                <shownInInsertView>false</shownInInsertView>
+                <isKeyField>true</isKeyField>
+            </column>
+            <column columnName="studyId">
+                <columnTitle>Study ID</columnTitle>
+                <fk>
+                    <fkDbSchema>studies</fkDbSchema>
+                    <fkTable>studies</fkTable>
+                    <fkColumnName>rowId</fkColumnName>
+                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                </fk>
+            </column>
+            <column columnName="label">
+                <columnTitle>Label</columnTitle>
+            </column>
+            <column columnName="description">
+                <columnTitle>Description</columnTitle>
+                <inputType>textarea</inputType>
+            </column>
+            <column columnName="eventProviderName">
+                <columnTitle>Event Provider</columnTitle>
+                <fk>
+                    <fkDbSchema>studies</fkDbSchema>
+                    <fkTable>studyEventTypes</fkTable>
+                    <fkColumnName>name</fkColumnName>
+                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                </fk>
+            </column>
+            <column columnName="container">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+
+    <table tableName="expectedTimepoints" tableDbType="TABLE" useColumnOrder="true">
+        <tableTitle>Study Expected Timepoints</tableTitle>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
+        <description>This table contains the expected timepoints within this study, by cohort</description>
+        <auditLogging>DETAILED</auditLogging>
+        <columns>
+            <column columnName="rowid">
+                <isAutoInc>true</isAutoInc>
+                <shownInUpdateView>false</shownInUpdateView>
+                <shownInInsertView>false</shownInInsertView>
+                <isKeyField>true</isKeyField>
+            </column>
+            <column columnName="studyId">
+                <columnTitle>Study ID</columnTitle>
+                <fk>
+                    <fkDbSchema>studies</fkDbSchema>
+                    <fkTable>studies</fkTable>
+                    <fkColumnName>rowId</fkColumnName>
+                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                </fk>
+            </column>
+            <column columnName="cohortId">
+                <columnTitle>Cohort ID</columnTitle>
+                <fk>
+                    <fkDbSchema>studies</fkDbSchema>
+                    <fkTable>studyCohorts</fkTable>
+                    <fkColumnName>rowId</fkColumnName>
+                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                </fk>
+            </column>
+            <column columnName="label">
+                <columnTitle>Label</columnTitle>
+            </column>
+            <column columnName="labelShort">
+                <columnTitle>Short Label</columnTitle>
+            </column>
+            <column columnName="description">
+                <columnTitle>Description</columnTitle>
+                <inputType>textarea</inputType>
+            </column>
+            <column columnName="numericLabel">
+                <columnTitle>Numeric Label</columnTitle>
+            </column>
+            <column columnName="anchorEvent">
+                <columnTitle>Anchor Event</columnTitle>
+                <fk>
+                    <fkDbSchema>studies</fkDbSchema>
+                    <fkTable>anchorEvents</fkTable>
+                    <fkColumnName>rowId</fkColumnName>
+                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                </fk>
+            </column>
+            <column columnName="rangeMin">
+                <columnTitle>Min Days Relative to Anchor</columnTitle>
+            </column>
+            <column columnName="rangeMax">
+                <columnTitle>Max Days Relative to Anchor</columnTitle>
+            </column>
+
+            <column columnName="container">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+
+    <table tableName="timepointToDate" tableDbType="TABLE" useColumnOrder="true">
+        <tableTitle>Timepoint to Date Range</tableTitle>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
+        <description>Per subject, this table contains the allowable date ranges to map record to timepoint label. It is usually populated automatically, but can be manually overridden</description>
+        <auditLogging>DETAILED</auditLogging>
+        <importUrl></importUrl>
+        <insertUrl></insertUrl>
+        <updateUrl></updateUrl>
+        <deleteUrl></deleteUrl>
+        <columns>
+            <column columnName="rowid">
+                <isAutoInc>true</isAutoInc>
+                <shownInUpdateView>false</shownInUpdateView>
+                <shownInInsertView>false</shownInInsertView>
+                <isKeyField>true</isKeyField>
+            </column>
+            <column columnName="subjectId">
+                <columnTitle>Subject Id</columnTitle>
+                <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+            </column>
+            <column columnName="timepointId">
+                <columnTitle>Timepoint</columnTitle>
+                <fk>
+                    <fkDbSchema>studies</fkDbSchema>
+                    <fkTable>expectedTimepoints</fkTable>
+                    <fkColumnName>rowId</fkColumnName>
+                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                </fk>
+            </column>
+            <column columnName="dateMin">
+                <columnTitle>Min Allowable Date</columnTitle>
+            </column>
+            <column columnName="dateMax">
+                <columnTitle>Max Allowable Date</columnTitle>
+            </column>
+            <column columnName="isManualOverride">
+                <columnTitle>Is Manual Override?</columnTitle>
+            </column>
+
+            <column columnName="container">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+
+    <table tableName="subjectAnchorDates" tableDbType="TABLE" useColumnOrder="true">
+        <tableTitle>Timepoint to Date Range</tableTitle>
+        <javaCustomizer class="org.labkey.ldk.query.DefaultTableCustomizer" />
+        <description>Per subject, this table contains the anchor dates, which are key dates that establish relative time within the study</description>
+        <auditLogging>DETAILED</auditLogging>
+        <importUrl></importUrl>
+        <insertUrl></insertUrl>
+        <updateUrl></updateUrl>
+        <deleteUrl></deleteUrl>
+        <columns>
+            <column columnName="rowid">
+                <isAutoInc>true</isAutoInc>
+                <shownInUpdateView>false</shownInUpdateView>
+                <shownInInsertView>false</shownInInsertView>
+                <isKeyField>true</isKeyField>
+            </column>
+            <column columnName="subjectId">
+                <columnTitle>Subject Id</columnTitle>
+                <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+                <nullable>false</nullable>
+            </column>
+            <column columnName="date">
+                <columnTitle>Date</columnTitle>
+                <nullable>false</nullable>
+            </column>
+            <column columnName="eventLabel">
+                <columnTitle>Event Label</columnTitle>
+            </column>
+            <column columnName="anchorEventId">
+                <columnTitle>Anchor Event Id</columnTitle>
+                <fk>
+                    <fkDbSchema>studies</fkDbSchema>
+                    <fkTable>anchorEvents</fkTable>
+                    <fkColumnName>rowId</fkColumnName>
+                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                </fk>
+            </column>
+            <column columnName="dataSource">
+                <columnTitle>Data Source</columnTitle>
+            </column>
+
+            <column columnName="container">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="createdby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="created">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modifiedby">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="modified">
+                <isUserEditable>false</isUserEditable>
+                <nullable>true</nullable>
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
 </tables>

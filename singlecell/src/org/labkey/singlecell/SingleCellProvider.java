@@ -164,29 +164,24 @@ public class SingleCellProvider extends AbstractSequenceDataProvider
 
         List<TabbedReportItem> items = new ArrayList<>();
 
-        NavItem owner = getDataNavItems(c, u).get(0);
         String category = NAME;
         QueryCache cache = new QueryCache();
 
         TabbedReportItem stims = new QueryTabbedReportItem(cache, this, SingleCellSchema.NAME, SingleCellSchema.TABLE_SAMPLES, "Single Cell Samples", category);
-        stims.setOwnerKey(owner.getPropertyManagerKey());
         items.add(stims);
 
         TabbedReportItem sorts = new QueryTabbedReportItem(cache, this, SingleCellSchema.NAME, SingleCellSchema.TABLE_SORTS, "Single Cell Sorts", category);
         sorts.setSubjectIdFieldKey(FieldKey.fromString("sampleId/subjectId"));
         sorts.setSampleDateFieldKey(FieldKey.fromString("sampleId/date"));
-        sorts.setAllProjectsFieldKey(FieldKey.fromString("sampleId/allProjectsPivot"));
-        sorts.setOverlappingProjectsFieldKey(FieldKey.fromString("sampleId/overlappingProjectsPivot"));
-        sorts.setOwnerKey(owner.getPropertyManagerKey());
+        sorts.setKeyOverride("allProjectsFieldName", FieldKey.fromString("sampleId/allProjectsPivot"));
+        sorts.setKeyOverride("overlappingProjectsFieldName", FieldKey.fromString("sampleId/overlappingProjectsPivot"));
         items.add(sorts);
 
         TabbedReportItem cdnas = new QueryTabbedReportItem(cache, this, SingleCellSchema.NAME, SingleCellSchema.TABLE_CDNAS, "Single Cell Libraries", category);
-
         cdnas.setSubjectIdFieldKey(FieldKey.fromString("sortId/sampleId/subjectId"));
         cdnas.setSampleDateFieldKey(FieldKey.fromString("sortId/sampleId/date"));
-        cdnas.setAllProjectsFieldKey(FieldKey.fromString("sortId/sampleId/allProjectsPivot"));
-        cdnas.setOverlappingProjectsFieldKey(FieldKey.fromString("sortId/sampleId/overlappingProjectsPivot"));
-        cdnas.setOwnerKey(owner.getPropertyManagerKey());
+        cdnas.setKeyOverride("allProjectsFieldName", FieldKey.fromString("sortId/sampleId/allProjectsPivot"));
+        cdnas.setKeyOverride("overlappingProjectsFieldName", FieldKey.fromString("sortId/sampleId/overlappingProjectsPivot"));
         items.add(cdnas);
 
         return items;

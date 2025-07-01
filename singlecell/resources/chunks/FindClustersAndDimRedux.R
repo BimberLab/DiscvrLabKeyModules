@@ -19,7 +19,21 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
-    seuratObj <- CellMembrane::FindClustersAndDimRedux(seuratObj, minDimsToUse = minDimsToUse, useLeiden = useLeiden)
+    if (all(is.null(clusterResolutions))) {
+        clusterResolutions <- c(0.2, 0.4, 0.6, 0.8, 1.2)
+    } else if (is.character(clusterResolutions)) {
+        clusterResolutionsOrig <- clusterResolutions
+        clusterResolutions <- gsub(clusterResolutions, pattern = ' ', replacement = '')
+        clusterResolutions <- unlist(strsplit(clusterResolutions, split = ','))
+        clusterResolutions <- as.numeric(clusterResolutions)
+        if (any(is.na(clusterResolutions))) {
+            stop(paste0('Some values for clusterResolutions were not numeric: ', clusterResolutionsOrig))
+        }
+    } else {
+        stop('Must provide a value for clusterResolutions')
+    }
+
+    seuratObj <- CellMembrane::FindClustersAndDimRedux(seuratObj, minDimsToUse = minDimsToUse, useLeiden = useLeiden, clusterResolutions = clusterResolutions)
 
     saveData(seuratObj, datasetId)
 

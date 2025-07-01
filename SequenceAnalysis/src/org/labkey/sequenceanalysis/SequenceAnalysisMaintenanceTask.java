@@ -300,6 +300,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         if (root != null && !root.isCloudRoot())
         {
             //first sequences
+            log.debug("Inspecting sequences");
             File sequenceDir = new File(root.getRootPath(), ".sequences");
             TableInfo tableRefNtSequences = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
             TableSelector ntTs = new TableSelector(tableRefNtSequences, new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
@@ -342,6 +343,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             }
 
             //then libraries
+            log.debug("Inspecting genomes");
             File libraryDir = SequenceAnalysisManager.get().getReferenceLibraryDir(c);
             if (libraryDir != null && libraryDir.exists())
             {
@@ -516,6 +518,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             }
 
             //finally outputfiles
+            log.debug("Inspecting outputs");
             TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
             TableSelector ts = new TableSelector(ti, Collections.singleton("dataid"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
             Set<String> expectedFileNames = new HashSet<>();
@@ -563,6 +566,8 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                     }
                 }
             }
+
+            log.debug("done");
         }
 
         for (Container child : c.getChildren())

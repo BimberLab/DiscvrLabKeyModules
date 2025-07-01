@@ -1,0 +1,59 @@
+<script type="text/javascript" nonce="<%=scriptNonce%>">
+
+    (function($, LABKEY) {
+        $(function(){
+            $( document ).ready(function() {
+                const studyId = LABKEY.ActionURL.getParameter('studyId')
+                if (!studyId) {
+                    alert('Must supply a study ID!')
+                    return
+                }
+
+                const webpart = <%=webpartContext%>;
+
+                const parentDiv = $('#' + webpart.wrapperDivId)
+                parentDiv.append('<div id="' + webpart.wrapperDivId + '-studyCohorts"></div>')
+                parentDiv.append('<div id="' + webpart.wrapperDivId + '-anchorEvents"></div>')
+                parentDiv.append('<div id="' + webpart.wrapperDivId + '-expectedTimepoints"></div>')
+
+                LDK.Utils.getBasicQWP({
+                    frame: 'portal',
+                    title: 'Cohorts',
+                    name: 'query',
+                    schemaName: 'studies',
+                    queryName: 'studyCohorts',
+                    filterArray: [LABKEY.Filter.create('studyId',studyId, LABKEY.Filter.Types.EQUAL)],
+                    maxRows: 20,
+                    renderTo: webpart.wrapperDivId + '-studyCohorts'
+                }).render();
+
+                LDK.Utils.getBasicQWP({
+                    frame: 'portal',
+                    title: 'Anchor Events',
+                    name: 'query',
+                    schemaName: 'studies',
+                    queryName: 'anchorEvents',
+                    filterArray: [LABKEY.Filter.create('studyId',studyId, LABKEY.Filter.Types.EQUAL)],
+                    maxRows: 20,
+                    renderTo: webpart.wrapperDivId + '-anchorEvents'
+                }).render();
+
+                LDK.Utils.getBasicQWP({
+                    frame: 'portal',
+                    title: 'Expected Timepoints',
+                    name: 'query',
+                    schemaName: 'studies',
+                    queryName: 'expectedTimepoints',
+                    filterArray: [LABKEY.Filter.create('studyId',studyId, LABKEY.Filter.Types.EQUAL)],
+                    maxRows: 20,
+                    renderTo: webpart.wrapperDivId + '-expectedTimepoints'
+                }).render();
+            })
+        });
+    }(jQuery, LABKEY));
+
+</script>
+
+
+PLACEHOLDER: Make a page that accepts a studyId and renders useful UI to manage timepoints, run QC, and show data
+<br><br>
