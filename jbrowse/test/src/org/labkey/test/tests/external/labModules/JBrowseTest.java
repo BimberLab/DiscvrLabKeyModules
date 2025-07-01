@@ -593,18 +593,12 @@ public class JBrowseTest extends BaseWebDriverTest
 
         // all
         // this should return 143 results. We can't make any other assumptions about the content
-        JSONArray searchJson = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "all", "pageSize", 43));
-        Assert.assertEquals(143, searchJson.length());
+        JSONArray jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "all", "pageSize", 143));
+        Assert.assertEquals(143, jsonArray.length());
 
         // stringType:
         // ref equals A
-        String url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=ref%3AA";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        String jsonString = getText(Locator.tagWithClass("pre", "data"));
-        JSONObject mainJsonObject = new JSONObject(jsonString);
-        JSONArray jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "ref:A"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -612,13 +606,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // alt does not equal C
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=*%3A*%20-alt%3AC";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "*:* -alt:C"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -626,13 +614,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // ref contains A
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=ref%3A*A*";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "ref:*A*"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -640,13 +622,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // alt does not contain AA
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=*%3A*%20-alt%3A*AA*";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "*:* -alt:*AA*"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -654,13 +630,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // IMPACT starts with HI
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=IMPACT%3AHI*";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "IMPACT:HI*"));
         Assert.assertEquals(1, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -668,13 +638,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // ref ends with TA
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=ref%3A*TA";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "ref:*TA"));
         Assert.assertEquals(5, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -682,13 +646,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // IMPACT is empty
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=*%3A*%20-IMPACT%3A*";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "*:* -IMPACT:*"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -696,13 +654,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // IMPACT is not empty
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=IMPACT%3A*";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "IMPACT:*"));
         Assert.assertEquals(3, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -710,23 +662,11 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // variableSamplesType in set TestGroup
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=variableSamples%3A~!TestGroup!~";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "variableSamples:~!TestGroup!~"));
         Assert.assertEquals(100, jsonArray.length());
 
         // variable in m00004
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=variableSamples%3Am00004";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "variableSamples:m00004"));
         Assert.assertEquals(79, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++)
         {
@@ -745,13 +685,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // not variable in m00004
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=*%3A*%20-variableSamples%3Am00004";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "*:* -variableSamples:m00004"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++)
         {
@@ -781,13 +715,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // variable in all of m00004, m00013, m00029
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=%252BvariableSamples%3Am00004%20%252BvariableSamples%3Am00013%20%252BvariableSamples%3Am00029";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "%2BvariableSamples:m00004 %2BvariableSamples:m00013 %2BvariableSamples:m00029"));
         Assert.assertEquals(69, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++)
         {
@@ -815,13 +743,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // variable in any of m00004, m00013, m00029
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=variableSamples%3Am00004%20OR%20variableSamples%3Am00013%20OR%20variableSamples%3Am00029";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "variableSamples:m00004 OR variableSamples:m00013 OR variableSamples:m00029"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++)
         {
@@ -847,13 +769,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // not variable in any of m00004, m00013, m00029
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=*%3A*%20-variableSamples%3Am00004%20AND%20*%3A*%20-variableSamples%3Am00013%20AND%20*%3A*%20-variableSamples%3Am00029";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "*:* -variableSamples:m00004 AND *:* -variableSamples:m00013 AND *:* -variableSamples:m00029"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++)
         {
@@ -899,13 +815,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // not variable in one of m00004, m00013, m00029
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=*%3A*%20-variableSamples%3Am00004%20OR%20*%3A*%20-variableSamples%3Am00013%20OR%20*%3A*%20-variableSamples%3Am00029";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "*:* -variableSamples:m00004 OR *:* -variableSamples:m00013 OR *:* -variableSamples:m00029"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++)
         {
@@ -949,13 +859,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // is empty
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=*%3A*%20-variableSamples%3A*";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "*:* -variableSamples:*"));
         Assert.assertEquals(5, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -963,13 +867,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // is not empty
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=variableSamples%3A*";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "variableSamples:*"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -979,13 +877,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         // numericType, int and float:
         // AC = 12
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=AC%3A%5B12%20TO%2012%5D";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "AC:[12 TO 12]"));
         Assert.assertEquals(3, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -993,13 +885,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // AC != 88
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=AC%3A%5B*%20TO%2088%7D%20OR%20AC%3A%7B88%20TO%20*%5D";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "AC:[* TO 88} OR AC:{88 TO *]"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -1007,13 +893,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // AC > 88
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=AC%3A%7B88%20TO%20*%5D";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "AC:{88 TO *]"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -1021,13 +901,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // AC >= 88
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=AC%3A%5B88%20TO%20*%5D";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "AC:[88 TO *]"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -1035,13 +909,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // start < 137
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=start%3A%5B*%20TO%20137%7D";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "start:[* TO 137}"));
         Assert.assertEquals(2, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -1049,13 +917,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // end <= 440
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=end%3A%5B*%20TO%20440%5D";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "end:[* TO 440]"));
         Assert.assertEquals(7, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -1063,13 +925,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // AF = 0.532
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=AF%3A%5B0.531999%20TO%200.5320010000000001%5D";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "AF:[0.531999 TO 0.5320010000000001]"));
         Assert.assertEquals(1, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -1077,13 +933,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // AF != 0.029
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=AF%3A%5B*%20TO%200.028999%5D%20OR%20AF%3A%5B0.029001000000000002%20TO%20*%5D";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "AF:[* TO 0.028999] OR AF:[0.029001000000000002 TO *]"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -1091,13 +941,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // AF > 0.532
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=AF%3A%5B0.5320010000000001%20TO%20*%5D";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "AF:[0.5320010000000001 TO *]"));
         Assert.assertEquals(18, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -1105,13 +949,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // AF >= 0.029
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=AF%3A%5B0.029%20TO%20*%5D";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "AF:[0.029 TO *]"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -1119,13 +957,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // AF < 0.029
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=AF%3A%5B*%20TO%200.028999%5D";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "AF:[* TO 0.028999]"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -1133,13 +965,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // AF <= 0.029
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=AF%3A%5B*%20TO%200.029%5D";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "AF:[* TO 0.029]"));
         Assert.assertEquals(100, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -1151,13 +977,7 @@ public class JBrowseTest extends BaseWebDriverTest
         // contig := 1
         // ref := A
         // should be 100 results and each should be ref = A
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=contig%3A%3D1%26ref%3A%3DA&pageSize=200";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "contig:=1&ref:=A", "pageSize", 200));
         Assert.assertEquals(104, jsonArray.length());
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -1166,14 +986,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // Default genomic position sort (ascending)
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=all&pageSize=100";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
-
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "all", "pageSize", 100));
         long previousGenomicPosition = Long.MIN_VALUE;
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -1183,14 +996,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // Sort by alt, ascending
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=all&pageSize=100&sortField=alt";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
-
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "all", "pageSize", 100, "sortField", "alt"));
         String previousAlt = "";
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -1200,14 +1006,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // Sort by alt, descending
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=all&pageSize=100&sortField=alt&sortReverse=true";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
-
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "all", "pageSize", 100, "sortField", "alt", "sortReverse", "true"));
         previousAlt = "ZZZZ"; // Assuming 'Z' is higher than any character in your data
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -1217,14 +1016,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // Sort by af, ascending
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=all&pageSize=100&sortField=AF";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
-
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "all", "pageSize", 100, "sortField", "AF"));
         double previousAf = -1.0;
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -1234,14 +1026,7 @@ public class JBrowseTest extends BaseWebDriverTest
         }
 
         // Sort by af, descending
-        url = "/jbrowse/" + getProjectName() + "/luceneQuery.view?sessionId=" + sessionId + "&trackId=" + trackId + "&searchString=all&pageSize=100&sortField=AF&sortReverse=true";
-        beginAt(url);
-        waitForText("data");
-        waitAndClick(Locator.tagWithId("a", "rawdata-tab"));
-        jsonString = getText(Locator.tagWithClass("pre", "data"));
-        mainJsonObject = new JSONObject(jsonString);
-        jsonArray = mainJsonObject.getJSONArray("data");
-
+        jsonArray = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "all", "pageSize", 100, "sortField", "AF", "sortReverse", "true"));
         previousAf = 2.0; // Assuming 'af' is <= 1.0
         for (int i = 0; i < jsonArray.length(); i++) {
             JSONObject jsonObject = jsonArray.getJSONObject(i);
