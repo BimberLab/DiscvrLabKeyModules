@@ -546,7 +546,7 @@ public class JBrowseTest extends BaseWebDriverTest
         ic.execute(cn, getProjectName());
     }
 
-    private JSONObject getSearchResults(Map<String, Object> queryParams) throws CommandException, IOException
+    private JSONArray getSearchResults(Map<String, Object> queryParams) throws CommandException, IOException
     {
         Connection connection = createDefaultConnection();
 
@@ -558,7 +558,7 @@ public class JBrowseTest extends BaseWebDriverTest
         log("JBrowse search time: " + DurationFormatUtils.formatDurationWords(new Date().getTime() - start.getTime(), true, true));
         log(response.getText());
 
-        return new JSONObject(response.getText());
+        return new JSONArray(response.getText());
     }
 
     @Override
@@ -592,7 +592,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         // all
         // this should return 143 results. We can't make any other assumptions about the content
-        JSONObject searchJson = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "all", "pageSize", 43));
+        JSONArray searchJson = getSearchResults(Map.of("sessionId", sessionId, "trackId", trackId, "searchString", "all", "pageSize", 43));
         Assert.assertEquals(143, searchJson.length());
 
         // stringType:
