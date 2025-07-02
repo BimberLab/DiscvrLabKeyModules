@@ -87,7 +87,7 @@ public class SubsetSeurat extends AbstractCellMembraneStep
                     ret.add("\tprint(paste0('Subsetting dataset: ', datasetId, ' with the expression: " + subsetEscaped + "'))");
                     if (useDplyr)
                     {
-                        ret.add("\t\t\tcells <- rownames(seuratObj@meta.data %>% dplyr::filter( " + subset + " ))");
+                        ret.add("\t\t\tcells <- rownames(seuratObj@meta.data |> dplyr::filter( " + subset + " ))");
                     }
                     else
                     {
