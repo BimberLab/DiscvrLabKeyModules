@@ -12,6 +12,7 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.BcftoolsRunner;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
@@ -256,6 +257,49 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                 }
             }
 
+            File cellSnpBaseVcf = new File(cellsnpDir, "cellSNP.base.vcf.gz");
+            if (!cellSnpBaseVcf.exists())
+            {
+                throw new PipelineJobException("Unable to find cellsnp base VCF");
+            }
+
+
+            File cellSnpCellsVcf = new File(cellsnpDir, "cellSNP.cells.vcf.gz");
+            if (!cellSnpCellsVcf.exists())
+            {
+                throw new PipelineJobException("Unable to find cellsnp calls VCF");
+            }
+
+            sortAndFixVcf(cellSnpBaseVcf, genome, ctx.getLogger());
+            sortAndFixVcf(cellSnpCellsVcf, genome, ctx.getLogger());
+
+            int vcfFile = ctx.getParams().optInt(REF_VCF, -1);
+            File refVcfSubset = null;
+            if (vcfFile > -1)
+            {
+                File vcf = ctx.getSequenceSupport().getCachedData(vcfFile);
+                if (vcf == null || !vcf.exists())
+                {
+                    throw new PipelineJobException("Unable to find file with ID: " + vcfFile);
+                }
+
+                refVcfSubset = new File(ctx.getWorkingDirectory(), vcf.getName());
+                BcftoolsRunner bcftoolsRunner = new BcftoolsRunner(ctx.getLogger());
+                bcftoolsRunner.execute(Arrays.asList(
+                        BcftoolsRunner.getBcfToolsPath().getAbsolutePath(),
+                        "view",
+                        vcf.getPath(),
+                        "-R",
+                        cellSnpCellsVcf.getPath(),
+                        "-Oz",
+                        "-o",
+                        refVcfSubset.getPath()
+                ));
+
+                ctx.getFileManager().addIntermediateFile(refVcfSubset);
+                ctx.getFileManager().addIntermediateFile(new File(refVcfSubset.getPath() + ".tbi"));
+            }
+
             List<String> vireo = new ArrayList<>();
             vireo.add("vireo");
             vireo.add("-c");
@@ -275,6 +319,12 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
             if (nDonors == 0)
             {
                 throw new PipelineJobException("Must provide nDonors");
+            }
+
+            if (refVcfSubset != null)
+            {
+                vireo.add("-d");
+                vireo.add(refVcfSubset.getPath());
             }
 
             vireo.add("-N");
@@ -312,24 +362,12 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                     so.setName(inputFiles.get(0).getName() + ": Vireo Demultiplexing");
                 }
                 so.setCategory("Vireo Demultiplexing");
+                if (vcfFile > -1)
+                {
+                    so.setDescription("Reference VCF ID: " + vcfFile);
+                }
                 ctx.addSequenceOutput(so);
             }
-
-            File cellSnpBaseVcf = new File(cellsnpDir, "cellSNP.base.vcf.gz");
-            if (!cellSnpBaseVcf.exists())
-            {
-                throw new PipelineJobException("Unable to find cellsnp base VCF");
-            }
-
-
-            File cellSnpCellsVcf = new File(cellsnpDir, "cellSNP.cells.vcf.gz");
-            if (!cellSnpCellsVcf.exists())
-            {
-                throw new PipelineJobException("Unable to find cellsnp calls VCF");
-            }
-
-            sortAndFixVcf(cellSnpBaseVcf, genome, ctx.getLogger());
-            sortAndFixVcf(cellSnpCellsVcf, genome, ctx.getLogger());
 
             if (storeCellSnpVcf)
             {
