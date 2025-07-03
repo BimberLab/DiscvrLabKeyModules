@@ -19,7 +19,7 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
-    if (all(is.null(clusterResolutions))) {
+    if (all(is.null(clusterResolutions)) || clusterResolutions == '') {
         clusterResolutions <- c(0.2, 0.4, 0.6, 0.8, 1.2)
     } else if (is.character(clusterResolutions)) {
         clusterResolutionsOrig <- clusterResolutions
