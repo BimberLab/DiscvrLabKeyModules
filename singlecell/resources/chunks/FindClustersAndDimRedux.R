@@ -25,7 +25,7 @@ if (all(is.null(clusterResolutions)) || clusterResolutions == '') {
     if (any(is.na(clusterResolutions))) {
         stop(paste0('Some values for clusterResolutions were not numeric: ', clusterResolutionsOrig))
     }
-else if (is.numeric(clusterResolutions)) {
+} else if (is.numeric(clusterResolutions)) {
     # No action needed
 } else {
     stop('Must provide a value for clusterResolutions')
