@@ -38,14 +38,14 @@ public class LookupSetsTable<SchemaType extends UserSchema> extends ContainerSco
         @Override
         protected void afterInsertUpdate(int count, BatchValidationException errors)
         {
-            LookupSetsManager.get().getCache().clear();
+            StudiesUserSchema.repopulateCaches(getUserSchema().getUser(), getUserSchema().getContainer());
         }
 
         @Override
         protected Map<String, Object> deleteRow(User user, Container container, Map<String, Object> oldRowMap) throws QueryUpdateServiceException, SQLException, InvalidKeyException
         {
             Map<String, Object> row = super.deleteRow(user, container, oldRowMap);
-            LookupSetsManager.get().getCache().clear();
+            StudiesUserSchema.repopulateCaches(getUserSchema().getUser(), getUserSchema().getContainer());
             return row;
         }
 
@@ -53,7 +53,7 @@ public class LookupSetsTable<SchemaType extends UserSchema> extends ContainerSco
         protected int truncateRows(User user, Container container) throws QueryUpdateServiceException, SQLException
         {
             int i = super.truncateRows(user, container);
-            LookupSetsManager.get().getCache().clear();
+            StudiesUserSchema.repopulateCaches(getUserSchema().getUser(), getUserSchema().getContainer());
             return i;
         }
     }
