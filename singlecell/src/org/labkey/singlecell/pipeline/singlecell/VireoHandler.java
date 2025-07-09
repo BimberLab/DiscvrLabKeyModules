@@ -1,5 +1,6 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import au.com.bytecode.opencsv.CSVReader;
 import htsjdk.samtools.util.IOUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -9,6 +10,7 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
@@ -365,10 +367,38 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                     so.setName(inputFiles.get(0).getName() + ": Vireo Demultiplexing");
                 }
                 so.setCategory("Vireo Demultiplexing");
+                StringBuilder description = new StringBuilder();
                 if (vcfFile > -1)
                 {
-                    so.setDescription("Reference VCF ID: " + vcfFile);
+                    description.append("Reference VCF ID: \n").append(vcfFile);
                 }
+
+                File summary = new File(ctx.getOutputDir(), "summary.tsv");
+                if (!summary.exists())
+                {
+                    throw new PipelineJobException("Missing file: " + summary.getPath());
+                }
+
+                description.append("Results:\n");
+                try (CSVReader reader = new CSVReader(Readers.getReader(summary)))
+                {
+                    String[] line;
+                    while ((line = reader.readNext()) != null)
+                    {
+                        if ("Var1".equals(line[0]))
+                        {
+                            continue;
+                        }
+
+                        description.append(line[0]).append(": ").append(line[1]).append("\n");
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
+                so.setDescription(StringUtils.trimToEmpty(description.toString()));
                 ctx.addSequenceOutput(so);
             }
 
