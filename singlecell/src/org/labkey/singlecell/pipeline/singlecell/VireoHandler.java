@@ -202,12 +202,6 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                     cellsnp.add(maxThreads.toString());
                 }
 
-                cellsnp.add("--minMAF");
-                cellsnp.add("0.1");
-
-                cellsnp.add("--minCOUNT");
-                cellsnp.add("100");
-
                 String maxDepth = StringUtils.trimToNull(ctx.getParams().optString("maxDepth"));
                 if (maxDepth != null)
                 {
@@ -240,6 +234,12 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                         cellsnp.add("--chrom");
                         cellsnp.add(contigs);
                     }
+
+                    cellsnp.add("--minMAF");
+                    cellsnp.add("0.1");
+
+                    cellsnp.add("--minCOUNT");
+                    cellsnp.add("100");
                 }
 
                 new SimpleScriptWrapper(ctx.getLogger()).execute(cellsnp);
