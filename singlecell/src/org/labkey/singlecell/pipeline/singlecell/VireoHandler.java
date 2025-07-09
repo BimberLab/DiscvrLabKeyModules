@@ -41,8 +41,8 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
     public VireoHandler()
     {
         super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run CellSnp-Lite/Vireo", "This will run cellsnp-lite and vireo to infer cell-to-sample based on genotype.", new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/SequenceOutputFileSelectorField.js")), Arrays.asList(
-                ToolParameterDescriptor.create("nDonors", "# Donors", "The number of donors to demultiplex", "ldk-integerfield", new JSONObject(){{
-                    put("allowBlank", false);
+                ToolParameterDescriptor.create("nDonors", "# Donors", "The number of donors to demultiplex. This can be blank only if a reference VCF is provided.", "ldk-integerfield", new JSONObject(){{
+
                 }}, null),
                 ToolParameterDescriptor.create("maxDepth", "Max Depth", "At a position, read maximally INT reads per input file, to avoid excessive memory usage", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
@@ -112,6 +112,13 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
             {
                 throw new PipelineJobException("Unable to find file: " + bam.getPath());
             }
+
+            int nDonors = ctx.getParams().optInt("nDonors", -1);
+            int vcfFile = ctx.getParams().optInt(REF_VCF, -1);
+            if (nDonors == -1 & vcfFile == -1)
+            {
+                throw new PipelineJobException("nDonors must be provided, unless a reference VCF is used");
+            }
         }
 
         private File getBarcodesFile(File loupe)
@@ -146,7 +153,7 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
             File barcodesGz = getBarcodesFile(inputFiles.get(0).getFile());
             File bam = getBamFile(inputFiles.get(0).getFile());
 
-            File barcodes = new File(ctx.getWorkingDirectory(), "barcodes.csv");
+            File barcodes = new File(ctx.getWorkingDirectory(), "barcodes.tsv");
             try (BufferedReader reader = IOUtil.openFileForBufferedUtf8Reading(barcodesGz); PrintWriter writer = PrintWriters.getPrintWriter(barcodes))
             {
                 String line;
@@ -314,21 +321,20 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
             vireo.add("-o");
             vireo.add(ctx.getWorkingDirectory().getPath());
 
-            int nDonors = ctx.getParams().optInt("nDonors", 0);
             boolean storeCellSnpVcf = ctx.getParams().optBoolean("storeCellSnpVcf", false);
-            if (nDonors == 0)
-            {
-                throw new PipelineJobException("Must provide nDonors");
-            }
-
             if (refVcfSubset != null)
             {
                 vireo.add("-d");
                 vireo.add(refVcfSubset.getPath());
             }
 
-            vireo.add("-N");
-            vireo.add(String.valueOf(nDonors));
+            // Note: this value should be checked in init(). It is required only if refVCF is null
+            int nDonors = ctx.getParams().optInt("nDonors", -1);
+            if (nDonors > -1)
+            {
+                vireo.add("-N");
+                vireo.add(String.valueOf(nDonors));
+            }
 
             if (nDonors == 1)
             {
