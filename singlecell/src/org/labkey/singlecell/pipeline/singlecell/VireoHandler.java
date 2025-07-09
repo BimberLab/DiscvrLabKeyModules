@@ -277,9 +277,6 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                 throw new PipelineJobException("Unable to find cellsnp calls VCF");
             }
 
-            sortAndFixVcf(cellSnpBaseVcf, genome, ctx.getLogger());
-            sortAndFixVcf(cellSnpCellsVcf, genome, ctx.getLogger());
-
             int vcfFile = ctx.getParams().optInt(REF_VCF, -1);
             File refVcfSubset = null;
             if (vcfFile > -1)
@@ -377,33 +374,44 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
 
             if (storeCellSnpVcf)
             {
+                File fixedVcf = sortAndFixVcf(cellSnpBaseVcf, genome, ctx.getLogger(), ctx.getWorkingDirectory());
+
                 SequenceOutputFile so = new SequenceOutputFile();
                 so.setReadset(inputFiles.get(0).getReadset());
                 so.setLibrary_id(inputFiles.get(0).getLibrary_id());
-                so.setFile(cellSnpCellsVcf);
+                so.setFile(fixedVcf);
                 if (so.getReadset() != null)
                 {
                     so.setName(ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName() + ": Cellsnp-lite VCF");
                 }
                 else
                 {
-                    so.setName(inputFiles.get(0).getName() + ": Cellsnp-lite VCF");
+                    so.setName(inputFiles.get(0).getName() + ": Cellsnp-lite Base VCF");
                 }
                 so.setCategory("VCF File");
                 ctx.addSequenceOutput(so);
             }
+            else
+            {
+                ctx.getFileManager().addIntermediateFile(cellSnpBaseVcf.getParentFile());
+            }
         }
 
-        private void sortAndFixVcf(File vcf, ReferenceGenome genome, Logger log) throws PipelineJobException
+        private File sortAndFixVcf(File vcf, ReferenceGenome genome, Logger log, File outDir) throws PipelineJobException
         {
+            File outVcf = new File(outDir, vcf.getName());
+
             // This original VCF is generally not properly sorted, and has an invalid index. This is redundant, the VCF is not that large:
             try
             {
-                SequencePipelineService.get().sortROD(vcf, log, 2);
-                SequenceAnalysisService.get().ensureVcfIndex(vcf, log, true);
+                FileUtils.copyFile(vcf, outVcf);
+                SequencePipelineService.get().sortROD(outVcf, log, 2);
+                SequenceAnalysisService.get().ensureVcfIndex(outVcf, log, true);
 
-                new UpdateVCFSequenceDictionary(log).execute(vcf, genome.getSequenceDictionary());
-                SequenceAnalysisService.get().ensureVcfIndex(vcf, log);
+                new UpdateVCFSequenceDictionary(log).execute(outVcf, genome.getSequenceDictionary());
+                SequenceAnalysisService.get().ensureVcfIndex(outVcf, log);
+
+                return outVcf;
             }
             catch (IOException e)
             {
