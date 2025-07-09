@@ -380,7 +380,7 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                 }
 
                 description.append("Results:\n");
-                try (CSVReader reader = new CSVReader(Readers.getReader(summary)))
+                try (CSVReader reader = new CSVReader(Readers.getReader(summary), '\t'))
                 {
                     String[] line;
                     while ((line = reader.readNext()) != null)
