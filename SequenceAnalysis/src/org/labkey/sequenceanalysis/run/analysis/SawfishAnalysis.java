@@ -61,7 +61,7 @@ public class SawfishAnalysis extends AbstractPipelineStep implements AnalysisSte
         Integer maxThreads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
         if (maxThreads != null)
         {
-            args.add("-threads");
+            args.add("--threads");
             args.add(String.valueOf(maxThreads));
         }
 
