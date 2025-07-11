@@ -12,6 +12,7 @@ import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SamtoolsIndexer;
 import org.labkey.api.sequenceanalysis.pipeline.SamtoolsRunner;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
@@ -53,11 +54,21 @@ public class SawfishAnalysis extends AbstractPipelineStep implements AnalysisSte
         {
             CramToBam samtoolsRunner = new CramToBam(getPipelineCtx().getLogger());
             File bam = new File(getPipelineCtx().getWorkingDirectory(), inputFile.getName().replaceAll(".cram$", ".bam"));
-            samtoolsRunner.convert(inputFile, bam, referenceGenome.getWorkingFastaFile(), SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger()));
+            File bamIdx = new File(bam.getPath() + ".bai");
+            if (!bamIdx.exists())
+            {
+                samtoolsRunner.convert(inputFile, bam, referenceGenome.getWorkingFastaFile(), SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger()));
+                new SamtoolsIndexer(getPipelineCtx().getLogger()).execute(bam);
+            }
+            else
+            {
+                getPipelineCtx().getLogger().debug("BAM index exists, will not re-convert CRAM");
+            }
+
             inputFile = bam;
 
             output.addIntermediateFile(bam);
-            output.addIntermediateFile(new File(bam.getPath() + ".bai"));
+            output.addIntermediateFile(bamIdx);
         }
 
         List<String> args = new ArrayList<>();
