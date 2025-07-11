@@ -120,9 +120,6 @@ public class SawfishJointCallingHandler extends AbstractParameterizedOutputHandl
                 args.add(String.valueOf(maxThreads));
             }
 
-            args.add("--ref");
-            args.add(genome.getWorkingFastaFile().getPath());
-
             for (File sample : inputs)
             {
                 args.add("--sample");
