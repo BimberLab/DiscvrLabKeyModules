@@ -73,6 +73,15 @@ public class StudiesUserSchema extends SimpleUserSchema
         return getContainer().isWorkbookOrTab() ? getContainer().getParent() : getContainer();
     }
 
+    public static void repopulateCaches(User u, Container c)
+    {
+        DbSchema schema = StudiesSchema.getInstance().getSchema();
+        StudiesUserSchema us = new StudiesUserSchema(u, c, schema);
+
+        LookupSetsManager.get().getCache().clear();
+        us.getPropertySetNames();
+    }
+
     private Map<String, Map<String, Object>> getPropertySetNames()
     {
         Map<String, Map<String, Object>> nameMap = (Map<String, Map<String, Object>>) LookupSetsManager.get().getCache().get(LookupSetTable.getCacheKey(getTargetContainer()));
@@ -81,6 +90,7 @@ public class StudiesUserSchema extends SimpleUserSchema
             return nameMap;
         }
 
+        _log.debug("Populating lookup tables in StudiesUserSchema.getPropertySetNames() for container: " + getTargetContainer().getName());
         nameMap = new CaseInsensitiveHashMap<>();
 
         TableSelector ts = new TableSelector(_dbSchema.getTable(TABLE_LOOKUP_SETS), new SimpleFilter(FieldKey.fromString("container"), getTargetContainer().getId()), null);

@@ -1,5 +1,6 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import au.com.bytecode.opencsv.CSVReader;
 import htsjdk.samtools.util.IOUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -9,9 +10,11 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
+import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.BcftoolsRunner;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
@@ -40,8 +43,8 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
     public VireoHandler()
     {
         super(ModuleLoader.getInstance().getModule(SingleCellModule.class), "Run CellSnp-Lite/Vireo", "This will run cellsnp-lite and vireo to infer cell-to-sample based on genotype.", new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/SequenceOutputFileSelectorField.js")), Arrays.asList(
-                ToolParameterDescriptor.create("nDonors", "# Donors", "The number of donors to demultiplex", "ldk-integerfield", new JSONObject(){{
-                    put("allowBlank", false);
+                ToolParameterDescriptor.create("nDonors", "# Donors", "The number of donors to demultiplex. This can be blank only if a reference VCF is provided.", "ldk-integerfield", new JSONObject(){{
+
                 }}, null),
                 ToolParameterDescriptor.create("maxDepth", "Max Depth", "At a position, read maximally INT reads per input file, to avoid excessive memory usage", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
@@ -111,6 +114,13 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
             {
                 throw new PipelineJobException("Unable to find file: " + bam.getPath());
             }
+
+            int nDonors = ctx.getParams().optInt("nDonors", -1);
+            int vcfFile = ctx.getParams().optInt(REF_VCF, -1);
+            if (nDonors == -1 & vcfFile == -1)
+            {
+                throw new PipelineJobException("nDonors must be provided, unless a reference VCF is used");
+            }
         }
 
         private File getBarcodesFile(File loupe)
@@ -145,7 +155,7 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
             File barcodesGz = getBarcodesFile(inputFiles.get(0).getFile());
             File bam = getBamFile(inputFiles.get(0).getFile());
 
-            File barcodes = new File(ctx.getWorkingDirectory(), "barcodes.csv");
+            File barcodes = new File(ctx.getWorkingDirectory(), "barcodes.tsv");
             try (BufferedReader reader = IOUtil.openFileForBufferedUtf8Reading(barcodesGz); PrintWriter writer = PrintWriters.getPrintWriter(barcodes))
             {
                 String line;
@@ -201,12 +211,6 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                     cellsnp.add(maxThreads.toString());
                 }
 
-                cellsnp.add("--minMAF");
-                cellsnp.add("0.1");
-
-                cellsnp.add("--minCOUNT");
-                cellsnp.add("100");
-
                 String maxDepth = StringUtils.trimToNull(ctx.getParams().optString("maxDepth"));
                 if (maxDepth != null)
                 {
@@ -239,6 +243,12 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                         cellsnp.add("--chrom");
                         cellsnp.add(contigs);
                     }
+
+                    cellsnp.add("--minMAF");
+                    cellsnp.add("0.1");
+
+                    cellsnp.add("--minCOUNT");
+                    cellsnp.add("100");
                 }
 
                 new SimpleScriptWrapper(ctx.getLogger()).execute(cellsnp);
@@ -256,6 +266,46 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                 }
             }
 
+            File cellSnpBaseVcf = new File(cellsnpDir, "cellSNP.base.vcf.gz");
+            if (!cellSnpBaseVcf.exists())
+            {
+                throw new PipelineJobException("Unable to find cellsnp base VCF");
+            }
+
+
+            File cellSnpCellsVcf = new File(cellsnpDir, "cellSNP.cells.vcf.gz");
+            if (!cellSnpCellsVcf.exists())
+            {
+                throw new PipelineJobException("Unable to find cellsnp calls VCF");
+            }
+
+            int vcfFile = ctx.getParams().optInt(REF_VCF, -1);
+            File refVcfSubset = null;
+            if (vcfFile > -1)
+            {
+                File vcf = ctx.getSequenceSupport().getCachedData(vcfFile);
+                if (vcf == null || !vcf.exists())
+                {
+                    throw new PipelineJobException("Unable to find file with ID: " + vcfFile);
+                }
+
+                refVcfSubset = new File(ctx.getWorkingDirectory(), vcf.getName());
+                BcftoolsRunner bcftoolsRunner = new BcftoolsRunner(ctx.getLogger());
+                bcftoolsRunner.execute(Arrays.asList(
+                        BcftoolsRunner.getBcfToolsPath().getAbsolutePath(),
+                        "view",
+                        vcf.getPath(),
+                        "-R",
+                        cellSnpCellsVcf.getPath(),
+                        "-Oz",
+                        "-o",
+                        refVcfSubset.getPath()
+                ));
+
+                ctx.getFileManager().addIntermediateFile(refVcfSubset);
+                ctx.getFileManager().addIntermediateFile(new File(refVcfSubset.getPath() + ".tbi"));
+            }
+
             List<String> vireo = new ArrayList<>();
             vireo.add("vireo");
             vireo.add("-c");
@@ -270,15 +320,20 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
             vireo.add("-o");
             vireo.add(ctx.getWorkingDirectory().getPath());
 
-            int nDonors = ctx.getParams().optInt("nDonors", 0);
             boolean storeCellSnpVcf = ctx.getParams().optBoolean("storeCellSnpVcf", false);
-            if (nDonors == 0)
+            if (refVcfSubset != null)
             {
-                throw new PipelineJobException("Must provide nDonors");
+                vireo.add("-d");
+                vireo.add(refVcfSubset.getPath());
             }
 
-            vireo.add("-N");
-            vireo.add(String.valueOf(nDonors));
+            // Note: this value should be checked in init(). It is required only if refVCF is null
+            int nDonors = ctx.getParams().optInt("nDonors", -1);
+            if (nDonors > -1)
+            {
+                vireo.add("-N");
+                vireo.add(String.valueOf(nDonors));
+            }
 
             if (nDonors == 1)
             {
@@ -312,54 +367,81 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                     so.setName(inputFiles.get(0).getName() + ": Vireo Demultiplexing");
                 }
                 so.setCategory("Vireo Demultiplexing");
+                StringBuilder description = new StringBuilder();
+                if (vcfFile > -1)
+                {
+                    description.append("Reference VCF ID: \n").append(vcfFile);
+                }
+
+                File summary = new File(ctx.getOutputDir(), "summary.tsv");
+                if (!summary.exists())
+                {
+                    throw new PipelineJobException("Missing file: " + summary.getPath());
+                }
+
+                description.append("Results:\n");
+                try (CSVReader reader = new CSVReader(Readers.getReader(summary), '\t'))
+                {
+                    String[] line;
+                    while ((line = reader.readNext()) != null)
+                    {
+                        if ("Var1".equals(line[0]))
+                        {
+                            continue;
+                        }
+
+                        description.append(line[0]).append(": ").append(line[1]).append("\n");
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+
+                so.setDescription(StringUtils.trimToEmpty(description.toString()));
                 ctx.addSequenceOutput(so);
             }
 
-            File cellSnpBaseVcf = new File(cellsnpDir, "cellSNP.base.vcf.gz");
-            if (!cellSnpBaseVcf.exists())
-            {
-                throw new PipelineJobException("Unable to find cellsnp base VCF");
-            }
-
-
-            File cellSnpCellsVcf = new File(cellsnpDir, "cellSNP.cells.vcf.gz");
-            if (!cellSnpCellsVcf.exists())
-            {
-                throw new PipelineJobException("Unable to find cellsnp calls VCF");
-            }
-
-            sortAndFixVcf(cellSnpBaseVcf, genome, ctx.getLogger());
-            sortAndFixVcf(cellSnpCellsVcf, genome, ctx.getLogger());
-
             if (storeCellSnpVcf)
             {
+                File fixedVcf = sortAndFixVcf(cellSnpBaseVcf, genome, ctx.getLogger(), ctx.getWorkingDirectory());
+
                 SequenceOutputFile so = new SequenceOutputFile();
                 so.setReadset(inputFiles.get(0).getReadset());
                 so.setLibrary_id(inputFiles.get(0).getLibrary_id());
-                so.setFile(cellSnpCellsVcf);
+                so.setFile(fixedVcf);
                 if (so.getReadset() != null)
                 {
                     so.setName(ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName() + ": Cellsnp-lite VCF");
                 }
                 else
                 {
-                    so.setName(inputFiles.get(0).getName() + ": Cellsnp-lite VCF");
+                    so.setName(inputFiles.get(0).getName() + ": Cellsnp-lite Base VCF");
                 }
                 so.setCategory("VCF File");
                 ctx.addSequenceOutput(so);
             }
+            else
+            {
+                ctx.getFileManager().addIntermediateFile(cellSnpBaseVcf.getParentFile());
+            }
         }
 
-        private void sortAndFixVcf(File vcf, ReferenceGenome genome, Logger log) throws PipelineJobException
+        private File sortAndFixVcf(File vcf, ReferenceGenome genome, Logger log, File outDir) throws PipelineJobException
         {
+            File outVcf = new File(outDir, vcf.getName());
+
             // This original VCF is generally not properly sorted, and has an invalid index. This is redundant, the VCF is not that large:
             try
             {
-                SequencePipelineService.get().sortROD(vcf, log, 2);
-                SequenceAnalysisService.get().ensureVcfIndex(vcf, log, true);
+                FileUtils.copyFile(vcf, outVcf);
+                SequencePipelineService.get().sortROD(outVcf, log, 2);
+                SequenceAnalysisService.get().ensureVcfIndex(outVcf, log, true);
 
-                new UpdateVCFSequenceDictionary(log).execute(vcf, genome.getSequenceDictionary());
-                SequenceAnalysisService.get().ensureVcfIndex(vcf, log);
+                new UpdateVCFSequenceDictionary(log).execute(outVcf, genome.getSequenceDictionary());
+                SequenceAnalysisService.get().ensureVcfIndex(outVcf, log);
+
+                return outVcf;
             }
             catch (IOException e)
             {

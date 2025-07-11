@@ -319,3 +319,17 @@ then
 else
     echo "Already installed"
 fi
+
+if [[ ! -e ${LKTOOLS_DIR}/sawfish || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf $LKTOOLS_DIR/sawfish*
+
+    wget https://github.com/PacificBiosciences/sawfish/releases/download/v2.0.0/sawfish-v2.0.0-x86_64-unknown-linux-gnu.tar.gz
+    tar -xzf sawfish-v2.0.0-x86_64-unknown-linux-gnu.tar.gz
+
+    mv sawfish-v2.0.0-x86_64-unknown-linux-gnu $LKTOOLS_DIR/
+    ln -s $LKTOOLS_DIR/sawfish-v2.0.0/bin/sawfish $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi
