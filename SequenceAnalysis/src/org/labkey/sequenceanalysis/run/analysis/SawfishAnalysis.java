@@ -49,37 +49,16 @@ public class SawfishAnalysis extends AbstractPipelineStep implements AnalysisSte
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
 
-        File inputFile = inputBam;
-        if (SequenceUtil.FILETYPE.cram.getFileType().isType(inputFile))
-        {
-            CramToBam samtoolsRunner = new CramToBam(getPipelineCtx().getLogger());
-            File bam = new File(getPipelineCtx().getWorkingDirectory(), inputFile.getName().replaceAll(".cram$", ".bam"));
-            File bamIdx = new File(bam.getPath() + ".bai");
-            if (!bamIdx.exists())
-            {
-                samtoolsRunner.convert(inputFile, bam, referenceGenome.getWorkingFastaFile(), SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger()));
-                new SamtoolsIndexer(getPipelineCtx().getLogger()).execute(bam);
-            }
-            else
-            {
-                getPipelineCtx().getLogger().debug("BAM index exists, will not re-convert CRAM");
-            }
-
-            inputFile = bam;
-
-            output.addIntermediateFile(bam);
-            output.addIntermediateFile(bamIdx);
-        }
-
         List<String> args = new ArrayList<>();
         args.add(getExe().getPath());
         args.add("discover");
 
         args.add("--bam");
-        args.add(inputFile.getPath());
+        args.add(inputBam.getPath());
 
+        // NOTE: sawfish stores the absolute path of the FASTA in the output JSON, so dont rely on working copies:
         args.add("--ref");
-        args.add(referenceGenome.getWorkingFastaFile().getPath());
+        args.add(referenceGenome.getSourceFastaFile().getPath());
 
         File svOutDir = new File(outputDir, "sawfish");
         args.add("--output-dir");
@@ -122,42 +101,5 @@ public class SawfishAnalysis extends AbstractPipelineStep implements AnalysisSte
     private File getExe()
     {
         return SequencePipelineService.get().getExeForPackage("SAWFISHPATH", "sawfish");
-    }
-
-    private static class CramToBam extends SamtoolsRunner
-    {
-        public CramToBam(Logger log)
-        {
-            super(log);
-        }
-
-        public void convert(File inputCram, File outputBam, File fasta, @Nullable Integer threads) throws PipelineJobException
-        {
-            getLogger().info("Converting CRAM to BAM");
-
-            execute(getParams(inputCram, outputBam, fasta, threads));
-        }
-
-        private List<String> getParams(File inputCram, File outputBam, File fasta, @Nullable Integer threads)
-        {
-            List<String> params = new ArrayList<>();
-            params.add(getSamtoolsPath().getPath());
-            params.add("view");
-            params.add("-b");
-            params.add("-T");
-            params.add(fasta.getPath());
-            params.add("-o");
-            params.add(outputBam.getPath());
-
-            if (threads != null)
-            {
-                params.add("-@");
-                params.add(String.valueOf(threads));
-            }
-
-            params.add(inputCram.getPath());
-
-            return params;
-        }
     }
 }
