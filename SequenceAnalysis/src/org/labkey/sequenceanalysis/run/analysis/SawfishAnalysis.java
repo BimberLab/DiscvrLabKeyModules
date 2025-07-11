@@ -1,5 +1,7 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
+import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -10,8 +12,10 @@ import org.labkey.api.sequenceanalysis.pipeline.AnalysisStep;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SamtoolsRunner;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -44,12 +48,24 @@ public class SawfishAnalysis extends AbstractPipelineStep implements AnalysisSte
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
 
+        File inputFile = inputBam;
+        if (SequenceUtil.FILETYPE.cram.getFileType().isType(inputFile))
+        {
+            CramToBam samtoolsRunner = new CramToBam(getPipelineCtx().getLogger());
+            File bam = new File(getPipelineCtx().getWorkingDirectory(), inputFile.getName().replaceAll(".cram$", ".bam"));
+            samtoolsRunner.convert(inputFile, bam, referenceGenome.getWorkingFastaFile(), SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger()));
+            inputFile = bam;
+
+            output.addIntermediateFile(bam);
+            output.addIntermediateFile(new File(bam.getPath() + ".bai"));
+        }
+
         List<String> args = new ArrayList<>();
         args.add(getExe().getPath());
         args.add("discover");
 
         args.add("--bam");
-        args.add(inputBam.getPath());
+        args.add(inputFile.getPath());
 
         args.add("--ref");
         args.add(referenceGenome.getWorkingFastaFile().getPath());
@@ -86,5 +102,42 @@ public class SawfishAnalysis extends AbstractPipelineStep implements AnalysisSte
     private File getExe()
     {
         return SequencePipelineService.get().getExeForPackage("SAWFISHPATH", "sawfish");
+    }
+
+    private static class CramToBam extends SamtoolsRunner
+    {
+        public CramToBam(Logger log)
+        {
+            super(log);
+        }
+
+        public void convert(File inputCram, File outputBam, File fasta, @Nullable Integer threads) throws PipelineJobException
+        {
+            getLogger().info("Converting CRAM to BAM");
+
+            execute(getParams(inputCram, outputBam, fasta, threads));
+        }
+
+        private List<String> getParams(File inputCram, File outputBam, File fasta, @Nullable Integer threads)
+        {
+            List<String> params = new ArrayList<>();
+            params.add(getSamtoolsPath().getPath());
+            params.add("view");
+            params.add("-b");
+            params.add("-T");
+            params.add(fasta.getPath());
+            params.add("-o");
+            params.add(outputBam.getPath());
+
+            if (threads != null)
+            {
+                params.add("-@");
+                params.add(String.valueOf(threads));
+            }
+
+            params.add(inputCram.getPath());
+
+            return params;
+        }
     }
 }
