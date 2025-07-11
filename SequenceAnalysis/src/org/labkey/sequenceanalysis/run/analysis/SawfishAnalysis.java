@@ -92,15 +92,24 @@ public class SawfishAnalysis extends AbstractPipelineStep implements AnalysisSte
             args.add(String.valueOf(maxThreads));
         }
 
-        new SimpleScriptWrapper(getPipelineCtx().getLogger()).execute(args);
-
-        File vcf = new File(svOutDir, "genotyped.sv.vcf.gz");
-        if (!vcf.exists())
+        File bcf = new File(svOutDir, "candidate.sv.bcf");
+        File bcfIdx = new File(bcf.getPath() + ".csi");
+        if (bcfIdx.exists())
         {
-            throw new PipelineJobException("Unable to find file: " + vcf.getPath());
+            getPipelineCtx().getLogger().debug("BCF index already exists, reusing output");
+        }
+        else
+        {
+            new SimpleScriptWrapper(getPipelineCtx().getLogger()).execute(args);
         }
 
-        output.addSequenceOutput(vcf, rs.getName() + ": sawfish", "Sawfish SV Discovery", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+        if (!bcf.exists())
+        {
+            throw new PipelineJobException("Unable to find file: " + bcf.getPath());
+        }
+
+        output.addSequenceOutput(bcf, rs.getName() + ": sawfish", "Sawfish SV Discovery", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+
         return output;
     }
 

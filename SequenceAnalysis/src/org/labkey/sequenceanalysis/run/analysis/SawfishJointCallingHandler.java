@@ -43,7 +43,7 @@ public class SawfishJointCallingHandler extends AbstractParameterizedOutputHandl
     @Override
     public boolean canProcess(SequenceOutputFile o)
     {
-        return o.getFile() != null && SequenceUtil.FILETYPE.vcf.getFileType().isType(o.getFile());
+        return o.getFile() != null && SequenceUtil.FILETYPE.bcf.getFileType().isType(o.getFile());
     }
 
     @Override
@@ -90,8 +90,6 @@ public class SawfishJointCallingHandler extends AbstractParameterizedOutputHandl
             }
 
             File expectedFinalOutput = new File(ctx.getOutputDir(), outputBaseName + ".vcf.gz");
-            File expectedFinalOutputIdx = new File(expectedFinalOutput.getPath() + ".tbi");
-            boolean jobCompleted = expectedFinalOutputIdx.exists();  // this would occur if the job died during the cleanup phase
 
             File ouputVcf = runSawfishCall(ctx, filesToProcess, genome, outputBaseName);
 
@@ -150,20 +148,22 @@ public class SawfishJointCallingHandler extends AbstractParameterizedOutputHandl
                 if (vcfOutFinal.exists())
                 {
                     vcfOutFinal.delete();
-                    FileUtils.moveFile(vcfOut, vcfOutFinal);
+                }
+                FileUtils.moveFile(vcfOut, vcfOutFinal);
 
-                    File targetIndex = new File(vcfOutFinal.getPath() + ".tbi");
-                    if (targetIndex.exists())
-                    {
-                        targetIndex.delete();
-                    }
+                File targetIndex = new File(vcfOutFinal.getPath() + ".tbi");
+                if (targetIndex.exists())
+                {
+                    targetIndex.delete();
+                }
 
-                    File origIndex = new File(vcfOut.getPath() + ".tbi");
-                    if (origIndex.exists())
-                    {
-                        FileUtils.moveFile(origIndex, targetIndex);
-                    }
-
+                File origIndex = new File(vcfOut.getPath() + ".tbi");
+                if (origIndex.exists())
+                {
+                    FileUtils.moveFile(origIndex, targetIndex);
+                }
+                else
+                {
                     SequenceAnalysisService.get().ensureVcfIndex(vcfOutFinal, ctx.getLogger(), true);
                 }
             }
