@@ -10,7 +10,7 @@
     "build-dev": "npm run build-no-pkg",
     "build-prod": "npm run clean && cross-env NODE_ENV=production PROD_SOURCE_MAP=source-map webpack --config ./config/prod.config.js --progress --profile",
     "clean": "rimraf resources/web/gen && rimraf resources/web/jbrowse/gen && rimraf resources/views/gen",
-    "prepareCli": "rimraf ./buildCli && rimraf ./resources/external/jb-cli && npm install @jbrowse/cli@1.7.4 --prefix ./buildCli",
+    "prepareCli": "rimraf ./buildCli && rimraf ./resources/external/jb-cli && npm install @jbrowse/cli@3.2.0 --prefix ./buildCli",
     "jb-pkg": "npm run prepareCli && npx pkg --outdir=./resources/external/jb-cli ./buildCli/node_modules/@jbrowse/cli && rimraf ./buildCli"
   },
   "dependencies": {
