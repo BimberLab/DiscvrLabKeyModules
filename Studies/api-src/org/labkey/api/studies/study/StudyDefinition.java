@@ -1,6 +1,9 @@
 package org.labkey.api.studies.study;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -8,6 +11,9 @@ import org.json.JSONObject;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class StudyDefinition
 {
@@ -246,12 +252,12 @@ public class StudyDefinition
             _description = description;
         }
 
-        public Boolean getControlGroup()
+        public Boolean getIsControlGroup()
         {
             return _isControlGroup;
         }
 
-        public void setControlGroup(Boolean controlGroup)
+        public void setIsControlGroup(Boolean controlGroup)
         {
             _isControlGroup = controlGroup;
         }
@@ -448,7 +454,13 @@ public class StudyDefinition
         private String _labelShort;
         private String _description;
 
+        @JsonIgnore
         private Integer _anchorEvent;
+
+        @JsonIgnore
+        private String _anchorEventLabel;
+
+        private String _cohortName;
         private Integer _rangeMin;
         private Integer _rangeMax;
 
@@ -463,6 +475,25 @@ public class StudyDefinition
         {
 
         }
+
+        // When reading from a JSON object, store the anchorEvent label
+        @JsonSetter("anchorEvent")
+        void readAnchorEvent(String lbl) { _anchorEventLabel = lbl; }
+
+        @JsonGetter("anchorEvent")
+        String writeAnchorEvent() { return _anchorEventLabel; }
+
+        // Call this to translate from label to index in order to fit the DB schema
+        void resolveAnchorEvent(Map<String,Integer> idxByLabel)
+        {
+            Integer idx = idxByLabel.get(_anchorEventLabel);
+            if (idx == null)
+                throw new IllegalArgumentException(
+                        "Unknown anchorEvent label '" + _anchorEventLabel + "'");
+            _anchorEvent = idx;
+        }
+
+        public Integer getAnchorEvent() { return _anchorEvent; }
 
         public Integer getRowId()
         {
@@ -482,6 +513,16 @@ public class StudyDefinition
         public void setStudyId(Integer studyId)
         {
             _studyId = studyId;
+        }
+
+        public String getCohortName()
+        {
+            return _cohortName;
+        }
+
+        public void setCohortName(String cohortName)
+        {
+            _cohortName = cohortName;
         }
 
         public Integer getCohortId()
@@ -522,16 +563,6 @@ public class StudyDefinition
         public void setDescription(String description)
         {
             _description = description;
-        }
-
-        public Integer getAnchorEvent()
-        {
-            return _anchorEvent;
-        }
-
-        public void setAnchorEvent(Integer anchorEvent)
-        {
-            _anchorEvent = anchorEvent;
         }
 
         public Integer getRangeMin()
@@ -608,8 +639,19 @@ public class StudyDefinition
     public static StudyDefinition fromJson(JSONObject json)
     {
         ObjectMapper mapper = new ObjectMapper();
+        StudyDefinition sd = mapper.convertValue(json.toMap(), StudyDefinition.class);
 
-        return mapper.convertValue(json, StudyDefinition.class);
+        // In our JSON, Timepoints store the anchorEvent label, not an ID. Since the DB schema requires an int, we need
+        // to do that translation manually. Here, we store the anchorEvent by its index in the anchorEvent list.
+        Map<String,Integer> idxByLabel = IntStream.range(0, sd.getAnchorEvents().size())
+                .boxed()
+                .collect(Collectors.toMap(
+                        i -> sd.getAnchorEvents().get(i).getLabel(),
+                        i -> i));
+
+        sd.getTimepoints().forEach(tp -> tp.resolveAnchorEvent(idxByLabel));
+
+        return sd;
     }
 
     public String toJson() throws JsonProcessingException
