@@ -72,6 +72,7 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.discvrcore.annotation.UtilityAction;
 import org.labkey.api.exceptions.OptimisticConflictException;
 import org.labkey.api.exp.ExperimentException;
 import org.labkey.api.exp.api.DataType;
@@ -501,6 +502,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
+    @UtilityAction(label = "Find Orphan Files", description = "This will start a pipeline job that will inspect all files in this folder to identify potential orphan or otherwise unnecessary files")
     @RequiresPermission(ReadPermission.class)
     public static class FindOrphanFilesAction extends ConfirmAction<Object>
     {
@@ -5065,6 +5067,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
     }
 
+    @UtilityAction(label = "Update ExpData Path", description = "This will update the DataFileUrl on the selected ExpData to the path provided")
     @RequiresSiteAdmin
     public static class UpdateExpDataPathAction extends ConfirmAction<UpdateExpDataPathForm>
     {

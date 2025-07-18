@@ -344,6 +344,8 @@ public class OrphanFilePipelineJob extends PipelineJob
                 return;
             }
 
+
+            getJob().updateStatusForTask();
             if (getJob().isCancelled())
             {
                 throw new CancelledException();
