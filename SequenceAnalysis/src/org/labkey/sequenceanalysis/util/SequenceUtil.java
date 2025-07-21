@@ -96,6 +96,7 @@ public class SequenceUtil
         bed(Collections.singletonList(".bed"), true),
         bw(Collections.singletonList(".bw"), false),
         vcf(List.of(".vcf"), true),
+        bcf(List.of(".bcf"), true),
         gvcf(List.of(".g.vcf"), true);
 
         private final List<String> _extensions;

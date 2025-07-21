@@ -44,6 +44,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
     private File _outputDir = null;
     private File _workingDir = null;
     private Logger _log = null;
+    private boolean _logPath = false;
     private Level _logLevel = Level.DEBUG;
     private boolean _warnNonZeroExits = true;
     private boolean _throwNonZeroExits = true;
@@ -205,9 +206,11 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         {
             String path = System.getenv("PATH");
 
-            getLogger().debug("Existing PATH: " + path);
-            getLogger().debug("toolDir: " + toolDir);
-
+            if (_logPath)
+            {
+                getLogger().debug("Existing PATH: " + path);
+                getLogger().debug("toolDir: " + toolDir);
+            }
 
             if (path == null)
             {
@@ -229,9 +232,17 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
                     path = fileExe.getParent() + File.pathSeparatorChar + path;
             }
 
-            getLogger().debug("using path: " + path);
+            if (_logPath)
+            {
+                getLogger().debug("using path: " + path);
+            }
             pb.environment().put("PATH", path);
         }
+    }
+
+    public void setLogPath(boolean logPath)
+    {
+        _logPath = logPath;
     }
 
     public void setOutputDir(File outputDir)

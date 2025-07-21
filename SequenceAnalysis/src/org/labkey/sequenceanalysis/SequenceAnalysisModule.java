@@ -123,6 +123,8 @@ import org.labkey.sequenceanalysis.run.analysis.PangolinHandler;
 import org.labkey.sequenceanalysis.run.analysis.PbsvAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.PbsvJointCallingHandler;
 import org.labkey.sequenceanalysis.run.analysis.PindelAnalysis;
+import org.labkey.sequenceanalysis.run.analysis.SawfishAnalysis;
+import org.labkey.sequenceanalysis.run.analysis.SawfishJointCallingHandler;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SnpCountAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SubreadAnalysis;
@@ -342,6 +344,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new PindelAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PbsvAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new GenrichStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SawfishAnalysis.Provider());
 
         SequencePipelineService.get().registerPipelineStep(new PARalyzerAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new RnaSeQCStep.Provider());
@@ -400,6 +403,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new NextCladeHandler());
         SequenceAnalysisService.get().registerFileHandler(new ConvertToCramHandler());
         SequenceAnalysisService.get().registerFileHandler(new PbsvJointCallingHandler());
+        SequenceAnalysisService.get().registerFileHandler(new SawfishJointCallingHandler());
         SequenceAnalysisService.get().registerFileHandler(new DeepVariantHandler());
         SequenceAnalysisService.get().registerFileHandler(new GLNexusHandler());
         SequenceAnalysisService.get().registerFileHandler(new ParagraphStep());

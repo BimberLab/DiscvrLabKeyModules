@@ -9,7 +9,6 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -34,7 +33,8 @@ public class SubsetSeurat extends AbstractCellMembraneStep
                         put("height", 150);
                         put("width", 600);
                         put("delimiter", DELIM);
-                    }}, null)
+                    }}, null),
+                    ToolParameterDescriptor.create("useDplyr", "Use dplyr", "If checked, the subset will be executed using dplyr::filter rather than Seurat::subset. This should allow more complex expressions to be used, including negations", "checkbox", null, false)
             ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
@@ -71,6 +71,9 @@ public class SubsetSeurat extends AbstractCellMembraneStep
 
         final String[] values = val.split(DELIM);
 
+        ToolParameterDescriptor pd2 = getProvider().getParameterByName("useDplyr");
+        final boolean useDplyr = pd2.extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+
         List<String> ret = new ArrayList<>();
         for (String line : super.loadChunkFromFile())
         {
@@ -82,15 +85,23 @@ public class SubsetSeurat extends AbstractCellMembraneStep
 
                     ret.add("\tif (!is.null(seuratObj)) {");
                     ret.add("\tprint(paste0('Subsetting dataset: ', datasetId, ' with the expression: " + subsetEscaped + "'))");
-                    ret.add("\t\tcells <- c()");
-                    ret.add("\t\ttryCatch({");
-                    ret.add("\t\t\tcells <- WhichCells(seuratObj, expression = " + subset + ")");
-                    ret.add("\t\t}, error = function(e){");
-                    ret.add("\t\t\tif (!is.null(e) && e$message == 'Cannot find cells provided') {");
-                    ret.add("\t\t\t\tprint(paste0('There were no cells remaining after the subset: ', '" + subsetEscaped + "'))");
-                    ret.add("\t\t\t}");
-                    ret.add("\t\t})");
-                    ret.add("");
+                    if (useDplyr)
+                    {
+                        ret.add("\t\t\tcells <- rownames(seuratObj@meta.data |> dplyr::filter( " + subset + " ))");
+                    }
+                    else
+                    {
+                        ret.add("\t\tcells <- c()");
+                        ret.add("\t\ttryCatch({");
+                        ret.add("\t\t\tcells <- WhichCells(seuratObj, expression = " + subset + ")");
+                        ret.add("\t\t}, error = function(e){");
+                        ret.add("\t\t\tif (!is.null(e) && e$message == 'Cannot find cells provided') {");
+                        ret.add("\t\t\t\tprint(paste0('There were no cells remaining after the subset: ', '" + subsetEscaped + "'))");
+                        ret.add("\t\t\t}");
+                        ret.add("\t\t})");
+                        ret.add("");
+                    }
+
                     ret.add("\t\tif (length(cells) == 0) {");
                     ret.add("\t\t\tprint(paste0('There were no cells after subsetting for dataset: ', datasetId, ', with subset: ', '" + subsetEscaped + "'))");
                     ret.add("\t\t\tseuratObj <- NULL");
