@@ -359,11 +359,11 @@ public class StudiesManager
             sd.setLabel(sd.getLabel() + " (updated)");
 
             StudyDefinition.StudyCohort firstCohort = sd.getCohorts().get(0);
-            firstCohort.setLabel(firstCohort.getLabel() + "‑updated");
+            firstCohort.setLabel(firstCohort.getLabel() + "-updated");
 
             StudyDefinition.StudyCohort newCohort = new StudyDefinition.StudyCohort();
             newCohort.setCohortName("NEW");
-            newCohort.setLabel("Brand‑new cohort");
+            newCohort.setLabel("Brand-new cohort");
             sd.getCohorts().add(newCohort);
 
             StudyDefinition.Timepoint removedTp = sd.getTimepoints().remove(0);
