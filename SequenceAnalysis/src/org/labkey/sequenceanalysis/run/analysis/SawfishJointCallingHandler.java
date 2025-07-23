@@ -120,9 +120,6 @@ public class SawfishJointCallingHandler extends AbstractParameterizedOutputHandl
                 args.add(String.valueOf(maxThreads));
             }
 
-            args.add("--ref");
-            args.add(genome.getWorkingFastaFile().getPath());
-
             for (File sample : inputs)
             {
                 args.add("--sample");
@@ -177,7 +174,7 @@ public class SawfishJointCallingHandler extends AbstractParameterizedOutputHandl
 
         private File getExe()
         {
-            return SequencePipelineService.get().getExeForPackage("PBSVPATH", "pbsv");
+            return SequencePipelineService.get().getExeForPackage("SAWFISHPATH", "sawfish");
         }
     }
 }
