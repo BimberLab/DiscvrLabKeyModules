@@ -1,0 +1,43 @@
+{
+  "studyName": "DemoStudy",
+  "label": "Demo Study",
+  "description": "This is a demo study",
+  "cohorts": [{
+    "cohortName": "Group1",
+    "label": "Group 1",
+    "description": "This is the first group",
+    "isControlGroup": false,
+    "sortOrder": 1
+  },{
+    "cohortName": "Control",
+    "label": "Control Group",
+    "description": "This is the control group",
+    "isControlGroup": true,
+    "sortOrder": 2
+  }],
+  "anchorEvents": [{
+    "label": "Study Enrollment",
+    "description": "The represents Day 0 of the study",
+    "eventProviderName": "EnrollmentStart"
+  }],
+  "timepoints": [{
+    "cohortId": null,
+    "label": "Day 0",
+    "labelShort": "D0",
+    "anchorEvent": "Study Enrollment"
+  },{
+    "cohortName": "Group1",
+    "label": "Vaccination",
+    "labelShort": "V",
+    "anchorEvent": "Study Enrollment",
+    "rangeMin": 7,
+    "rangeMax": 10
+  },{
+    "cohortName": "Control",
+    "label": "Mock-Vaccination",
+    "labelShort": "V",
+    "anchorEvent": "Study Enrollment",
+    "rangeMin": 7,
+    "rangeMax": 10
+  }]
+}
