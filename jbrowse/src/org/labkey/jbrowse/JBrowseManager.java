@@ -238,7 +238,19 @@ public class JBrowseManager
         public void testJBrowseCli() throws Exception
         {
             File exe = JBrowseManager.get().getJbrowseCli();
-            String output = new SimpleScriptWrapper(_log).executeWithOutput(Arrays.asList(exe.getPath(), "help"));
+            SimpleScriptWrapper wrapper = new SimpleScriptWrapper(_log);
+            wrapper.setThrowNonZeroExits(false);
+
+            String output = wrapper.executeWithOutput(Arrays.asList(exe.getPath(), "help"));
+            if (wrapper.getLastReturnCode() != 0)
+            {
+                _log.error("Non-zero exit from testJBrowseCli: " + wrapper.getLastReturnCode());
+                wrapper.getCommandsExecuted().forEach(_log::error);
+                _log.error("output: ");
+                _log.error(output);
+
+                throw new RuntimeException("Non-zero exit running testJBrowseCli: " + wrapper.getLastReturnCode());
+            }
 
             assertTrue("Malformed output", output.contains("Add an assembly to a JBrowse 2 configuration"));
         }
