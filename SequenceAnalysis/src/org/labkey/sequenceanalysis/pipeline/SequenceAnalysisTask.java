@@ -159,7 +159,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         job.getLogger().info("Processing Alignments");
 
         //first validate all analysis records before actually creating any DB records
-        Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
+        Long runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
         ExpRun run = ExperimentService.get().getExpRun(runId);
         AnalysisModelImpl analysisModel = null;
 
@@ -356,7 +356,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         return new RecordedActionSet();
     }
 
-    private void processAnalyses(AnalysisModelImpl analysisModel, int runId, List<RecordedAction> actions, SequenceTaskHelper taskHelper, boolean discardBam) throws PipelineJobException
+    private void processAnalyses(AnalysisModelImpl analysisModel, long runId, List<RecordedAction> actions, SequenceTaskHelper taskHelper, boolean discardBam) throws PipelineJobException
     {
         List<AnalysisStep.Output> outputs = new ArrayList<>();
         List<PipelineStepCtx<AnalysisStep>> steps = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);

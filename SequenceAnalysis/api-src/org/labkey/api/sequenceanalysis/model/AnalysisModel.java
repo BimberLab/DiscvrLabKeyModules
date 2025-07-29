@@ -33,22 +33,22 @@ public interface AnalysisModel extends Serializable
 {
     Integer getAnalysisId();
 
-    Integer getRunId();
+    Long getRunId();
 
     String getContainer();
 
     Integer getReadset();
 
-    Integer getAlignmentFile();
+    Long getAlignmentFile();
 
     File getAlignmentFileObject();
 
     ExpData getAlignmentData();
 
     @Deprecated
-    Integer getReferenceLibrary();
+    Long getReferenceLibrary();
 
-    void setReferenceLibrary(Integer libraryId);
+    void setReferenceLibrary(Long libraryId);
 
     ExpData getReferenceLibraryData(User u) throws PipelineJobException;
 

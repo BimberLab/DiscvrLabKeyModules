@@ -87,7 +87,7 @@ public class IlluminaReadsetCreationTask extends WorkDirectoryTask<IlluminaReads
         PipelineJob job = getJob();
 
         job.getLogger().info("Updating readsets");
-        Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
+        Long runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
 
         DbSchema schema = SequenceAnalysisSchema.getInstance().getSchema();
 
@@ -97,7 +97,7 @@ public class IlluminaReadsetCreationTask extends WorkDirectoryTask<IlluminaReads
             TableInfo readData = schema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
 
             ExpRun run = ExperimentService.get().getExpRun(runId);
-            List<Integer> dataIds = new ArrayList<>();
+            List<Long> dataIds = new ArrayList<>();
             List<ExpData> outputs = run.getDataOutputs();
             for (ExpData d : outputs)
             {

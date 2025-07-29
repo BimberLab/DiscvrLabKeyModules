@@ -15,6 +15,7 @@
  */
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -182,15 +183,15 @@ public class SequenceTaskHelper implements PipelineContext
         return _settings;
     }
 
-    public static Integer getExpRunIdForJob(PipelineJob job) throws PipelineJobException
+    public static Long getExpRunIdForJob(PipelineJob job) throws PipelineJobException
     {
         return getExpRunIdForJob(job, true);
     }
 
-    public static Integer getExpRunIdForJob(PipelineJob job, boolean throwUnlessFound) throws PipelineJobException
+    public static Long getExpRunIdForJob(PipelineJob job, boolean throwUnlessFound) throws PipelineJobException
     {
-        Integer jobId = PipelineService.get().getJobId(job.getUser(), job.getContainer(), job.getJobGUID());
-        Integer parentJobId = PipelineService.get().getJobId(job.getUser(), job.getContainer(), job.getParentGUID());
+        Long jobId = PipelineService.get().getJobId(job.getUser(), job.getContainer(), job.getJobGUID());
+        Long parentJobId = PipelineService.get().getJobId(job.getUser(), job.getContainer(), job.getParentGUID());
 
         TableInfo runs = ExperimentService.get().getSchema().getTable("ExperimentRun");
         TableSelector ts = new TableSelector(runs, Collections.singleton("RowId"), new SimpleFilter(FieldKey.fromString("JobId"), jobId), null);
@@ -210,7 +211,7 @@ public class SequenceTaskHelper implements PipelineContext
                 return null;
         }
         Map<String, Object> row = rows[0];
-        return (Integer)row.get("rowid");
+        return MapUtils.getLong(row,"rowid");
     }
 
     public static String getUnzippedBaseName(File file)

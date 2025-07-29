@@ -37,7 +37,7 @@ import java.util.Map;
  */
 public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Serializable
 {
-    private final Map<Integer, File> _cachedFilePaths = new HashMap<>();
+    private final Map<Long, File> _cachedFilePaths = new HashMap<>();
     private final List<SequenceReadsetImpl> _cachedReadsets = new ArrayList<>();
     private final Map<Integer, AnalysisModel> _cachedAnalyses = new HashMap<>();
     private final Map<Integer, ReferenceGenome> _cachedGenomes = new HashMap<>();
@@ -243,13 +243,13 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     }
 
     @Override
-    public File getCachedData(int dataId)
+    public File getCachedData(long dataId)
     {
         return _cachedFilePaths.get(dataId);
     }
 
     @Override
-    public Map<Integer, File> getAllCachedData()
+    public Map<Long, File> getAllCachedData()
     {
         return Collections.unmodifiableMap(_cachedFilePaths);
     }
@@ -309,7 +309,7 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
             rs1.setRowId(100);
 
             js1._cachedReadsets.add(rs1);
-            js1._cachedFilePaths.put(4, new File("/"));
+            js1._cachedFilePaths.put(4L, new File("/"));
 
             HashMap<Integer, Integer> map = new HashMap<>();
             map.put(1, 1);

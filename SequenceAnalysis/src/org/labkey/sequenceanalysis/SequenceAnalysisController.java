@@ -503,15 +503,15 @@ public class SequenceAnalysisController extends SpringActionController
 
     public static class DeleteForm extends QueryForm
     {
-        private Integer[] _jobIds;
+        private Long[] _jobIds;
         private boolean _doDelete = false;
 
-        public Integer[] getJobIds()
+        public Long[] getJobIds()
         {
             return _jobIds;
         }
 
-        public void setJobIds(Integer[] jobIds)
+        public void setJobIds(Long[] jobIds)
         {
             _jobIds = jobIds;
         }
@@ -2916,7 +2916,7 @@ public class SequenceAnalysisController extends SpringActionController
                     String header = se.eval(rs.getFieldKeyRowMap());
                     RefNtSequenceModel model = new RefNtSequenceModel();
                     if (rs.getObject(FieldKey.fromString("sequenceFile")) != null)
-                        model.setSequenceFile(rs.getInt(FieldKey.fromString("sequenceFile")));
+                        model.setSequenceFile(rs.getLong(FieldKey.fromString("sequenceFile")));
 
                     model.setContainer(rs.getString(FieldKey.fromString("container")));
 

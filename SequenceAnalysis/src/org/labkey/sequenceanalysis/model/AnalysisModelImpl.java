@@ -29,15 +29,15 @@ public class AnalysisModelImpl implements AnalysisModel
 {
     private Integer _rowId;
     private String _type;
-    private Integer _runId;
+    private Long _runId;
     private Integer _createdby;
     private Date _created;
     private Integer _modifiedby;
     private Date _modified;
     private String _container;
     private Integer _readset;
-    private Integer _alignmentFile;
-    private Integer _reference_library;
+    private Long _alignmentFile;
+    private Long _reference_library;
     private Integer _library_id;
     private String _description;
     private String _synopsis;
@@ -85,7 +85,7 @@ public class AnalysisModelImpl implements AnalysisModel
         _type = type;
     }
 
-    public void setRunId(Integer runId)
+    public void setRunId(Long runId)
     {
         _runId = runId;
     }
@@ -110,18 +110,18 @@ public class AnalysisModelImpl implements AnalysisModel
         _readset = readset;
     }
 
-    public void setAlignmentFile(Integer alignmentFile)
+    public void setAlignmentFile(Long alignmentFile)
     {
         _alignmentFile = alignmentFile;
     }
 
-    public void setReference_library(Integer reference_library)
+    public void setReference_library(Long reference_library)
     {
         _reference_library = reference_library;
     }
 
     @Override
-    public void setReferenceLibrary(Integer reference_library)
+    public void setReferenceLibrary(Long reference_library)
 {
     _reference_library = reference_library;
 }
@@ -137,7 +137,7 @@ public class AnalysisModelImpl implements AnalysisModel
     }
 
     @Override
-    public Integer getRunId()
+    public Long getRunId()
     {
         return _runId;
     }
@@ -155,7 +155,7 @@ public class AnalysisModelImpl implements AnalysisModel
     }
 
     @Override
-    public Integer getAlignmentFile()
+    public Long getAlignmentFile()
     {
         return _alignmentFile;
     }
@@ -166,7 +166,7 @@ public class AnalysisModelImpl implements AnalysisModel
         return getData(_alignmentFile);
     }
 
-    private ExpData getData(Integer dataId)
+    private ExpData getData(Long dataId)
     {
         if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
         {
@@ -194,12 +194,12 @@ public class AnalysisModelImpl implements AnalysisModel
     }
 
     @Override
-    public Integer getReferenceLibrary()
+    public Long getReferenceLibrary()
     {
         return _reference_library;
     }
 
-    public Integer getReference_Library()
+    public Long getReference_Library()
     {
         return _reference_library;
     }
@@ -208,7 +208,7 @@ public class AnalysisModelImpl implements AnalysisModel
     public ExpData getReferenceLibraryData(User u) throws PipelineJobException
     {
         //preferentially use library_id
-        Integer dataId = null;
+        Long dataId = null;
         if (_library_id != null && PipelineJobService.get().getLocationType() == PipelineJobService.LocationType.WebServer)
         {
             ReferenceGenome g = SequenceAnalysisService.get().getReferenceGenome(_library_id, u);
@@ -328,7 +328,7 @@ public class AnalysisModelImpl implements AnalysisModel
 //        return new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READSETS)).getObject(_readset, Readset.class);
 //    }
 
-    private String getFilePath(Integer dataId)
+    private String getFilePath(Long dataId)
     {
         if (dataId == null || PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
         {

@@ -182,7 +182,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
             TableInfo rs = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
             TableInfo readDataTable = schema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
 
-            Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob(), false);
+            Long runId = SequenceTaskHelper.getExpRunIdForJob(getJob(), false);
 
             //update the readsets
             Map<String, Object> row;
@@ -453,7 +453,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         if (_instrumentRunId != null)
             row.put("instrument_run_id", _instrumentRunId);
 
-        Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob(), false);
+        Long runId = SequenceTaskHelper.getExpRunIdForJob(getJob(), false);
         if (runId != null)
             row.put("runid", runId);
 

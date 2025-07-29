@@ -328,7 +328,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
         map.put("modified", new Date());
         map.put("modifiedby", getJob().getUser().getUserId());
         map.put("fileid", trackData.getRowId());
-        Integer jobId = PipelineService.get().getJobId(getJob().getUser(), genomeContainer, getJob().getJobGUID());
+        Long jobId = PipelineService.get().getJobId(getJob().getUser(), genomeContainer, getJob().getJobGUID());
         map.put("jobId", jobId);
 
         TableInfo trackTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_LIBRARY_TRACKS);

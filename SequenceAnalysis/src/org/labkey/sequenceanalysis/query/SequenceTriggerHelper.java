@@ -228,7 +228,7 @@ public class SequenceTriggerHelper
         }
     }
     
-    public int createExpData(String relPath) {
+    public long createExpData(String relPath) {
         PipeRoot pr = PipelineService.get().getPipelineRootSetting(getContainer());
         if (pr == null)
         {

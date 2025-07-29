@@ -97,7 +97,7 @@ public class ImportFastaSequencesTask extends PipelineJob.Task<ImportFastaSequen
             List<Integer> sequenceIds = new ArrayList<>();
             for (File f : getPipelineJob().getFastas())
             {
-                Integer jobId = PipelineService.get().getJobId(getJob().getUser(), getJob().getContainer(), getJob().getJobGUID());
+                Long jobId = PipelineService.get().getJobId(getJob().getUser(), getJob().getContainer(), getJob().getJobGUID());
                 sequenceIds.addAll(SequenceAnalysisManager.get().importRefSequencesFromFasta(getJob().getContainer(), getJob().getUser(), f, getPipelineJob().isSplitWhitespace(), getPipelineJob().getParams(), getJob().getLogger(), getPipelineJob().getOutDir(), jobId));
             }
 

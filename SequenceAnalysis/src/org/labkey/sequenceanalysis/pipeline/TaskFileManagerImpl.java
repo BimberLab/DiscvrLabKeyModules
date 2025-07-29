@@ -361,7 +361,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     {
         if (!_job.getOutputsToCreate().isEmpty())
         {
-            Integer runId = SequenceTaskHelper.getExpRunIdForJob(_job);
+            Long runId = SequenceTaskHelper.getExpRunIdForJob(_job);
             return SequenceOutputHandlerFinalTask.createOutputFiles(_job, runId, analysisId);
         }
         else
@@ -582,7 +582,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                     }
 
                     String type = StringUtils.trimToNull(line[2]);
-                    Integer dataId = null;
+                    Long dataId = null;
                     if (typeMap.containsKey(readsetId) && type != null)
                     {
                         _job.getLogger().debug("importing metrics using readsetId");

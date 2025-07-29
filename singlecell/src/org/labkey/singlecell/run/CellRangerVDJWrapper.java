@@ -696,7 +696,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             }
         }
 
-        public void addMetrics(File outDir, AnalysisModel model, int dataId) throws PipelineJobException
+        public void addMetrics(File outDir, AnalysisModel model, long dataId) throws PipelineJobException
         {
             getPipelineCtx().getLogger().debug("adding 10x metrics");
 
@@ -810,7 +810,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 folderWithMetricFile = outputForData.getFile().getParentFile().getParentFile();
             }
 
-            Integer dataId = outputForData.getDataId();
+            Long dataId = outputForData.getDataId();
             if (dataId == null)
             {
                 throw new PipelineJobException("Unable to find dataId for output file");

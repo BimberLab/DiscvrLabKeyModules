@@ -87,7 +87,7 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
     @Override
     public RecordedActionSet run() throws PipelineJobException
     {
-        Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
+        Long runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
         getPipelineJob().setExperimentRunRowId(runId);
 
         //create analysisRecord
@@ -164,7 +164,7 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         return new RecordedActionSet();
     }
 
-    public static Set<SequenceOutputFile> createOutputFiles(SequenceJob job, int runId, @Nullable Integer analysisId)
+    public static Set<SequenceOutputFile> createOutputFiles(SequenceJob job, long runId, @Nullable Integer analysisId)
     {
         job.getLogger().info("creating " + job.getOutputsToCreate().size() + " new output files for run: " + runId);
 
@@ -205,7 +205,7 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         return created;
     }
 
-    public static void updateOutputFile(SequenceOutputFile o, PipelineJob job, Integer runId, Integer analysisId)
+    public static void updateOutputFile(SequenceOutputFile o, PipelineJob job, Long runId, Integer analysisId)
     {
         o.setRunId(runId);
         o.setAnalysis_id(analysisId);

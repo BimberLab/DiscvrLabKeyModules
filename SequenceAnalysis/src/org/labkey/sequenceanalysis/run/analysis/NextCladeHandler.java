@@ -176,7 +176,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         }
     }
 
-    public static void processAndImportNextCladeAa(PipelineJob job, File jsonFile, int analysisId, int libraryId, int alignmentId, int readsetId, File consensusVCF, boolean dbImport) throws PipelineJobException
+    public static void processAndImportNextCladeAa(PipelineJob job, File jsonFile, int analysisId, int libraryId, long alignmentId, int readsetId, File consensusVCF, boolean dbImport) throws PipelineJobException
     {
         JSONObject sample = parseNextClade(jsonFile, job.getLogger());
         if (sample == null)
@@ -360,7 +360,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         }
     }
 
-    private static void saveClade(String clade, int analysisId, int alignmentId, int readsetId, PipelineJob job) throws PipelineJobException
+    private static void saveClade(String clade, int analysisId, long alignmentId, int readsetId, PipelineJob job) throws PipelineJobException
     {
         List<Map<String, Object>> toInsert = new ArrayList<>();
         Map<String, Object> row1 = new CaseInsensitiveHashMap<>();

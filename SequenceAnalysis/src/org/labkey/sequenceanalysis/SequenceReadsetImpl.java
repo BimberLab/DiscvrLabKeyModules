@@ -50,7 +50,7 @@ public class SequenceReadsetImpl implements Readset
     private Double _fragmentSize;
     private Double _concentration;
     private Integer _instrument_run_id;
-    private Integer _runId;
+    private Long _runId;
     private String _status;
     private String _container;
     private Date _created;
@@ -259,12 +259,12 @@ public class SequenceReadsetImpl implements Readset
     }
 
     @Override
-    public Integer getRunId()
+    public Long getRunId()
     {
         return _runId;
     }
 
-    public void setRunId(Integer runId)
+    public void setRunId(Long runId)
     {
         _runId = runId;
     }

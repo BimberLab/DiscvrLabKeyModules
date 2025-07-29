@@ -92,9 +92,9 @@ public class AlignmentAnalysisRemoteWorkTask extends WorkDirectoryTask<Alignment
     {
         _taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
 
-        Map<Integer, File> cachedFiles = getTaskHelper().getSequenceSupport().getAllCachedData();
+        Map<Long, File> cachedFiles = getTaskHelper().getSequenceSupport().getAllCachedData();
         getJob().getLogger().debug("total ExpDatas cached: " + cachedFiles.size());
-        for (Integer dataId : cachedFiles.keySet())
+        for (Long dataId : cachedFiles.keySet())
         {
             getJob().getLogger().debug("file was cached: " + dataId + " / " + cachedFiles.get(dataId).getPath());
         }
@@ -142,7 +142,7 @@ public class AlignmentAnalysisRemoteWorkTask extends WorkDirectoryTask<Alignment
     private File resolveRefFasta(AnalysisModel m, File inputBam) throws PipelineJobException
     {
         //first try to find FASTA based on reference_library
-        Integer refFastaId = m.getReferenceLibrary();
+        Long refFastaId = m.getReferenceLibrary();
         if (refFastaId != null)
         {
             File refFasta = getTaskHelper().getSequenceSupport().getCachedData(refFastaId);
@@ -184,7 +184,7 @@ public class AlignmentAnalysisRemoteWorkTask extends WorkDirectoryTask<Alignment
 
         for (AnalysisModel m : getTaskHelper().getSequenceSupport().getCachedAnalyses())
         {
-            int bamId = m.getAlignmentFile();
+            long bamId = m.getAlignmentFile();
             File bam = getTaskHelper().getSequenceSupport().getCachedData(bamId);
             if (bam != null)
             {

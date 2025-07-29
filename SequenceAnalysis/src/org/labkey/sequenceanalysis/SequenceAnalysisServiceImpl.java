@@ -363,7 +363,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
-    public Integer getExpRunIdForJob(PipelineJob job, boolean throwUnlessFound) throws PipelineJobException
+    public Long getExpRunIdForJob(PipelineJob job, boolean throwUnlessFound) throws PipelineJobException
     {
         return SequenceTaskHelper.getExpRunIdForJob(job, throwUnlessFound);
     }

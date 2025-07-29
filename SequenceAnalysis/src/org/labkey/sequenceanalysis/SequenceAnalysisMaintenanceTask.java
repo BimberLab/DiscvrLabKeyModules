@@ -239,7 +239,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         }
     }
 
-    private void inspectForCoreFiles(Integer runId, Logger log)
+    private void inspectForCoreFiles(Long runId, Logger log)
     {
         if (runId == null)
         {

@@ -280,9 +280,9 @@ public class SequenceAnalysisManager
                 throw new IllegalArgumentException("Unable to find sequenceanalysis user schema");
             }
 
-            Set<Integer> bamsDeleted = new HashSet<>();
+            Set<Long> bamsDeleted = new HashSet<>();
             Set<Integer> outputFilesWithDataNotDeleted = new HashSet<>();
-            Set<Integer> expDataDeleted = new HashSet<>();
+            Set<Long> expDataDeleted = new HashSet<>();
             List<SequenceOutputFile> files = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), new SimpleFilter(FieldKey.fromString("rowid"), outputFileIds, CompareType.IN), null).getArrayList(SequenceOutputFile.class);
             for (SequenceOutputFile so : files)
             {
@@ -728,7 +728,7 @@ public class SequenceAnalysisManager
         }
     }
 
-    public List<Integer> importRefSequencesFromFasta(Container c, User u, File file, boolean splitWhitespace, Map<String, String> params, Logger log, @Nullable File outDir, @Nullable Integer jobId) throws IOException
+    public List<Integer> importRefSequencesFromFasta(Container c, User u, File file, boolean splitWhitespace, Map<String, String> params, Logger log, @Nullable File outDir, @Nullable Long jobId) throws IOException
     {
         PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
         if (root == null)

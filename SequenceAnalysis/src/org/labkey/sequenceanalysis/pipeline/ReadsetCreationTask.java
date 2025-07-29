@@ -156,7 +156,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         SequencePipelineSettings settings = getSettings();
         DbSchema schema = SequenceAnalysisSchema.getInstance().getSchema();
 
-        Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
+        Long runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
         ExpRun run = ExperimentService.get().getExpRun(runId);
         List<ExpData> datas = new ArrayList<>();
         datas.addAll(run.getInputDatas(SequenceTaskHelper.NORMALIZED_FASTQ_OUTPUTNAME, ExpProtocol.ApplicationType.ExperimentRunOutput));
@@ -166,7 +166,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
 
         List<SequenceReadsetImpl> newReadsets = new ArrayList<>();
 
-        Set<Integer> fileIdsWithExistingMetrics = new HashSet<>();
+        Set<Long> fileIdsWithExistingMetrics = new HashSet<>();
         try (DbScope.Transaction transaction = schema.getScope().ensureTransaction())
         {
             Map<Integer, String> readsetsToDeactivate = new HashMap<>();
@@ -514,7 +514,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         }
     }
 
-    private void runFastqcForFile(Integer fileId) throws PipelineJobException
+    private void runFastqcForFile(Long fileId) throws PipelineJobException
     {
         ExpData d1 = ExperimentService.get().getExpData(fileId);
         if (d1 != null && d1.getFile().exists())
@@ -535,7 +535,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         }
     }
 
-    private Long getTotalReadsForFile(int fileId, int readsetId)
+    private Long getTotalReadsForFile(long fileId, int readsetId)
     {
         TableInfo metricsTable = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
 
@@ -554,12 +554,12 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         return 0L;
     }
 
-    public static long addQualityMetricsForReadset(Readset rs, int fileId, PipelineJob job) throws PipelineJobException
+    public static long addQualityMetricsForReadset(Readset rs, long fileId, PipelineJob job) throws PipelineJobException
     {
         return addQualityMetricsForReadset(rs, fileId, job, false);
     }
 
-    public static long addQualityMetricsForReadset(Readset rs, int fileId, PipelineJob job, boolean deleteExisting) throws PipelineJobException
+    public static long addQualityMetricsForReadset(Readset rs, long fileId, PipelineJob job, boolean deleteExisting) throws PipelineJobException
     {
         if (deleteExisting)
         {

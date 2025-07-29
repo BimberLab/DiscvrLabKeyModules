@@ -72,7 +72,7 @@ public interface Readset extends Serializable
 
     String getStatus();
 
-    Integer getRunId();
+    Long getRunId();
 
     boolean hasPairedData();
 

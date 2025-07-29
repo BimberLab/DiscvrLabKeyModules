@@ -609,7 +609,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 ReferenceGenome rg = ctx.getSequenceSupport().getCachedGenome(genomes.iterator().next());
                 MergeVcfsAndGenotypesWrapper cv = new MergeVcfsAndGenotypesWrapper(ctx.getLogger());
 
-                Map<Integer, Integer> fileMap = new HashMap<>();
+                Map<Integer, Long> fileMap = new HashMap<>();
                 inputFiles.forEach(x -> fileMap.put(x.getRowid(), x.getDataId()));
                 String[] ids = priorityOrder.split(",");
 
@@ -622,7 +622,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                         throw new PipelineJobException("Unable to find file matching priority: " + i);
                     }
 
-                    int dataId = fileMap.get(i);
+                    long dataId = fileMap.get(i);
 
                     vcfsInPriority.add(ctx.getSequenceSupport().getCachedData(dataId));
                 }

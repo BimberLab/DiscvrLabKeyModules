@@ -1452,7 +1452,7 @@ public class SequenceIntegrationTests
             }
         }
 
-        private SequenceReadsetImpl[] getReadsetsForJob(int runId)
+        private SequenceReadsetImpl[] getReadsetsForJob(long runId)
         {
             TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
             TableSelector ts = new TableSelector(ti, new SimpleFilter(FieldKey.fromString("runid"), runId), null);

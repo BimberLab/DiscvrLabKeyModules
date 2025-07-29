@@ -35,9 +35,9 @@ public interface SequenceAnalysisJobSupport extends Serializable
 {
     void cacheExpData(ExpData data);
 
-    File getCachedData(int dataId);
+    File getCachedData(long dataId);
 
-    Map<Integer, File> getAllCachedData();
+    Map<Long, File> getAllCachedData();
 
     Readset getCachedReadset(Integer rowId);
 

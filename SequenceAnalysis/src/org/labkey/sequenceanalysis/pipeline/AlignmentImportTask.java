@@ -103,7 +103,7 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
 
         //find moved BAM files and build map
         Map<String, ExpData> bamMap = new HashMap<>();
-        Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
+        Long runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
         ExpRun run = ExperimentService.get().getExpRun(runId);
         List<? extends ExpData> datas = run.getInputDatas(SequenceAlignmentTask.FINAL_BAM_ROLE, ExpProtocol.ApplicationType.ExperimentRunOutput);
         if (!datas.isEmpty())
@@ -151,7 +151,7 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
                     a.setLibrary_id(o.getInt("library_id"));
 
                     TableInfo ti = SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
-                    Integer refFastaId = new TableSelector(ti, PageFlowUtil.set("fasta_file")).getObject(o.getInt("library_id"), Integer.class);
+                    Long refFastaId = new TableSelector(ti, PageFlowUtil.set("fasta_file")).getObject(o.getInt("library_id"), Long.class);
                     a.setReferenceLibrary(refFastaId);
                     a.setContainer(getJob().getContainer().getId());
                     a.setCreated(new Date());
