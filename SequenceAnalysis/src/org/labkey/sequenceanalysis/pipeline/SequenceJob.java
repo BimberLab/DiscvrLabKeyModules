@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.exp.api.DataType;
@@ -164,7 +163,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
     private Path _getLogFile()
     {
-        var file = AssayFileWriter.findUniqueFileName((FileUtil.makeLegalName(_jobName) + ".log"), getDataDirectoryFileObject());
+        var file = FileUtil.findUniqueFileName((FileUtil.makeLegalName(_jobName) + ".log"), getDataDirectoryFileObject());
         return file.toNioPathForWrite();
     }
 
@@ -228,7 +227,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         }
 
         String folderName = FileUtil.makeLegalName(StringUtils.capitalize(_folderPrefix) + "_" + FileUtil.getTimestamp());
-        webserverOutDir = AssayFileWriter.findUniqueFileName(folderName, webserverOutDir);
+        webserverOutDir = FileUtil.findUniqueFileName(folderName, webserverOutDir);
         if (!webserverOutDir.exists())
         {
             webserverOutDir.mkdir();

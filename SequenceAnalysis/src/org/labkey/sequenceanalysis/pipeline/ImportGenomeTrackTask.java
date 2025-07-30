@@ -33,7 +33,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -61,6 +60,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenomeManager;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Job;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.PageFlowUtil;
@@ -354,7 +354,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
     }
     private File getOutputFile(File file, File tracksDir)
     {
-        return AssayFileWriter.findUniqueFileName(file.getName().replaceAll(" ", "_"), tracksDir);
+        return FileUtil.findUniqueFileName(file.getName().replaceAll(" ", "_"), tracksDir);
     }
 
     private Map<String, Pair<String, Integer>> getNameTranslationMap(List<RefNtSequenceModel> refNtSequenceModels) throws PipelineJobException

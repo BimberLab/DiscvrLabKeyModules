@@ -24,7 +24,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -67,6 +66,7 @@ import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Job;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.PageFlowUtil;
@@ -827,7 +827,7 @@ public class SequenceAnalysisManager
 
         //create file
         String expectedName = "chain-" + genomeId1 + "to" + genomeId2 + ".chain";
-        File outputFile = AssayFileWriter.findUniqueFileName(expectedName, targetDir);
+        File outputFile = FileUtil.findUniqueFileName(expectedName, targetDir);
 
         FileUtils.moveFile(file, outputFile);
         ExpData chainFile = ExperimentService.get().createData(c, new DataType("Sequence Track"));

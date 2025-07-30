@@ -2151,7 +2151,7 @@ public class SequenceAnalysisController extends SpringActionController
 
             File targetDirectory = root.getRootPath();
 
-            return AssayFileWriter.findUniqueFileName(filename, targetDirectory);
+            return FileUtil.findUniqueFileName(filename, targetDirectory);
         }
 
         @Override
@@ -2449,7 +2449,7 @@ public class SequenceAnalysisController extends SpringActionController
             try
             {
                 FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer(), "sequenceOutputs");
-                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
+                return FileUtil.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
             }
             catch (ExperimentException e)
             {
@@ -2582,7 +2582,7 @@ public class SequenceAnalysisController extends SpringActionController
             try
             {
                 FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
+                return FileUtil.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
             }
             catch (ExperimentException e)
             {
@@ -2747,7 +2747,7 @@ public class SequenceAnalysisController extends SpringActionController
             try
             {
                 FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
+                return FileUtil.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
             }
             catch (ExperimentException e)
             {
@@ -4089,7 +4089,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                 for (File file : toCreate.keySet())
                 {
-                    FileLike target = AssayFileWriter.findUniqueFileName(file.getName(), targetDirectory);
+                    FileLike target = FileUtil.findUniqueFileName(file.getName(), targetDirectory);
                     FileUtils.moveFile(file, target.toNioPathForWrite().toFile());
 
                     ExpData data = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"));

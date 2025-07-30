@@ -69,7 +69,7 @@ public class ImportFastaSequencesPipelineJob extends PipelineJob
 
         AssayFileWriter writer = new AssayFileWriter();
         String folderName = "SequenceImport_" + FileUtil.getTimestamp();
-        webserverOutDir = AssayFileWriter.findUniqueFileName(folderName, webserverOutDir);
+        webserverOutDir = FileUtil.findUniqueFileName(folderName, webserverOutDir);
         if (!webserverOutDir.exists())
         {
             webserverOutDir.mkdirs();
