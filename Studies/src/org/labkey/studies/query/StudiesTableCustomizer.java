@@ -1,8 +1,10 @@
 package org.labkey.studies.query;
 
 import org.apache.commons.collections4.MultiValuedMap;
+import org.apache.commons.collections4.SetValuedMap;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
+
 import org.labkey.api.collections.CaseInsensitiveKeyedHashSetValuedMap;
 import org.labkey.api.data.AbstractTableInfo;
 import org.labkey.api.data.TableCustomizer;

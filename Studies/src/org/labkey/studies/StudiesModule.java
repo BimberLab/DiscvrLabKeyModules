@@ -11,6 +11,8 @@ import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.studies.StudiesService;
+import org.labkey.api.util.PageFlowUtil;
+import org.labkey.studies.query.StudiesUserSchema;
 import org.labkey.api.studies.security.StudiesDataAdminRole;
 import org.labkey.studies.query.StudiesUserSchema;
 import org.labkey.studies.study.StudiesFilterProvider;
@@ -78,5 +80,13 @@ public class StudiesModule extends ExtendedSimpleModule
                 return new StudiesUserSchema(schema.getUser(), schema.getContainer(), StudiesSchema.getInstance().getSchema());
             }
         });
+    }
+
+    @Override
+    public @NotNull Set<Class> getIntegrationTests()
+    {
+        return PageFlowUtil.set(
+                StudiesManager.TestCase.class
+        );
     }
 }
