@@ -291,4 +291,16 @@ public class DiscvrCoreController extends SpringActionController
             return DetailsURL.fromString("laboratory/setTableIncrementValue.view", getContainer()).getActionURL();
         }
     }
+
+    // This allows registration of this action without creating a dependency between laboratory and discvrcore
+    @UtilityAction(label = "Manage File Roots", description = "This standalone file root management action can be used on folder types that do not support the normal 'Manage Folder' UI.")
+    @RequiresPermission(AdminPermission.class)
+    public class ManageFileRootAction extends SimpleRedirectAction<Object>
+    {
+        @Override
+        public URLHelper getRedirectURL(Object o) throws Exception
+        {
+            return DetailsURL.fromString("admin/manageFileRoot.view", getContainer()).getActionURL();
+        }
+    }
 }
