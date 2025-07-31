@@ -368,7 +368,7 @@ public class FastqcRunner
             throw new RuntimeException("Not found: " + jbzip2.getPath());
         }
 
-        File htsjdkJar = new File(libDir, "htsjdk-4.0.0.jar");
+        File htsjdkJar = findJar(libDir, "htsjdk-");
         if (!htsjdkJar.exists())
         {
             throw new RuntimeException("Not found: " + htsjdkJar.getPath());
@@ -401,6 +401,27 @@ public class FastqcRunner
         params.add("-Djava.awt.headless=true");
 
         return params;
+    }
+
+    private File findJar(final File libDir, final String prefix)
+    {
+        if (!libDir.exists())
+        {
+            throw new RuntimeException("Missing directory: " + libDir);
+        }
+
+        List<String> jarNames = Arrays.stream(libDir.list()).filter(fn -> fn.startsWith(prefix)).sorted().toList();
+        if (jarNames.isEmpty())
+        {
+            throw new RuntimeException("Unable to find JAR with prefix: " + prefix);
+        }
+
+        if (jarNames.size() > 1)
+        {
+            _logger.info("More than one JAR found with prefix: " + prefix);
+        }
+
+        return new File(libDir, jarNames.get(jarNames.size() - 1));
     }
 
     private int getThreads()
