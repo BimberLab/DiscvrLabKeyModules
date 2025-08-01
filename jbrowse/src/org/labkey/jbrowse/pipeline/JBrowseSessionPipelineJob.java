@@ -1,7 +1,6 @@
 package org.labkey.jbrowse.pipeline;
 
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
@@ -15,6 +14,7 @@ import org.labkey.api.pipeline.TaskPipeline;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
@@ -101,7 +101,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         _sourceContainerId = databaseGuid == null ? getContainerId() : getSourceContainerId(databaseGuid);
         _mode = mode;
 
-        setLogFile(AssayFileWriter.findUniqueFileName("jbrowse-" + new GUID() + ".log", JBrowseManager.get().getBaseDir(c, true)));
+        setLogFile(FileUtil.findUniqueFileName("jbrowse-" + new GUID() + ".log", JBrowseManager.get().getBaseDir(c, true)));
     }
 
     private JBrowseSessionPipelineJob(Container c, User user, PipeRoot pipeRoot, String name, String description, Integer libraryId, List<Integer> trackIds, List<Integer> outputFileIds, @Nullable String existingDatabaseGuid, boolean isTemporarySession)
@@ -118,7 +118,7 @@ public class JBrowseSessionPipelineJob extends PipelineJob
         _sourceContainerId = existingDatabaseGuid == null ? getContainerId() : getSourceContainerId(existingDatabaseGuid);
         _isTemporarySession = isTemporarySession;
 
-        setLogFile(AssayFileWriter.findUniqueFileName("jbrowse-" + _databaseGuid + ".log", JBrowseManager.get().getBaseDir(c, true)));
+        setLogFile(FileUtil.findUniqueFileName("jbrowse-" + _databaseGuid + ".log", JBrowseManager.get().getBaseDir(c, true)));
     }
 
     private String getSourceContainerId(String databaseGuid)

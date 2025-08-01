@@ -40,7 +40,7 @@ public class QueryExtensionsModule extends DefaultModule
     @Override
     public @Nullable Double getSchemaVersion()
     {
-        return 23.000;
+        return 25.000;
     }
 
     @Override
