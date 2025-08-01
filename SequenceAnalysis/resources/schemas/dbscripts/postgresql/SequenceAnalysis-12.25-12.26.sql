@@ -17,7 +17,9 @@ ALTER TABLE sequenceanalysis.quality_metrics add column analysis_id integer;
 
 ALTER TABLE sequenceanalysis.aa_snps_by_codon add column ref_nt_positions varchar(200);
 
+-- @SkipOnEmptySchemasBegin
 INSERT into sequenceanalysis.quality_metrics_types (type) VALUES ('%Reads Aligned In Pairs');
 INSERT into sequenceanalysis.quality_metrics_types (type) VALUES ('Total Sequences Passed Filter');
 INSERT into sequenceanalysis.quality_metrics_types (type) VALUES ('Reads Aligned');
 INSERT into sequenceanalysis.quality_metrics_types (type) VALUES ('%Reads Aligned');
+-- @SkipOnEmptySchemasEnd

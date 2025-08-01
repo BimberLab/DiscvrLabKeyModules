@@ -38,7 +38,9 @@ UPDATE sequenceanalysis.ref_nt_sequences set genbank = 'SIVmac239' WHERE name = 
 UPDATE sequenceanalysis.ref_nt_sequences set genbank = 'SIVmac251' WHERE name = 'M19499';
 UPDATE sequenceanalysis.ref_nt_sequences set genbank = 'SIVsmE543' WHERE name = 'U72748.2';
 
+-- @SkipOnEmptySchemasBegin
 INSERT INTO sequenceanalysis.sequence_platforms (platform) VALUES ('MIXED');
+-- @SkipOnEmptySchemasEnd
 
 --delete duplicate epitopes accidentally entered
 update sequenceanalysis.ref_aa_features set comment = null where comment = '';

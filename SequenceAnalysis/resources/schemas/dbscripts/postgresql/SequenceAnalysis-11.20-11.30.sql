@@ -51,6 +51,7 @@ WITH (OIDS=FALSE)
 -- ----------------------------
 -- Records of sequenceAnalysis.sequence_platforms
 -- ----------------------------
+-- @SkipOnEmptySchemasBegin
 INSERT INTO sequenceanalysis.sequence_platforms
 (platform,aliases)
 VALUES
@@ -62,11 +63,14 @@ VALUES
 ('ION_TORRENT', 'IONTORRENT'),
 ('SANGER', null)
 ;
+-- @SkipOnEmptySchemasEnd
 
 update sequenceAnalysis.sequence_reads set chemistry = 'LS454' where chemistry = 'Pyrosequencing';
 
 delete from sequenceAnalysis.site_module_properties where prop_name = 'contactEmail';
+-- @SkipOnEmptySchemasBegin
 insert into sequenceAnalysis.site_module_properties (prop_name, stringValue) VALUES ('contactEmail', 'bbimber@labkey.com');
+-- @SkipOnEmptySchemasEnd
 
 DROP TABLE IF EXISTS sequenceAnalysis.sequence_readsets;
 CREATE TABLE sequenceAnalysis.sequence_readsets (

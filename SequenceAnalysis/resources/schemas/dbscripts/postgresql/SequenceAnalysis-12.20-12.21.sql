@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+-- @SkipOnEmptySchemasBegin
 INSERT INTO sequenceanalysis.barcodes (tag_name, sequence, group_name) VALUES ('N701', 'TCGCCTTA', 'Illumina');
 INSERT INTO sequenceanalysis.barcodes (tag_name, sequence, group_name) VALUES ('N702', 'CTAGTACG', 'Illumina');
 INSERT INTO sequenceanalysis.barcodes (tag_name, sequence, group_name) VALUES ('N703', 'TTCTGCCT', 'Illumina');
@@ -420,3 +421,4 @@ INSERT into sequenceanalysis.barcodes (tag_name, sequence, group_name) VALUES ('
 INSERT into sequenceanalysis.barcodes (tag_name, sequence, group_name) VALUES ('FLD0382', 'AAGGTATGAG', 'Fluidigm');
 INSERT into sequenceanalysis.barcodes (tag_name, sequence, group_name) VALUES ('FLD0383', 'ATGGAGCACT', 'Fluidigm');
 INSERT into sequenceanalysis.barcodes (tag_name, sequence, group_name) VALUES ('FLD0384', 'ACGGTGCTAG', 'Fluidigm');
+-- @SkipOnEmptySchemasEnd
