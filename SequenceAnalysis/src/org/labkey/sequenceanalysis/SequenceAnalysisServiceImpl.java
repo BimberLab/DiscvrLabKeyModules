@@ -193,7 +193,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
-    public SequenceReadsetImpl getReadset(int readsetId, User u)
+    public SequenceReadsetImpl getReadset(long readsetId, User u)
     {
         TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), readsetId);

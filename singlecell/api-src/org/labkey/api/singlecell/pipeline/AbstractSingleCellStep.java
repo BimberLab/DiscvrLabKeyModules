@@ -64,7 +64,7 @@ public interface AbstractSingleCellStep extends PipelineStep
         private transient SequenceOutputFile _sequenceOutputFile;
 
         private Integer _sequenceOutputFileId;
-        private Integer _readsetId;
+        private Long _readsetId;
 
         private File _file;
         private String _datasetId;
@@ -87,7 +87,7 @@ public interface AbstractSingleCellStep extends PipelineStep
 
         }
 
-        public SeuratObjectWrapper(String datasetId, String datasetName, File file, @Nullable Integer sequenceOutputFileId, @Nullable Integer readsetId)
+        public SeuratObjectWrapper(String datasetId, String datasetName, File file, @Nullable Integer sequenceOutputFileId, @Nullable Long readsetId)
         {
             _datasetId = datasetId;
             _datasetName = datasetName;
@@ -127,12 +127,12 @@ public interface AbstractSingleCellStep extends PipelineStep
             _datasetName = datasetName;
         }
 
-        public Integer getReadsetId()
+        public Long getReadsetId()
         {
             return _readsetId;
         }
 
-        public void setReadsetId(Integer readsetId)
+        public void setReadsetId(Long readsetId)
         {
             _readsetId = readsetId;
         }

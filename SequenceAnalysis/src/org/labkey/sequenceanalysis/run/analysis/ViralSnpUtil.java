@@ -69,13 +69,13 @@ public class ViralSnpUtil
         return consensusMap;
     }
 
-    public static void deleteExistingMetrics(PipelineJob job, int analysisId, String category) throws PipelineJobException
+    public static void deleteExistingMetrics(PipelineJob job, long analysisId, String category) throws PipelineJobException
     {
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("category"), category);
         deleteExistingValues(job, analysisId, SequenceAnalysisSchema.TABLE_QUALITY_METRICS, filter);
     }
 
-    public static void deleteExistingValues(PipelineJob job, int analysisId, String queryName, SimpleFilter filter) throws PipelineJobException
+    public static void deleteExistingValues(PipelineJob job, long analysisId, String queryName, SimpleFilter filter) throws PipelineJobException
     {
         Container targetContainer = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
         TableInfo ti = QueryService.get().getUserSchema(job.getUser(), targetContainer, SequenceAnalysisSchema.SCHEMA_NAME).getTable(queryName);

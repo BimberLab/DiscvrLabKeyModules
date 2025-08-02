@@ -17,6 +17,7 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.labkey.api.collections.LongHashMap;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -313,8 +314,8 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         if (SequenceTaskHelper.isAlignmentUsed(getJob()))
         {
             //build map used next to import metrics
-            Map<Integer, Integer> readsetToAnalysisMap = new HashMap<>();
-            Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap = new HashMap<>();
+            Map<Long, Long> readsetToAnalysisMap = new LongHashMap<>();
+            Map<Long, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap = new LongHashMap<>();
             readsetToAnalysisMap.put(analysisModel.getReadset(), analysisModel.getRowId());
             typeMap.put(analysisModel.getReadset(), new HashMap<>());
 

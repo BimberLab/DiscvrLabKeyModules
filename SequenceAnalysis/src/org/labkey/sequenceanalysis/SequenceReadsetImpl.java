@@ -34,7 +34,7 @@ import java.util.List;
  */
 public class SequenceReadsetImpl implements Readset
 {
-    private Integer _rowId;
+    private Long _rowId;
     private String _name;
     private String _comments;
     private String _platform;
@@ -67,7 +67,7 @@ public class SequenceReadsetImpl implements Readset
     }
 
     @Override
-    public int getRowId()
+    public long getRowId()
     {
         return _rowId == null ? 0 : _rowId;
     }
@@ -77,7 +77,7 @@ public class SequenceReadsetImpl implements Readset
         _rowId = null;
     }
 
-    public void setRowId(int rowId)
+    public void setRowId(long rowId)
     {
         _rowId = rowId;
     }
@@ -89,7 +89,7 @@ public class SequenceReadsetImpl implements Readset
 
     @Override
     @JsonIgnore
-    public Integer getReadsetId()
+    public Long getReadsetId()
     {
         return _rowId;
     }

@@ -116,7 +116,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     }
 
     @Override
-    public void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId, @Nullable String description)
+    public void addSequenceOutput(File file, String label, String category, @Nullable Long readsetId, @Nullable Long analysisId, @Nullable Integer genomeId, @Nullable String description)
     {
         SequenceOutputFile so = new SequenceOutputFile();
         so.setFile(file);
@@ -357,7 +357,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     }
 
     @Override
-    public Set<SequenceOutputFile> createSequenceOutputRecords(@Nullable Integer analysisId) throws PipelineJobException
+    public Set<SequenceOutputFile> createSequenceOutputRecords(@Nullable Long analysisId) throws PipelineJobException
     {
         if (!_job.getOutputsToCreate().isEmpty())
         {
@@ -539,7 +539,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     }
 
     @Override
-    public void writeMetricsToDb(Map<Integer, Integer> readsetMap, Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap) throws PipelineJobException
+    public void writeMetricsToDb(Map<Long, Long> readsetMap, Map<Long, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap) throws PipelineJobException
     {
         if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
         {

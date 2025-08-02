@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import htsjdk.samtools.util.IOUtil;
 import org.junit.Assert;
 import org.junit.Test;
+import org.labkey.api.collections.IntHashMap;
+import org.labkey.api.collections.LongHashMap;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJob;
@@ -37,10 +39,10 @@ import java.util.Map;
  */
 public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Serializable
 {
-    private final Map<Long, File> _cachedFilePaths = new HashMap<>();
+    private final Map<Long, File> _cachedFilePaths = new LongHashMap<>();
     private final List<SequenceReadsetImpl> _cachedReadsets = new ArrayList<>();
-    private final Map<Integer, AnalysisModel> _cachedAnalyses = new HashMap<>();
-    private final Map<Integer, ReferenceGenome> _cachedGenomes = new HashMap<>();
+    private final Map<Long, AnalysisModel> _cachedAnalyses = new LongHashMap<>();
+    private final Map<Integer, ReferenceGenome> _cachedGenomes = new IntHashMap<>();
     private final Map<String, Serializable> _cachedObjects = new HashMap<>();
 
     private transient boolean _modifiedSinceSerialize = false;
@@ -53,7 +55,7 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     }
 
     @Override
-    public SequenceReadsetImpl getCachedReadset(Integer rowId)
+    public SequenceReadsetImpl getCachedReadset(Long rowId)
     {
         if (rowId == null || rowId < 1)
         {
@@ -72,19 +74,19 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     }
 
     @Override
-    public AnalysisModel getCachedAnalysis(int rowId)
+    public AnalysisModel getCachedAnalysis(long rowId)
     {
         return _cachedAnalyses.get(rowId);
     }
 
     @Override
-    public void cacheReadset(int readsetId, User u)
+    public void cacheReadset(long readsetId, User u)
     {
         cacheReadset(readsetId,u, false);
     }
 
     @Override
-    public void cacheReadset(int readsetId, User u, boolean allowReadsetsWithArchivedData)
+    public void cacheReadset(long readsetId, User u, boolean allowReadsetsWithArchivedData)
     {
         SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(readsetId, u);
         if (rs != null)
@@ -303,7 +305,7 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
         public void testSerializeWithMap() throws Exception
         {
             SequenceJobSupportImpl js1 = new SequenceJobSupportImpl();
-            js1._cachedAnalyses.put(1, new AnalysisModelImpl());
+            js1._cachedAnalyses.put(1L, new AnalysisModelImpl());
             js1._cachedGenomes.put(2, new ReferenceGenomeImpl());
             SequenceReadsetImpl rs1 = new SequenceReadsetImpl();
             rs1.setRowId(100);
@@ -324,13 +326,13 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
             mapper.writeValue(writer, js1);
 
             SequenceJobSupportImpl deserialized = mapper.readValue(new StringReader(writer.toString()), SequenceJobSupportImpl.class);
-            assertNotNull("Analysis map not serialized properly", deserialized._cachedAnalyses.get(1));
+            assertNotNull("Analysis map not serialized properly", deserialized._cachedAnalyses.get(1L));
             assertNotNull("Genome map not serialized properly", deserialized._cachedGenomes.get(2));
             assertEquals("Readset list not serialized properly", 1, deserialized._cachedReadsets.size());
             assertEquals("Readset not deserialized with correct rowid", 100, deserialized._cachedReadsets.get(0).getRowId());
             assertEquals("Readset not deserialized with correct readsetid", 100, deserialized._cachedReadsets.get(0).getReadsetId().intValue());
 
-            assertNotNull("File map not serialized properly", deserialized._cachedFilePaths.get(4));
+            assertNotNull("File map not serialized properly", deserialized._cachedFilePaths.get(4L));
             assertNotNull("Cached map not serialized properly", deserialized.getCachedObject("cachedMap",Map.class));
             assertEquals(" Cached int not serialized properly", Integer.valueOf(1), deserialized.getCachedObject("cachedInt", Integer.class));
             assertEquals(" Cached string not serialized properly", "foo", deserialized.getCachedObject("cachedString", String.class));

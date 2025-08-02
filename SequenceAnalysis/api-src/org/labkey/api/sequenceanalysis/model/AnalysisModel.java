@@ -31,13 +31,13 @@ import java.util.Date;
  */
 public interface AnalysisModel extends Serializable
 {
-    Integer getAnalysisId();
+    Long getAnalysisId();
 
     Long getRunId();
 
     String getContainer();
 
-    Integer getReadset();
+    Long getReadset();
 
     Long getAlignmentFile();
 
@@ -64,7 +64,7 @@ public interface AnalysisModel extends Serializable
 
     Integer getCreatedby();
 
-    Integer getRowId();
+    Long getRowId();
 
     String getDescription();
 

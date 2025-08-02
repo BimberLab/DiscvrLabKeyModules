@@ -46,7 +46,7 @@ public interface Readset extends Serializable
 
     Integer getInstrumentRunId();
 
-    Integer getReadsetId();
+    Long getReadsetId();
 
     String getBarcode5();
 
@@ -56,7 +56,7 @@ public interface Readset extends Serializable
 
     Double getConcentration();
 
-    int getRowId();
+    long getRowId();
 
     String getContainer();
 

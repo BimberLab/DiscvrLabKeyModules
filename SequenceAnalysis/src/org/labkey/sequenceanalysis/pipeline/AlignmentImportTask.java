@@ -2,6 +2,7 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
+import org.labkey.api.collections.LongHashMap;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.Table;
@@ -185,8 +186,8 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
             transaction.commit();
 
             //process metrics
-            Map<Integer, Integer> readsetToAnalysisMap = new HashMap<>();
-            Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap = new HashMap<>();
+            Map<Long, Long> readsetToAnalysisMap = new LongHashMap<>();
+            Map<Long, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap = new HashMap<>();
             for (AnalysisModel model : ret)
             {
                 readsetToAnalysisMap.put(model.getReadset(), model.getRowId());

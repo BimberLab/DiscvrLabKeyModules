@@ -141,7 +141,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
 
             for (SequenceOutputFile o : inputs)
             {
-                Integer analysisId = o.getAnalysis_id();
+                Long analysisId = o.getAnalysis_id();
                 if (analysisId == null)
                 {
                     ctx.getJob().getLogger().warn("no analysis Id for file, attempting to find this job: " + o.getName());
@@ -150,7 +150,7 @@ public class PicardAlignmentMetricsHandler extends AbstractParameterizedOutputHa
                     TableSelector ts = new TableSelector(QueryService.get().getUserSchema(ctx.getJob().getUser(), ctx.getJob().getContainer(), SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_ANALYSES), PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("runid/JobId"), sf.getRowId()), null);
                     if (ts.exists())
                     {
-                        analysisId = ts.getObject(Integer.class);
+                        analysisId = ts.getObject(Long.class);
                     }
                     else
                     {

@@ -23,8 +23,8 @@ import java.util.Map;
  */
 public class ReadDataImpl implements ReadData
 {
-    private Integer _rowid;
-    private Integer _readset;
+    private Long _rowid;
+    private Long _readset;
     private String _platformUnit;
     private String _centerName;
     private Date _date;
@@ -48,23 +48,23 @@ public class ReadDataImpl implements ReadData
     }
 
     @Override
-    public Integer getRowid()
+    public Long getRowid()
     {
         return _rowid;
     }
 
-    public void setRowid(Integer rowid)
+    public void setRowid(Long rowid)
     {
         _rowid = rowid;
     }
 
     @Override
-    public Integer getReadset()
+    public Long getReadset()
     {
         return _readset;
     }
 
-    public void setReadset(Integer readset)
+    public void setReadset(Long readset)
     {
         _readset = readset;
     }

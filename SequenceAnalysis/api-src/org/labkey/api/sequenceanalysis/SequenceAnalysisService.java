@@ -69,7 +69,7 @@ abstract public class SequenceAnalysisService
 
     abstract public ReadData getReadData(int rowId, User u);
 
-    abstract public Readset getReadset(int readsetId, User u);
+    abstract public Readset getReadset(long readsetId, User u);
 
     abstract public ReferenceGenome getReferenceGenome(int rowId, User u) throws PipelineJobException;
 

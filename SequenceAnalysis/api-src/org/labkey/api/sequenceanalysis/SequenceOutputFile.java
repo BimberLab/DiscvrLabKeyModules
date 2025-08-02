@@ -39,8 +39,8 @@ public class SequenceOutputFile implements Serializable
     private String _description;
     private Long _dataId;
     private Integer _library_id;
-    private Integer _readset;
-    private Integer _analysis_id;
+    private Long _readset;
+    private Long _analysis_id;
     private Long _runid;
     private String _category;
     private Boolean _intermediate;
@@ -106,22 +106,22 @@ public class SequenceOutputFile implements Serializable
         _library_id = library_id;
     }
 
-    public Integer getReadset()
+    public Long getReadset()
     {
         return _readset;
     }
 
-    public void setReadset(Integer readset)
+    public void setReadset(Long readset)
     {
         _readset = readset;
     }
 
-    public Integer getAnalysis_id()
+    public Long getAnalysis_id()
     {
         return _analysis_id;
     }
 
-    public void setAnalysis_id(Integer analysis_id)
+    public void setAnalysis_id(Long analysis_id)
     {
         _analysis_id = analysis_id;
     }

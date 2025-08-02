@@ -27,7 +27,7 @@ import java.util.Date;
  */
 public class AnalysisModelImpl implements AnalysisModel
 {
-    private Integer _rowId;
+    private Long _rowId;
     private String _type;
     private Long _runId;
     private Integer _createdby;
@@ -35,7 +35,7 @@ public class AnalysisModelImpl implements AnalysisModel
     private Integer _modifiedby;
     private Date _modified;
     private String _container;
-    private Integer _readset;
+    private Long _readset;
     private Long _alignmentFile;
     private Long _reference_library;
     private Integer _library_id;
@@ -47,7 +47,7 @@ public class AnalysisModelImpl implements AnalysisModel
 
     }
 
-    public static AnalysisModelImpl getFromDb(int analysisId, User u)
+    public static AnalysisModelImpl getFromDb(long analysisId, User u)
     {
         if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
         {
@@ -70,12 +70,12 @@ public class AnalysisModelImpl implements AnalysisModel
     }
 
     @Override
-    public Integer getAnalysisId()
+    public Long getAnalysisId()
     {
         return _rowId;
     }
 
-    public void setRowId(Integer rowId)
+    public void setRowId(Long rowId)
     {
         _rowId = rowId;
     }
@@ -105,7 +105,7 @@ public class AnalysisModelImpl implements AnalysisModel
         _container = container;
     }
 
-    public void setReadset(Integer readset)
+    public void setReadset(Long readset)
     {
         _readset = readset;
     }
@@ -149,7 +149,7 @@ public class AnalysisModelImpl implements AnalysisModel
     }
 
     @Override
-    public Integer getReadset()
+    public Long getReadset()
     {
         return _readset;
     }
@@ -265,7 +265,7 @@ public class AnalysisModelImpl implements AnalysisModel
     }
 
     @Override
-    public Integer getRowId()
+    public Long getRowId()
     {
         return _rowId;
     }

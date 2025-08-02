@@ -17,7 +17,7 @@ public interface PipelineOutputTracker
     /**
      * Add a SequenceOutputFile for this job.  These files are tracked and displayed through the browser UI.
      */
-    void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId, @Nullable String description);
+    void addSequenceOutput(File file, String label, String category, @Nullable Long readsetId, @Nullable Long analysisId, @Nullable Integer genomeId, @Nullable String description);
 
     /**
      * Remove a previously added intermediate file

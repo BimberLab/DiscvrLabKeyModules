@@ -162,7 +162,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
             throw new IllegalArgumentException("No library ID defined for VCFs");
         }
 
-        Set<Integer> readsetIds = new HashSet<>();
+        Set<Long> readsetIds = new HashSet<>();
         inputFiles.forEach(x -> readsetIds.add(x.getReadset()));
 
         int sampleCount = getSamplesForWorkspace(mergedWorkspace.getParentFile()).size();

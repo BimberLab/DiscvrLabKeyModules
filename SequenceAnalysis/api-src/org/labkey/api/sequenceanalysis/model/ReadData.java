@@ -24,9 +24,9 @@ import java.util.Date;
  */
 public interface ReadData extends Serializable
 {
-    Integer getRowid();
+    Long getRowid();
 
-    Integer getReadset();
+    Long getReadset();
 
     String getPlatformUnit();
 

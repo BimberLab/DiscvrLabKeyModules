@@ -31,6 +31,7 @@ import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
+import org.labkey.api.collections.LongHashMap;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.ObjectKeySerialization;
 import org.labkey.api.pipeline.PairSerializer;
@@ -1282,7 +1283,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         {
             getJob().getLogger().info("No FASTQ merge necessary");
             List<Pair<File, File>> inputs = new ArrayList<>(files.values());
-            Optional<Integer> minReadData = files.keySet().stream().map(ReadData::getRowid).min(Integer::compareTo);
+            Optional<Long> minReadData = files.keySet().stream().map(ReadData::getRowid).min(Long::compareTo);
             return doAlignmentForSet(inputs, referenceGenome, rs, minReadData.get(), "", inputs.size() == 1 ? files.keySet().stream().iterator().next().getPlatformUnit() : null);
         }
     }
@@ -1340,7 +1341,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         return bam;
     }
 
-    public File doAlignmentForSet(List<Pair<File, File>> inputFiles, ReferenceGenome referenceGenome, Readset rs, int lowestReadDataId, @NotNull String msgSuffix, @Nullable String platformUnit) throws PipelineJobException, IOException
+    public File doAlignmentForSet(List<Pair<File, File>> inputFiles, ReferenceGenome referenceGenome, Readset rs, long lowestReadDataId, @NotNull String msgSuffix, @Nullable String platformUnit) throws PipelineJobException, IOException
     {
         AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
 
@@ -1496,7 +1497,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         private boolean _alignmentMetricsDone = false;
         private File _renamedBamFile = null;
         private boolean _indexBamDone = false;
-        private Map<Integer, File> _readDataBamMap = new HashMap<>();
+        private Map<Long, File> _readDataBamMap = new LongHashMap<>();
 
         //for serialization
         public Resumer()
@@ -1795,12 +1796,12 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             saveState();
         }
 
-        public boolean isReadDataAlignmentDone(int readDataId)
+        public boolean isReadDataAlignmentDone(long readDataId)
         {
             return _readDataBamMap.containsKey(readDataId);
         }
 
-        public void setReadDataAlignmentDone(int readDataId, List<RecordedAction> actions, File bam) throws PipelineJobException
+        public void setReadDataAlignmentDone(long readDataId, List<RecordedAction> actions, File bam) throws PipelineJobException
         {
             getLogger().debug("setting read data alignment done: " + readDataId + ", " + (actions == null ? "0" : actions.size()) + " actions");
             _readDataBamMap.put(readDataId, bam);
@@ -1811,17 +1812,17 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             saveState();
         }
 
-        public File getBamForReadData(int readDataId)
+        public File getBamForReadData(long readDataId)
         {
             return _readDataBamMap.get(readDataId);
         }
 
-        public Map<Integer, File> getReadDataBamMap()
+        public Map<Long, File> getReadDataBamMap()
         {
             return _readDataBamMap;
         }
 
-        public void setReadDataBamMap(Map<Integer, File> readDataBamMap)
+        public void setReadDataBamMap(Map<Long, File> readDataBamMap)
         {
             _readDataBamMap = readDataBamMap;
         }
@@ -1874,8 +1875,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             ReadDataImpl rd = new ReadDataImpl();
             rd.setFile(file1, 1);
             rd.setFile(file2, 2);
-            rd.setReadset(-1);
-            rd.setRowid(-1);
+            rd.setReadset(-1L);
+            rd.setRowid(-1L);
             r._filesToAlign = new LinkedHashMap<>();
             r._filesToAlign.put(rd, pair);
 

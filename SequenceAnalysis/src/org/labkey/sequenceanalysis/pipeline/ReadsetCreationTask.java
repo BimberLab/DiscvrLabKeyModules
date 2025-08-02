@@ -169,7 +169,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         Set<Long> fileIdsWithExistingMetrics = new HashSet<>();
         try (DbScope.Transaction transaction = schema.getScope().ensureTransaction())
         {
-            Map<Integer, String> readsetsToDeactivate = new HashMap<>();
+            Map<Long, String> readsetsToDeactivate = new HashMap<>();
             TableInfo readsetTable = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
             TableInfo readDataTable = schema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
 
@@ -535,7 +535,7 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
         }
     }
 
-    private Long getTotalReadsForFile(long fileId, int readsetId)
+    private Long getTotalReadsForFile(long fileId, long readsetId)
     {
         TableInfo metricsTable = SequenceAnalysisManager.get().getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
 

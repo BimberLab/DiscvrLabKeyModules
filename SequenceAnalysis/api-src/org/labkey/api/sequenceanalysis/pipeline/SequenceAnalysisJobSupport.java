@@ -39,15 +39,15 @@ public interface SequenceAnalysisJobSupport extends Serializable
 
     Map<Long, File> getAllCachedData();
 
-    Readset getCachedReadset(Integer rowId);
+    Readset getCachedReadset(Long rowId);
 
-    AnalysisModel getCachedAnalysis(int rowId);
+    AnalysisModel getCachedAnalysis(long rowId);
 
     List<Readset> getCachedReadsets();
 
-    void cacheReadset(int readsetId, User u);
+    void cacheReadset(long readsetId, User u);
 
-    void cacheReadset(int readsetId, User u, boolean allowReadsetsWithArchivedData);
+    void cacheReadset(long readsetId, User u, boolean allowReadsetsWithArchivedData);
 
     List<AnalysisModel> getCachedAnalyses();
 

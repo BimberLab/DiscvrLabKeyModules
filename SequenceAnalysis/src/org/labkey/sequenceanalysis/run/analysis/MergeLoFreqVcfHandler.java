@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
+import org.labkey.api.collections.LongHashSet;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -183,7 +184,7 @@ public class MergeLoFreqVcfHandler extends AbstractParameterizedOutputHandler<Se
             {
                 writer.writeNext(new String[]{"ReadsetName", "OutputFileId", "ReadsetId", "Source", "Contig", "Start", "End", "Length", "Ref", "AltAllele", "GatkDepth", "LoFreqDepth", "AltCount", "AltAF"});
 
-                Set<Integer> analysesWithoutPindel = new HashSet<>();
+                Set<Long> analysesWithoutPindel = new LongHashSet();
                 for (SequenceOutputFile so : inputFiles)
                 {
                     //This will error if the coverage file is not found.  Perform check now to fail fast

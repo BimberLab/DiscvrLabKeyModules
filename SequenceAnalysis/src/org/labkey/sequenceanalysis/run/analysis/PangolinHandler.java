@@ -193,7 +193,7 @@ public class PangolinHandler extends AbstractParameterizedOutputHandler<Sequence
 
             Container targetContainer = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
             TableInfo ti = QueryService.get().getUserSchema(job.getUser(), targetContainer, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS);
-            Set<Integer> uniqueAnalyses = inputFiles.stream().map(SequenceOutputFile::getAnalysis_id).collect(Collectors.toSet());
+            Set<Long> uniqueAnalyses = inputFiles.stream().map(SequenceOutputFile::getAnalysis_id).collect(Collectors.toSet());
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString("category"), "Pangolin");
             filter.addCondition(FieldKey.fromString("analysis_id"), uniqueAnalyses, CompareType.IN);
 

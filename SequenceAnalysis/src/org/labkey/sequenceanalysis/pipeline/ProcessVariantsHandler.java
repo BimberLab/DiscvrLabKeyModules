@@ -171,7 +171,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             throw new IllegalArgumentException("No library ID defined for VCFs");
         }
 
-        Set<Integer> readsetIds = new HashSet<>();
+        Set<Long> readsetIds = new HashSet<>();
         inputFiles.forEach(x -> readsetIds.add(x.getReadset()));
 
         int sampleCount;
@@ -676,7 +676,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             _resumer.markComplete(ctx);
         }
 
-        private void processFile(File input, Integer libraryId, Integer readsetId, JobContext ctx) throws PipelineJobException
+        private void processFile(File input, Integer libraryId, Long readsetId, JobContext ctx) throws PipelineJobException
         {
             File processed = processVCF(input, libraryId, ctx, _resumer, true);
             if (processed != null && processed.exists())

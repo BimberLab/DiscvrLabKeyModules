@@ -610,7 +610,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     }
 
     @Override
-    public void updateOutputFile(SequenceOutputFile o, PipelineJob job, Long runId, Integer analysisId)
+    public void updateOutputFile(SequenceOutputFile o, PipelineJob job, Long runId, Long analysisId)
     {
         SequenceOutputHandlerFinalTask.updateOutputFile(o, job, runId, analysisId);
     }

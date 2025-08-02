@@ -94,7 +94,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         @Override
         public void complete(JobContext ctx, List<SequenceOutputFile> inputFiles, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
         {
-            Map<Integer, SequenceOutputFile> readsetToInput = inputFiles.stream().collect(Collectors.toMap(SequenceOutputFile::getReadset, x -> x));
+            Map<Long, SequenceOutputFile> readsetToInput = inputFiles.stream().collect(Collectors.toMap(SequenceOutputFile::getReadset, x -> x));
 
             ctx.getJob().getLogger().info("Parsing NextClade JSON:");
             for (SequenceOutputFile so : outputsCreated)
@@ -176,7 +176,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         }
     }
 
-    public static void processAndImportNextCladeAa(PipelineJob job, File jsonFile, int analysisId, int libraryId, long alignmentId, int readsetId, File consensusVCF, boolean dbImport) throws PipelineJobException
+    public static void processAndImportNextCladeAa(PipelineJob job, File jsonFile, long analysisId, int libraryId, long alignmentId, long readsetId, File consensusVCF, boolean dbImport) throws PipelineJobException
     {
         JSONObject sample = parseNextClade(jsonFile, job.getLogger());
         if (sample == null)
@@ -360,7 +360,7 @@ public class NextCladeHandler extends AbstractParameterizedOutputHandler<Sequenc
         }
     }
 
-    private static void saveClade(String clade, int analysisId, long alignmentId, int readsetId, PipelineJob job) throws PipelineJobException
+    private static void saveClade(String clade, long analysisId, long alignmentId, long readsetId, PipelineJob job) throws PipelineJobException
     {
         List<Map<String, Object>> toInsert = new ArrayList<>();
         Map<String, Object> row1 = new CaseInsensitiveHashMap<>();
