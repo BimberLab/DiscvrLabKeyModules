@@ -115,6 +115,10 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
         plinkArgs.add("--max-alleles");
         plinkArgs.add("2");
 
+        // NOTE: tools like sawfish can report half-called genotypes, like 0/.. For now, be most conservative in PCA:
+        plinkArgs.add("--vcf-half-call");
+        plinkArgs.add("missing");
+
         Integer threads = SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger());
         if (threads != null)
         {
