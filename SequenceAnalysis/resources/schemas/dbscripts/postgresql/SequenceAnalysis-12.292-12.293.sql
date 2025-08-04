@@ -74,5 +74,7 @@ CREATE TABLE sequenceanalysis.analysisSetMembers (
 
 ALTER TABLE sequenceanalysis.outputfiles drop column intermediate;
 
+-- @SkipOnEmptySchemasBegin
 INSERT INTO sequenceanalysis.sequence_applications (application) VALUES ('DNA Sequencing (Exome)');
 INSERT INTO sequenceanalysis.sequence_applications (application) VALUES ('DNA Sequencing (GBS)');
+-- @SkipOnEmptySchemasEnd
