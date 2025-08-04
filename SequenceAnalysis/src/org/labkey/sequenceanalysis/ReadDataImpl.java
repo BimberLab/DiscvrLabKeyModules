@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis;
 
+import org.labkey.api.collections.IntHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
@@ -14,7 +15,6 @@ import org.labkey.api.util.PageFlowUtil;
 
 import java.io.File;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +40,7 @@ public class ReadDataImpl implements ReadData
     private boolean _archived = false;
     private String sra_accession;
 
-    private final Map<Integer, File> _cachedFiles = new HashMap<>();
+    private final Map<Integer, File> _cachedFiles = new IntHashMap<>();
 
     public ReadDataImpl()
     {

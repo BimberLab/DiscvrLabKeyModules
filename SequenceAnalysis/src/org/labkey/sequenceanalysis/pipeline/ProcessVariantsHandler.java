@@ -16,6 +16,9 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
+import org.labkey.api.collections.IntHashMap;
+import org.labkey.api.collections.IntHashSet;
+import org.labkey.api.collections.LongHashSet;
 import org.labkey.api.data.Container;
 import org.labkey.api.laboratory.DemographicsProvider;
 import org.labkey.api.module.Module;
@@ -160,7 +163,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
 
     public static SequenceOutputFile createSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles, String category)
     {
-        Set<Integer> libraryIds = new HashSet<>();
+        Set<Integer> libraryIds = new IntHashSet();
         inputFiles.forEach(x -> {
             if (x.getLibrary_id() != null)
                 libraryIds.add(x.getLibrary_id());
@@ -171,7 +174,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
             throw new IllegalArgumentException("No library ID defined for VCFs");
         }
 
-        Set<Long> readsetIds = new HashSet<>();
+        Set<Long> readsetIds = new LongHashSet();
         inputFiles.forEach(x -> readsetIds.add(x.getReadset()));
 
         int sampleCount;
@@ -598,7 +601,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                     throw new PipelineJobException("Priority order not supplied for VCFs");
                 }
 
-                Set<Integer> genomes = new HashSet<>();
+                Set<Integer> genomes = new IntHashSet();
                 inputFiles.forEach(x -> genomes.add(x.getLibrary_id()));
 
                 if (genomes.size() != 1)
@@ -609,7 +612,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
                 ReferenceGenome rg = ctx.getSequenceSupport().getCachedGenome(genomes.iterator().next());
                 MergeVcfsAndGenotypesWrapper cv = new MergeVcfsAndGenotypesWrapper(ctx.getLogger());
 
-                Map<Integer, Long> fileMap = new HashMap<>();
+                Map<Integer, Long> fileMap = new IntHashMap<>();
                 inputFiles.forEach(x -> fileMap.put(x.getRowid(), x.getDataId()));
                 String[] ids = priorityOrder.split(",");
 

@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
+import org.labkey.api.collections.IntHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -42,7 +43,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -101,7 +101,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                 {
                     try
                     {
-                        Map<Integer, File> genomeMap = new HashMap<>();
+                        Map<Integer, File> genomeMap = new IntHashMap<>();
                         new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("rowid", "fasta_file"), new SimpleFilter(FieldKey.fromString("datedisabled"), null, CompareType.ISBLANK), null).forEachResults(rs -> {
                             int dataId = rs.getInt(FieldKey.fromString("fasta_file"));
                             if (dataId > -1)

@@ -4,6 +4,8 @@ import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.labkey.api.collections.IntHashMap;
+import org.labkey.api.collections.IntHashSet;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
@@ -25,8 +27,6 @@ import org.labkey.singlecell.SingleCellSchema;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,7 +59,7 @@ public class AppendSaturation extends AbstractCellMembraneStep
     {
         try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(getMolInfoTable(ctx))))
         {
-            Map<Integer, SequenceOutputFile> loupeOutputs = new HashMap<>();
+            Map<Integer, SequenceOutputFile> loupeOutputs = new IntHashMap<>();
             for (SequenceOutputFile so : inputFiles)
             {
                 if (!LOUPE_TYPE.isType(so.getFile()))
@@ -75,7 +75,7 @@ public class AppendSaturation extends AbstractCellMembraneStep
                         throw new PipelineJobException("Cannot find expected metadata file: " + meta.getPath());
                     }
 
-                    Set<Integer> uniqueIds = new HashSet<>();
+                    Set<Integer> uniqueIds = new IntHashSet();
                     try (CSVReader reader = new CSVReader(Readers.getReader(meta), '_'))
                     {
                         String[] line;
@@ -200,7 +200,7 @@ public class AppendSaturation extends AbstractCellMembraneStep
 
     private void findAdditionalData(SequenceOutputFile loupeFile, CSVWriter writer, PipelineJob job) throws IOException, PipelineJobException
     {
-        Set<Integer> citeReadsets = new HashSet<>();
+        Set<Integer> citeReadsets = new IntHashSet();
         Container targetContainer = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
         TableSelector ts = new TableSelector(QueryService.get().getUserSchema(job.getUser(), targetContainer, SingleCellSchema.NAME).getTable(SingleCellSchema.TABLE_CDNAS), PageFlowUtil.set("hashingReadsetId", "citeseqReadsetId"), new SimpleFilter(FieldKey.fromString("readsetId"), loupeFile.getReadset()), null);
         ts.forEachResults(rs -> {

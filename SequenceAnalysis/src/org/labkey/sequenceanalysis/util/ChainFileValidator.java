@@ -7,6 +7,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.collections.IntHashMap;
+import org.labkey.api.collections.IntHashSet;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.Results;
@@ -59,8 +61,8 @@ public class ChainFileValidator
         // reference names must match those in the DB for that genome
 
         Pattern SPLITTER = Pattern.compile("\\s");
-        Set<Integer> uniqueIds = new HashSet<>();
-        Set<Integer> encounteredIds = new HashSet<>();
+        Set<Integer> uniqueIds = new IntHashSet();
+        Set<Integer> encounteredIds = new IntHashSet();
 
         //step 1: iterate lines, gather unique chain IDs
         boolean hasChanges = false;
@@ -284,7 +286,7 @@ public class ChainFileValidator
         return newId;
     }
 
-    private final Map<Integer, Map<String, String>> _cachedReferencesByGenome = new HashMap<>();
+    private final Map<Integer, Map<String, String>> _cachedReferencesByGenome = new IntHashMap<>();
 
     private String resolveSequenceId(String refName, int genomeId)
     {

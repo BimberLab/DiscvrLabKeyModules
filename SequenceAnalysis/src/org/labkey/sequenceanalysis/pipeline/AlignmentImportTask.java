@@ -187,7 +187,7 @@ public class AlignmentImportTask extends WorkDirectoryTask<AlignmentImportTask.F
 
             //process metrics
             Map<Long, Long> readsetToAnalysisMap = new LongHashMap<>();
-            Map<Long, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap = new HashMap<>();
+            Map<Long, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap = new LongHashMap<>();
             for (AnalysisModel model : ret)
             {
                 readsetToAnalysisMap.put(model.getReadset(), model.getRowId());

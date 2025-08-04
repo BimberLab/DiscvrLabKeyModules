@@ -18,6 +18,7 @@ package org.labkey.sequenceanalysis.run.analysis;
 import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.logging.log4j.Logger;
+import org.labkey.api.collections.IntHashMap;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SimpleFilter;
@@ -76,7 +77,7 @@ public class AASnpByCodonAggregator extends NtSnpByPosAggregator
         assert ref != null;
         _refSequenceMap.put(ref.getName(), ref.getBases());
 
-        Map<Integer, List<NTSnp>> highQualitySnpsByPos = new HashMap<>();
+        Map<Integer, List<NTSnp>> highQualitySnpsByPos = new IntHashMap<>();
 
         for (Integer pos : snps.keySet())
         {

@@ -18,6 +18,8 @@ package org.labkey.sequenceanalysis.pipeline;
 import au.com.bytecode.opencsv.CSVReader;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
+import org.labkey.api.collections.LongHashMap;
+import org.labkey.api.collections.LongHashSet;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
@@ -62,7 +64,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -166,10 +167,10 @@ public class ReadsetCreationTask extends PipelineJob.Task<ReadsetCreationTask.Fa
 
         List<SequenceReadsetImpl> newReadsets = new ArrayList<>();
 
-        Set<Long> fileIdsWithExistingMetrics = new HashSet<>();
+        Set<Long> fileIdsWithExistingMetrics = new LongHashSet();
         try (DbScope.Transaction transaction = schema.getScope().ensureTransaction())
         {
-            Map<Long, String> readsetsToDeactivate = new HashMap<>();
+            Map<Long, String> readsetsToDeactivate = new LongHashMap<>();
             TableInfo readsetTable = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
             TableInfo readDataTable = schema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
 
