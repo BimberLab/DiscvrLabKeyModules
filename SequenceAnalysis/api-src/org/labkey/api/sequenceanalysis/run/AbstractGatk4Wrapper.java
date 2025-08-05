@@ -91,6 +91,7 @@ abstract public class AbstractGatk4Wrapper extends AbstractCommandWrapper
         args.add(SequencePipelineService.get().getJavaFilepath());
         args.addAll(SequencePipelineService.get().getJavaOpts(_maxRamOverride));
         args.add("-DGATK_STACKTRACE_ON_USER_EXCEPTION=true");
+        args.add("-Dsamjdk.optimistic_vcf_4_4=true");
         args.add("-jar");
         args.add(getJAR().getPath());
 
