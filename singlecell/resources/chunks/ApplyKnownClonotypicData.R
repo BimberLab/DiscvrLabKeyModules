@@ -11,7 +11,7 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
-    seuratObj <- ApplyKnownClontypicData(seuratObj, groupFields = groupFields, addMetadata = addMetadata)
+    seuratObj <- ApplyKnownClonotypicData(seuratObj, groupFields = groupFields, addMetadata = addMetadata)
     saveData(seuratObj, datasetId)
 
     # Cleanup
