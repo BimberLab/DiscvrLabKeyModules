@@ -42,6 +42,7 @@ import org.labkey.singlecell.pipeline.singlecell.AppendMetadata;
 import org.labkey.singlecell.pipeline.singlecell.AppendNimble;
 import org.labkey.singlecell.pipeline.singlecell.AppendSaturation;
 import org.labkey.singlecell.pipeline.singlecell.AppendTcr;
+import org.labkey.singlecell.pipeline.singlecell.ApplyKnownClonotypicData;
 import org.labkey.singlecell.pipeline.singlecell.AvgExpression;
 import org.labkey.singlecell.pipeline.singlecell.CalculateGeneComponentScores;
 import org.labkey.singlecell.pipeline.singlecell.CalculateUCellScores;
@@ -299,6 +300,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new PerformDefaultNimbleAppend.Provider());
         SequencePipelineService.get().registerPipelineStep(new PerformMhcDimRedux.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunTricycle.Provider());
+        SequencePipelineService.get().registerPipelineStep(new ApplyKnownClonotypicData.Provider());
 
         SequenceAnalysisService.get().registerReadsetListener(new SingleCellReadsetListener());
     }
