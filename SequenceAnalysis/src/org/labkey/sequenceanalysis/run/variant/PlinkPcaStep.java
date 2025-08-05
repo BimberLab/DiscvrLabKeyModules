@@ -227,6 +227,10 @@ public class PlinkPcaStep extends AbstractCommandPipelineStep<PlinkPcaStep.Plink
             args.add(String.valueOf(maxRam));
         }
 
+        // NOTE: tools like sawfish can report half-called genotypes, like 0/.. For now, be most conservative in PCA:
+        args.add("--vcf-half-call");
+        args.add("missing");
+
         args.addAll(getClientCommandArgs());
 
         getWrapper().execute(args);

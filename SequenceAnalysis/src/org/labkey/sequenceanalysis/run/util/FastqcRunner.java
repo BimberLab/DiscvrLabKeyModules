@@ -17,16 +17,16 @@ package org.labkey.sequenceanalysis.run.util;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJobService;
-import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.DirectoryResource;
+import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.Resource;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.settings.AppProps;
@@ -46,6 +46,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -366,7 +367,7 @@ public class FastqcRunner
             throw new RuntimeException("Not found: " + jbzip2.getPath());
         }
 
-        File htsjdkJar = new File(libDir, "htsjdk-4.0.0.jar");
+        File htsjdkJar = findJar(libDir, "htsjdk-");
         if (!htsjdkJar.exists())
         {
             throw new RuntimeException("Not found: " + htsjdkJar.getPath());
@@ -399,6 +400,27 @@ public class FastqcRunner
         params.add("-Djava.awt.headless=true");
 
         return params;
+    }
+
+    private File findJar(final File libDir, final String prefix)
+    {
+        if (!libDir.exists())
+        {
+            throw new RuntimeException("Missing directory: " + libDir);
+        }
+
+        List<String> jarNames = Arrays.stream(libDir.list()).filter(fn -> fn.startsWith(prefix)).sorted().toList();
+        if (jarNames.isEmpty())
+        {
+            throw new RuntimeException("Unable to find JAR with prefix: " + prefix);
+        }
+
+        if (jarNames.size() > 1)
+        {
+            _logger.info("More than one JAR found with prefix: " + prefix);
+        }
+
+        return new File(libDir, jarNames.get(jarNames.size() - 1));
     }
 
     private int getThreads()
