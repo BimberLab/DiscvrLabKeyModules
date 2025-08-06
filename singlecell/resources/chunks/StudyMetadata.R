@@ -4,8 +4,15 @@ if (!file.exists(netRc)) {
     stop(paste0('Unable to find file: ', netRc))
 }
 
-invisible(Rlabkey::labkey.setCurlOptions(NETRC_FILE = netRc, timeout = 60, timeout_ms = 60000))
+invisible(Rlabkey::labkey.setCurlOptions(NETRC_FILE = netRc, timeout = 60, timeout_ms = 60000, connecttimeout = 20, connecttimeout_ms = 20000))
 Rdiscvr::SetLabKeyDefaults(baseUrl = serverBaseUrl, defaultFolder = defaultLabKeyFolder)
+
+curlOpt <- curl::curl_options('timeout')
+message('Curl options:')
+for (x in names(curlOpt)) {
+    message(paste0(x, ': ', curlOpt[x]))
+}
+rm(curlOpt)
 
 for (datasetId in names(seuratObjects)) {
     printName(datasetId)
