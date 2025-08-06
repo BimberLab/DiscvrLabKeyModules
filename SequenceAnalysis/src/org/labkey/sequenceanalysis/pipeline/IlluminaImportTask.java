@@ -57,6 +57,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import static org.labkey.api.exp.api.ExperimentService.asInteger;
+
 /**
  * User: bbimber
  * Date: 4/22/12
@@ -292,7 +294,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
         runRow = Table.insert(getJob().getUser(), runTable, runRow);
 
-        _instrumentRunId = (Integer)runRow.get("rowid");
+        _instrumentRunId = asInteger(runRow.get("rowid"));
         getJob().getLogger().info("Created run: " + _instrumentRunId);
     }
 

@@ -91,6 +91,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.labkey.api.exp.api.ExperimentService.asInteger;
+
 public class SequenceAnalysisManager
 {
     private static final SequenceAnalysisManager _instance = new SequenceAnalysisManager();
@@ -783,7 +785,7 @@ public class SequenceAnalysisManager
                         map.put("jobId", jobId);
 
                     map = Table.insert(u, dnaTable, map);
-                    sequenceIds.add((Integer) map.get("rowid"));
+                    sequenceIds.add(asInteger(map.get("rowid")));
 
                     RefNtSequenceModel m = new TableSelector(dnaTable, new SimpleFilter(FieldKey.fromString("rowid"), map.get("rowid")), null).getObject(RefNtSequenceModel.class);
 

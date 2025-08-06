@@ -90,6 +90,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static org.labkey.api.exp.api.ExperimentService.asInteger;
+
 /**
  * User: bimber
  * Date: 11/25/12
@@ -1753,11 +1755,11 @@ public class SequenceIntegrationTests
             if (ts.exists())
             {
                 Map<String, Object> rowMap = ts.getMap();
-                Integer fasta_file = (Integer)rowMap.get("fasta_file");
+                Integer fasta_file = asInteger(rowMap.get("fasta_file"));
                 ExpData d = fasta_file == null ? null : ExperimentService.get().getExpData(fasta_file);
                 if (d != null && d.getFile() != null && d.getFile().exists())
                 {
-                    return (Integer) rowMap.get("rowid");
+                    return asInteger(rowMap.get("rowid"));
                 }
                 else
                 {

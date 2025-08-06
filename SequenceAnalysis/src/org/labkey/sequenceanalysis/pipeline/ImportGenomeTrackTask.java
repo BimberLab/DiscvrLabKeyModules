@@ -81,6 +81,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.labkey.api.exp.api.ExperimentService.asInteger;
+
 /**
  * User: bbimber
  * Date: 8/6/12
@@ -338,7 +340,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
             throw new PipelineJobException("Unable to find rowid for new track");
         }
 
-        return (Integer)map.get("rowid");
+        return asInteger(map.get("rowid"));
     }
 
     private void sortGxf(File gxf) throws PipelineJobException

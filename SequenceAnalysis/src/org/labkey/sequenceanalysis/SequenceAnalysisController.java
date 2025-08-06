@@ -209,6 +209,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static org.labkey.api.exp.api.ExperimentService.asInteger;
 import static org.labkey.sequenceanalysis.SequenceIntegrationTests.PIPELINE_PROP_NAME;
 
 public class SequenceAnalysisController extends SpringActionController
@@ -3239,8 +3240,8 @@ public class SequenceAnalysisController extends SpringActionController
                         continue;
                     }
 
-                    Integer dataId = (Integer) rowMap.get("dataid");
-                    Integer libraryId = (Integer) rowMap.get("library_id");
+                    Integer dataId = asInteger(rowMap.get("dataid"));
+                    Integer libraryId = asInteger(rowMap.get("library_id"));
                     ExpData d = ExperimentService.get().getExpData(dataId);
                     if (d == null)
                     {
