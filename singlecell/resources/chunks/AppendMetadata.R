@@ -4,7 +4,7 @@ if (!file.exists(netRc)) {
     stop(paste0('Unable to find file: ', netRc))
 }
 
-invisible(Rlabkey::labkey.setCurlOptions(NETRC_FILE = netRc))
+invisible(Rlabkey::labkey.setCurlOptions(NETRC_FILE = netRc, timeout = 60, timeout_ms = 60000))
 Rdiscvr::SetLabKeyDefaults(baseUrl = serverBaseUrl, defaultFolder = defaultLabKeyFolder)
 
 for (datasetId in names(seuratObjects)) {
