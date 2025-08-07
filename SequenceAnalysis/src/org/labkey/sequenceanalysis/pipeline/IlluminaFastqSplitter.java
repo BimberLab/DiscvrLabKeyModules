@@ -42,6 +42,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
+import static org.labkey.api.exp.api.ExperimentService.asLong;
+
 /**
  * This is designed to parse the FASTQ files produced by a single run on an illumina instructment and produce one gzipped FASTQ
  * for each sample in that run.  Parsing that CSV file to obtain the sample list is upstream of this class.
@@ -232,11 +234,11 @@ public class IlluminaFastqSplitter<SampleIdType>
         else
         {
             String suffix;
-            if (Integer.valueOf(0).equals(sampleId))
+            if (asLong(0L).equals(asLong(sampleId)))
             {
                 suffix = "Control";
             }
-            else if (sampleId == null || Integer.valueOf(-1).equals(sampleId))
+            else if (sampleId == null || asLong(-1L).equals(asLong(sampleId)))
             {
                 suffix = "Undetermined";
             }
