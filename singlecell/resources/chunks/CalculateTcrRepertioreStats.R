@@ -10,9 +10,10 @@ Rdiscvr::SetLabKeyDefaults(baseUrl = serverBaseUrl, defaultFolder = defaultLabKe
 for (datasetId in names(seuratObjects)) {
   printName(datasetId)
   seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
-  seuratObj <- Rdiscvr::CalculateAndStoreTcrRepertioreStats(seuratObj)
+  df <- Rdiscvr::CalculateAndStoreTcrRepertioreStats(seuratObj)
 
   # Cleanup
   rm(seuratObj)
+  rm(df)
   gc()
 }
