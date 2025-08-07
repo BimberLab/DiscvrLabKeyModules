@@ -574,7 +574,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                     toInsert.put("createdby", _job.getUser().getUserId());
                     toInsert.put("created", new Date());
 
-                    Integer readsetId = Integer.parseInt(line[0]);
+                    Long readsetId = Long.parseLong(line[0]);
                     toInsert.put("readset", readsetId);
                     if (readsetMap.containsKey(readsetId))
                     {
