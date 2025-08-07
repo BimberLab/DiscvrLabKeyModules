@@ -45,6 +45,7 @@ import org.labkey.singlecell.pipeline.singlecell.AppendTcr;
 import org.labkey.singlecell.pipeline.singlecell.ApplyKnownClonotypicData;
 import org.labkey.singlecell.pipeline.singlecell.AvgExpression;
 import org.labkey.singlecell.pipeline.singlecell.CalculateGeneComponentScores;
+import org.labkey.singlecell.pipeline.singlecell.CalculateTcrRepertoireStats;
 import org.labkey.singlecell.pipeline.singlecell.CalculateUCellScores;
 import org.labkey.singlecell.pipeline.singlecell.CellBarcodeFilter;
 import org.labkey.singlecell.pipeline.singlecell.CheckExpectations;
@@ -301,6 +302,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new PerformMhcDimRedux.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunTricycle.Provider());
         SequencePipelineService.get().registerPipelineStep(new ApplyKnownClonotypicData.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CalculateTcrRepertoireStats.Provider());
 
         SequenceAnalysisService.get().registerReadsetListener(new SingleCellReadsetListener());
     }
