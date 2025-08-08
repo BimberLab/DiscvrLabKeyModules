@@ -1,5 +1,6 @@
 package org.labkey.studies.query;
 
+import com.google.gwt.user.client.ui.TabBar;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.collections.CaseInsensitiveTreeSet;
@@ -137,7 +138,7 @@ public class StudiesUserSchema extends SimpleUserSchema
         }
         else if (TABLE_STUDIES.equalsIgnoreCase(name))
         {
-            return createStudyDesignTable(name, cf, false);
+            return createStudiesTable(name, cf, false);
         }
         else if (TABLE_COHORTS.equalsIgnoreCase(name))
         {
@@ -168,7 +169,22 @@ public class StudiesUserSchema extends SimpleUserSchema
         return super.createTable(name, cf);
     }
 
-    private TableInfo createStudyDesignTable(String name, ContainerFilter cf, boolean addTriggers)
+    private TableInfo createStudiesTable(String name, ContainerFilter cf, boolean addTriggers)
+    {
+        CustomPermissionsTable<?> ret = createStudyDesignTable(name, cf, addTriggers);
+
+        final String chr = ret.getSqlDialect().isPostgreSQL() ? "chr" : "char";
+        SQLFragment sql1 = new SQLFragment("(SELECT ").append(ret.getSqlDialect().getGroupConcat(new SQLFragment("c.label"), true, true, new SQLFragment(chr + "(10)"))).append(" as expr FROM " + StudiesSchema.NAME + "." + TABLE_COHORTS + " c WHERE c.studyId = " + ExprColumn.STR_TABLE_ALIAS + ".rowId)");
+        ExprColumn col1 = new ExprColumn(ret, "cohorts", sql1, JdbcType.VARCHAR, ret.getColumn("rowid"));
+        col1.setLabel("Cohort(s)");
+        col1.setDescription("This column lists the cohort labels for this study");
+
+        ret.addColumn(col1);
+
+        return ret;
+    }
+
+    private CustomPermissionsTable<?> createStudyDesignTable(String name, ContainerFilter cf, boolean addTriggers)
     {
         CustomPermissionsTable<SimpleUserSchema> ret = new CustomPermissionsTable<>(this, createSourceTable(name), cf);
         ret.addPermissionMapping(InsertPermission.class, StudiesDataAdminPermission.class);
@@ -180,16 +196,7 @@ public class StudiesUserSchema extends SimpleUserSchema
             ret.addTriggerFactory(new StudiesTriggerFactory());
         }
 
-        ret = ret.init();
-
-        final String chr = ret.getSqlDialect().isPostgreSQL() ? "chr" : "char";
-        SQLFragment sql1 = new SQLFragment("(SELECT ").append(ret.getSqlDialect().getGroupConcat(new SQLFragment("c.label"), true, true, new SQLFragment(chr + "(10)"))).append(" as expr FROM " + StudiesSchema.NAME + "." + TABLE_COHORTS + " c WHERE c.studyId = " + ExprColumn.STR_TABLE_ALIAS + ".rowId)");
-        ExprColumn col1 = new ExprColumn(ret, "cohorts", sql1, JdbcType.VARCHAR, ret.getColumn("rowid"));
-        col1.setLabel("Cohort(s)");
-        col1.setDescription("This column lists the cohort labels for this study");
-        ret.addColumn(col1);
-
-        return ret;
+        return ret.init();
     }
 
     private LookupSetTable createForPropertySet(StudiesUserSchema us, ContainerFilter cf, String setName, Map<String, Object> map)
