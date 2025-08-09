@@ -8,9 +8,9 @@ invisible(Rlabkey::labkey.setCurlOptions(NETRC_FILE = netRc, timeout = 60, timeo
 Rdiscvr::SetLabKeyDefaults(baseUrl = serverBaseUrl, defaultFolder = defaultLabKeyFolder)
 
 curlOpt <- curl::curl_options('timeout')
-message('Curl options:')
+logger::log_info('Curl options:')
 for (x in names(curlOpt)) {
-    message(paste0(x, ': ', curlOpt[x]))
+    logger::log_info(paste0(x, ': ', curlOpt[x]))
 }
 rm(curlOpt)
 

@@ -79,6 +79,7 @@ import org.labkey.singlecell.pipeline.singlecell.PhenotypePlots;
 import org.labkey.singlecell.pipeline.singlecell.PlotAssayFeatures;
 import org.labkey.singlecell.pipeline.singlecell.PlotAverageCiteSeqCounts;
 import org.labkey.singlecell.pipeline.singlecell.PredictScTour;
+import org.labkey.singlecell.pipeline.singlecell.PredictTcellActivation;
 import org.labkey.singlecell.pipeline.singlecell.PrepareRawCounts;
 import org.labkey.singlecell.pipeline.singlecell.RemoveCellCycle;
 import org.labkey.singlecell.pipeline.singlecell.RunCellHashing;
@@ -303,6 +304,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new RunTricycle.Provider());
         SequencePipelineService.get().registerPipelineStep(new ApplyKnownClonotypicData.Provider());
         SequencePipelineService.get().registerPipelineStep(new CalculateTcrRepertoireStats.Provider());
+        SequencePipelineService.get().registerPipelineStep(new PredictTcellActivation.Provider());
 
         SequenceAnalysisService.get().registerReadsetListener(new SingleCellReadsetListener());
     }
