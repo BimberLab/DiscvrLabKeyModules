@@ -203,7 +203,7 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
 
         if (getCachedGenome(key) != null)
         {
-            _cachedGenomes.remove(getCachedGenome(key));
+            _cachedGenomes.remove(key);
         }
 
         _cachedGenomes.put(key, m);
