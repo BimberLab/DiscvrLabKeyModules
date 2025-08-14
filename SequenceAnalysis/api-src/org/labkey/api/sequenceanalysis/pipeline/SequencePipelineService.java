@@ -115,7 +115,7 @@ abstract public class SequencePipelineService
     /**
      * Throws exception if no run is found
      */
-    abstract public Integer getExpRunIdForJob(PipelineJob job) throws PipelineJobException;
+    abstract public Long getExpRunIdForJob(PipelineJob job) throws PipelineJobException;
 
     abstract public long getLineCount(File f) throws PipelineJobException;
 
@@ -140,7 +140,7 @@ abstract public class SequencePipelineService
 
     abstract public boolean hasMinLineCount(File f, long minLines) throws PipelineJobException;
 
-    abstract public void updateOutputFile(SequenceOutputFile o, PipelineJob job, Integer runId, Integer analysisId);
+    abstract public void updateOutputFile(SequenceOutputFile o, PipelineJob job, Long runId, Long analysisId);
 
     abstract public PreprocessingStep.Output simpleTrimFastqPair(File fq1, File fq2, List<String> params, File outDir, Logger log) throws PipelineJobException;
 

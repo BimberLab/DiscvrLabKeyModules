@@ -34,7 +34,7 @@ import java.util.List;
  */
 public class SequenceReadsetImpl implements Readset
 {
-    private Integer _rowId;
+    private Long _rowId;
     private String _name;
     private String _comments;
     private String _platform;
@@ -50,7 +50,7 @@ public class SequenceReadsetImpl implements Readset
     private Double _fragmentSize;
     private Double _concentration;
     private Integer _instrument_run_id;
-    private Integer _runId;
+    private Long _runId;
     private String _status;
     private String _container;
     private Date _created;
@@ -67,7 +67,7 @@ public class SequenceReadsetImpl implements Readset
     }
 
     @Override
-    public int getRowId()
+    public long getRowId()
     {
         return _rowId == null ? 0 : _rowId;
     }
@@ -77,7 +77,7 @@ public class SequenceReadsetImpl implements Readset
         _rowId = null;
     }
 
-    public void setRowId(int rowId)
+    public void setRowId(long rowId)
     {
         _rowId = rowId;
     }
@@ -89,7 +89,7 @@ public class SequenceReadsetImpl implements Readset
 
     @Override
     @JsonIgnore
-    public Integer getReadsetId()
+    public Long getReadsetId()
     {
         return _rowId;
     }
@@ -259,12 +259,12 @@ public class SequenceReadsetImpl implements Readset
     }
 
     @Override
-    public Integer getRunId()
+    public Long getRunId()
     {
         return _runId;
     }
 
-    public void setRunId(Integer runId)
+    public void setRunId(Long runId)
     {
         _runId = runId;
     }

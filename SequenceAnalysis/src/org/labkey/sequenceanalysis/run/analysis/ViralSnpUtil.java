@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.run.analysis;
 import htsjdk.samtools.util.CloseableIterator;
 import htsjdk.variant.variantcontext.VariantContext;
 import htsjdk.variant.vcf.VCFFileReader;
+import org.labkey.api.collections.IntHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
@@ -18,7 +19,6 @@ import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +40,7 @@ public class ViralSnpUtil
 
     public static Map<Integer, List<VariantContext>> readVcfToMap(File vcf)
     {
-        Map<Integer, List<VariantContext>> consensusMap = new HashMap<>();
+        Map<Integer, List<VariantContext>> consensusMap = new IntHashMap<>();
         try (VCFFileReader reader = new VCFFileReader(vcf); CloseableIterator<VariantContext> it = reader.iterator())
         {
             while (it.hasNext())
@@ -69,13 +69,13 @@ public class ViralSnpUtil
         return consensusMap;
     }
 
-    public static void deleteExistingMetrics(PipelineJob job, int analysisId, String category) throws PipelineJobException
+    public static void deleteExistingMetrics(PipelineJob job, long analysisId, String category) throws PipelineJobException
     {
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("category"), category);
         deleteExistingValues(job, analysisId, SequenceAnalysisSchema.TABLE_QUALITY_METRICS, filter);
     }
 
-    public static void deleteExistingValues(PipelineJob job, int analysisId, String queryName, SimpleFilter filter) throws PipelineJobException
+    public static void deleteExistingValues(PipelineJob job, long analysisId, String queryName, SimpleFilter filter) throws PipelineJobException
     {
         Container targetContainer = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
         TableInfo ti = QueryService.get().getUserSchema(job.getUser(), targetContainer, SequenceAnalysisSchema.SCHEMA_NAME).getTable(queryName);

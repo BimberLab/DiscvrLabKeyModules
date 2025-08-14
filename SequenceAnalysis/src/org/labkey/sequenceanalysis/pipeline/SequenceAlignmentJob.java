@@ -38,7 +38,7 @@ public class SequenceAlignmentJob extends SequenceJob
 {
     public static final String FOLDER_NAME = "sequenceAnalysis";
 
-    private int _readsetId;
+    private long _readsetId;
 
     // Default constructor for serialization
     protected SequenceAlignmentJob()
@@ -112,7 +112,7 @@ public class SequenceAlignmentJob extends SequenceJob
         return ret;
     }
 
-    public int getReadsetId()
+    public long getReadsetId()
     {
         return _readsetId;
     }

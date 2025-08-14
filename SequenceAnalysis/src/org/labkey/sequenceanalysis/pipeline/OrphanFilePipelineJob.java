@@ -498,7 +498,7 @@ public class OrphanFilePipelineJob extends PipelineJob
             // NOTE: if this file is within a known job path, it still could be an orphan.  first check whether the directory has registered files.
             // If so, remove that path from the set of known job paths
             List<? extends ExpData> dataUnderPath = ExperimentService.get().getExpDatasUnderPath(dir, c);
-            Set<Integer> dataIdsUnderPath = new HashSet<>();
+            Set<Long> dataIdsUnderPath = new HashSet<>();
             for (ExpData d : dataUnderPath)
             {
                 dataIdsUnderPath.add(d.getRowId());

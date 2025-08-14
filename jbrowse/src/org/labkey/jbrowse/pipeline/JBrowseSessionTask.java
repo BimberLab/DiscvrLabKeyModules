@@ -44,6 +44,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import static org.labkey.api.exp.api.ExperimentService.asInteger;
+
 /**
  * User: bbimber
  * Date: 8/6/12
@@ -254,7 +256,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                     trackRecord.put("modified", new Date());
                     trackRecord.put("modifiedby", getJob().getUser().getUserId());
                     trackRecord = Table.insert(getJob().getUser(), databaseMembers, trackRecord);
-                    databaseMemberRecordsCreated.add((Integer)trackRecord.get("rowid"));
+                    databaseMemberRecordsCreated.add(asInteger(trackRecord.get("rowid")));
 
                     json.prepareResource(getJob().getUser(), getJob().getLogger(), false, false);
                 }
@@ -305,7 +307,7 @@ public class JBrowseSessionTask extends PipelineJob.Task<JBrowseSessionTask.Fact
                     trackRecord.put("modified", new Date());
                     trackRecord.put("modifiedby", getJob().getUser().getUserId());
                     trackRecord = Table.insert(getJob().getUser(), databaseMembers, trackRecord);
-                    databaseMemberRecordsCreated.add((Integer) trackRecord.get("rowid"));
+                    databaseMemberRecordsCreated.add(asInteger(trackRecord.get("rowid")));
 
                     json.prepareResource(getJob().getUser(), getJob().getLogger(), false, false);
                 }

@@ -67,7 +67,7 @@ import java.util.stream.Collectors;
 public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, HasJobParams, SequenceOutputTracker
 {
     private TaskId _taskPipelineId;
-    private Integer _experimentRunRowId;
+    private Long _experimentRunRowId;
     private String _jobName;
     private String _description;
     private FileLike _webserverJobDir;
@@ -557,12 +557,12 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         return _folderFileRoot;
     }
 
-    public Integer getExperimentRunRowId()
+    public Long getExperimentRunRowId()
     {
         return _experimentRunRowId;
     }
 
-    public void setExperimentRunRowId(Integer experimentRunRowId)
+    public void setExperimentRunRowId(Long experimentRunRowId)
     {
         _experimentRunRowId = experimentRunRowId;
     }

@@ -52,7 +52,7 @@ abstract public class CellHashingService
 
     abstract public File generateHashingCallsForRawMatrix(Readset parentReadset, PipelineOutputTracker output, SequenceOutputHandler.JobContext ctx, CellHashingParameters parameters, File rawCountMatrixDir) throws PipelineJobException;
 
-    abstract public File getH5FileForGexReadset(SequenceAnalysisJobSupport support, int readsetId, int genomeId) throws PipelineJobException;
+    abstract public File getH5FileForGexReadset(SequenceAnalysisJobSupport support, long readsetId, int genomeId) throws PipelineJobException;
 
     abstract public File getCDNAInfoFile(File sourceDir);
 
@@ -76,7 +76,7 @@ abstract public class CellHashingService
 
     abstract public List<ToolParameterDescriptor> getHashingCallingParams(boolean allowMethodsNeedingGex);
 
-    abstract public Set<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support, boolean throwIfNotFound) throws PipelineJobException;
+    abstract public Set<String> getHtosForParentReadset(Long parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support, boolean throwIfNotFound) throws PipelineJobException;
 
     abstract public File getExistingFeatureBarcodeCountDir(Readset parentReadset, BARCODE_TYPE type, SequenceAnalysisJobSupport support) throws PipelineJobException;
 
@@ -232,7 +232,7 @@ abstract public class CellHashingService
             return Collections.emptyList();
         }
 
-        public int getEffectiveReadsetId()
+        public long getEffectiveReadsetId()
         {
             return parentReadset != null ? parentReadset.getReadsetId() : htoReadset.getReadsetId();
         }

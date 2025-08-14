@@ -25,6 +25,8 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.samtools.util.IntervalList;
 import htsjdk.samtools.util.SamLocusIterator;
 import org.apache.logging.log4j.Logger;
+import org.labkey.api.collections.IntHashMap;
+import org.labkey.api.collections.StringHashMap;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
@@ -93,7 +95,7 @@ public class AvgBaseQualityAggregator
             if (sr == null)
                 throw new IllegalArgumentException("Unknown reference: " + refName);
 
-            Map<Integer, Map<String, Double>> quals = new HashMap<>();
+            Map<Integer, Map<String, Double>> quals = new IntHashMap<>();
             IntervalList il = new IntervalList(header);
             il.add(new Interval(refName, start, stop));
             quals.put(sr.getSequenceIndex(), calculateAvgQualsForInterval(reader, il));
@@ -115,7 +117,7 @@ public class AvgBaseQualityAggregator
             SAMFileHeader header = reader.getFileHeader();
             List<SAMSequenceRecord> sequences = header.getSequenceDictionary().getSequences();
 
-            Map<Integer, Map<String, Double>> quals = new HashMap<>();
+            Map<Integer, Map<String, Double>> quals = new IntHashMap<>();
             for(SAMSequenceRecord sr : sequences) {
                 IntervalList il = new IntervalList(header);
                 il.add(new Interval(sr.getSequenceName(), 1, sr.getSequenceLength()));
@@ -136,7 +138,7 @@ public class AvgBaseQualityAggregator
      */
     private Map<String, Double> calculateAvgQualsForInterval(SamReader sam, IntervalList il)
     {
-        Map<String, Double> quals = new HashMap<>();
+        Map<String, Double> quals = new StringHashMap<>();
 
         try (SamLocusIterator sli = new SamLocusIterator(sam, il, true))
         {
@@ -210,7 +212,7 @@ public class AvgBaseQualityAggregator
         if (map == null)
             return null;
 
-        Map<Integer, Map<String, Double>> ret = new HashMap<>();
+        Map<Integer, Map<String, Double>> ret = new IntHashMap<>();
         for (String key : map.keySet())
         {
             String[] tokens = key.split("\\|\\|");

@@ -75,7 +75,7 @@ public interface ReferenceGenome extends Serializable
      * this will correspond to the permanent FASTA, as opposed to the copy used in this job.  If this FASTA was created specifically for
      * this job then the FASTA will be in the analysis directory.
      */
-    Integer getFastaExpDataId();
+    Long getFastaExpDataId();
 
     /**
      * @param name The name used by the aligner to identify its cached directory

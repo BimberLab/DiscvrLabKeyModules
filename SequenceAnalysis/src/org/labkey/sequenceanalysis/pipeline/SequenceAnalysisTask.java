@@ -17,6 +17,7 @@ package org.labkey.sequenceanalysis.pipeline;
 
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.labkey.api.collections.LongHashMap;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -159,7 +160,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         job.getLogger().info("Processing Alignments");
 
         //first validate all analysis records before actually creating any DB records
-        Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
+        Long runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
         ExpRun run = ExperimentService.get().getExpRun(runId);
         AnalysisModelImpl analysisModel = null;
 
@@ -313,8 +314,8 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         if (SequenceTaskHelper.isAlignmentUsed(getJob()))
         {
             //build map used next to import metrics
-            Map<Integer, Integer> readsetToAnalysisMap = new HashMap<>();
-            Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap = new HashMap<>();
+            Map<Long, Long> readsetToAnalysisMap = new LongHashMap<>();
+            Map<Long, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap = new LongHashMap<>();
             readsetToAnalysisMap.put(analysisModel.getReadset(), analysisModel.getRowId());
             typeMap.put(analysisModel.getReadset(), new HashMap<>());
 
@@ -356,7 +357,7 @@ public class SequenceAnalysisTask extends WorkDirectoryTask<SequenceAnalysisTask
         return new RecordedActionSet();
     }
 
-    private void processAnalyses(AnalysisModelImpl analysisModel, int runId, List<RecordedAction> actions, SequenceTaskHelper taskHelper, boolean discardBam) throws PipelineJobException
+    private void processAnalyses(AnalysisModelImpl analysisModel, long runId, List<RecordedAction> actions, SequenceTaskHelper taskHelper, boolean discardBam) throws PipelineJobException
     {
         List<AnalysisStep.Output> outputs = new ArrayList<>();
         List<PipelineStepCtx<AnalysisStep>> steps = SequencePipelineService.get().getSteps(getJob(), AnalysisStep.class);

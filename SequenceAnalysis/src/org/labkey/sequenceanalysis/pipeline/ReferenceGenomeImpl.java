@@ -34,7 +34,7 @@ public class ReferenceGenomeImpl implements ReferenceGenome
     private File _sourceFasta;
     private File _workingFasta;
     private Integer _genomeId;
-    private Integer _expDataId;
+    private Long _expDataId;
 
     // Default constructor for serialization
     protected ReferenceGenomeImpl()
@@ -146,13 +146,13 @@ public class ReferenceGenomeImpl implements ReferenceGenome
         _genomeId = genomeId;
     }
 
-    public void setExpDataId(Integer expDataId)
+    public void setExpDataId(Long expDataId)
     {
         _expDataId = expDataId;
     }
 
     @Override
-    public Integer getFastaExpDataId()
+    public Long getFastaExpDataId()
     {
         return _expDataId;
     }

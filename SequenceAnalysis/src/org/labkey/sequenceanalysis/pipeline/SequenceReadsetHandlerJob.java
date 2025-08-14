@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 public class SequenceReadsetHandlerJob extends SequenceJob implements HasJobParams
 {
     private String _handlerClassName;
-    private List<Integer> _readsetIds;
+    private List<Long> _readsetIds;
 
     // Default constructor for serialization
     protected SequenceReadsetHandlerJob()
@@ -105,12 +105,12 @@ public class SequenceReadsetHandlerJob extends SequenceJob implements HasJobPara
         return null;
     }
 
-    public List<Integer> getReadsetIds()
+    public List<Long> getReadsetIds()
     {
         return _readsetIds;
     }
 
-    public void setReadsetIds(List<Integer> readsetIds)
+    public void setReadsetIds(List<Long> readsetIds)
     {
         _readsetIds = readsetIds;
     }

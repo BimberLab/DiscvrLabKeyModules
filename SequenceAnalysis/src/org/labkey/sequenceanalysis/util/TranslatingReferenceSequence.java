@@ -17,6 +17,7 @@ package org.labkey.sequenceanalysis.util;
 
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.labkey.api.collections.IntHashMap;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
@@ -29,7 +30,6 @@ import org.labkey.sequenceanalysis.run.util.AASnp;
 import org.labkey.sequenceanalysis.run.util.NTSnp;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -231,7 +231,7 @@ public class TranslatingReferenceSequence
                     StringBuilder codon = new StringBuilder();
 
                     //to track the SNPs that comprise this codon, 0-based
-                    Map<Integer, NTSnp> snpMap = new HashMap<>();
+                    Map<Integer, NTSnp> snpMap = new IntHashMap<>();
                     Integer positionInCodon = null; //0-based
                     for (Integer p : positions) //1-based
                     {
@@ -240,7 +240,7 @@ public class TranslatingReferenceSequence
                         {
                             StringBuilder thisSegment = new StringBuilder();
                             int positionInSegment = 0;
-                            Map<Integer, NTSnp> snpMapForSegment = new HashMap<>(); //0-based
+                            Map<Integer, NTSnp> snpMapForSegment = new IntHashMap<>(); //0-based
 
                             //force sorting by idx
                             List<NTSnp> otherSnps = readSnps.get(position);

@@ -518,7 +518,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     }
 
     @Override
-    public Integer getExpRunIdForJob(PipelineJob job) throws PipelineJobException
+    public Long getExpRunIdForJob(PipelineJob job) throws PipelineJobException
     {
         return SequenceTaskHelper.getExpRunIdForJob(job);
     }
@@ -610,7 +610,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
     }
 
     @Override
-    public void updateOutputFile(SequenceOutputFile o, PipelineJob job, Integer runId, Integer analysisId)
+    public void updateOutputFile(SequenceOutputFile o, PipelineJob job, Long runId, Long analysisId)
     {
         SequenceOutputHandlerFinalTask.updateOutputFile(o, job, runId, analysisId);
     }

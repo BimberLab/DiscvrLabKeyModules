@@ -81,7 +81,7 @@ public class RecalculateSequenceMetricsHandler extends AbstractParameterizedOutp
 
                 for (ReadData rd : rs.getReadData())
                 {
-                    for (Integer dataId : Arrays.asList(rd.getFileId1(), rd.getFileId2()))
+                    for (Long dataId : Arrays.asList(rd.getFileId1(), rd.getFileId2()))
                     {
                         if (dataId == null)
                         {

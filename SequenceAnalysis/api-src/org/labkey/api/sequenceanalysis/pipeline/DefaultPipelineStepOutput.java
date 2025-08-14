@@ -103,7 +103,7 @@ public class DefaultPipelineStepOutput implements PipelineStepOutput
     }
 
     @Override
-    public void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId, @Nullable String description)
+    public void addSequenceOutput(File file, String label, String category, @Nullable Long readsetId, @Nullable Long analysisId, @Nullable Integer genomeId, @Nullable String description)
     {
         _intermediateFiles.remove(file);
 

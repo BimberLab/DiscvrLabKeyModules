@@ -50,6 +50,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.fasterxml.jackson.databind.type.LogicalType.Collection;
+import static org.labkey.api.exp.api.ExperimentService.asInteger;
 
 @RunWith(Enclosed.class)
 public class StudiesManager
@@ -149,7 +150,7 @@ public class StudiesManager
         if (bve.hasErrors())
             throw bve;
 
-        sd.setRowId((Integer) ret.get(0).get("rowId"));
+        sd.setRowId(asInteger(ret.get(0).get("rowId")));
         return sd;
     }
 
@@ -208,7 +209,7 @@ public class StudiesManager
         {
             List<Map<String,Object>> ret = qus.insertRows(u, c, inserts, bve, null, null);
             for (int i = 0; i < ret.size(); i++)
-                setRowId.set(insertBeans.get(i), (Integer) ret.get(i).get("rowId"));
+                setRowId.set(insertBeans.get(i), asInteger(ret.get(i).get("rowId")));
         }
 
         if (!updates.isEmpty())

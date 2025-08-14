@@ -31,24 +31,24 @@ import java.util.Date;
  */
 public interface AnalysisModel extends Serializable
 {
-    Integer getAnalysisId();
+    Long getAnalysisId();
 
-    Integer getRunId();
+    Long getRunId();
 
     String getContainer();
 
-    Integer getReadset();
+    Long getReadset();
 
-    Integer getAlignmentFile();
+    Long getAlignmentFile();
 
     File getAlignmentFileObject();
 
     ExpData getAlignmentData();
 
     @Deprecated
-    Integer getReferenceLibrary();
+    Long getReferenceLibrary();
 
-    void setReferenceLibrary(Integer libraryId);
+    void setReferenceLibrary(Long libraryId);
 
     ExpData getReferenceLibraryData(User u) throws PipelineJobException;
 
@@ -64,7 +64,7 @@ public interface AnalysisModel extends Serializable
 
     Integer getCreatedby();
 
-    Integer getRowId();
+    Long getRowId();
 
     String getDescription();
 

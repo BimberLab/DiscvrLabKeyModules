@@ -87,7 +87,7 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
     @Override
     public RecordedActionSet run() throws PipelineJobException
     {
-        Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
+        Long runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
         getPipelineJob().setExperimentRunRowId(runId);
 
         //create analysisRecord
@@ -119,7 +119,7 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         am.setType(getPipelineJob().getHandler().getAnalysisType(getJob()));
         TableInfo analysisTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_ANALYSES);
 
-        Set<Integer> readsetIds = new HashSet<>();
+        Set<Long> readsetIds = new HashSet<>();
         for (SequenceOutputFile so : getPipelineJob().getFiles())
         {
             if (so.getReadset() == null)
@@ -137,7 +137,7 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         }
 
         Table.insert(getJob().getUser(), analysisTable, am);
-        int analysisId = am.getRowId();
+        long analysisId = am.getRowId();
 
         List<SequenceOutputFile> outputsCreated = new ArrayList<>();
         if (!getPipelineJob().getOutputsToCreate().isEmpty())
@@ -164,7 +164,7 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         return new RecordedActionSet();
     }
 
-    public static Set<SequenceOutputFile> createOutputFiles(SequenceJob job, int runId, @Nullable Integer analysisId)
+    public static Set<SequenceOutputFile> createOutputFiles(SequenceJob job, long runId, @Nullable Long analysisId)
     {
         job.getLogger().info("creating " + job.getOutputsToCreate().size() + " new output files for run: " + runId);
 
@@ -205,7 +205,7 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         return created;
     }
 
-    public static void updateOutputFile(SequenceOutputFile o, PipelineJob job, Integer runId, Integer analysisId)
+    public static void updateOutputFile(SequenceOutputFile o, PipelineJob job, Long runId, Long analysisId)
     {
         o.setRunId(runId);
         o.setAnalysis_id(analysisId);

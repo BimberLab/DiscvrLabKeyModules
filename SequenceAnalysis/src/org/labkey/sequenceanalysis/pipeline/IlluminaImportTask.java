@@ -16,6 +16,7 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import au.com.bytecode.opencsv.CSVReader;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.biojava.nbio.core.exceptions.CompoundNotFoundException;
 import org.biojava.nbio.core.sequence.DNASequence;
@@ -55,6 +56,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+
+import static org.labkey.api.exp.api.ExperimentService.asInteger;
 
 /**
  * User: bbimber
@@ -142,18 +145,18 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
             RecordedAction action = new RecordedAction(ACTION_NAME);
             action.addInputIfNotPresent(input, "Illumina Sample CSV");
 
-            Map<String, Integer> sampleMap = parseCsv(input, schema);
+            Map<String, Long> sampleMap = parseCsv(input, schema);
 
             //NOTE: it might be just as easy to match filename based on expected pattern
 
             //this step will be slow
-            IlluminaFastqSplitter<Integer> parser = new IlluminaFastqSplitter<>("Illumina", sampleMap, job.getLogger(), input.getParent(), prefix);
+            IlluminaFastqSplitter<Long> parser = new IlluminaFastqSplitter<>("Illumina", sampleMap, job.getLogger(), input.getParent(), prefix);
             parser.setOutputGzip(true);
             parser.setDestinationDir(getSupport().getAnalysisDirectory());
 
             // the first element of the pair is the sample ID.  the second is either 1 or 2,
             // depending on whether the file represents the forward or reverse reads
-            Map<Pair<Integer, Integer>, File> fileMap = parser.parseFastqFiles();
+            Map<Pair<Long, Integer>, File> fileMap = parser.parseFastqFiles();
 
             for (File f : parser.getFiles())
             {
@@ -164,7 +167,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
             getJob().getLogger().info("Compressing FASTQ files");
             FileType gz = new FileType("gz");
-            for (Pair<Integer, Integer> sampleKey : fileMap.keySet())
+            for (Pair<Long, Integer> sampleKey : fileMap.keySet())
             {
                 File inputFile = fileMap.get(sampleKey);
                 if (!gz.isType(inputFile))
@@ -182,18 +185,18 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
             TableInfo rs = schema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
             TableInfo readDataTable = schema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
 
-            Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob(), false);
+            Long runId = SequenceTaskHelper.getExpRunIdForJob(getJob(), false);
 
             //update the readsets
             Map<String, Object> row;
             for (Object key : new HashSet<>(sampleMap.values()))
             {
-                Integer readsetId = (Integer) key;
+                Long readsetId = (Long) key;
 
                 Readset readset = SequenceAnalysisService.get().getReadset(readsetId, getJob().getUser());
 
                 row = new HashMap<>();
-                Pair<Integer, Integer> pair = Pair.of(readsetId, 1);
+                Pair<Long, Integer> pair = Pair.of(readsetId, 1);
                 ReadDataImpl rd = new ReadDataImpl();
                 rd.setReadset(readsetId);
                 rd.setCreated(new Date());
@@ -291,11 +294,11 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
 
         runRow = Table.insert(getJob().getUser(), runTable, runRow);
 
-        _instrumentRunId = (Integer)runRow.get("rowid");
+        _instrumentRunId = asInteger(runRow.get("rowid"));
         getJob().getLogger().info("Created run: " + _instrumentRunId);
     }
 
-    private void addQualityMetrics(DbSchema schema, int readsetId, Pair<Integer, Integer> key, IlluminaFastqSplitter parser, ExpData d)
+    private void addQualityMetrics(DbSchema schema, long readsetId, Pair<Long, Integer> key, IlluminaFastqSplitter parser, ExpData d)
     {
         getJob().getLogger().info("Adding quality metrics for file: " + d.getFile().getName());
         Map<Pair<Integer, Integer>, Integer> readCounts = parser.getReadCounts();
@@ -325,15 +328,15 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         return SequenceTaskHelper.createExpData(f, getJob());
     }
 
-    private Map<String, Integer> parseCsv(File sampleFile, DbSchema schema) throws PipelineJobException
+    private Map<String, Long> parseCsv(File sampleFile, DbSchema schema) throws PipelineJobException
     {
         getJob().getLogger().info("Parsing Sample File: " + sampleFile.getName());
         try (CSVReader reader = new CSVReader(Readers.getReader(sampleFile)))
         {
             //parse the samples file
             String [] nextLine;
-            Map<String, Integer> sampleMap = new HashMap<>();
-            sampleMap.put("S0", 0); //placeholder for control and unmapped reads
+            Map<String, Long> sampleMap = new HashMap<>();
+            sampleMap.put("S0", 0L); //placeholder for control and unmapped reads
 
             boolean inSamples = false;
             int sampleIdx = 0;
@@ -363,10 +366,10 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
                     String indexesRC = new DNASequence(nextLine[6]).getReverseComplement().getSequenceAsString() + "+" + nextLine[8];
 
                     sampleIdx++;
-                    Integer readsetId;
+                    Long readsetId;
                     try
                     {
-                        readsetId = Integer.parseInt(nextLine[0]);
+                        readsetId = Long.parseLong(nextLine[0]);
                     }
                     catch (NumberFormatException e)
                     {
@@ -400,7 +403,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
     }
 
     //not very efficient, but we only expect a handful of samples per run
-    private boolean validateReadsetId(Integer id) throws PipelineJobException, PipelineValidationException
+    private boolean validateReadsetId(Long id) throws PipelineJobException, PipelineValidationException
     {
         getJob().getLogger().debug("attempting to resolve readset by Id: " + id);
         if (id == null)
@@ -425,7 +428,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         return true;
     }
 
-    private Integer tryCreateReadset(DbSchema schema, String[] line) throws PipelineJobException
+    private Long tryCreateReadset(DbSchema schema, String[] line) throws PipelineJobException
     {
         if (!_settings.doAutoCreateReadsets())
             throw new PipelineJobException("Unable to find existing readset matching ID: " + line[0]);
@@ -453,7 +456,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         if (_instrumentRunId != null)
             row.put("instrument_run_id", _instrumentRunId);
 
-        Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob(), false);
+        Long runId = SequenceTaskHelper.getExpRunIdForJob(getJob(), false);
         if (runId != null)
             row.put("runid", runId);
 
@@ -462,7 +465,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         row.put("created", new Date());
 
         row = Table.insert(getJob().getUser(), rsTable, row);
-        return (Integer)row.get("rowid");
+        return MapUtils.getLong(row,"rowid");
     }
 
     private String resolveBarcode(String barcode)

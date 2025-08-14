@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.analysis;
 
 import org.json.JSONObject;
+import org.labkey.api.collections.IntHashMap;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
@@ -41,9 +42,9 @@ public class CombineStarGeneCountsHandler extends AbstractCombineGeneCountsHandl
         long totalStrand2 = 0L;
 
         results.distinctGenes.addAll(translator.getGeneMap().keySet());
-        Map<Integer, Map<String, Double>> unstrandedCounts = new HashMap<>(inputFiles.size());
-        Map<Integer, Map<String, Double>> strand1Counts = new HashMap<>(inputFiles.size());
-        Map<Integer, Map<String, Double>> strand2Counts = new HashMap<>(inputFiles.size());
+        Map<Integer, Map<String, Double>> unstrandedCounts = new IntHashMap<>(inputFiles.size());
+        Map<Integer, Map<String, Double>> strand1Counts = new IntHashMap<>(inputFiles.size());
+        Map<Integer, Map<String, Double>> strand2Counts = new IntHashMap<>(inputFiles.size());
 
         for (SequenceOutputFile so : inputFiles)
         {

@@ -373,7 +373,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             String basename;
             if (inputFiles.size() == 1 && inputFiles.get(0).getReadset() != null)
             {
-                Integer readsetId = inputFiles.get(0).getReadset();
+                Long readsetId = inputFiles.get(0).getReadset();
                 Readset rs = ctx.getSequenceSupport().getCachedReadset(readsetId);
                 basename = FileUtil.makeLegalName(rs.getName()).replaceAll(" ", "_");
             }

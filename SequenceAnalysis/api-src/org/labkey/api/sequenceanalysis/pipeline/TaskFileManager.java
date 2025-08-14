@@ -62,11 +62,11 @@ public interface TaskFileManager extends PipelineOutputTracker
 
     void addPicardMetricsFiles(List<PipelineStepOutput.PicardMetricsOutput> files) throws PipelineJobException;
 
-    void writeMetricsToDb(Map<Integer, Integer> readsetMap, Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap) throws PipelineJobException;
+    void writeMetricsToDb(Map<Long, Long> readsetMap, Map<Long, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap) throws PipelineJobException;
 
     void deleteIntermediateFiles() throws PipelineJobException;
 
-    Set<SequenceOutputFile> createSequenceOutputRecords(@Nullable Integer analysisId)throws PipelineJobException;
+    Set<SequenceOutputFile> createSequenceOutputRecords(@Nullable Long analysisId)throws PipelineJobException;
 
     //should be used for remote jobs or local jobs running in a separate working directory
     void cleanup(Collection<RecordedAction> actions) throws PipelineJobException;

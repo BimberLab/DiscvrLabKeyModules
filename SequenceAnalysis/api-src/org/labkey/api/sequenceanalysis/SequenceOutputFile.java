@@ -37,11 +37,11 @@ public class SequenceOutputFile implements Serializable
     private Integer _rowid;
     private String _name;
     private String _description;
-    private Integer _dataId;
+    private Long _dataId;
     private Integer _library_id;
-    private Integer _readset;
-    private Integer _analysis_id;
-    private Integer _runid;
+    private Long _readset;
+    private Long _analysis_id;
+    private Long _runid;
     private String _category;
     private Boolean _intermediate;
     private String _container;
@@ -86,12 +86,12 @@ public class SequenceOutputFile implements Serializable
         _description = description;
     }
 
-    public Integer getDataId()
+    public Long getDataId()
     {
         return _dataId;
     }
 
-    public void setDataId(Integer dataId)
+    public void setDataId(Long dataId)
     {
         _dataId = dataId;
     }
@@ -106,32 +106,32 @@ public class SequenceOutputFile implements Serializable
         _library_id = library_id;
     }
 
-    public Integer getReadset()
+    public Long getReadset()
     {
         return _readset;
     }
 
-    public void setReadset(Integer readset)
+    public void setReadset(Long readset)
     {
         _readset = readset;
     }
 
-    public Integer getAnalysis_id()
+    public Long getAnalysis_id()
     {
         return _analysis_id;
     }
 
-    public void setAnalysis_id(Integer analysis_id)
+    public void setAnalysis_id(Long analysis_id)
     {
         _analysis_id = analysis_id;
     }
 
-    public Integer getRunId()
+    public Long getRunId()
     {
         return _runid;
     }
 
-    public void setRunId(Integer runid)
+    public void setRunId(Long runid)
     {
         _runid = runid;
     }

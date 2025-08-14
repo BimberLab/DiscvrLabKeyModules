@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import org.apache.logging.log4j.Logger;
+import org.labkey.api.collections.IntHashMap;
 import org.labkey.api.data.Container;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
@@ -15,7 +16,6 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 
 public class CacheGenomeTrigger implements GenomeTrigger
@@ -48,7 +48,7 @@ public class CacheGenomeTrigger implements GenomeTrigger
     {
         try
         {
-            Map<Integer, File> genomeMap = new HashMap<>();
+            Map<Integer, File> genomeMap = new IntHashMap<>();
             ReferenceGenome rg = SequenceAnalysisService.get().getReferenceGenome(genomeId, u);
             genomeMap.put(rg.getGenomeId(), rg.getSourceFastaFile());
             cacheGenomes(c, u, genomeMap, log, false);

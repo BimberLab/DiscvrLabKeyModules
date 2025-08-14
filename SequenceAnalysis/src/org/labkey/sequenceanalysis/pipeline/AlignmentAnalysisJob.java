@@ -37,8 +37,8 @@ public class AlignmentAnalysisJob extends SequenceJob
 {
     public static final String FOLDER_NAME = "sequenceAnalysis";
 
-    private int _analyisId;
-    private int _readsetId;
+    private long _analyisId;
+    private long _readsetId;
 
     // Default constructor for serialization
     protected AlignmentAnalysisJob()
@@ -79,7 +79,7 @@ public class AlignmentAnalysisJob extends SequenceJob
             Container targetContainer = c;
             if (submitJobToReadsetContainer)
             {
-                Integer readsetId = model.getReadset();
+                Long readsetId = model.getReadset();
                 if (readsetId != null)
                 {
                     SequenceReadsetImpl readset = SequenceAnalysisServiceImpl.get().getReadset(readsetId, u);
@@ -141,22 +141,22 @@ public class AlignmentAnalysisJob extends SequenceJob
         PipelineJobService.get().addTaskPipeline(settings);
     }
 
-    public int getAnalyisId()
+    public long getAnalyisId()
     {
         return _analyisId;
     }
 
-    public void setAnalyisId(int analyisId)
+    public void setAnalyisId(long analyisId)
     {
         _analyisId = analyisId;
     }
 
-    public int getReadsetId()
+    public long getReadsetId()
     {
         return _readsetId;
     }
 
-    public void setReadsetId(int readsetId)
+    public void setReadsetId(long readsetId)
     {
         _readsetId = readsetId;
     }

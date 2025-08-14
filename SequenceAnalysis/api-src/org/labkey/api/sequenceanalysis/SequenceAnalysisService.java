@@ -69,7 +69,7 @@ abstract public class SequenceAnalysisService
 
     abstract public ReadData getReadData(int rowId, User u);
 
-    abstract public Readset getReadset(int readsetId, User u);
+    abstract public Readset getReadset(long readsetId, User u);
 
     abstract public ReferenceGenome getReferenceGenome(int rowId, User u) throws PipelineJobException;
 
@@ -87,7 +87,7 @@ abstract public class SequenceAnalysisService
 
     abstract public String getUnzippedBaseName(String filename);
 
-    abstract public Integer getExpRunIdForJob(PipelineJob job, boolean throwUnlessFound) throws PipelineJobException;
+    abstract public Long getExpRunIdForJob(PipelineJob job, boolean throwUnlessFound) throws PipelineJobException;
 
     abstract public List<PedigreeRecord> generatePedigree(Collection<String> sampleNames, Container c, User u, DemographicsProvider d);
 
