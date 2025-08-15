@@ -10,16 +10,17 @@
     "build-dev": "npm run build-no-pkg",
     "build-prod": "npm run clean && cross-env NODE_ENV=production PROD_SOURCE_MAP=source-map webpack --config ./config/prod.config.js --progress --profile",
     "clean": "rimraf resources/web/gen && rimraf resources/web/jbrowse/gen && rimraf resources/views/gen",
-    "prepareCli": "rimraf ./buildCli && rimraf ./resources/external/jb-cli && npm install @jbrowse/cli@1.7.4 --prefix ./buildCli",
-    "jb-pkg": "npm run prepareCli && npx pkg --outdir=./resources/external/jb-cli ./buildCli/node_modules/@jbrowse/cli && rimraf ./buildCli"
+    "jb-sea:fetch": "node ./resources/external/fetch-jbrowse-bundle.mjs",
+    "jb-sea:build": "node ./resources/external/build-sea.mjs ./resources/external/jbrowse.js",
+    "jb-sea": "npm run jb-sea:fetch && npm run jb-sea:build"
   },
   "dependencies": {
     "@gmod/vcf": "^6.0.9",
     "@jbrowse/core": "^3.2.0",
-    "@jbrowse/product-core": "^3.2.0",
     "@jbrowse/plugin-linear-genome-view": "^3.2.0",
     "@jbrowse/plugin-svg": "^3.2.0",
     "@jbrowse/plugin-variants": "^3.2.0",
+    "@jbrowse/product-core": "^3.2.0",
     "@jbrowse/react-linear-genome-view2": "^3.2.0",
     "@labkey/api": "^1.39.0",
     "@labkey/components": "^6.32.2",
@@ -54,6 +55,7 @@
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "rimraf": "^6.0.1",
+    "tar": "^6.2.1",
     "typescript": "^5.1.6"
   }
 }
