@@ -43,7 +43,7 @@ for (datasetId in names(seuratObjects)) {
   if (saveRepertoireStats) {
     seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
     outputFile <- gsub(seuratObjects[[datasetId]], pattern = '.rds', replacement = '.tcrStats.txt')
-    df <- Rdiscvr::CalculateAndStoreTcrRepertoireStats(seuratObj, outputFile = outFile)
+    df <- Rdiscvr::CalculateAndStoreTcrRepertoireStats(seuratObj, outputFile = outputFile)
   }
 
   if (scoreActivation) {
