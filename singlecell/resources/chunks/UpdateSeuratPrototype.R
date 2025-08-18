@@ -7,6 +7,12 @@ if (!file.exists(netRc)) {
 invisible(Rlabkey::labkey.setCurlOptions(NETRC_FILE = netRc))
 Rdiscvr::SetLabKeyDefaults(baseUrl = serverBaseUrl, defaultFolder = defaultLabKeyFolder)
 
+if (Sys.getenv('SEURAT_MAX_THREADS') != '') {
+  nCores <- Sys.getenv('SEURAT_MAX_THREADS')
+} else {
+  nCores <- 1
+}
+
 for (datasetId in names(seuratObjects)) {
   printName(datasetId)
   seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
@@ -32,6 +38,20 @@ for (datasetId in names(seuratObjects)) {
     }
 
     seuratObj <- Rdiscvr::ClassifyTNKByExpression(seuratObj)
+  }
+
+  if (saveRepertoireStats) {
+    seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
+    outputFile <- gsub(seuratObjects[[datasetId]], pattern = '.rds', replacement = '.tcrStats.txt')
+    df <- Rdiscvr::CalculateAndStoreTcrRepertoireStats(seuratObj, outputFile = outFile)
+  }
+
+  if (scoreActivation) {
+    seuratObj <- RIRA::PredictTcellActivation(seuratObj)
+  }
+
+  if (recalculateUCells) {
+    seuratObj <- RIRA::CalculateUCellScores(seuratObj, storeRanks = FALSE, assayName = 'RNA', forceRecalculate = TRUE, ncores = nCores)
   }
 
   saveData(seuratObj, datasetId)

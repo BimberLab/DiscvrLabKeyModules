@@ -49,6 +49,18 @@ public class UpdateSeuratPrototype extends AbstractRDiscvrStep
                     {{
                         put("checked", false);
                     }}, false),
+                    SeuratToolParameter.create("recalculateUCells", "Recalculate UCells", "If checked, RIRA::CalculateUCellScores will be re-run", "checkbox", new JSONObject()
+                    {{
+                        put("checked", true);
+                    }}, true),
+                    SeuratToolParameter.create("saveRepertoireStats", "Save TCR Repertoire Stats", "If checked, Rdiscvr::CalculateAndStoreTcrRepertoireStats will be run", "checkbox", new JSONObject()
+                    {{
+                        put("checked", true);
+                    }}, true),
+                    SeuratToolParameter.create("scoreActivation", "Score T Cell Activation", "If checked, RIRA::PredictTcellActivation will be run", "checkbox", new JSONObject()
+                    {{
+                        put("checked", true);
+                    }}, true),
                     SeuratToolParameter.create("keepOriginal", "Keep Copy of Original File", "If checked, the original file will be copied with the file extension '.bk'", "checkbox", new JSONObject()
                     {{
                         put("checked", false);
