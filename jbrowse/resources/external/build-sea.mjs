@@ -1,120 +1,185 @@
-import { execFileSync, execSync, spawnSync } from 'node:child_process';
-import { copyFileSync, chmodSync, existsSync, mkdirSync, rmSync, renameSync, writeFileSync } from 'node:fs';
-import { basename, join, resolve } from 'node:path';
+// Build SEA for all platforms (win/linux/macos) from any host.
+// - Creates sea-prep.blob once from resources/external/jbrowse.js
+// - Downloads official Node runtimes for the same Node version as process.execPath
+// - Injects the blob into each runtime with postject
+// - Writes outputs to resources/external/jb-cli:
+//     cli-win.exe, cli-linux, cli-macos
+// - Cleans up temp files and resources/external/jbrowse.js at the end
 
-const input = process.argv[2];
-if (!input) {
-  console.error('Usage: node build-sea.mjs <input.js> [outputBaseName]');
-  process.exit(1);
-}
-const inputAbs = resolve(input);
-const baseName = process.argv[3] || basename(input, '.js');
+import { execFileSync, execSync, spawnSync } from 'node:child_process';
+import {
+  copyFileSync, chmodSync, existsSync, mkdirSync, rmSync, renameSync, writeFileSync
+} from 'node:fs';
+import { basename, join, resolve } from 'node:path';
+import https from 'node:https';
+import { createWriteStream } from 'node:fs';
 
 const ROOT = resolve('.');
 const OUTDIR = join(ROOT, 'resources', 'external', 'jb-cli');
-mkdirSync(OUTDIR, { recursive: true });
+const TMPDIR = join(ROOT, '.sea-tmp');
+const INPUT_JS = join(ROOT, 'resources', 'external', 'jbrowse.js');
 
-const platform = process.platform; // 'win32' | 'darwin' | 'linux'
-const outName =
-  platform === 'win32' ? 'cli-win.exe' :
-  platform === 'darwin' ? 'cli-macos' : 'cli-linux';
+const NODE_VERSION = process.versions.node;
+const DIST_BASE = process.env.NODE_DIST_URL || 'https://nodejs.org/dist';
+const TARGETS = [
+  ['win-x64',   'cli-win.exe', 'zip'],
+  ['linux-x64', 'cli-linux',   'tar.xz'],
+  ['darwin-x64','cli-macos',   'tar.xz'],
+  // ['darwin-arm64','cli-macos-arm64','tar.xz'],
+  // ['linux-arm64','cli-linux-arm64','tar.xz'],
+];
 
-const tmpCfg = 'sea-config.json';
-const tmpBlob = 'sea-prep.blob';
-const tmpOut = `${baseName}${platform === 'win32' ? '.exe' : ''}`;
+const SENTINEL = 'NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2';
+const POSTJECT_PKG = 'postject@1.0.0-alpha.6';
 
-console.log(`SEA build: ${inputAbs} -> ${join(OUTDIR, outName)} [${platform}]`);
+function log(s){ console.log(s); }
+function warn(s){ console.warn(s); }
+function fail(e){ console.error(e); process.exit(1); }
 
-// 1) Create SEA config
-const cfg = {
-  main: inputAbs,
-  output: tmpBlob,
-  disableExperimentalSEAWarning: true,
-};
-writeFileSync(tmpCfg, JSON.stringify(cfg, null, 2));
-
-// 2) Produce blob
-execFileSync(process.execPath, ['--experimental-sea-config', tmpCfg], { stdio: 'inherit' });
-
-// 3) Copy current Node runtime as the base executable
-copyFileSync(process.execPath, tmpOut);
-
-// 4) Remove signature (it'll be invalid once we postject the Jbrowse CLI into the node runtime executable)
-if (platform === 'darwin') {
-  try { spawnSync('codesign', ['--remove-signature', tmpOut], { stdio: 'inherit' }); } catch {}
-}
-if (platform === 'win32') {
-  try { spawnSync('signtool', ['remove', '/s', tmpOut], { stdio: 'inherit' }); } catch {}
+function ensureDirs(){
+  mkdirSync(OUTDIR, { recursive: true });
+  mkdirSync(TMPDIR, { recursive: true });
 }
 
-// Helper: run postject with multiple fallbacks
-function runPostject(argsList) {
-  const isWin = platform === 'win32';
+function httpDownload(url, dest){
+  return new Promise((resolveP, rejectP)=>{
+    const file = createWriteStream(dest);
+    https.get(url, res=>{
+      if(res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location){
+        httpDownload(res.headers.location, dest).then(resolveP, rejectP);
+        return;
+      }
+      if(res.statusCode !== 200){
+        rejectP(new Error(`Download failed ${res.statusCode}: ${url}`));
+        return;
+      }
+      res.pipe(file);
+      file.on('finish', ()=>file.close(()=>resolveP(void 0)));
+    }).on('error', err=>{ rejectP(err); });
+  });
+}
+
+function runOrThrow(cmd, args, opts={}){
+  execFileSync(cmd, args, { stdio: 'inherit', ...opts });
+}
+
+function shellOrThrow(command){
+  execSync(command, { stdio: 'inherit', shell: true });
+}
+
+// postject runner with fallbacks
+function runPostject(args){
+  const isWin = process.platform === 'win32';
   const npxCmd = isWin ? 'npx.cmd' : 'npx';
   const npmCmd = isWin ? 'npm.cmd' : 'npm';
-  const postjectPkg = 'postject@1.0.0-alpha.6';
+  try { runOrThrow(npxCmd, ['--yes', POSTJECT_PKG, ...args]); return; }
+  catch{ warn('[postject] npx failed, trying npm exec…'); }
+  try { runOrThrow(npmCmd, ['exec', '-y', POSTJECT_PKG, '--', ...args]); return; }
+  catch{ warn('[postject] npm exec failed, trying shell npx…'); }
+  try { shellOrThrow(`npx --yes ${POSTJECT_PKG} ${args.map(a=>`"${a}"`).join(' ')}`); return; }
+  catch{ warn('[postject] shell npx failed, trying shell npm exec…'); }
+  shellOrThrow(`npm exec -y ${POSTJECT_PKG} -- ${args.map(a=>`"${a}"`).join(' ')}`);
+}
 
-  // Attempt 1: npx (execFileSync)
-  try {
-    execFileSync(npxCmd, ['--yes', postjectPkg, ...argsList], { stdio: 'inherit' });
-    return;
-  } catch (e1) {
-    console.warn('[postject] npx (execFileSync) failed, trying npm exec…');
-    // Attempt 2: npm exec (execFileSync)
-    try {
-      execFileSync(npmCmd, ['exec', '-y', postjectPkg, '--', ...argsList], { stdio: 'inherit' });
-      return;
-    } catch (e2) {
-      console.warn('[postject] npm exec (execFileSync) failed, trying shell npx…');
-      // Attempt 3: npx via shell (execSync)
-      try {
-        const cmd = `npx --yes ${postjectPkg} ${argsList.map(a => `"${a}"`).join(' ')}`;
-        execSync(cmd, { stdio: 'inherit', shell: true });
-        return;
-      } catch (e3) {
-        console.warn('[postject] shell npx failed, trying shell npm exec…');
-        // Attempt 4: npm exec via shell (execSync)
-        const cmd2 = `npm exec -y ${postjectPkg} -- ${argsList.map(a => `"${a}"`).join(' ')}`;
-        execSync(cmd2, { stdio: 'inherit', shell: true });
-      }
-    }
+function extractZip(zipPath, outDir){
+  if (process.platform === 'win32') {
+    shellOrThrow(`powershell -NoProfile -Command "Expand-Archive -Force '${zipPath.replace(/'/g, "''")}' '${outDir.replace(/'/g, "''")}'"`);
+  } else {
+    shellOrThrow(`unzip -o "${zipPath}" -d "${outDir}"`);
   }
 }
 
-// Postject magic from the docs to do the jbrowse->node appending
-const SENTINEL = 'NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2';
-const postjectArgs = platform === 'darwin'
-  ? [tmpOut, 'NODE_SEA_BLOB', tmpBlob, '--sentinel-fuse', SENTINEL, '--macho-segment-name', 'NODE_SEA']
-  : [tmpOut, 'NODE_SEA_BLOB', tmpBlob, '--sentinel-fuse', SENTINEL];
-
-// 5) Inject the SEA blob
-runPostject(postjectArgs);
-
-// 6) Re-sign for the new combined executable
-if (platform === 'darwin') {
-  try { spawnSync('codesign', ['--sign', '-', tmpOut], { stdio: 'inherit' }); } catch {}
-}
-if (platform === 'win32') {
-  try { spawnSync('signtool', ['sign', '/fd', 'SHA256', tmpOut], { stdio: 'inherit' }); } catch {}
+// extract only bin/node from tar.xz to avoid symlink issues on Windows
+function extractNodeFromTarXz(tarxzPath, outDir, target) {
+  const innerPath = `node-v${NODE_VERSION}-${target}/bin/node`;
+  try { shellOrThrow(`tar -xJf "${tarxzPath}" -C "${outDir}" "${innerPath}"`); }
+  catch { shellOrThrow(`bsdtar -xf "${tarxzPath}" -C "${outDir}" "${innerPath}"`); }
+  return join(outDir, innerPath);
 }
 
-// 7) POSIX chmod
-if (platform !== 'win32') {
-  chmodSync(tmpOut, 0o755);
+function nodeBinaryPathFromExtract(dir, target){
+  const base = `node-v${NODE_VERSION}-${target}`;
+  if (target.startsWith('win')) return join(dir, base, 'node.exe');
+  return join(dir, base, 'bin', 'node');
 }
 
-// 8) Move to final destination
-const finalPath = join(OUTDIR, outName);
-if (existsSync(finalPath)) rmSync(finalPath, { force: true });
-renameSync(tmpOut, finalPath);
+function injectForTarget(target, outName, archiveExt, blobPath){
+  const distUrl = `${DIST_BASE}/v${NODE_VERSION}/node-v${NODE_VERSION}-${target}.${archiveExt}`;
+  const dlPath = join(TMPDIR, `node-${target}.${archiveExt}`);
 
-// 9) Cleanup
-rmSync(tmpCfg, { force: true });
-rmSync(tmpBlob, { force: true });
+  log(`\n=== Target ${target} ===`);
+  log(`Downloading: ${distUrl}`);
+  httpDownload(distUrl, dlPath).then(()=>{
+    log('Extracting…');
+    let nodePath;
+    if (archiveExt === 'zip') {
+      extractZip(dlPath, TMPDIR);
+      nodePath = nodeBinaryPathFromExtract(TMPDIR, target);
+    } else {
+      nodePath = extractNodeFromTarXz(dlPath, TMPDIR, target);
+    }
+    if (!existsSync(nodePath)) fail(`node binary not found in ${nodePath}`);
 
-const jbrowseJsPath = join(ROOT, 'resources', 'external', 'jbrowse.js');
-if (existsSync(jbrowseJsPath)) {
-  rmSync(jbrowseJsPath, { force: true });
+    const workExe = join(TMPDIR, `work-${outName}`);
+    copyFileSync(nodePath, workExe);
+
+    const postjectArgs = target.startsWith('darwin')
+      ? [workExe, 'NODE_SEA_BLOB', blobPath, '--sentinel-fuse', SENTINEL, '--macho-segment-name', 'NODE_SEA']
+      : [workExe, 'NODE_SEA_BLOB', blobPath, '--sentinel-fuse', SENTINEL];
+
+    log('Injecting SEA blob…');
+    runPostject(postjectArgs);
+
+    if (!target.startsWith('win')) chmodSync(workExe, 0o755);
+
+    const finalPath = join(OUTDIR, outName);
+    if (existsSync(finalPath)) rmSync(finalPath, { force: true });
+    renameSync(workExe, finalPath);
+
+    rmSync(dlPath, { force: true });
+    try { rmSync(join(TMPDIR, `node-v${NODE_VERSION}-${target}`), { recursive: true, force: true }); } catch {}
+    log(`Wrote ${finalPath}`);
+  }).catch(fail);
 }
 
-console.log(`Done: ${finalPath}`);
+function buildBlobOnce(){
+  const cfgPath = join(TMPDIR, 'sea-config.json');
+  const blobPath = join(TMPDIR, 'sea-prep.blob');
+  log('Creating SEA blob…');
+  const cfg = { main: INPUT_JS, output: blobPath, disableExperimentalSEAWarning: true };
+  writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
+  runOrThrow(process.execPath, ['--experimental-sea-config', cfgPath]);
+  return blobPath;
+}
+
+async function main(){
+  ensureDirs();
+  if (!existsSync(INPUT_JS)) fail(`Missing ${INPUT_JS}. Run your fetch step first.`);
+  rmSync(TMPDIR, { recursive: true, force: true });
+  mkdirSync(TMPDIR, { recursive: true });
+
+  const blob = buildBlobOnce();
+
+  for (const [target, outName, ext] of TARGETS) {
+    await new Promise((resolveP, rejectP)=>{
+      try {
+        injectForTarget(target, outName, ext, blob);
+        const interval = setInterval(()=>{
+          if (existsSync(join(OUTDIR, outName))) {
+            clearInterval(interval);
+            resolveP();
+          }
+        }, 500);
+      } catch (e) {
+        rejectP(e);
+      }
+    });
+  }
+
+  try { rmSync(TMPDIR, { recursive: true, force: true }); } catch {}
+  try { if (existsSync(INPUT_JS)) rmSync(INPUT_JS, { force: true }); } catch {}
+
+  log('\nAll targets built.');
+}
+
+main().catch(fail);

@@ -241,7 +241,7 @@ public class JBrowseManager
             SimpleScriptWrapper wrapper = new SimpleScriptWrapper(_log);
             wrapper.setThrowNonZeroExits(false);
 
-            String output = wrapper.executeWithOutput(Arrays.asList(exe.getPath(), "help"));
+            String output = wrapper.executeWithOutput(Arrays.asList(exe.getPath(), "--help"));
             if (wrapper.getLastReturnCode() != 0)
             {
                 _log.error("Non-zero exit from testJBrowseCli: " + wrapper.getLastReturnCode());
