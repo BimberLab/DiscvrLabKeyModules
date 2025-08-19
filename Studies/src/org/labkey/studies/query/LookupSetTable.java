@@ -22,7 +22,6 @@ import org.labkey.api.data.SchemaTableInfo;
 import org.labkey.api.ldk.LDKService;
 import org.labkey.api.ldk.table.AbstractDataDefinedTable;
 import org.labkey.api.query.QueryUpdateService;
-import org.labkey.api.query.SimpleUserSchema;
 
 import java.util.Map;
 
@@ -101,15 +100,7 @@ public class LookupSetTable extends AbstractDataDefinedTable<StudiesUserSchema>
     @Override
     public QueryUpdateService getUpdateService()
     {
-        return new EHRLookupsUpdateService(this);
-    }
-
-    protected class EHRLookupsUpdateService extends UpdateService
-    {
-        public EHRLookupsUpdateService(SimpleUserSchema.SimpleTable<StudiesUserSchema> ti)
-        {
-            super(ti);
-        }
+        return new UpdateService(this);
     }
 }
 
