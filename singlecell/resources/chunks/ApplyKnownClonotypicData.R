@@ -4,14 +4,14 @@ if (!file.exists(netRc)) {
     stop(paste0('Unable to find file: ', netRc))
 }
 
-invisible(Rlabkey::labkey.setCurlOptions(NETRC_FILE = netRc, connect-timeout = 10))
+invisible(Rlabkey::labkey.setCurlOptions(NETRC_FILE = netRc))
 Rdiscvr::SetLabKeyDefaults(baseUrl = serverBaseUrl, defaultFolder = defaultLabKeyFolder)
 
 for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
-    seuratObj <- ApplyKnownClontypicData(seuratObj, groupFields = groupFields, addMetadata = addMetadata)
+    seuratObj <- ApplyKnownClonotypicData(seuratObj)
     saveData(seuratObj, datasetId)
 
     # Cleanup

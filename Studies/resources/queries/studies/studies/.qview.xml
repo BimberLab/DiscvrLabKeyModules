@@ -1,0 +1,13 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" hidden="false" canOverride="false">
+    <columns>
+        <column name="rowId"/>
+        <column name="studyName"/>
+        <column name="label"/>
+        <column name="category"/>
+        <column name="description"/>
+        <column name="cohorts"/>
+    </columns>
+    <sorts>
+        <sort column="studyName" descending="false"/>
+    </sorts>
+</customView>
