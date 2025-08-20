@@ -6,13 +6,14 @@
 //     cli-win.exe, cli-linux, cli-macos
 // - Cleans up temp files and resources/external/jbrowse.js at the end
 
-import { execFileSync, execSync, spawnSync } from 'node:child_process';
+import { execFileSync, execSync } from 'node:child_process';
 import {
   copyFileSync, chmodSync, existsSync, mkdirSync, rmSync, renameSync, writeFileSync
 } from 'node:fs';
-import { basename, join, resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 import https from 'node:https';
-import { createWriteStream } from 'node:fs';
+import { createWriteStream, createReadStream } from 'node:fs';
+import * as unzipper from 'unzipper';
 
 const ROOT = resolve('.');
 const OUTDIR = join(ROOT, 'resources', 'external', 'jb-cli');
@@ -81,12 +82,31 @@ function runPostject(args){
   shellOrThrow(`npm exec -y ${POSTJECT_PKG} -- ${args.map(a=>`"${a}"`).join(' ')}`);
 }
 
-function extractZip(zipPath, outDir){
+async function extractZip(zipPath, outDir){
   if (process.platform === 'win32') {
-    shellOrThrow(`powershell -NoProfile -Command "Expand-Archive -Force '${zipPath.replace(/'/g, "''")}' '${outDir.replace(/'/g, "''")}'"`);
+    try {
+      shellOrThrow(`powershell -NoProfile -Command "Expand-Archive -Force '${zipPath.replace(/'/g, "''")}' '${outDir.replace(/'/g, "''")}'"`);
+      return;
+    } catch (e) {
+      // Fall through to unzipper if PowerShell isn’t present or fails
+    }
   } else {
-    shellOrThrow(`unzip -o "${zipPath}" -d "${outDir}"`);
+    // POSIX: try `unzip` if present
+    try {
+      shellOrThrow(`unzip -o "${zipPath}" -d "${outDir}"`);
+      return;
+    } catch (e) {
+      // Fall through to unzipper
+    }
   }
+
+  await new Promise((resolveP, rejectP) => {
+    const stream = createReadStream(zipPath)
+      .pipe(unzipper.Extract({ path: outDir }));
+
+    stream.on('close', resolveP);
+    stream.on('error', rejectP);
+  });
 }
 
 // extract only bin/node from tar.xz to avoid symlink issues on Windows
@@ -109,11 +129,11 @@ function injectForTarget(target, outName, archiveExt, blobPath){
 
   log(`\n=== Target ${target} ===`);
   log(`Downloading: ${distUrl}`);
-  httpDownload(distUrl, dlPath).then(()=>{
+  return httpDownload(distUrl, dlPath).then(async ()=>{
     log('Extracting…');
     let nodePath;
     if (archiveExt === 'zip') {
-      extractZip(dlPath, TMPDIR);
+      await extractZip(dlPath, TMPDIR);
       nodePath = nodeBinaryPathFromExtract(TMPDIR, target);
     } else {
       nodePath = extractNodeFromTarXz(dlPath, TMPDIR, target);
@@ -139,7 +159,7 @@ function injectForTarget(target, outName, archiveExt, blobPath){
     rmSync(dlPath, { force: true });
     try { rmSync(join(TMPDIR, `node-v${NODE_VERSION}-${target}`), { recursive: true, force: true }); } catch {}
     log(`Wrote ${finalPath}`);
-  }).catch(fail);
+  });
 }
 
 function buildBlobOnce(){
@@ -161,19 +181,7 @@ async function main(){
   const blob = buildBlobOnce();
 
   for (const [target, outName, ext] of TARGETS) {
-    await new Promise((resolveP, rejectP)=>{
-      try {
-        injectForTarget(target, outName, ext, blob);
-        const interval = setInterval(()=>{
-          if (existsSync(join(OUTDIR, outName))) {
-            clearInterval(interval);
-            resolveP();
-          }
-        }, 500);
-      } catch (e) {
-        rejectP(e);
-      }
-    });
+    await injectForTarget(target, outName, ext, blob);
   }
 
   try { rmSync(TMPDIR, { recursive: true, force: true }); } catch {}
