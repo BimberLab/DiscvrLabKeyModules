@@ -132,6 +132,7 @@
         <auditLogging>DETAILED</auditLogging>
         <columns>
             <column columnName="rowid">
+                <columnTitle>Study Id</columnTitle>
                 <isAutoInc>true</isAutoInc>
                 <shownInUpdateView>false</shownInUpdateView>
                 <shownInInsertView>false</shownInInsertView>

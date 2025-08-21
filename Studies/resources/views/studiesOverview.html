@@ -12,7 +12,7 @@
                 name: 'query',
                 schemaName: 'studies',
                 queryName: 'studies',
-                maxRows: 20
+                maxRows: 10
             }).render(webpart.wrapperDivId + '-studies');
 
             // LABKEY.Query.selectRows({
@@ -62,4 +62,5 @@
 }(jQuery, LABKEY));
 
 </script>
+<div style="padding-bottom: 20px;">Below is a list of the studies tracked in this folder. Please use the <a href="<%=contextPath%>/project/<%=containerPath%>/begin.view?pageId=dataBrowser">Data Browser</a> tab to browse the dataset tracked in this project.</div>
 

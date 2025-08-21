@@ -6,25 +6,24 @@
     "setup": "npm ci",
     "build": "npm run build-dev",
     "start": "cross-env NODE_ENV=development webpack serve --config ./config/watch.config.js",
-    "build-no-pkg": "npm run clean && cross-env NODE_ENV=development webpack --config ./config/dev.config.js --progress --profile",
-    "build-dev": "npm run build-no-pkg",
+    "build-dev": "npm run clean && cross-env NODE_ENV=development webpack --config ./config/dev.config.js --progress --profile",
     "build-prod": "npm run clean && cross-env NODE_ENV=production PROD_SOURCE_MAP=source-map webpack --config ./config/prod.config.js --progress --profile",
     "clean": "rimraf resources/web/gen && rimraf resources/web/jbrowse/gen && rimraf resources/views/gen",
-    "prepareCli": "rimraf ./buildCli && rimraf ./resources/external/jb-cli && npm install @jbrowse/cli@1.7.4 --prefix ./buildCli",
-    "jb-pkg": "npm run prepareCli && npx pkg --outdir=./resources/external/jb-cli ./buildCli/node_modules/@jbrowse/cli && rimraf ./buildCli"
+    "jb-sea:fetch": "node ./resources/external/fetch-jbrowse-bundle.mjs",
+    "jb-sea:build": "node ./resources/external/build-sea.mjs ./resources/external/jbrowse.js",
+    "jb-sea": "npm run jb-sea:fetch && npm run jb-sea:build"
   },
   "dependencies": {
     "@gmod/vcf": "^6.0.9",
     "@jbrowse/core": "^3.2.0",
-    "@jbrowse/product-core": "^3.2.0",
     "@jbrowse/plugin-linear-genome-view": "^3.2.0",
     "@jbrowse/plugin-svg": "^3.2.0",
     "@jbrowse/plugin-variants": "^3.2.0",
+    "@jbrowse/product-core": "^3.2.0",
     "@jbrowse/react-linear-genome-view2": "^3.2.0",
     "@labkey/api": "^1.39.0",
     "@labkey/components": "^6.32.2",
     "@mui/x-data-grid": "^7.28.1",
-    "@yao-pkg/pkg": "^6.3.2",
     "assert": "^2.1.0",
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",
@@ -54,6 +53,8 @@
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "rimraf": "^6.0.1",
-    "typescript": "^5.1.6"
+    "tar": "^7.4.3",
+    "typescript": "^5.1.6",
+    "unzipper": "^0.12.3"
   }
 }
