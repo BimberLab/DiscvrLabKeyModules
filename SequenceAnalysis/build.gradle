@@ -148,6 +148,9 @@ dependencies {
                 exclude group: "org.apache.commons", module: "commons-collections4"
                 // NOTE: this is a dependency of picard->google-cloud-storage. there is a vunerability in 1.6.8 that does not seem fixed as of 1.6.9
                 exclude group: "org.threeten", module: "threetenbp"
+                // https://nvd.nist.gov/vuln/detail/CVE-2024-7254
+                implementation "com.google.protobuf:protobuf-java:3.25.5"
+                implementation "com.google.protobuf:protobuf-java-util:3.25.6"
             }
     )
 
