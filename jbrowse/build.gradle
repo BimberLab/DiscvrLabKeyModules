@@ -30,7 +30,7 @@ dependencies {
 	external "org.apache.lucene:lucene-backward-codecs:${luceneVersion}"
 }
 
-def jbPkgTask = project.tasks.named("npm_run_jb-pkg")
+def jbPkgTask = project.tasks.named("npm_run_jb-sea")
 
 jbPkgTask.configure {
     outputs.cacheIf {false}
