@@ -70,6 +70,7 @@ import org.labkey.singlecell.pipeline.singlecell.FilterDisallowedClasses;
 import org.labkey.singlecell.pipeline.singlecell.FilterRawCounts;
 import org.labkey.singlecell.pipeline.singlecell.FindClustersAndDimRedux;
 import org.labkey.singlecell.pipeline.singlecell.FindMarkers;
+import org.labkey.singlecell.pipeline.singlecell.IdentifyAndStoreActiveClonotypes;
 import org.labkey.singlecell.pipeline.singlecell.IntegrateData;
 import org.labkey.singlecell.pipeline.singlecell.MergeSeurat;
 import org.labkey.singlecell.pipeline.singlecell.NormalizeAndScale;
@@ -305,6 +306,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new ApplyKnownClonotypicData.Provider());
         SequencePipelineService.get().registerPipelineStep(new CalculateTcrRepertoireStats.Provider());
         SequencePipelineService.get().registerPipelineStep(new PredictTcellActivation.Provider());
+        SequencePipelineService.get().registerPipelineStep(new IdentifyAndStoreActiveClonotypes.Provider());
 
         SequenceAnalysisService.get().registerReadsetListener(new SingleCellReadsetListener());
     }
