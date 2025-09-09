@@ -603,8 +603,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
             this.fileNameStore.each(function(f){
                 msg += '[' + f.get('fileName') + ']\n';
             }, this);
-
-            LDK.Utils.logError(msg);
         }
 
         return errorMsgs;
@@ -630,7 +628,6 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                     msg += '[' + f.get('fileName') + ']\n';
                 }, this);
 
-                LDK.Utils.logError(msg);
                 errorMsgs.push('Possible error: Encountered reverse reads prior to forward reads for ' + setId + ', which can indicate files are out of alphabetical order, one file from a pair is missing, or a problem parsing the filenames.  Please check over the file groups carefully.');
 
                 var m = Ext4.create('SequenceAnalysis.model.ReadsetDataModel', {});

@@ -149,7 +149,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         allowRowSpan: true
     },{
         name: 'kitType',
-        labels: ['Kit Type', 'V1.1/V2/HT', 'V1.1/HT', 'HT/V1.1/V2'],
+        labels: ['Kit Type', 'V1.1/V2/HT', 'V1.1/HT', 'HT/V1.1/V2', 'V2/HT'],
         transform: 'kitType'
     }],
 
@@ -819,7 +819,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 if (row[kitCol.dataIdx].toUpperCase() === 'V1.1') {
                     data.dualIndex10x = false;
                 }
-                else if (row[kitCol.dataIdx].toUpperCase() === 'V2' || row[kitCol.dataIdx].toUpperCase() === 'HT') {
+                else if (row[kitCol.dataIdx].toUpperCase() === 'V2' || row[kitCol.dataIdx].toUpperCase() === 'HT'  || row[kitCol.dataIdx].toUpperCase() === 'V3') {
                     data.dualIndex10x = true;
                 }
                 else {
@@ -828,7 +828,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
             }
 
             Ext4.Array.forEach(colArray, function(col, colIdx){
-                var cell = Ext4.isDefined(col.dataIdx) ? Ext4.String.trim(row[col.dataIdx]) : '';
+                var cell = Ext4.isDefined(col.dataIdx) && row[col.dataIdx] ? Ext4.String.trim(row[col.dataIdx]) : '';
                 if (cell){
                     if (col.transform && this.transforms[col.transform]){
                         cell = this.transforms[col.transform](cell, this, data);
