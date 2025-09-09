@@ -401,6 +401,10 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     {
                         datasetId = FileUtil.makeLegalName(ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName());
                     }
+                    else if (_doProcessRawCounts)
+                    {
+                        datasetId = FileUtil.makeLegalName(so.getReadset() == null ? so.getName() : ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName());
+                    }
                     else
                     {
                         datasetId = so.getName();
