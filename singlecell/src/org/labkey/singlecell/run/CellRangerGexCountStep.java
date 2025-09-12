@@ -61,7 +61,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
 {
     public static final String LOUPE_CATEGORY = "10x Loupe File";
 
-    public CellRangerGexCountStep(AlignmentStepProvider provider, PipelineContext ctx, CellRangerWrapper wrapper)
+    public CellRangerGexCountStep(AlignmentStepProvider<?> provider, PipelineContext ctx, CellRangerWrapper wrapper)
     {
         super(provider, ctx, wrapper);
     }
