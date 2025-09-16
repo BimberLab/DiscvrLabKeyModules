@@ -105,6 +105,16 @@ export default class extends BaseFeatureDataAdapter {
         return sub.getRefNames(opts)
     }
 
+    async getHeader(opts?: BaseOptions) {
+        const sub = await this.getVcfSubAdapter()
+        return sub.getHeader(opts)
+    }
+
+    async getMetadata(opts?: BaseOptions) {
+        const sub = await this.getVcfSubAdapter()
+        return sub.getMetadata(opts)
+    }
+
     freeResources(): void {
         void this.getVcfSubAdapter().then(sub => sub.freeResources?.())
     }
