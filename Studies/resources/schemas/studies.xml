@@ -196,6 +196,7 @@
         <auditLogging>DETAILED</auditLogging>
         <columns>
             <column columnName="rowid">
+                <columnTitle>Cohort ID</columnTitle>
                 <isAutoInc>true</isAutoInc>
                 <shownInUpdateView>false</shownInUpdateView>
                 <shownInInsertView>false</shownInInsertView>
