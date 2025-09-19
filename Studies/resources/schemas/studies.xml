@@ -208,7 +208,7 @@
                     <fkDbSchema>studies</fkDbSchema>
                     <fkTable>studies</fkTable>
                     <fkColumnName>rowId</fkColumnName>
-                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                    <fkDisplayColumnName>labelOrName</fkDisplayColumnName>
                 </fk>
             </column>
             <column columnName="cohortName">
@@ -287,7 +287,7 @@
                     <fkDbSchema>studies</fkDbSchema>
                     <fkTable>studies</fkTable>
                     <fkColumnName>rowId</fkColumnName>
-                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                    <fkDisplayColumnName>labelOrName</fkDisplayColumnName>
                 </fk>
             </column>
             <column columnName="label">
@@ -352,7 +352,7 @@
                     <fkDbSchema>studies</fkDbSchema>
                     <fkTable>studies</fkTable>
                     <fkColumnName>rowId</fkColumnName>
-                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                    <fkDisplayColumnName>labelOrName</fkDisplayColumnName>
                 </fk>
             </column>
             <column columnName="cohortId">
@@ -361,7 +361,7 @@
                     <fkDbSchema>studies</fkDbSchema>
                     <fkTable>studyCohorts</fkTable>
                     <fkColumnName>rowId</fkColumnName>
-                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                    <fkDisplayColumnName>labelOrName</fkDisplayColumnName>
                 </fk>
             </column>
             <column columnName="label">
