@@ -78,28 +78,28 @@ public class StudiesTriggerFactory implements TriggerFactory
 
         private void possiblyResolveStudy(@Nullable Map<String, Object> row, Container c, String sourceProperty)
         {
-            possiblyResolveStudyOrCohort(row, c, sourceProperty, "studyId", "studyName");
+            possiblyResolveStudyOrCohort(StudiesSchema.TABLE_STUDIES, row, c, sourceProperty, "studyId", "studyName");
         }
 
         private void possiblyResolveCohort(@Nullable Map<String, Object> row, Container c, String sourceProperty)
         {
-            possiblyResolveStudyOrCohort(row, c, sourceProperty, "cohortId", "cohortName");
+            possiblyResolveStudyOrCohort(StudiesSchema.TABLE_COHORTS, row, c, sourceProperty, "cohortId", "cohortName");
         }
 
-        private void possiblyResolveStudyOrCohort(@Nullable Map<String, Object> row, Container c, String sourceProperty, String targetFieldName, String filterFieldName)
+        private void possiblyResolveStudyOrCohort(String tableToQuery, @Nullable Map<String, Object> row, Container c, String sourceProperty, String targetFieldName, String filterFieldName)
         {
             if (row == null)
             {
                 return;
             }
 
-            if (row.get(sourceProperty) != null & row.get(sourceProperty) instanceof String)
+            if (row.get(sourceProperty) != null & row.get(sourceProperty) instanceof String & !String.valueOf(row.get(sourceProperty)).isEmpty())
             {
                 if (!NumberUtils.isCreatable(row.get(sourceProperty).toString()))
                 {
                     Container target = c.isWorkbookOrTab() ? c.getParent() : c;
                     SimpleFilter filter = new SimpleFilter(FieldKey.fromString("container"), target.getEntityId()).addCondition(FieldKey.fromString(filterFieldName), row.get(sourceProperty));
-                    List<Integer> rowIds = new TableSelector(StudiesSchema.getInstance().getSchema().getTable(StudiesSchema.TABLE_COHORTS), PageFlowUtil.set("rowId"), filter, null).getArrayList(Integer.class);
+                    List<Integer> rowIds = new TableSelector(StudiesSchema.getInstance().getSchema().getTable(tableToQuery), PageFlowUtil.set("rowId"), filter, null).getArrayList(Integer.class);
                     if (rowIds.size() == 1)
                     {
                         row.put(targetFieldName, rowIds.get(0));
