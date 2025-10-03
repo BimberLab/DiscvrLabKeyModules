@@ -119,7 +119,7 @@ public class OpenLdapSyncModule extends SpringModule
     }
 
     @Override
-    public @NotNull Set<Class> getIntegrationTests()
+    public @NotNull Set<Class<?>> getIntegrationTests()
     {
         return PageFlowUtil.set(LdapSyncRunner.TestCase.class);
     }

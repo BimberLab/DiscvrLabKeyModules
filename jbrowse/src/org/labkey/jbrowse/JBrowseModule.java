@@ -142,11 +142,8 @@ public class JBrowseModule extends ExtendedSimpleModule
     }
 
     @Override
-    @NotNull
-    public Set<Class> getUnitTests()
+    public @NotNull Set<Class<?>> getUnitTests()
     {
-        return PageFlowUtil.set(
-                JBrowseManager.TestCase.class
-        );
+        return Set.of(JBrowseManager.TestCase.class);
     }
 }
