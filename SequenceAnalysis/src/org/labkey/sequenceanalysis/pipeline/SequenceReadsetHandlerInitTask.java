@@ -35,7 +35,7 @@ public class SequenceReadsetHandlerInitTask extends PipelineJob.Task<SequenceRea
         public Factory()
         {
             super(SequenceReadsetHandlerInitTask.class);
-            setLocation("webserver");
+            setLocation("webserver-high-priority");
         }
 
         @Override
