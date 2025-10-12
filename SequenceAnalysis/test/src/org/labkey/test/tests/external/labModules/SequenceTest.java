@@ -195,6 +195,28 @@ public class SequenceTest extends BaseWebDriverTest
         log("verifying readset count correct");
         waitForText("Sequence Readsets");
         waitForElement(LabModuleHelper.getNavPanelItem("Sequence Readsets:", _readsetCt.toString()));
+
+        // Repeat, adding SRA accessions:
+        goToProjectHome();
+        waitAndClick(Locator.linkWithText("Plan Sequence Run (Create Readsets)"));
+        new Window.WindowFinder(getDriver()).withTitle("Create Readsets").waitFor();
+        waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Submit"));
+
+        _helper.waitForField("Sample Id", WAIT_FOR_PAGE);
+        _ext4Helper.clickTabContainingText("Import Spreadsheet");
+        waitForText("Copy/Paste Data");
+
+        setFormElementJS(Locator.name("text"), getIlluminaSRANames());
+
+        waitAndClick(Ext4Helper.Locators.ext4Button("Upload"));
+        new Window.WindowFinder(getDriver()).withTitle("Success").waitFor();
+        _readsetCt += 3;
+        assertTextPresent("Success!");
+        waitAndClickAndWait(Ext4Helper.Locators.ext4Button("OK"));
+
+        log("verifying readset count correct");
+        waitForText("Sequence Readsets");
+        waitForElement(LabModuleHelper.getNavPanelItem("Sequence Readsets:", _readsetCt.toString()));
     }
 
     /**
@@ -315,6 +337,18 @@ public class SequenceTest extends BaseWebDriverTest
         while (i < barcodes5.length)
         {
             sb.append("Illumina" + (i + 1) + "\tILLUMINA\t" + barcodes5[i] + "\t" + barcodes3[i] + "\n");
+            i++;
+        }
+        return sb.toString();
+    }
+
+    private String getIlluminaSRANames()
+    {
+        StringBuilder sb = new StringBuilder("Name\tPlatform\tsraAccessions\n");
+        int i = 0;
+        while (i < 3)
+        {
+            sb.append("IlluminaSRA" + (i + 1) + "\tILLUMINA\tSRA" + idx + "\n");
             i++;
         }
         return sb.toString();
