@@ -214,9 +214,10 @@ public class SequenceTest extends BaseWebDriverTest
         assertTextPresent("Success!");
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("OK"));
 
+        // This is scoped to this workbook:
         log("verifying readset count correct");
         waitForText("Sequence Readsets");
-        waitForElement(LabModuleHelper.getNavPanelItem("Sequence Readsets:", _readsetCt.toString()));
+        waitForElement(LabModuleHelper.getNavPanelItem("Sequence Readsets:", "3"));
     }
 
     /**
