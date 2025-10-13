@@ -348,7 +348,7 @@ public class SequenceTest extends BaseWebDriverTest
         int i = 0;
         while (i < 3)
         {
-            sb.append("IlluminaSRA" + (i + 1) + "\tILLUMINA\tSRA" + idx + "\n");
+            sb.append("IlluminaSRA" + (i + 1) + "\tILLUMINA\tSRA" + i + "\n");
             i++;
         }
         return sb.toString();
