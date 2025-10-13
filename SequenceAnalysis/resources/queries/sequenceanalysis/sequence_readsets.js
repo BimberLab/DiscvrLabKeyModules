@@ -1,3 +1,5 @@
+var LABKEY = require("labkey");
+
 var triggerHelper = new org.labkey.sequenceanalysis.query.SequenceTriggerHelper(LABKEY.Security.currentUser.id, LABKEY.Security.currentContainer.id);
 
 function beforeDelete(row, errors){
