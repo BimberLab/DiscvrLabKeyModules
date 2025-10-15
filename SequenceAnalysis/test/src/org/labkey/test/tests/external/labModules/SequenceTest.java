@@ -217,7 +217,25 @@ public class SequenceTest extends BaseWebDriverTest
         // This is scoped to this workbook:
         log("verifying readset count correct");
         waitForText("Sequence Readsets");
-        waitForElement(LabModuleHelper.getNavPanelItem("Sequence Readsets:", "3"));
+        waitAndClickAndWait(LabModuleHelper.getNavPanelItem("Sequence Readsets:", "3"));
+
+        DataRegionTable.DataRegion(getDriver()).withName("query").waitFor();
+
+        //verify CSV file creation
+        DataRegionTable.DataRegion(getDriver()).find().goToView("SRA Info");
+        DataRegionTable dr = DataRegionTable.DataRegion(getDriver()).withName("query").waitFor();
+        waitForElement(Locator.tagContainingText("a", "SRA0"));
+        waitForElement(Locator.tagContainingText("a", "SRA1"));
+        waitForElement(Locator.tagContainingText("a", "SRA2"));
+
+        dr.checkAllOnPage();
+        doAndWaitForPageToLoad(() ->
+        {
+            dr.clickHeaderButton("Delete");
+            assertAlert("Are you sure you want to delete the selected rows?");
+        });
+
+        _readsetCt -= 3;
     }
 
     /**
