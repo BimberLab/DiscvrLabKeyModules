@@ -229,11 +229,8 @@ public class SequenceTest extends BaseWebDriverTest
         waitForElement(Locator.tagContainingText("a", "SRA2"));
 
         dr.checkAllOnPage();
-        doAndWaitForPageToLoad(() ->
-        {
-            dr.clickHeaderButton("Delete");
-            assertAlert("Are you sure you want to delete the selected rows?");
-        });
+        dr.clickHeaderButtonAndWait("Delete");
+        clickButton("OK");
 
         _readsetCt -= 3;
     }
