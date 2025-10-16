@@ -1,5 +1,8 @@
 package org.labkey.singlecell.run;
 
+import htsjdk.samtools.SAMFileHeader;
+import htsjdk.samtools.SAMTag;
+import htsjdk.samtools.SamReaderFactory;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -29,7 +32,7 @@ public class NimbleAnalysis extends AbstractPipelineStep implements AnalysisStep
     {
         public Provider()
         {
-            super("NimbleAnalysis", "Nimble", null, "This will run Nimble to generate a supplemental feature count matrix for the provided libraries", NimbleAlignmentStep.getToolParameters(), new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/GenomeField.js", "singlecell/panel/NimbleAlignPanel.js")), null);
+            super("NimbleAnalysis", "Nimble", null, "This will run Nimble to generate a supplemental feature count matrix for the provided libraries. This should work using either CellRanger/scRNA-seq or bulk input data.", NimbleAlignmentStep.getToolParameters(), new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/GenomeField.js", "singlecell/panel/NimbleAlignPanel.js")), null);
         }
 
         @Override
@@ -58,7 +61,15 @@ public class NimbleAnalysis extends AbstractPipelineStep implements AnalysisStep
         NimbleHelper helper = new NimbleHelper(getPipelineCtx(), getProvider(), getStepIdx());
         helper.doNimbleAlign(inputBam, output, rs, FileUtil.getBaseName(inputBam));
 
-        NimbleHelper.write10xBarcodes(inputBam, getPipelineCtx().getLogger(), rs, referenceGenome, output);
+        SAMFileHeader header = SamReaderFactory.makeDefault().getFileHeader(inputBam);
+        if (header.getAttribute(SAMTag.CB.name()) != null)
+        {
+            NimbleHelper.write10xBarcodes(inputBam, getPipelineCtx().getLogger(), rs, referenceGenome, output);
+        }
+        else
+        {
+            getPipelineCtx().getLogger().info("BAM lacks CB tag, will not output 10x barcodes to file");
+        }
 
         return output;
     }
