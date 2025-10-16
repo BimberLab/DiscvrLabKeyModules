@@ -163,6 +163,11 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             libraryMembers = new TableSelector(libraryMembersTable, new SimpleFilter(FieldKey.fromString("library_id"), getPipelineJob().getLibraryId()), new Sort("ref_nt_id/name")).getArrayList(ReferenceLibraryMember.class);
         }
 
+        if (libraryMembers == null)
+        {
+            throw new PipelineJobException("There are no sequences in the library: " + getPipelineJob().getLibraryId());
+        }
+
         getJob().getLogger().info("there are " + libraryMembers.size() + " sequences to process");
 
         //make sure sequence names are unique
