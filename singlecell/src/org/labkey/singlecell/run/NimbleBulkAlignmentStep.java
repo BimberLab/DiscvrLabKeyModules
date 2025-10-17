@@ -4,7 +4,7 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.Readset;
-import org.labkey.api.sequenceanalysis.pipeline.AbstractAnalysisStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStepProvider;
@@ -26,17 +26,22 @@ import java.util.List;
 
 public class NimbleBulkAlignmentStep extends AbstractAlignmentPipelineStep<NimbleBulkAlignmentStep.NimbleBulkWrapper> implements AlignmentStep
 {
-    public static class Provider extends AbstractAnalysisStepProvider<NimbleAnalysis>
+    public static class Provider extends AbstractAlignmentStepProvider<AlignmentStep>
     {
         public Provider()
         {
-            super("NimbleBulkAnalysis", "Nimble (Bulk)", null, "This will run Nimble to generate a supplemental feature count matrix for the provided libraries. This version is intended for bulk input data. Please use the CellRanger/Nimble version for scRNA-seq", NimbleAlignmentStep.getToolParameters(), new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/GenomeField.js", "singlecell/panel/NimbleAlignPanel.js")), null);
+            super("Nimble-Bulk",
+                    "This will run Nimble to generate a supplemental feature count matrix for the provided libraries. This version is intended for bulk input data. Please use the CellRanger/Nimble version for scRNA-seq",
+                    NimbleAlignmentStep.getToolParameters(),
+                    new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/GenomeField.js", "singlecell/panel/NimbleAlignPanel.js")),
+                    null,
+                    true,  false, ALIGNMENT_MODE.MERGE_THEN_ALIGN);
         }
 
         @Override
-        public NimbleAnalysis create(PipelineContext ctx)
+        public NimbleBulkAlignmentStep create(PipelineContext ctx)
         {
-            return new NimbleAnalysis(this, ctx);
+            return new NimbleBulkAlignmentStep(this, ctx, new NimbleBulkWrapper(ctx.getLogger()));
         }
     }
 
