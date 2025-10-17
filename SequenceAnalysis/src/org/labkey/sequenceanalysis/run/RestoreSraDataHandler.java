@@ -47,6 +47,7 @@ import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.pipeline.ReadsetCreationTask;
 import org.labkey.sequenceanalysis.pipeline.SequenceNormalizationTask;
+import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -299,6 +300,12 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     toUpdate.put("archived", false);
                     toUpdate.put("container", rd.getContainer());
 
+                    if (rd.getRunId() == null)
+                    {
+                        Integer runId = SequenceTaskHelper.getExpRunIdForJob(job);
+                        toUpdate.put("runid", runId);
+                    }
+
                     rows.add(toUpdate);
 
                     SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), rs.getRowId());
@@ -383,12 +390,18 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     File expectedFile1 = ctx.getSequenceSupport().getCachedData(rd.getFileId1());
                     File expectedFile2 = rd.getFileId2() == null ? null : ctx.getSequenceSupport().getCachedData(rd.getFileId2());
 
+                    if (!expectedFile1.getParentFile().exists())
+                    {
+                        ctx.getLogger().info("Creating folder: " + expectedFile1.getParentFile().getPath());
+                        expectedFile1.getParentFile().mkdirs();
+                    }
+
                     FastqDumpWrapper wrapper = new FastqDumpWrapper(ctx.getLogger());
                     Pair<File, File> files = wrapper.downloadSra(accession, ctx.getOutputDir(), rd.isPairedEnd(), false);
 
                     long lines1 = SequenceUtil.getLineCount(files.first) / 4;
                     ctx.getJob().getLogger().debug("Reads in " + files.first.getName() + ": " + lines1);
-                    if (lines1 != accessionToReads.get(accession))
+                    if (accessionToReads.containsKey(accession) && lines1 != accessionToReads.get(accession))
                     {
                         throw new PipelineJobException("Reads found in file, " + lines1 + ", does not match expected: " + accessionToReads.get(accession) + " for file: " + files.first.getPath());
                     }
@@ -397,7 +410,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     {
                         long lines2 = SequenceUtil.getLineCount(files.second) / 4;
                         ctx.getJob().getLogger().debug("Reads in " + files.second.getName() + ": " + lines2);
-                        if (lines2 != accessionToReads.get(accession))
+                        if (accessionToReads.containsKey(accession) && lines2 != accessionToReads.get(accession))
                         {
                             throw new PipelineJobException("Reads found in file, " + lines2 + ", does not match expected: " + accessionToReads.get(accession) + " for file: " + files.second.getPath());
                         }
