@@ -8,6 +8,7 @@ import org.labkey.api.sequenceanalysis.pipeline.AbstractAlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStep;
 import org.labkey.api.sequenceanalysis.pipeline.AlignmentStepProvider;
+import org.labkey.api.sequenceanalysis.pipeline.IndexOutputImpl;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SamtoolsRunner;
@@ -53,7 +54,7 @@ public class NimbleBulkAlignmentStep extends AbstractAlignmentPipelineStep<Nimbl
     @Override
     public IndexOutput createIndex(ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
-        return null;
+        return new IndexOutputImpl(referenceGenome);
     }
 
     @Override

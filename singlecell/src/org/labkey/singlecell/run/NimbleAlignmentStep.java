@@ -141,7 +141,7 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
     private File getUmiMapping(File cellbarcodeFile) throws PipelineJobException
     {
         File ret = new File(cellbarcodeFile.getPath().replaceAll("cb.txt.gz", "umi.txt.gz"));
-        if (ret == null || ! ret.exists())
+        if (!ret.exists())
         {
             throw new PipelineJobException("Missing cached UMI file: " + ret.getPath());
         }
