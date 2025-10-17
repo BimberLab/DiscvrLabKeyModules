@@ -181,7 +181,20 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                         continue;
                     }
 
-                    if (readdataToSra.get(accession).size() > 1)
+                    if (readdataToSra.get(accession).size() == 1)
+                    {
+                        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), rs.getRowId());
+                        filter.addCondition(FieldKey.fromString("category"), "Readset");
+                        filter.addCondition(FieldKey.fromString("container"), rs.getContainer());
+                        filter.addCondition(FieldKey.fromString("dataId"), toMerge.get(0).getFileId1());
+                        boolean hasMetrics = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), PageFlowUtil.set("RowId"), filter, null).exists();
+                        if (!hasMetrics)
+                        {
+                            job.getLogger().debug("No existing metrics found for: " + accession);
+                            updatedAccessions.add(accession);
+                        }
+                    }
+                    else
                     {
                         job.getLogger().debug("Consolidating multiple readdata for: " + accession);
 
