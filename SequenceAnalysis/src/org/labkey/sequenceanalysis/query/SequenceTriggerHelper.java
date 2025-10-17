@@ -36,6 +36,7 @@ import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
+import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
 import org.labkey.vfs.FileLike;
 
 import java.io.File;
@@ -302,7 +303,8 @@ public class SequenceTriggerHelper
             }
 
             String folderName = "SequenceImport_RS" + rs.getRowId() + "_" + FileUtil.getTimestamp();
-            FileLike outDir = AssayFileWriter.findUniqueFileName(folderName, pr.getRootFileLike());
+            FileLike sequenceImport = FileUtil.appendPath(pr.getRootFileLike(), Path.parse(ReadsetImportJob.NAME));
+            FileLike outDir = AssayFileWriter.findUniqueFileName(folderName, sequenceImport);
 
             FileLike expectedFile1 = FileUtil.appendPath(outDir, Path.parse(token + "_1.fastq.gz"));
             ExpData exp1 = ExperimentService.get().createData(c, new DataType("Data"));

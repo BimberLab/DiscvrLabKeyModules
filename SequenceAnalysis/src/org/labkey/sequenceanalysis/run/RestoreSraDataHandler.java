@@ -158,8 +158,13 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                             throw new PipelineJobException("Missing Expdata: " + rd.getFileId1());
                         }
 
-                        if (!f1.getFile().exists() && !f1.getFile().getParentFile().exists())
+                        if (!f1.getFile().exists())
                         {
+                            if (f1.getFile().getParentFile().exists())
+                            {
+                                job.getLogger().warn("Parent file unexpectedly exists: " + f1.getFile().getParentFile().getPath());
+                            }
+
                             f1.setDataFileURI(new File(outputDir, accession + "_1.fastq.gz").toURI());
                             f1.save(job.getUser());
                             job.getLogger().debug("Updating filepath: " + f1.getFile().getPath());
