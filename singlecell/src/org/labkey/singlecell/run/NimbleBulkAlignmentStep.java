@@ -80,7 +80,22 @@ public class NimbleBulkAlignmentStep extends AbstractAlignmentPipelineStep<Nimbl
         while (bamIdx < inputFastqs1.size())
         {
             File outputBam = new File(getPipelineCtx().getWorkingDirectory(), FileUtil.makeLegalName(rs.getName()) + ".unmapped." + bamIdx + ".bam");
-            List<String> args = new ArrayList<>(Arrays.asList(st.getSamtoolsPath().getPath(), "import", "-o", outputBam.getPath(), "-r", "ID:" + readGroupId));
+            List<String> args = new ArrayList<>(Arrays.asList(st.getSamtoolsPath().getPath(), "import", "-o", outputBam.getPath()));
+            args.add("-r");
+            args.add("ID:" + readGroupId);
+
+            args.add("-r");
+            args.add("LB:" + rs.getReadsetId().toString());
+
+            args.add("-r");
+            args.add("PL:" + (rs.getPlatform() == null ? "ILLUMINA" : rs.getPlatform()));
+
+            args.add("-r");
+            args.add("PU:" + (platformUnit == null ? rs.getReadsetId().toString() : platformUnit));
+
+            args.add("-r");
+            args.add("SM:" + rs.getName().replaceAll(" ", "_"));
+
             if (inputFastqs2 == null || inputFastqs2.isEmpty())
             {
                 args.add("-O");
