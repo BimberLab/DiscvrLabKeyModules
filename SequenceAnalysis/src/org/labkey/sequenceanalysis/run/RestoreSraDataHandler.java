@@ -401,7 +401,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
 
                     long lines1 = SequenceUtil.getLineCount(files.first) / 4;
                     ctx.getJob().getLogger().debug("Reads in " + files.first.getName() + ": " + lines1);
-                    if (accessionToReads.containsKey(accession) && lines1 != accessionToReads.get(accession))
+                    if (accessionToReads.containsKey(accession) && accessionToReads.get(accession) > 0 && lines1 != accessionToReads.get(accession))
                     {
                         throw new PipelineJobException("Reads found in file, " + lines1 + ", does not match expected: " + accessionToReads.get(accession) + " for file: " + files.first.getPath());
                     }
@@ -410,7 +410,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     {
                         long lines2 = SequenceUtil.getLineCount(files.second) / 4;
                         ctx.getJob().getLogger().debug("Reads in " + files.second.getName() + ": " + lines2);
-                        if (accessionToReads.containsKey(accession) && lines2 != accessionToReads.get(accession))
+                        if (accessionToReads.containsKey(accession) && accessionToReads.get(accession) > 0 && lines2 != accessionToReads.get(accession))
                         {
                             throw new PipelineJobException("Reads found in file, " + lines2 + ", does not match expected: " + accessionToReads.get(accession) + " for file: " + files.second.getPath());
                         }
