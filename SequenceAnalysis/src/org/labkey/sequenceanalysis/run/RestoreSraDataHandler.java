@@ -364,7 +364,9 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     if (!hasMetrics)
                     {
                         job.getLogger().debug("No existing metrics found for: " + rd.getFileId1());
-                        List<Integer> toAdd = new ArrayList<>(rd.getFileId1());
+                        List<Integer> toAdd = new ArrayList<>();
+                        toAdd.add(rd.getFileId1());
+
                         if (rd.getFileId2() != null)
                         {
                             toAdd.add(rd.getFileId2());
