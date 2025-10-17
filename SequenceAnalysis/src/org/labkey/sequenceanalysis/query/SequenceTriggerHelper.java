@@ -301,7 +301,7 @@ public class SequenceTriggerHelper
                 throw new IllegalStateException("Unable to find pipeline root for: " + c.getPath());
             }
 
-            String folderName = "SequenceImport_" + FileUtil.getTimestamp();
+            String folderName = "SequenceImport_RS" + rs.getRowId() + "_" + FileUtil.getTimestamp();
             FileLike outDir = AssayFileWriter.findUniqueFileName(folderName, pr.getRootFileLike());
 
             FileLike expectedFile1 = FileUtil.appendPath(outDir, Path.parse(token + "_1.fastq.gz"));

@@ -149,7 +149,7 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
         return ret;
     }
 
-    private File findCellBarcodeFiles(Readset rs) throws PipelineJobException
+    private ExpData findCellBarcodeFiles(Readset rs) throws PipelineJobException
     {
         Container targetContainer = getPipelineCtx().getJob().getContainer().isWorkbookOrTab() ? getPipelineCtx().getJob().getContainer().getParent() : getPipelineCtx().getJob().getContainer();
         UserSchema us = QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), targetContainer, SingleCellSchema.SEQUENCE_SCHEMA_NAME);
@@ -167,7 +167,7 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
                 throw new PipelineJobException("Output lacks a file: " + dataId);
             }
 
-            return d.getFile();
+            return d;
         }
 
         return null;
@@ -213,13 +213,14 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
         }
 
         // Try to find 10x barcodes:
-        HashMap<Integer, File> readsetToBarcodes = new HashMap<>();
+        HashMap<Integer, Integer> readsetToBarcodes = new HashMap<>();
         for (Readset rs : support.getCachedReadsets())
         {
-            File f = findCellBarcodeFiles(rs);
+            ExpData f = findCellBarcodeFiles(rs);
             if (f != null)
             {
-                readsetToBarcodes.put(rs.getReadsetId(), f);
+                support.cacheExpData(f);
+                readsetToBarcodes.put(rs.getReadsetId(), f.getRowId());
             }
         }
 
