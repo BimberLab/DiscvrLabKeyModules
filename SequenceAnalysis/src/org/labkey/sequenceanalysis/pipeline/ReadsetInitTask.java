@@ -466,8 +466,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                 }
                 else
                 {
-                    output = new File(outputDir, FileUtil.getBaseName(input.getName()) + ".orig.gz");
-                    job.getLogger().debug("\tA file with the expected output name already exists, so the original will be renamed: " + output.getPath());
+                    throw new PipelineJobException("A file with the expected output name already exists: " + output.getPath());
                 }
             }
 
