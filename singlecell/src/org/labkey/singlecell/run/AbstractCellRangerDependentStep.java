@@ -88,6 +88,8 @@ public class AbstractCellRangerDependentStep extends CellRangerGexCountStep
             }
         }
 
+        NimbleHelper.write10xBarcodes(localBam, getWrapper().getLogger(), rs, referenceGenome, output);
+
         return localBam;
     }
 

@@ -109,10 +109,9 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
 
     private File createNimbleBam(AlignmentOutputImpl output, Readset rs, List<File> inputFastqs1, List<File> inputFastqs2) throws PipelineJobException
     {
-        File cellbarcodes = getCachedBarcodeFile(rs, true);
-        File umiMapping = getUmiMapping(cellbarcodes);
+        File cellBarcodeUmiMap = getCachedBarcodeFile(rs, true);
 
-        return NimbleHelper.runFastqToBam(output, getPipelineCtx(), rs, inputFastqs1, inputFastqs2, cellbarcodes, umiMapping);
+        return NimbleHelper.runFastqToBam(output, getPipelineCtx(), rs, inputFastqs1, inputFastqs2, cellBarcodeUmiMap);
     }
 
     private File getCachedBarcodeFile(Readset rs, boolean throwIfNotFound) throws PipelineJobException
@@ -132,18 +131,7 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
         File ret = getPipelineCtx().getSequenceSupport().getCachedData(dataId);
         if (ret == null || ! ret.exists())
         {
-            throw new PipelineJobException("Missing cached cellbarcode file: " + dataId);
-        }
-
-        return ret;
-    }
-
-    private File getUmiMapping(File cellbarcodeFile) throws PipelineJobException
-    {
-        File ret = new File(cellbarcodeFile.getPath().replaceAll("cb.txt.gz", "umi.txt.gz"));
-        if (!ret.exists())
-        {
-            throw new PipelineJobException("Missing cached UMI file: " + ret.getPath());
+            throw new PipelineJobException("Missing cached cellbarcode/UMI file: " + dataId);
         }
 
         return ret;
@@ -156,7 +144,7 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
         TableInfo ti = us.getTable("outputfiles");
 
         SimpleFilter sf = new SimpleFilter(FieldKey.fromString("readset"), rs.getRowId());
-        sf.addCondition(FieldKey.fromString("category"), NimbleHelper.CATEGORY_CB);
+        sf.addCondition(FieldKey.fromString("category"), NimbleHelper.CATEGORY_CB_UMI);
         List<Integer> cbs = new TableSelector(ti, PageFlowUtil.set("dataid"), sf, new Sort("-rowid")).getArrayList(Integer.class);
         if (!cbs.isEmpty())
         {
@@ -193,8 +181,6 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
                 throw new PipelineJobException();
             }
         }
-
-        NimbleHelper.write10xBarcodes(localBam, getWrapper().getLogger(), rs, referenceGenome, output);
 
         return localBam;
     }

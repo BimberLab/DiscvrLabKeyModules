@@ -498,8 +498,7 @@ public class NimbleHelper
         return resultMap;
     }
 
-    public static final String CATEGORY_CB = "10x CellBarcode Map";
-    public static final String CATEGORY_UB = "10x UMI Map";
+    public static final String CATEGORY_CB_UMI = "10x CellBarcode/UMI Map";
 
     public static void write10xBarcodes(File bam, Logger log, Readset rs, ReferenceGenome referenceGenome, PipelineStepOutput output) throws PipelineJobException
     {
@@ -509,18 +508,13 @@ public class NimbleHelper
         barcodeArgs.add("-I");
         barcodeArgs.add(bam.getPath());
 
-        File cbOutput = new File(bam.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(bam.getName()) + ".cb.txt.gz");
-        barcodeArgs.add("--cbOutput");
-        barcodeArgs.add(cbOutput.getPath());
-
-        File umiOutput = new File(bam.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(bam.getName()) + ".umi.txt.gz");
-        barcodeArgs.add("--umiOutput");
-        barcodeArgs.add(umiOutput.getPath());
+        File bcOutput = new File(bam.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(bam.getName()) + ".bc.txt.gz");
+        barcodeArgs.add("--output");
+        barcodeArgs.add(bcOutput.getPath());
 
         runner.execute(barcodeArgs);
 
-        output.addSequenceOutput(cbOutput, "10x CellBarcode Map: " + rs.getName(), CATEGORY_CB, rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
-        output.addSequenceOutput(umiOutput, "10x UMI Map: " + rs.getName(), CATEGORY_UB, rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+        output.addSequenceOutput(bcOutput, "10x CellBarcode/UMI Map: " + rs.getName(), CATEGORY_CB_UMI, rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
     }
 
     public static File runNimbleReport(File alignResultsGz, int genomeId, PipelineStepOutput output, PipelineContext ctx) throws PipelineJobException
@@ -600,7 +594,7 @@ public class NimbleHelper
         return new File(parentDir, "nimble." + resumeString + ".done");
     }
 
-    public static File runFastqToBam(PipelineStepOutput output, PipelineContext ctx, Readset rs, List<File> inputFastqs1, List<File> inputFastqs2, File cellBarcodes, File umiMapping) throws PipelineJobException
+    public static File runFastqToBam(PipelineStepOutput output, PipelineContext ctx, Readset rs, List<File> inputFastqs1, List<File> inputFastqs2, File cellBarcodeUmiMap) throws PipelineJobException
     {
         List<File> outputBams = new ArrayList<>();
         int bamIdx = 0;
@@ -632,11 +626,8 @@ public class NimbleHelper
             args.add("--r2-fastq");
             args.add(inputFastqs2.get(bamIdx).getPath());
 
-            args.add("--cell-barcodes");
-            args.add(cellBarcodes.getPath());
-
-            args.add("--umi-mapping");
-            args.add(umiMapping.getPath());
+            args.add("--map");
+            args.add(cellBarcodeUmiMap.getPath());
 
             args.add("--output");
             args.add(outputBam.getPath());
