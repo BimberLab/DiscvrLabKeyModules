@@ -430,6 +430,10 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                         moveInputToAnalysisDir(compressed, job, actions, unalteredInputs, outputFiles);
                     }
                 }
+                else
+                {
+                    job.getLogger().debug("Input file does not exist, may have already been moved: " + input.getPath());
+                }
             }
         }
         else
@@ -452,6 +456,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
             job.getLogger().debug("Destination: " + output.getPath());
             if (output.exists())
             {
+                job.getLogger().debug("output already exists");
                 if (unalteredInputs != null && unalteredInputs.contains(output))
                 {
                     job.getLogger().debug("\tThis input was unaltered during normalization and a copy already exists in the analysis folder so the original will be discarded");
@@ -488,7 +493,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
 
             TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, output, actions, job, null);
         }
-        catch (IOException e)
+        catch (Exception e)
         {
             throw new PipelineJobException(e);
         }
