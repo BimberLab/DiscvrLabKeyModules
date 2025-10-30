@@ -472,6 +472,11 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                         input.delete();
                         alreadyMoved = true;
                     }
+                    else if (input.exists() && input.length() > output.length() && input.lastModified() == output.lastModified())
+                    {
+                        job.getLogger().info("Output exists with same timestamp, but with smaller file size. This probably indicates a truncated/failed copy. Deleting this file.");
+                        output.delete();
+                    }
                     else
                     {
                         throw new PipelineJobException("A file with the expected output name already exists: " + output.getPath());
