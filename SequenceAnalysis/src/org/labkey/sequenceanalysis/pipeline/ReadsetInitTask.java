@@ -454,6 +454,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
             File outputDir = job.getAnalysisDirectory();
             File output = new File(outputDir, input.getName());
             job.getLogger().debug("Destination: " + output.getPath());
+            boolean alreadyMoved = false;
             if (output.exists())
             {
                 job.getLogger().debug("output already exists");
@@ -461,16 +462,27 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                 {
                     job.getLogger().debug("\tThis input was unaltered during normalization and a copy already exists in the analysis folder so the original will be discarded");
                     input.delete();
-                    TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, output, actions, job, null);
-                    return;
+                    alreadyMoved = true;
                 }
                 else
                 {
-                    throw new PipelineJobException("A file with the expected output name already exists: " + output.getPath());
+                    if (input.length() == output.length() && input.lastModified() == output.lastModified())
+                    {
+                        job.getLogger().info("Output exists, but has the same size/modified timestamp. Deleting original");
+                        input.delete();
+                        alreadyMoved = true;
+                    }
+                    else
+                    {
+                        throw new PipelineJobException("A file with the expected output name already exists: " + output.getPath());
+                    }
                 }
             }
 
-            FileUtils.moveFile(input, output);
+            if (!alreadyMoved)
+            {
+                FileUtils.moveFile(input, output);
+            }
             if (!output.exists())
             {
                 throw new PipelineJobException("Unable to move file: " + input.getPath());
