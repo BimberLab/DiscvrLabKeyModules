@@ -502,7 +502,7 @@ public class NimbleHelper
 
     public static void write10xBarcodes(File bam, Logger log, Readset rs, ReferenceGenome referenceGenome, PipelineStepOutput output) throws PipelineJobException
     {
-        // Write barcodes:
+        log.info("Writing 10x CB/UMIs to TSV");
         DISCVRSeqRunner runner = new DISCVRSeqRunner(log);
         List<String> barcodeArgs = new ArrayList<>(runner.getBaseArgs("Save10xBarcodes"));
         barcodeArgs.add("-I");

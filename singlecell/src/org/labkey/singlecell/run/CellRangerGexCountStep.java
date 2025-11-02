@@ -328,7 +328,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
             return false;
         }
 
-        return !_alwaysRetainBam &&  getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        return !_alwaysRetainBam && getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
     }
 
     private boolean _alwaysRetainBam = false;
@@ -349,7 +349,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         AbstractAlignmentStepProvider.ALIGNMENT_MODE mode = AbstractAlignmentStepProvider.ALIGNMENT_MODE.valueOf(alignmentMode);
 
         List<Pair<File, File>> inputFastqs = new ArrayList<>();
-        for (int i = 0; i < inputFastqs1.size();i++)
+        for (int i = 0; i < inputFastqs1.size(); i++)
         {
             File inputFastq1 = inputFastqs1.get(i);
             File inputFastq2 = inputFastqs2.get(i);
@@ -395,9 +395,14 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         File outdir = new File(outputDirectory, id);
         outdir = new File(outdir, "outs");
 
+        File bam = new File(outdir, "possorted_genome_bam.bam");
+        if (bam.exists())
+        {
+            NimbleHelper.write10xBarcodes(bam, getWrapper().getLogger(), rs, referenceGenome, output);
+        }
+
         if (!shouldDiscardBam())
         {
-            File bam = new File(outdir, "possorted_genome_bam.bam");
             if (!bam.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + bam.getPath());
