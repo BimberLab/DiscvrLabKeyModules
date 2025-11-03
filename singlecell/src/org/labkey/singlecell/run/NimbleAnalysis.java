@@ -1,8 +1,5 @@
 package org.labkey.singlecell.run;
 
-import htsjdk.samtools.SAMFileHeader;
-import htsjdk.samtools.SAMTag;
-import htsjdk.samtools.SamReaderFactory;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -20,6 +17,8 @@ import org.labkey.api.util.PageFlowUtil;
 import java.io.File;
 import java.util.LinkedHashSet;
 import java.util.List;
+
+import static org.labkey.singlecell.run.NimbleAlignmentStep.WRITE_10X_BARCODES;
 
 public class NimbleAnalysis extends AbstractPipelineStep implements AnalysisStep
 {
@@ -61,14 +60,14 @@ public class NimbleAnalysis extends AbstractPipelineStep implements AnalysisStep
         NimbleHelper helper = new NimbleHelper(getPipelineCtx(), getProvider(), getStepIdx());
         helper.doNimbleAlign(inputBam, output, rs, FileUtil.getBaseName(inputBam));
 
-        SAMFileHeader header = SamReaderFactory.makeDefault().getFileHeader(inputBam);
-        if (header.getAttribute(SAMTag.CB.name()) != null)
+        boolean write10xBarcodes = getProvider().getParameterByName(WRITE_10X_BARCODES).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
+        if (write10xBarcodes)
         {
             NimbleHelper.write10xBarcodes(inputBam, getPipelineCtx().getLogger(), rs, referenceGenome, output);
         }
         else
         {
-            getPipelineCtx().getLogger().info("BAM lacks CB tag, will not output 10x barcodes to file");
+            getPipelineCtx().getLogger().info("10x barcodes will not be saved to TSV");
         }
 
         return output;

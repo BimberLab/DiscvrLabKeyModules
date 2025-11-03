@@ -41,6 +41,7 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
     public static final String MAX_HITS_TO_REPORT = "maxHitsToReport";
     public static final String STRANDEDNESS = "strandedness";
     public static final String REQUIRE_CACHED_BARCODES = "requireCachedBarcodes";
+    public static final String WRITE_10X_BARCODES = "write10xBarcodes";
 
     public NimbleAlignmentStep(AlignmentStepProvider<?> provider, PipelineContext ctx, CellRangerWrapper wrapper)
     {
@@ -76,7 +77,10 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
                 }}, 4),
                 ToolParameterDescriptor.create(REQUIRE_CACHED_BARCODES, "Fail Unless Cached Barcodes Present", "If checked, the pipeline will expect a previously computed map of cellbarcodes and UMIs to be computed. Under default conditions, if this is missing, cellranger will be re-run. This flag can be helpful to avoid that computation if you expect the barcode file to exist.", "checkbox", new JSONObject(){{
 
-                }}, false)
+                }}, false),
+                ToolParameterDescriptor.create(WRITE_10X_BARCODES, "Write 10x Barcodes To File", "If checked, the pipeline will save the 10x barcodes from the BAM to a TSV. This facilitates future analyses.", "checkbox", new JSONObject(){{
+
+                }}, true)
         );
     }
 
