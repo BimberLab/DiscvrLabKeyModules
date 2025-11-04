@@ -396,15 +396,6 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         outdir = new File(outdir, "outs");
 
         File bam = new File(outdir, "possorted_genome_bam.bam");
-        if (bam.exists())
-        {
-            NimbleHelper.write10xBarcodes(bam, getWrapper().getLogger(), rs, referenceGenome, output);
-        }
-        else
-        {
-            getPipelineCtx().getLogger().info("BAM file does not exist, cannot write 10x barcodes: " + bam.getPath());
-        }
-
         if (!shouldDiscardBam())
         {
             if (!bam.exists())

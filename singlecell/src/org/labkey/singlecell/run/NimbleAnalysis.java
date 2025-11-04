@@ -18,8 +18,6 @@ import java.io.File;
 import java.util.LinkedHashSet;
 import java.util.List;
 
-import static org.labkey.singlecell.run.NimbleAlignmentStep.WRITE_10X_BARCODES;
-
 public class NimbleAnalysis extends AbstractPipelineStep implements AnalysisStep
 {
     public NimbleAnalysis(PipelineStepProvider<?> provider, PipelineContext ctx)
@@ -59,16 +57,6 @@ public class NimbleAnalysis extends AbstractPipelineStep implements AnalysisStep
         AnalysisOutputImpl output = new AnalysisOutputImpl();
         NimbleHelper helper = new NimbleHelper(getPipelineCtx(), getProvider(), getStepIdx());
         helper.doNimbleAlign(inputBam, output, rs, FileUtil.getBaseName(inputBam));
-
-        boolean write10xBarcodes = getProvider().getParameterByName(WRITE_10X_BARCODES).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
-        if (write10xBarcodes)
-        {
-            NimbleHelper.write10xBarcodes(inputBam, getPipelineCtx().getLogger(), rs, referenceGenome, output);
-        }
-        else
-        {
-            getPipelineCtx().getLogger().info("10x barcodes will not be saved to TSV");
-        }
 
         return output;
     }
