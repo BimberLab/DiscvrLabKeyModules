@@ -148,7 +148,7 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
         TableInfo ti = us.getTable("outputfiles");
 
         SimpleFilter sf = new SimpleFilter(FieldKey.fromString("readset"), rs.getRowId());
-        sf.addCondition(FieldKey.fromString("category"), NimbleHelper.CATEGORY_CB_UMI);
+        sf.addCondition(FieldKey.fromString("category"), NimbleHelper.CATEGORY_CB);
         List<Integer> cbs = new TableSelector(ti, PageFlowUtil.set("dataid"), sf, new Sort("-rowid")).getArrayList(Integer.class);
         if (!cbs.isEmpty())
         {

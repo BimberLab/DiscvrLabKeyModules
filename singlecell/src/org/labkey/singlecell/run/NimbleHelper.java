@@ -498,7 +498,7 @@ public class NimbleHelper
         return resultMap;
     }
 
-    public static final String CATEGORY_CB_UMI = "10x CellBarcode/UMI Map";
+    public static final String CATEGORY_CB = "10x CellBarcode Map";
 
     public static void write10xBarcodes(File bam, Logger log, Readset rs, ReferenceGenome referenceGenome, PipelineStepOutput output) throws PipelineJobException
     {
@@ -508,13 +508,13 @@ public class NimbleHelper
         barcodeArgs.add("-I");
         barcodeArgs.add(bam.getPath());
 
-        File bcOutput = new File(bam.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(bam.getName()) + ".bc.txt.gz");
+        File bcOutput = new File(bam.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(bam.getName()) + ".cb.txt.gz");
         barcodeArgs.add("--output");
         barcodeArgs.add(bcOutput.getPath());
 
         runner.execute(barcodeArgs);
 
-        output.addSequenceOutput(bcOutput, "10x CellBarcode/UMI Map: " + rs.getName(), CATEGORY_CB_UMI, rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+        output.addSequenceOutput(bcOutput, "10x CellBarcode Map: " + rs.getName(), CATEGORY_CB, rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
     }
 
     public static File runNimbleReport(File alignResultsGz, int genomeId, PipelineStepOutput output, PipelineContext ctx) throws PipelineJobException
