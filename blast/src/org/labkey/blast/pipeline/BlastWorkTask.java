@@ -15,6 +15,7 @@
  */
 package org.labkey.blast.pipeline;
 
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 import org.labkey.api.pipeline.PipelineJob;
@@ -81,7 +82,7 @@ public class BlastWorkTask extends PipelineJob.Task<BlastWorkTask.Factory>
     }
 
     @Override
-    public RecordedActionSet run() throws PipelineJobException
+    public @NotNull RecordedActionSet run() throws PipelineJobException
     {
         try
         {

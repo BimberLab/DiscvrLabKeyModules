@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
@@ -98,7 +99,7 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
     }
 
     @Override
-    public RecordedActionSet run() throws PipelineJobException
+    public @NotNull RecordedActionSet run() throws PipelineJobException
     {
         _taskHelper = new SequenceTaskHelper(getPipelineJob(), _wd);
 

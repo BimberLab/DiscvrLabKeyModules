@@ -23,6 +23,7 @@ import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.api.util.FileUtil;
 import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.Connection;
 import org.labkey.remoteapi.query.Filter;
@@ -295,13 +296,22 @@ public class SequenceTest extends BaseWebDriverTest
         assertTextPresent(fileSearcher, prop_name + "," + prop_value);
 
         File fileRoot = TestFileUtils.getDefaultFileRoot(getProjectName());
-        File importTemplate = new File(fileRoot, ILLUMINA_CSV);
+        File importTemplate = FileUtil.appendName(fileRoot, ILLUMINA_CSV);
         if (importTemplate.exists())
             importTemplate.delete();
 
 
         //NOTE: use the text generated directly using JS
-        TestFileUtils.saveFile(importTemplate.getParentFile(), importTemplate.getName(), outputTable);
+        File tsvFile = FileUtil.appendName(importTemplate.getParentFile(), importTemplate.getName());
+
+        try
+        {
+            TestFileUtils.writeFile(tsvFile, outputTable);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace(System.err);
+        }
         goToProjectHome();
     }
 
@@ -330,7 +340,7 @@ public class SequenceTest extends BaseWebDriverTest
         File fileRoot = TestFileUtils.getDefaultFileRoot(getProjectName());
         for (String fn : Arrays.asList("Illumina-F.fastq.gz", "Illumina-R.fastq.gz", "SkipMe.fastq.gz"))
         {
-            File target = new File(fileRoot, fn);
+            File target = FileUtil.appendName(fileRoot, fn);
             if (target.exists())
             {
                 target.delete();
@@ -749,7 +759,7 @@ public class SequenceTest extends BaseWebDriverTest
         File fileRoot = TestFileUtils.getDefaultFileRoot(getProjectName());
         log("file root: " + fileRoot.getPath());
 
-        File inputBam = new File(fileRoot, "test.bam");
+        File inputBam = FileUtil.appendName(fileRoot, "test.bam");
         File inputBamIdx = new File(inputBam.getPath() + ".bai");
         if (inputBam.exists())
         {
@@ -763,8 +773,8 @@ public class SequenceTest extends BaseWebDriverTest
             inputBamIdx.delete();
         }
 
-        FileUtils.copyFile(new File(_sampleData, "test.bam"), inputBam);
-        FileUtils.copyFile(new File(_sampleData, "test.bam.bai"), inputBamIdx);
+        FileUtils.copyFile(FileUtil.appendName(_sampleData, "test.bam"), inputBam);
+        FileUtils.copyFile(FileUtil.appendName(_sampleData, "test.bam.bai"), inputBamIdx);
 
         _helper.initiatePipelineJob(_alignmentImportPipelineName, List.of(inputBam.getName()), getProjectName());
         waitForText("Job Name");

@@ -25,12 +25,12 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.logging.LogHelper;
 import org.labkey.studies.query.StudiesTableCustomizer;
+import org.labkey.vfs.FileLike;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
@@ -56,28 +56,28 @@ public class StudiesServiceImpl extends StudiesService
     {
         Resource root = m.getModuleResource(sourceFolderDirPath);
         PipeRoot pipeRoot = PipelineService.get().findPipelineRoot(container);
-        java.nio.file.Path pipeRootPath = pipeRoot.getRootNioPath();
+        FileLike pipeRootPath = pipeRoot.getRootFileLike();
 
-        java.nio.file.Path folderXmlPath;
+        FileLike folderXmlPath;
 
-        if (root instanceof DirectoryResource && ((DirectoryResource)root).getDir().equals(pipeRootPath.toFile()))
+        if (root instanceof DirectoryResource dir && dir.getDir().equals(pipeRootPath.toNioPathForRead().toFile()))
         {
             // The pipeline root is already pointed at the folder definition, like it might be on a dev machine.
             // No need to copy, especially since copying can cause infinite recursion when the paths are nested
-            folderXmlPath = pipeRootPath.resolve("folder.xml");
+            folderXmlPath = pipeRootPath.resolveChild("folder.xml");
         }
         else
         {
-            java.nio.file.Path folderPath = pipeRootPath.resolve("moduleFolderImport");
-            folderXmlPath = folderPath.resolve("folder.xml");
-            if (Files.exists(folderPath))
+            FileLike folderPath = pipeRootPath.resolveChild("moduleFolderImport");
+            folderXmlPath = folderPath.resolveChild("folder.xml");
+            if (folderPath.exists())
             {
                 FileUtil.deleteDir(folderPath);
             }
             copyResourceToPath(root, folderPath);
         }
 
-        if (!Files.exists(folderXmlPath))
+        if (!folderXmlPath.exists())
         {
             throw new FileNotFoundException("Couldn't find an extracted " + folderXmlPath);
         }
@@ -87,21 +87,21 @@ public class StudiesServiceImpl extends StudiesService
         PipelineService.get().runFolderImportJob(container, user, null, folderXmlPath, "folder.xml", pipeRoot, options);
     }
 
-    private void copyResourceToPath(Resource resource, java.nio.file.Path target) throws IOException
+    private void copyResourceToPath(Resource resource, FileLike target) throws IOException
     {
         if (resource.isCollection())
         {
-            Files.createDirectory(target);
+            FileUtil.createDirectory(target);
             for (Resource child : resource.list())
             {
-                java.nio.file.Path childTarget = target.resolve(child.getName());
+                FileLike childTarget = target.resolveChild(child.getName());
                 copyResourceToPath(child, childTarget);
             }
         }
         else
         {
             try (InputStream in = resource.getInputStream();
-                 OutputStream out = Files.newOutputStream(target))
+                 OutputStream out = target.openOutputStream())
             {
                 FileUtil.copyData(in, out);
             }

@@ -16,6 +16,7 @@
 package org.labkey.sequenceanalysis.pipeline;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 import org.labkey.api.pipeline.PipelineJob;
@@ -84,7 +85,7 @@ public class ImportFastaSequencesTask extends PipelineJob.Task<ImportFastaSequen
     }
 
     @Override
-    public RecordedActionSet run() throws PipelineJobException
+    public @NotNull RecordedActionSet run() throws PipelineJobException
     {
         getJob().getLogger().info("Importing sequences from file(s): ");
         for (File f : getPipelineJob().getFastas())

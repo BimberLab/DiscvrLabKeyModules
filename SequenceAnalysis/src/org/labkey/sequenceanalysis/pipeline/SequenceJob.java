@@ -161,10 +161,9 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         params.put("labkeyFolderPath", getContainer().isWorkbook() ? getContainer().getParent().getPath() : getContainer().getPath());
     }
 
-    private Path _getLogFile()
+    private FileLike _getLogFile()
     {
-        var file = FileUtil.findUniqueFileName((FileUtil.makeLegalName(_jobName) + ".log"), getDataDirectoryFileObject());
-        return file.toNioPathForWrite();
+        return FileUtil.findUniqueFileName((FileUtil.makeLegalName(_jobName) + ".log"), getDataDirectoryFileObject());
     }
 
     @Override
@@ -342,9 +341,9 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     }
 
     @Override
-    public File getDataDirectory()
+    public FileLike getDataDirectoryFileLike()
     {
-        return _webserverJobDir.toNioPathForWrite().toFile();
+        return _webserverJobDir;
     }
 
     public FileLike getDataDirectoryFileObject()
@@ -395,13 +394,6 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
     {
         var dir = _parentWebserverJobDir == null ? _webserverJobDir : _parentWebserverJobDir;
         return FileUtil.appendName(dir.toNioPathForWrite().toFile(),_folderPrefix + ".json");
-    }
-
-    @Nullable
-    @Override
-    public File getJobInfoFile()
-    {
-        return FileUtil.appendName(_webserverJobDir.toNioPathForWrite().toFile(), FileUtil.makeLegalName(_jobName) + ".job.json");
     }
 
     @Override

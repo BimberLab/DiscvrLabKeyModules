@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis.pipeline;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.SimpleFilter;
@@ -85,7 +86,7 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
     }
 
     @Override
-    public RecordedActionSet run() throws PipelineJobException
+    public @NotNull RecordedActionSet run() throws PipelineJobException
     {
         Long runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
         getPipelineJob().setExperimentRunRowId(runId);

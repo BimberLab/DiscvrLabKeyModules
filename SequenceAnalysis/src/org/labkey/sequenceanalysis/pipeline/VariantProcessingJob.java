@@ -37,6 +37,8 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.util.ScatterGatherUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
+import org.labkey.vfs.FileLike;
+import org.labkey.vfs.FileSystemLike;
 
 import java.io.File;
 import java.io.IOException;
@@ -408,9 +410,9 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
         {
             VariantProcessingJob job1 = new VariantProcessingJob(){
                 @Override
-                public File getDataDirectory()
+                public FileLike getDataDirectoryFileLike()
                 {
-                    return new File(System.getProperty("java.io.tmpdir"));
+                    return FileSystemLike.wrapFile(new File(System.getProperty("java.io.tmpdir")));
                 }
             };
 
