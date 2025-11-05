@@ -140,6 +140,7 @@
             </column>
             <column columnName="studyName">
                 <columnTitle>Study Name</columnTitle>
+                <nullable>false</nullable>
             </column>
             <column columnName="label">
                 <columnTitle>Label</columnTitle>

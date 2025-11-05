@@ -173,7 +173,8 @@ public class StudiesUserSchema extends SimpleUserSchema
     {
         CustomPermissionsTable<?> ret = createStudyDesignTable(name, cf, true);
 
-        SQLFragment sql2 = new SQLFragment("coalesce(" + ExprColumn.STR_TABLE_ALIAS + ".label, " + ExprColumn.STR_TABLE_ALIAS + ".cohortName)");
+        SQLFragment lastTerm = ret.getSqlDialect().concatenate(new SQLFragment("'Cohort-'"), new SQLFragment("CAST(" + ExprColumn.STR_TABLE_ALIAS + ".rowId AS VARCHAR)"));
+        SQLFragment sql2 = new SQLFragment("coalesce(" + ExprColumn.STR_TABLE_ALIAS + ".label, " + ExprColumn.STR_TABLE_ALIAS + ".cohortName, ").append(lastTerm).append(new SQLFragment(")"));
         ExprColumn col2 = new ExprColumn(ret, "labelOrName", sql2, JdbcType.VARCHAR, ret.getColumn("cohortName"), ret.getColumn("label"));
         col2.setLabel("Cohort Name");
         col2.setHidden(true);
