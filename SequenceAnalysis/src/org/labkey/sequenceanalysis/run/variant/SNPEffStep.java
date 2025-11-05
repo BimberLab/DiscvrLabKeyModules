@@ -75,13 +75,17 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
 
         SnpEffWrapper wrapper = new SnpEffWrapper(log);
         File snpEffIndexDir = wrapper.getExpectedIndexDir(snpEffBaseDir, genome.getGenomeId(), geneFileId);
-        if (!snpEffIndexDir.exists())
-        {
-            wrapper.buildIndex(snpEffBaseDir, genome, geneFile, geneFileId);
-        }
-        else
+        if (snpEffIndexDir.exists())
         {
             log.debug("previously created index found, re-using: " + snpEffIndexDir.getPath());
+            return snpEffBaseDir;
+        }
+
+        File binFile = new File(snpEffIndexDir, "snpEffectPredictor.bin");
+        if (!binFile.exists())
+        {
+            log.debug("existing index not found, expected: " + binFile.getPath());
+            wrapper.buildIndex(snpEffBaseDir, genome, geneFile, geneFileId);
         }
 
         return snpEffBaseDir;

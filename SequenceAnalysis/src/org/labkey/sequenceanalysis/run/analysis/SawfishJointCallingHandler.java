@@ -1,7 +1,12 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
+import au.com.bytecode.opencsv.CSVWriter;
+import htsjdk.samtools.util.IOUtil;
 import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpRun;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -9,6 +14,7 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
+import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
@@ -67,6 +73,38 @@ public class SawfishJointCallingHandler extends AbstractParameterizedOutputHandl
     public static class Processor implements SequenceOutputProcessor
     {
         @Override
+        public void init(JobContext ctx, List<SequenceOutputFile> inputFiles, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
+        {
+            try (CSVWriter csv = new CSVWriter(IOUtil.openFileForBufferedUtf8Writing(getSampleCsvFile(ctx))))
+            {
+                for (SequenceOutputFile so : inputFiles)
+                {
+                    if (so.getRunId() == null)
+                    {
+                        throw new PipelineJobException("Unable to find ExperimentRun for: " + so.getRowid());
+                    }
+
+                    ExpRun run = ExperimentService.get().getExpRun(so.getRunId());
+                    List<? extends ExpData> inputs = run.getInputDatas("Input BAM File", null);
+                    if (inputs.isEmpty())
+                    {
+                        throw new PipelineJobException("Unable to find input BAMs for: " + so.getRowid());
+                    }
+                    else if (inputs.size() > 1)
+                    {
+                        throw new PipelineJobException("More than one input BAM found for ExperimentRun: " + so.getRunId());
+                    }
+
+                    csv.writeNext(new String[]{so.getFile().getParentFile().getPath(), inputs.get(0).getFile().getPath()});
+                }
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
+        }
+
+        @Override
         public void processFilesOnWebserver(PipelineJob job, SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles, JSONObject params, File outputDir, List<RecordedAction> actions, List<SequenceOutputFile> outputsToCreate) throws UnsupportedOperationException, PipelineJobException
         {
 
@@ -89,8 +127,6 @@ public class SawfishJointCallingHandler extends AbstractParameterizedOutputHandl
                 outputBaseName = outputBaseName.replaceAll(".vcf$", "");
             }
 
-            File expectedFinalOutput = new File(ctx.getOutputDir(), outputBaseName + ".vcf.gz");
-
             File ouputVcf = runSawfishCall(ctx, filesToProcess, genome, outputBaseName);
 
             SequenceOutputFile so = new SequenceOutputFile();
@@ -100,6 +136,11 @@ public class SawfishJointCallingHandler extends AbstractParameterizedOutputHandl
             so.setLibrary_id(genome.getGenomeId());
 
             ctx.addSequenceOutput(so);
+        }
+
+        private File getSampleCsvFile(PipelineContext ctx)
+        {
+            return new File(ctx.getSourceDirectory(), "sawfish.samples.csv");
         }
 
         private File runSawfishCall(JobContext ctx, List<File> inputs, ReferenceGenome genome, String outputBaseName) throws PipelineJobException
@@ -125,6 +166,9 @@ public class SawfishJointCallingHandler extends AbstractParameterizedOutputHandl
                 args.add("--sample");
                 args.add(sample.getParentFile().getPath());
             }
+
+            args.add("--sample-csv");
+            args.add(getSampleCsvFile(ctx).getPath());
 
             File outDir = new File(ctx.getOutputDir(), "sawfish");
             args.add("--output-dir");

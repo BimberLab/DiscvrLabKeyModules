@@ -33,7 +33,7 @@ public class SawfishAnalysis extends AbstractPipelineStep implements AnalysisSte
     {
         public Provider()
         {
-            super("sawfish", "Sawfish Analysis", null, "This will run sawfish SV dicvoery and calling on the selected BAMs", List.of(), null, null);
+            super("sawfish", "Sawfish Analysis", null, "This will run sawfish SV discovery and calling on the selected CRAMs/BAMs", List.of(), null, null);
         }
 
 
@@ -45,16 +45,38 @@ public class SawfishAnalysis extends AbstractPipelineStep implements AnalysisSte
     }
 
     @Override
-    public Output performAnalysisPerSampleRemote(Readset rs, File inputBam, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
+    public Output performAnalysisPerSampleRemote(Readset rs, File inputBamOrCram, ReferenceGenome referenceGenome, File outputDir) throws PipelineJobException
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
+
+        File inputFile = inputBamOrCram;
+        if (SequenceUtil.FILETYPE.cram.getFileType().isType(inputFile))
+        {
+            CramToBam samtoolsRunner = new CramToBam(getPipelineCtx().getLogger());
+            File bam = new File(getPipelineCtx().getWorkingDirectory(), inputFile.getName().replaceAll(".cram$", ".bam"));
+            File bamIdx = new File(bam.getPath() + ".bai");
+            if (!bamIdx.exists())
+            {
+                samtoolsRunner.convert(inputFile, bam, referenceGenome.getWorkingFastaFile(), SequencePipelineService.get().getMaxThreads(getPipelineCtx().getLogger()));
+                new SamtoolsIndexer(getPipelineCtx().getLogger()).execute(bam);
+            }
+            else
+            {
+                getPipelineCtx().getLogger().debug("BAM index exists, will not re-convert CRAM");
+            }
+
+            inputFile = bam;
+
+            output.addIntermediateFile(bam);
+            output.addIntermediateFile(bamIdx);
+        }
 
         List<String> args = new ArrayList<>();
         args.add(getExe().getPath());
         args.add("discover");
 
         args.add("--bam");
-        args.add(inputBam.getPath());
+        args.add(inputFile.getPath());
 
         // NOTE: sawfish stores the absolute path of the FASTA in the output JSON, so dont rely on working copies:
         args.add("--ref");
@@ -101,5 +123,42 @@ public class SawfishAnalysis extends AbstractPipelineStep implements AnalysisSte
     private File getExe()
     {
         return SequencePipelineService.get().getExeForPackage("SAWFISHPATH", "sawfish");
+    }
+
+    private static class CramToBam extends SamtoolsRunner
+    {
+        public CramToBam(Logger log)
+        {
+            super(log);
+        }
+
+        public void convert(File inputCram, File outputBam, File fasta, @Nullable Integer threads) throws PipelineJobException
+        {
+            getLogger().info("Converting CRAM to BAM");
+
+            execute(getParams(inputCram, outputBam, fasta, threads));
+        }
+
+        private List<String> getParams(File inputCram, File outputBam, File fasta, @Nullable Integer threads)
+        {
+            List<String> params = new ArrayList<>();
+            params.add(getSamtoolsPath().getPath());
+            params.add("view");
+            params.add("-b");
+            params.add("-T");
+            params.add(fasta.getPath());
+            params.add("-o");
+            params.add(outputBam.getPath());
+
+            if (threads != null)
+            {
+                params.add("-@");
+                params.add(String.valueOf(threads));
+            }
+
+            params.add(inputCram.getPath());
+
+            return params;
+        }
     }
 }

@@ -35,7 +35,7 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
         public Factory()
         {
             super(SequenceOutputHandlerInitTask.class);
-            setLocation("webserver");
+            setLocation("webserver-high-priority");
         }
 
         @Override

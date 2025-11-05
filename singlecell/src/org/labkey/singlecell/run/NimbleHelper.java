@@ -27,9 +27,11 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepOutput;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
+import org.labkey.api.sequenceanalysis.pipeline.SamtoolsRunner;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.sequenceanalysis.run.DISCVRSeqRunner;
 import org.labkey.api.sequenceanalysis.run.DockerWrapper;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 
@@ -496,26 +498,23 @@ public class NimbleHelper
         return resultMap;
     }
 
+    public static final String CATEGORY_CB = "10x CellBarcode Map";
+
     public static void write10xBarcodes(File bam, Logger log, Readset rs, ReferenceGenome referenceGenome, PipelineStepOutput output) throws PipelineJobException
     {
-        // Write barcodes:
+        log.info("Writing 10x CB/UMIs to TSV");
         DISCVRSeqRunner runner = new DISCVRSeqRunner(log);
         List<String> barcodeArgs = new ArrayList<>(runner.getBaseArgs("Save10xBarcodes"));
         barcodeArgs.add("-I");
         barcodeArgs.add(bam.getPath());
 
-        File cbOutput = new File(bam.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(bam.getName()) + "cb.txt.gz");
-        barcodeArgs.add("--cbOutput");
-        barcodeArgs.add(cbOutput.getPath());
-
-        File umiOutput = new File(bam.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(bam.getName()) + "umi.txt.gz");
-        barcodeArgs.add("--umiOutput");
-        barcodeArgs.add(umiOutput.getPath());
+        File bcOutput = new File(bam.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(bam.getName()) + ".cb.txt.gz");
+        barcodeArgs.add("--output");
+        barcodeArgs.add(bcOutput.getPath());
 
         runner.execute(barcodeArgs);
 
-        output.addSequenceOutput(cbOutput, "10x CellBarcode Map: " + rs.getName(), "10x CellBarcode Map", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
-        output.addSequenceOutput(umiOutput, "10x UMI Map: " + rs.getName(), "10x UMI Map", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+        output.addSequenceOutput(bcOutput, "10x CellBarcode Map: " + rs.getName(), CATEGORY_CB, rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
     }
 
     public static File runNimbleReport(File alignResultsGz, int genomeId, PipelineStepOutput output, PipelineContext ctx) throws PipelineJobException
@@ -593,6 +592,75 @@ public class NimbleHelper
     private static File getNimbleDoneFile(File parentDir, String resumeString)
     {
         return new File(parentDir, "nimble." + resumeString + ".done");
+    }
+
+    public static File runFastqToBam(PipelineStepOutput output, PipelineContext ctx, Readset rs, List<File> inputFastqs1, List<File> inputFastqs2, File cellBarcodeUmiMap) throws PipelineJobException
+    {
+        List<File> outputBams = new ArrayList<>();
+        int bamIdx = 0;
+        while (bamIdx < inputFastqs1.size())
+        {
+            File outputBam = new File(ctx.getWorkingDirectory(), FileUtil.makeLegalName(rs.getName()) + ".unmapped." + bamIdx + ".bam");
+
+            List<String> args = new ArrayList<>();
+            args.add("python3");
+            args.add("-m");
+            args.add("nimble");
+
+            args.add("fastq-to-bam");
+
+            Integer maxThreads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
+            if (maxThreads != null)
+            {
+                args.add("-c");
+                args.add(maxThreads.toString());
+            }
+
+            args.add("--r1-fastq");
+            args.add(inputFastqs1.get(bamIdx).getPath());
+            if (bamIdx > inputFastqs2.size())
+            {
+                throw new PipelineJobException("Unequal lengths for first/second pair FASTQs");
+            }
+
+            args.add("--r2-fastq");
+            args.add(inputFastqs2.get(bamIdx).getPath());
+
+            args.add("--map");
+            args.add(cellBarcodeUmiMap.getPath());
+
+            args.add("--output");
+            args.add(outputBam.getPath());
+
+            runUsingDocker(args, output, "nimble.fastq-to-bam." + bamIdx, ctx);
+            outputBams.add(outputBam);
+            bamIdx++;
+        }
+
+        File outputBam;
+        if (outputBams.size() > 1)
+        {
+            outputBam = new File(ctx.getWorkingDirectory(), FileUtil.makeLegalName(rs.getName()) + ".unmapped.bam");
+            outputBams.forEach(output::addIntermediateFile);
+
+            SamtoolsRunner st = new SamtoolsRunner(ctx.getLogger());
+            List<String> args = new ArrayList<>(Arrays.asList(st.getSamtoolsPath().getPath(), "merge", "-o", outputBam.getPath(), "-f"));
+            Integer maxThreads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
+            if (maxThreads != null)
+            {
+                args.add("-@");
+                args.add(maxThreads.toString());
+            }
+
+            outputBams.forEach(bam -> args.add(bam.getPath()));
+            st.execute(args);
+        }
+        else
+        {
+            outputBam = outputBams.get(0);
+        }
+
+        return outputBam;
     }
 
     public static String DOCKER_CONTAINER_NAME = "ghcr.io/bimberlab/nimble:latest";

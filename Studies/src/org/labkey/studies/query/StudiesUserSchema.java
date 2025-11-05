@@ -138,11 +138,11 @@ public class StudiesUserSchema extends SimpleUserSchema
         }
         else if (TABLE_STUDIES.equalsIgnoreCase(name))
         {
-            return createStudiesTable(name, cf, false);
+            return createStudiesTable(name, cf);
         }
         else if (TABLE_COHORTS.equalsIgnoreCase(name))
         {
-            return createStudyDesignTable(name, cf, true);
+            return createCohortsTable(name, cf);
         }
         else if (TABLE_ANCHOR_EVENTS.equalsIgnoreCase(name))
         {
@@ -169,17 +169,41 @@ public class StudiesUserSchema extends SimpleUserSchema
         return super.createTable(name, cf);
     }
 
-    private TableInfo createStudiesTable(String name, ContainerFilter cf, boolean addTriggers)
+    private TableInfo createCohortsTable(String name, ContainerFilter cf)
     {
-        CustomPermissionsTable<?> ret = createStudyDesignTable(name, cf, addTriggers);
+        CustomPermissionsTable<?> ret = createStudyDesignTable(name, cf, true);
+
+        SQLFragment lastTerm = ret.getSqlDialect().concatenate(new SQLFragment("'Cohort-'"), new SQLFragment("CAST(" + ExprColumn.STR_TABLE_ALIAS + ".rowId AS VARCHAR)"));
+        SQLFragment sql2 = new SQLFragment("coalesce(" + ExprColumn.STR_TABLE_ALIAS + ".label, " + ExprColumn.STR_TABLE_ALIAS + ".cohortName, ").append(lastTerm).append(new SQLFragment(")"));
+        ExprColumn col2 = new ExprColumn(ret, "labelOrName", sql2, JdbcType.VARCHAR, ret.getColumn("cohortName"), ret.getColumn("label"));
+        col2.setLabel("Cohort Name");
+        col2.setHidden(true);
+        col2.setDescription("This column lists the cohort label, and the name if label is blank");
+
+        ret.addColumn(col2);
+
+        return ret;
+    }
+
+    private TableInfo createStudiesTable(String name, ContainerFilter cf)
+    {
+        CustomPermissionsTable<?> ret = createStudyDesignTable(name, cf, false);
 
         final String chr = ret.getSqlDialect().isPostgreSQL() ? "chr" : "char";
-        SQLFragment sql1 = new SQLFragment("(SELECT ").append(ret.getSqlDialect().getGroupConcat(new SQLFragment("c.label"), true, true, new SQLFragment(chr + "(10)"))).append(" as expr FROM " + StudiesSchema.NAME + "." + TABLE_COHORTS + " c WHERE c.studyId = " + ExprColumn.STR_TABLE_ALIAS + ".rowId)");
+        SQLFragment sql1 = new SQLFragment("(SELECT ").append(ret.getSqlDialect().getGroupConcat(new SQLFragment("coalesce(c.label, c.cohortName)"), true, true, new SQLFragment(chr + "(10)"))).append(" as expr FROM " + StudiesSchema.NAME + "." + TABLE_COHORTS + " c WHERE c.studyId = " + ExprColumn.STR_TABLE_ALIAS + ".rowId)");
         ExprColumn col1 = new ExprColumn(ret, "cohorts", sql1, JdbcType.VARCHAR, ret.getColumn("rowid"));
         col1.setLabel("Cohort(s)");
         col1.setDescription("This column lists the cohort labels for this study");
 
         ret.addColumn(col1);
+
+        SQLFragment sql2 = new SQLFragment("coalesce(" + ExprColumn.STR_TABLE_ALIAS + ".label, " + ExprColumn.STR_TABLE_ALIAS + ".studyName)");
+        ExprColumn col2 = new ExprColumn(ret, "labelOrName", sql2, JdbcType.VARCHAR, ret.getColumn("studyName"), ret.getColumn("label"));
+        col2.setLabel("Study Name");
+        col2.setHidden(true);
+        col2.setDescription("This column lists the study label, and the name if label is blank");
+
+        ret.addColumn(col2);
 
         return ret;
     }
