@@ -199,7 +199,7 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
         }
 
         // Try to find 10x barcodes:
-        HashMap<Integer, Integer> readsetToBarcodes = new HashMap<>();
+        HashMap<Long, Long> readsetToBarcodes = new HashMap<>();
         for (Readset rs : support.getCachedReadsets())
         {
             ExpData f = findCellBarcodeFiles(rs);
