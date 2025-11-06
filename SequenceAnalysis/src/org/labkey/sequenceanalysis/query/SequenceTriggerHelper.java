@@ -268,7 +268,7 @@ public class SequenceTriggerHelper
 
     public void createReaddataForSra(int readsetId, String sraAccessions)
     {
-        SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(readsetId, _user);
+        SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(Long.valueOf(readsetId), _user);
         if (rs == null)
         {
             throw new IllegalArgumentException("Unable to find readset: " + readsetId);
@@ -286,7 +286,7 @@ public class SequenceTriggerHelper
 
             // Create new:
             ReadDataImpl rd1 = new ReadDataImpl();
-            rd1.setReadset(readsetId);
+            rd1.setReadset(Long.valueOf(readsetId));
             rd1.setContainer(rs.getContainer());
             rd1.setCreated(new Date());
             rd1.setModified(new Date());
@@ -305,7 +305,7 @@ public class SequenceTriggerHelper
 
             String folderName = "SequenceImport_RS" + rs.getRowId() + "_" + FileUtil.getTimestamp();
             FileLike sequenceImport = FileUtil.appendPath(pr.getRootFileLike(), Path.parse(ReadsetImportJob.NAME));
-            FileLike outDir = AssayFileWriter.findUniqueFileName(folderName, sequenceImport);
+            FileLike outDir = FileUtil.findUniqueFileName(folderName, sequenceImport);
 
             FileLike expectedFile1 = FileUtil.appendPath(outDir, Path.parse(token + "_1.fastq.gz"));
             ExpData exp1 = ExperimentService.get().createData(c, new DataType("Data"));

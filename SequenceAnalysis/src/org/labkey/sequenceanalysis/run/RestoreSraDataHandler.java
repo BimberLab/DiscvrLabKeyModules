@@ -350,7 +350,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
 
                     if (rd.getRunId() == null)
                     {
-                        Integer runId = SequenceTaskHelper.getExpRunIdForJob(job);
+                        Long runId = SequenceTaskHelper.getExpRunIdForJob(job);
                         toUpdate.put("runid", runId);
                     }
 
