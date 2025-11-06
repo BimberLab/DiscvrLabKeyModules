@@ -31,6 +31,11 @@ jobs:
           echo "DEFAULT_BRANCH=${DEFAULT_BRANCH}" >> $GITHUB_ENV
         id: default-branch
 
+      # Note: use slight delay in case there are associated commits across repos
+      - name: "Sleep for 30 seconds"
+        run: sleep 30s
+        shell: bash
+
       - name: "Build DISCVR"
         uses: bimberlabinternal/DevOps/githubActions/discvr-build@master
         with:

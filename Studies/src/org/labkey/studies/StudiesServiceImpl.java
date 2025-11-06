@@ -5,6 +5,7 @@ import org.labkey.api.admin.ImportOptions;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.triggers.TriggerFactory;
 import org.labkey.api.module.Module;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
@@ -26,6 +27,7 @@ import org.labkey.api.util.Path;
 import org.labkey.api.util.logging.LogHelper;
 import org.labkey.studies.query.StudiesTableCustomizer;
 import org.labkey.vfs.FileLike;
+import org.labkey.studies.query.StudiesTriggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -49,6 +51,12 @@ public class StudiesServiceImpl extends StudiesService
     private StudiesServiceImpl()
     {
 
+    }
+
+    @Override
+    public TriggerFactory getStudiesTriggerFactory()
+    {
+        return new StudiesTriggerFactory();
     }
 
     @Override

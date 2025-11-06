@@ -14,9 +14,11 @@ import org.biojava.nbio.core.sequence.transcription.TranscriptionEngine;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.collections.IntHashMap;
+import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.DataType;
@@ -29,12 +31,21 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
+import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.Path;
+import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
+import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
+import org.labkey.sequenceanalysis.SequenceReadsetImpl;
+import org.labkey.sequenceanalysis.pipeline.ReadsetImportJob;
+import org.labkey.vfs.FileLike;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -253,5 +264,66 @@ public class SequenceTriggerHelper
         d.save(getUser());
 
         return d.getRowId();
+    }
+
+    public void createReaddataForSra(int readsetId, String sraAccessions)
+    {
+        SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(Long.valueOf(readsetId), _user);
+        if (rs == null)
+        {
+            throw new IllegalArgumentException("Unable to find readset: " + readsetId);
+        }
+
+        TableInfo rd = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READ_DATA);
+
+        String[] tokens = StringUtils.split(sraAccessions, ",");
+        for (String token : tokens)
+        {
+            if (rs.getReadData() != null && !rs.getReadData().isEmpty())
+            {
+                throw new IllegalArgumentException("Did not expect readset to have existing readdata: " + rs.getReadsetId());
+            }
+
+            // Create new:
+            ReadDataImpl rd1 = new ReadDataImpl();
+            rd1.setReadset(Long.valueOf(readsetId));
+            rd1.setContainer(rs.getContainer());
+            rd1.setCreated(new Date());
+            rd1.setModified(new Date());
+            rd1.setCreatedBy(_user.getUserId());
+            rd1.setModifiedBy(_user.getUserId());
+            rd1.setSra_accession(token);
+            rd1.setArchived(true);
+
+            // NOTE: this is a fragile assumption. We might need to eventually query SRA to figure out whether data is paired:
+            Container c = ContainerManager.getForId(rs.getContainer());
+            PipeRoot pr = PipelineService.get().findPipelineRoot(c);
+            if (pr == null)
+            {
+                throw new IllegalStateException("Unable to find pipeline root for: " + c.getPath());
+            }
+
+            String folderName = "SequenceImport_RS" + rs.getRowId() + "_" + FileUtil.getTimestamp();
+            FileLike sequenceImport = FileUtil.appendPath(pr.getRootFileLike(), Path.parse(ReadsetImportJob.NAME));
+            FileLike outDir = FileUtil.findUniqueFileName(folderName, sequenceImport);
+
+            FileLike expectedFile1 = FileUtil.appendPath(outDir, Path.parse(token + "_1.fastq.gz"));
+            ExpData exp1 = ExperimentService.get().createData(c, new DataType("Data"));
+            exp1.setDataFileURI(expectedFile1.toURI());
+            exp1.setContainer(c);
+            exp1.setName(expectedFile1.getName());
+            exp1.save(_user);
+            rd1.setFileId1(exp1.getRowId());
+
+            FileLike expectedFile2 = FileUtil.appendPath(outDir, Path.parse(token + "_2.fastq.gz"));
+            ExpData exp2 = ExperimentService.get().createData(c, new DataType("Data"));
+            exp2.setDataFileURI(expectedFile2.toURI());
+            exp2.setContainer(c);
+            exp2.setName(expectedFile2.getName());
+            exp2.save(_user);
+            rd1.setFileId2(exp2.getRowId());
+
+            Table.insert(_user, rd, rd1);
+        }
     }
 }

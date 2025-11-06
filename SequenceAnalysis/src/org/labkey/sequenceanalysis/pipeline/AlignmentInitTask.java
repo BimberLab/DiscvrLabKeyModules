@@ -44,6 +44,7 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
         public Factory()
         {
             super(AlignmentInitTask.class);
+            setLocation("webserver-high-priority");
             setJoin(true);
         }
 

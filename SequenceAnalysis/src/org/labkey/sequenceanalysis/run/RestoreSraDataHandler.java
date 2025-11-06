@@ -47,6 +47,7 @@ import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.pipeline.ReadsetCreationTask;
 import org.labkey.sequenceanalysis.pipeline.SequenceNormalizationTask;
+import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -148,6 +149,41 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                         throw new PipelineJobException("Missing accession for archived readdata: " + rd.getRowid());
                     }
 
+                    // This indicates there is no pipeline job and no file, meaning it was imported as a TSV with SRA info. Therefore use this job's folder as the output location:
+                    if (rd.getRunId() == null)
+                    {
+                        ExpData f1 = ExperimentService.get().getExpData(rd.getFileId1());
+                        if (f1 == null)
+                        {
+                            throw new PipelineJobException("Missing Expdata: " + rd.getFileId1());
+                        }
+
+                        if (!f1.getFile().exists())
+                        {
+                            if (f1.getFile().getParentFile().exists())
+                            {
+                                job.getLogger().warn("Parent file unexpectedly exists: " + f1.getFile().getParentFile().getPath());
+                            }
+
+                            f1.setDataFileURI(new File(outputDir, accession + "_1.fastq.gz").toURI());
+                            f1.save(job.getUser());
+                            job.getLogger().debug("Updating filepath: " + f1.getFile().getPath());
+
+                            if (rd.getFileId2() != null)
+                            {
+                                ExpData f2 = ExperimentService.get().getExpData(rd.getFileId2());
+                                if (f2 == null)
+                                {
+                                    throw new PipelineJobException("Missing Expdata: " + rd.getFileId2());
+                                }
+
+                                f2.setDataFileURI(new File(outputDir, accession + "_2.fastq.gz").toURI());
+                                f2.save(job.getUser());
+                                job.getLogger().debug("Updating filepath: " + f2.getFile().getPath());
+                            }
+                        }
+                    }
+
                     totalArchivedPairs++;
                     support.cacheExpData(ExperimentService.get().getExpData(rd.getFileId1()));
                     if (rd.getFileId2() != null)
@@ -180,7 +216,20 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                         continue;
                     }
 
-                    if (readdataToSra.get(accession).size() > 1)
+                    if (readdataToSra.get(accession).size() == 1)
+                    {
+                        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), rs.getRowId());
+                        filter.addCondition(FieldKey.fromString("category"), "Readset");
+                        filter.addCondition(FieldKey.fromString("container"), rs.getContainer());
+                        filter.addCondition(FieldKey.fromString("dataId"), toMerge.get(0).getFileId1());
+                        boolean hasMetrics = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_QUALITY_METRICS), PageFlowUtil.set("RowId"), filter, null).exists();
+                        if (!hasMetrics)
+                        {
+                            job.getLogger().debug("No existing metrics found for: " + accession);
+                            updatedAccessions.add(accession);
+                        }
+                    }
+                    else
                     {
                         job.getLogger().debug("Consolidating multiple readdata for: " + accession);
 
@@ -299,6 +348,12 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     toUpdate.put("archived", false);
                     toUpdate.put("container", rd.getContainer());
 
+                    if (rd.getRunId() == null)
+                    {
+                        Long runId = SequenceTaskHelper.getExpRunIdForJob(job);
+                        toUpdate.put("runid", runId);
+                    }
+
                     rows.add(toUpdate);
 
                     SimpleFilter filter = new SimpleFilter(FieldKey.fromString("readset"), rs.getRowId());
@@ -311,6 +366,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                         job.getLogger().debug("No existing metrics found for: " + rd.getFileId1());
                         List<Long> toAdd = new ArrayList<>();
                         toAdd.add(rd.getFileId1());
+
                         if (rd.getFileId2() != null)
                         {
                             toAdd.add(rd.getFileId2());
@@ -384,12 +440,18 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     File expectedFile1 = ctx.getSequenceSupport().getCachedData(rd.getFileId1());
                     File expectedFile2 = rd.getFileId2() == null ? null : ctx.getSequenceSupport().getCachedData(rd.getFileId2());
 
+                    if (!expectedFile1.getParentFile().exists())
+                    {
+                        ctx.getLogger().info("Creating folder: " + expectedFile1.getParentFile().getPath());
+                        expectedFile1.getParentFile().mkdirs();
+                    }
+
                     FastqDumpWrapper wrapper = new FastqDumpWrapper(ctx.getLogger());
                     Pair<File, File> files = wrapper.downloadSra(accession, ctx.getOutputDir(), rd.isPairedEnd(), false);
 
                     long lines1 = SequenceUtil.getLineCount(files.first) / 4;
                     ctx.getJob().getLogger().debug("Reads in " + files.first.getName() + ": " + lines1);
-                    if (lines1 != accessionToReads.get(accession))
+                    if (accessionToReads.containsKey(accession) && accessionToReads.get(accession) > 0 && lines1 != accessionToReads.get(accession))
                     {
                         throw new PipelineJobException("Reads found in file, " + lines1 + ", does not match expected: " + accessionToReads.get(accession) + " for file: " + files.first.getPath());
                     }
@@ -398,7 +460,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     {
                         long lines2 = SequenceUtil.getLineCount(files.second) / 4;
                         ctx.getJob().getLogger().debug("Reads in " + files.second.getName() + ": " + lines2);
-                        if (lines2 != accessionToReads.get(accession))
+                        if (accessionToReads.containsKey(accession) && accessionToReads.get(accession) > 0 && lines2 != accessionToReads.get(accession))
                         {
                             throw new PipelineJobException("Reads found in file, " + lines2 + ", does not match expected: " + accessionToReads.get(accession) + " for file: " + files.second.getPath());
                         }
