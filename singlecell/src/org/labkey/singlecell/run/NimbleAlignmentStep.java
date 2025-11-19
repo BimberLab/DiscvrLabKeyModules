@@ -86,10 +86,10 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
         AlignmentOutputImpl output = new AlignmentOutputImpl();
 
         boolean throwIfNotFound = getProvider().getParameterByName(REQUIRE_CACHED_BARCODES).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
-        File cachedBarcodes = getCachedBarcodeFile(rs, throwIfNotFound);
+        File loupeFile = getCachedLoupeFile(rs, throwIfNotFound);
 
         File localBam;
-        if (cachedBarcodes == null)
+        if (loupeFile == null)
         {
             localBam = performCellRangerAlignment(output, rs, inputFastqs1, inputFastqs2, outputDirectory, referenceGenome, basename, readGroupId, platformUnit);
         }
@@ -109,12 +109,12 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
 
     private File createNimbleBam(AlignmentOutputImpl output, Readset rs, List<File> inputFastqs1, List<File> inputFastqs2) throws PipelineJobException
     {
-        File cellBarcodeUmiMap = getCachedBarcodeFile(rs, true);
+        File loupeFile = getCachedLoupeFile(rs, true);
 
-        return NimbleHelper.runFastqToBam(output, getPipelineCtx(), rs, inputFastqs1, inputFastqs2, cellBarcodeUmiMap);
+        return NimbleHelper.runFastqToBam(output, getPipelineCtx(), rs, inputFastqs1, inputFastqs2, loupeFile);
     }
 
-    private File getCachedBarcodeFile(Readset rs, boolean throwIfNotFound) throws PipelineJobException
+    private File getCachedLoupeFile(Readset rs, boolean throwIfNotFound) throws PipelineJobException
     {
         Map<Integer, Integer> map = getPipelineCtx().getSequenceSupport().getCachedObject(CACHE_KEY, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, Integer.class));
         Integer dataId = map.get(rs.getReadsetId());
@@ -137,14 +137,14 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
         return ret;
     }
 
-    private ExpData findCellBarcodeFiles(Readset rs) throws PipelineJobException
+    private ExpData findLoupeFile(Readset rs) throws PipelineJobException
     {
         Container targetContainer = getPipelineCtx().getJob().getContainer().isWorkbookOrTab() ? getPipelineCtx().getJob().getContainer().getParent() : getPipelineCtx().getJob().getContainer();
         UserSchema us = QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), targetContainer, SingleCellSchema.SEQUENCE_SCHEMA_NAME);
         TableInfo ti = us.getTable("outputfiles");
 
         SimpleFilter sf = new SimpleFilter(FieldKey.fromString("readset"), rs.getRowId());
-        sf.addCondition(FieldKey.fromString("category"), NimbleHelper.CATEGORY_CB);
+        sf.addCondition(FieldKey.fromString("category"), CellRangerGexCountStep.LOUPE_CATEGORY);
         List<Integer> cbs = new TableSelector(ti, PageFlowUtil.set("dataid"), sf, new Sort("-rowid")).getArrayList(Integer.class);
         if (!cbs.isEmpty())
         {
@@ -199,19 +199,19 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
         }
 
         // Try to find 10x barcodes:
-        HashMap<Integer, Integer> readsetToBarcodes = new HashMap<>();
+        HashMap<Integer, Integer> readsetToLoupe = new HashMap<>();
         for (Readset rs : support.getCachedReadsets())
         {
-            ExpData f = findCellBarcodeFiles(rs);
+            ExpData f = findLoupeFile(rs);
             if (f != null)
             {
                 support.cacheExpData(f);
-                readsetToBarcodes.put(rs.getReadsetId(), f.getRowId());
+                readsetToLoupe.put(rs.getReadsetId(), f.getRowId());
             }
         }
 
-        support.cacheObject(CACHE_KEY, readsetToBarcodes);
+        support.cacheObject(CACHE_KEY, readsetToLoupe);
     }
 
-    private static final String CACHE_KEY = "nimble.cb";
+    private static final String CACHE_KEY = "nimble.loupe";
 }
