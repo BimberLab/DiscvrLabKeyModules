@@ -1,0 +1,22 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" hidden="false" canOverride="false">
+    <columns>
+        <column name="rowId"/>
+        <column name="studyId"/>
+        <column name="studyId/description">
+            <properties>
+                <property name="columnTitle" value="Study Description"/>
+            </properties>
+        </column>
+        <column name="cohortName"/>
+        <column name="label"/>
+        <column name="category"/>
+        <column name="description"/>
+        <column name="isControlGroup"/>
+        <column name="sortOrder"/>
+    </columns>
+    <sorts>
+        <sort column="studyId/studyName" descending="false"/>
+        <sort column="sortOrder" descending="false"/>
+        <sort column="cohortName" descending="false"/>
+    </sorts>
+</customView>
