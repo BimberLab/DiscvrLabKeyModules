@@ -199,7 +199,7 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
         }
 
         // Try to find 10x barcodes:
-        HashMap<Long, Integer> readsetToLoupe = new HashMap<>();
+        HashMap<Long, Long> readsetToLoupe = new HashMap<>();
         for (Readset rs : support.getCachedReadsets())
         {
             ExpData f = findLoupeFile(rs);
