@@ -93,6 +93,11 @@ public class StudiesTriggerFactory implements TriggerFactory
                 return;
             }
 
+            if (row.get(sourceProperty) instanceof Integer)
+            {
+                return;
+            }
+
             if (row.get(sourceProperty) != null & row.get(sourceProperty) instanceof String & !String.valueOf(row.get(sourceProperty)).isEmpty())
             {
                 if (!NumberUtils.isCreatable(row.get(sourceProperty).toString()))
