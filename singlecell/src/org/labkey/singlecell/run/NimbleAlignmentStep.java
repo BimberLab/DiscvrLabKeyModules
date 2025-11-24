@@ -116,8 +116,8 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
 
     private File getCachedLoupeFile(Readset rs, boolean throwIfNotFound) throws PipelineJobException
     {
-        Map<Long, Integer> map = getPipelineCtx().getSequenceSupport().getCachedObject(CACHE_KEY, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Long.class, Integer.class));
-        Integer dataId = map.get(rs.getReadsetId());
+        Map<Long, Long> map = getPipelineCtx().getSequenceSupport().getCachedObject(CACHE_KEY, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Long.class, Long.class));
+        Long dataId = map.get(rs.getReadsetId());
         if (dataId == null)
         {
             if (throwIfNotFound)
