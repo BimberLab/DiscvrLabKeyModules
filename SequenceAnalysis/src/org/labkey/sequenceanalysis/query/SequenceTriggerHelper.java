@@ -266,7 +266,7 @@ public class SequenceTriggerHelper
 
     public void createReaddataForSra(int readsetId, String sraAccessions)
     {
-        SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(readsetId, _user);
+        SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(Long.valueOf(readsetId), _user);
         if (rs == null)
         {
             throw new IllegalArgumentException("Unable to find readset: " + readsetId);
@@ -284,7 +284,7 @@ public class SequenceTriggerHelper
 
             // Create new:
             ReadDataImpl rd1 = new ReadDataImpl();
-            rd1.setReadset(readsetId);
+            rd1.setReadset(Long.valueOf(readsetId));
             rd1.setContainer(rs.getContainer());
             rd1.setCreated(new Date());
             rd1.setModified(new Date());
