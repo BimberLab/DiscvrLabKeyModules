@@ -23,7 +23,7 @@ function beforeUpsert(row, oldRow, errors){
     else if (['No stim', 'No Stim'].indexOf(row.stim) !== -1){
         row.stim = 'NoStim';
     }
-    else if (['Infected cells: SIV+', 'Infected Cells: SIV+'].indexOf(row.stim) !== -1){
+    else if (['SIV+', 'Infected cells: SIV+', 'Infected Cells: SIV+'].indexOf(row.stim) !== -1){
         row.stim = 'SIV-Infected CD4s';
     }
     else if (['Infected cells: SIV-', 'Infected Cells: SIV-'].indexOf(row.stim) !== -1){

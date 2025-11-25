@@ -430,6 +430,10 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
                         moveInputToAnalysisDir(compressed, job, actions, unalteredInputs, outputFiles);
                     }
                 }
+                else
+                {
+                    job.getLogger().debug("Input file does not exist, may have already been moved: " + input.getPath());
+                }
             }
         }
         else
@@ -450,23 +454,40 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
             File outputDir = job.getAnalysisDirectory();
             File output = new File(outputDir, input.getName());
             job.getLogger().debug("Destination: " + output.getPath());
+            boolean alreadyMoved = false;
             if (output.exists())
             {
+                job.getLogger().debug("output already exists");
                 if (unalteredInputs != null && unalteredInputs.contains(output))
                 {
                     job.getLogger().debug("\tThis input was unaltered during normalization and a copy already exists in the analysis folder so the original will be discarded");
                     input.delete();
-                    TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, output, actions, job, null);
-                    return;
+                    alreadyMoved = true;
                 }
                 else
                 {
-                    output = new File(outputDir, FileUtil.getBaseName(input.getName()) + ".orig.gz");
-                    job.getLogger().debug("\tA file with the expected output name already exists, so the original will be renamed: " + output.getPath());
+                    if (input.length() == output.length() && input.lastModified() == output.lastModified())
+                    {
+                        job.getLogger().info("Output exists, but has the same size/modified timestamp. Deleting original");
+                        input.delete();
+                        alreadyMoved = true;
+                    }
+                    else if (input.exists() && input.length() > output.length() && input.lastModified() == output.lastModified())
+                    {
+                        job.getLogger().info("Output exists with same timestamp, but with smaller file size. This probably indicates a truncated/failed copy. Deleting this file.");
+                        output.delete();
+                    }
+                    else
+                    {
+                        throw new PipelineJobException("A file with the expected output name already exists: " + output.getPath());
+                    }
                 }
             }
 
-            FileUtils.moveFile(input, output);
+            if (!alreadyMoved)
+            {
+                FileUtils.moveFile(input, output);
+            }
             if (!output.exists())
             {
                 throw new PipelineJobException("Unable to move file: " + input.getPath());
@@ -488,7 +509,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
 
             TaskFileManagerImpl.swapFilesInRecordedActions(job.getLogger(), input, output, actions, job, null);
         }
-        catch (IOException e)
+        catch (Exception e)
         {
             throw new PipelineJobException(e);
         }

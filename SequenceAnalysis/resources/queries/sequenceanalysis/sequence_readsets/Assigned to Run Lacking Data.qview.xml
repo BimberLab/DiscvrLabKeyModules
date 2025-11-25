@@ -1,6 +1,6 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView" canOverride="true">
     <sorts>
-        <sort column="name" descending="true"/>
+        <sort column="instrument_run_id/name" descending="false"/>
     </sorts>
     <filters>
         <filter column="totalFiles" operator="eq" value="0"/>

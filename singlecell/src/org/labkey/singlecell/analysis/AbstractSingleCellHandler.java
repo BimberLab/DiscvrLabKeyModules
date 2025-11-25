@@ -396,7 +396,20 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 currentFiles = new ArrayList<>();
                 for (SequenceOutputFile so : inputFiles)
                 {
-                    String datasetId = FileUtil.makeLegalName(so.getReadset() != null ? ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName() : so.getName());
+                    String datasetId;
+                    if ("Seurat Object Prototype".equals(so.getCategory()))
+                    {
+                        datasetId = FileUtil.makeLegalName(ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName());
+                    }
+                    else if (_doProcessRawCounts)
+                    {
+                        datasetId = FileUtil.makeLegalName(so.getReadset() == null ? so.getName() : ctx.getSequenceSupport().getCachedReadset(so.getReadset()).getName());
+                    }
+                    else
+                    {
+                        datasetId = so.getName();
+                    }
+
                     if (distinctIds.contains(datasetId))
                     {
                         throw new PipelineJobException("Duplicate dataset Ids in input data: " + datasetId);

@@ -70,6 +70,7 @@ import org.labkey.singlecell.pipeline.singlecell.FilterDisallowedClasses;
 import org.labkey.singlecell.pipeline.singlecell.FilterRawCounts;
 import org.labkey.singlecell.pipeline.singlecell.FindClustersAndDimRedux;
 import org.labkey.singlecell.pipeline.singlecell.FindMarkers;
+import org.labkey.singlecell.pipeline.singlecell.IdentifyAndStoreActiveClonotypes;
 import org.labkey.singlecell.pipeline.singlecell.IntegrateData;
 import org.labkey.singlecell.pipeline.singlecell.MergeSeurat;
 import org.labkey.singlecell.pipeline.singlecell.NormalizeAndScale;
@@ -86,7 +87,6 @@ import org.labkey.singlecell.pipeline.singlecell.RunCellHashing;
 import org.labkey.singlecell.pipeline.singlecell.RunCelltypist;
 import org.labkey.singlecell.pipeline.singlecell.RunCelltypistCustomModel;
 import org.labkey.singlecell.pipeline.singlecell.RunConga;
-import org.labkey.singlecell.pipeline.singlecell.RunCsCore;
 import org.labkey.singlecell.pipeline.singlecell.RunDecoupler;
 import org.labkey.singlecell.pipeline.singlecell.RunEscape;
 import org.labkey.singlecell.pipeline.singlecell.RunLDA;
@@ -97,7 +97,6 @@ import org.labkey.singlecell.pipeline.singlecell.RunSDA;
 import org.labkey.singlecell.pipeline.singlecell.RunScGate;
 import org.labkey.singlecell.pipeline.singlecell.RunScGateBuiltin;
 import org.labkey.singlecell.pipeline.singlecell.RunSingleR;
-import org.labkey.singlecell.pipeline.singlecell.RunTricycle;
 import org.labkey.singlecell.pipeline.singlecell.RunVision;
 import org.labkey.singlecell.pipeline.singlecell.ScoreCellCycle;
 import org.labkey.singlecell.pipeline.singlecell.SeuratPrototype;
@@ -115,6 +114,7 @@ import org.labkey.singlecell.run.CellRangerGexCountStep;
 import org.labkey.singlecell.run.CellRangerVDJWrapper;
 import org.labkey.singlecell.run.NimbleAlignmentStep;
 import org.labkey.singlecell.run.NimbleAnalysis;
+import org.labkey.singlecell.run.NimbleBulkAlignmentStep;
 import org.labkey.singlecell.run.RepeatNimbleReportHandler;
 import org.labkey.singlecell.run.VelocytoAlignmentStep;
 import org.labkey.singlecell.run.VelocytoAnalysisStep;
@@ -220,6 +220,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new CellRangerVDJWrapper.VDJProvider());
         SequencePipelineService.get().registerPipelineStep(new NimbleAlignmentStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new NimbleAnalysis.Provider());
+        SequencePipelineService.get().registerPipelineStep(new NimbleBulkAlignmentStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VelocytoAlignmentStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new VelocytoAnalysisStep.Provider());
 
@@ -294,17 +295,16 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new TrainScTour.Provider());
         SequencePipelineService.get().registerPipelineStep(new PredictScTour.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunEscape.Provider());
-        SequencePipelineService.get().registerPipelineStep(new RunCsCore.Provider());
         SequencePipelineService.get().registerPipelineStep(new CustomGSEA.Provider());
         SequencePipelineService.get().registerPipelineStep(new StudyMetadata.Provider());
         SequencePipelineService.get().registerPipelineStep(new UpdateSeuratPrototype.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunDecoupler.Provider());
         SequencePipelineService.get().registerPipelineStep(new PerformDefaultNimbleAppend.Provider());
         SequencePipelineService.get().registerPipelineStep(new PerformMhcDimRedux.Provider());
-        SequencePipelineService.get().registerPipelineStep(new RunTricycle.Provider());
         SequencePipelineService.get().registerPipelineStep(new ApplyKnownClonotypicData.Provider());
         SequencePipelineService.get().registerPipelineStep(new CalculateTcrRepertoireStats.Provider());
         SequencePipelineService.get().registerPipelineStep(new PredictTcellActivation.Provider());
+        SequencePipelineService.get().registerPipelineStep(new IdentifyAndStoreActiveClonotypes.Provider());
 
         SequenceAnalysisService.get().registerReadsetListener(new SingleCellReadsetListener());
     }

@@ -2436,7 +2436,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                             },{
                                 xtype: 'textfield',
                                 fieldLabel: 'Delimiter',
-                                value: '_',
+                                value: '[_-]',
                                 itemId: 'delimiter'
                             }],
                             buttons: [{
@@ -2455,7 +2455,7 @@ Ext4.define('SequenceAnalysis.panel.SequenceImportPanel', {
                                         if (prefix) {
                                             fg = fg.replace(new RegExp('^' + prefix), '');
                                         }
-                                        fg = fg.split(delim);
+                                        fg = fg.split(RegExp(delim));
                                         var id = fg[0];
                                         if (Ext4.isNumeric(id)) {
                                             r.set('readset', id);

@@ -28,6 +28,8 @@ import java.util.List;
  */
 public class RnaSeQCWrapper extends AbstractCommandWrapper
 {
+    final static int MAX_WARNINGS = 100;
+
     public RnaSeQCWrapper(@Nullable Logger logger)
     {
         super(logger);
@@ -122,12 +124,32 @@ public class RnaSeQCWrapper extends AbstractCommandWrapper
                 }
                 else if (!line.contains("transcript_id"))
                 {
-                    getLogger().info("skipping GTF line " + lineNo + " because it lacks transcript_id");
+                    if (filteredLines <= MAX_WARNINGS)
+                    {
+                        if (filteredLines == MAX_WARNINGS)
+                        {
+                            getLogger().info("skipping GTF line " + lineNo + " because it lacks transcript_id. No additional warnings will be printed");
+                        }
+                        else
+                        {
+                            getLogger().info("skipping GTF line " + lineNo + " because it lacks transcript_id");
+                        }
+                    }
                     filteredLines++;
                 }
                 else if (!line.contains("gene_id"))
                 {
-                    getLogger().info("skipping GTF line " + lineNo + " because it lacks gene_id");
+                    if (filteredLines <= MAX_WARNINGS)
+                    {
+                        if (filteredLines == MAX_WARNINGS)
+                        {
+                            getLogger().info("skipping GTF line " + lineNo + " because it lacks gene_id. No additional warnings will be printed");
+                        }
+                        else
+                        {
+                            getLogger().info("skipping GTF line " + lineNo + " because it lacks gene_id");
+                        }
+                    }
                     filteredLines++;
                 }
                 else

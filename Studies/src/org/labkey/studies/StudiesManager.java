@@ -226,7 +226,7 @@ public class StudiesManager
         Map<String,Object> m = new HashMap<>();
         if (s.getRowId() != null)
             m.put("rowId", s.getRowId());
-        m.put("name",        s.getStudyName());
+        m.put("studyName",        s.getStudyName());
         m.put("label",       s.getLabel());
         m.put("category",    s.getCategory());
         m.put("description", s.getDescription());

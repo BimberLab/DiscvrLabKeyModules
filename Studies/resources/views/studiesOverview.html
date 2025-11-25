@@ -43,15 +43,15 @@
                         });
 
                         dataByCategory[row['CategoryId/Label']] = dataByCategory[row['CategoryId/Label']] || []
-                        dataByCategory[row['CategoryId/Label']].push(`<li><a href="${dsUrl}">${row.Label}</a></li>`)
+                        dataByCategory[row['CategoryId/Label']].push($(`<li><a href="${dsUrl}">${row.Label}</a></li>`))
                     })
 
                     Object.keys(dataByCategory).sort().forEach(category => {
                         div.append('<h4 style="font-weight: bold;">' + category + '</h4>').append('<ul>')
+                        const ul = div.children('ul')[0]
                         dataByCategory[category].forEach(item => {
-                            div.append(item)
+                            ul.append(item[0])
                         })
-                        div.append('</ul>')
                     })
 
                     $('#' + webpart.wrapperDivId).append(div)

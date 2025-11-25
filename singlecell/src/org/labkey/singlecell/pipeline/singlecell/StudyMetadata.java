@@ -24,7 +24,7 @@ public class StudyMetadata extends AbstractRDiscvrStep
                     {{
                         put("multiSelect", false);
                         put("allowBlank", false);
-                        put("storeValues", "PC475;PC531;TB;Malaria;AcuteNx;EC;PPG_Stims");
+                        put("storeValues", "PC475;PC531;TB;Malaria;AcuteNx;EC;PPG_Stims;IMPAC_TB_Human");
                         put("delimiter", ";");
                     }}, null, null, false, false),
                     SeuratToolParameter.create("errorIfUnknownIdsFound", "Error If Unknown Ids Found", "If true, the job will fail if the seurat object contains ID not present in the metadata", "checkbox", null, true)
