@@ -45,7 +45,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -238,7 +237,7 @@ public class SequenceTriggerHelper
             }
         }
     }
-    
+
     public long createExpData(String relPath) {
         PipeRoot pr = PipelineService.get().getPipelineRootSetting(getContainer());
         if (pr == null)
@@ -257,7 +256,7 @@ public class SequenceTriggerHelper
         {
             return d.getRowId();
         }
-        
+
         d = ExperimentService.get().createData(getContainer(), new DataType("Output"));
         d.setDataFileURI(f.toURI());
         d.setName(f.getName());
