@@ -116,8 +116,8 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
 
     private File getCachedLoupeFile(Readset rs, boolean throwIfNotFound) throws PipelineJobException
     {
-        Map<Integer, Integer> map = getPipelineCtx().getSequenceSupport().getCachedObject(CACHE_KEY, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, Integer.class));
-        Integer dataId = map.get(rs.getReadsetId());
+        Map<Long, Long> map = getPipelineCtx().getSequenceSupport().getCachedObject(CACHE_KEY, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Long.class, Long.class));
+        Long dataId = map.get(rs.getReadsetId());
         if (dataId == null)
         {
             if (throwIfNotFound)
@@ -199,7 +199,7 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
         }
 
         // Try to find 10x barcodes:
-        HashMap<Integer, Integer> readsetToLoupe = new HashMap<>();
+        HashMap<Long, Long> readsetToLoupe = new HashMap<>();
         for (Readset rs : support.getCachedReadsets())
         {
             ExpData f = findLoupeFile(rs);
