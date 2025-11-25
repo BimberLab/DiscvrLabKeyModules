@@ -34,7 +34,7 @@ public class SubsetSeurat extends AbstractCellMembraneStep
                         put("width", 600);
                         put("delimiter", DELIM);
                     }}, null),
-                    ToolParameterDescriptor.create("useDplyr", "Use dplyr", "If checked, the subset will be executed using dplyr::filter rather than Seurat::subset. This should allow more complex expressions to be used, including negations", "checkbox", null, false)
+                    ToolParameterDescriptor.create("useDplyr", "Use dplyr", "If checked, the subset will be executed using dplyr::filter rather than Seurat::subset. This should allow more complex expressions to be used, including negations", "checkbox", null, true)
             ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 

@@ -171,7 +171,10 @@ for (datasetId in names(seuratObjects)) {
 		}
 
 		toDrop <- is.na(seuratObj@meta.data$scGateConsensus)
-		if (sum(toDrop) > 0) {
+		if (sum(toDrop) == ncol(seuratObj)) {
+			print(paste0('There were no cells remaining after dropping cells without a scGateConsensus value'))
+			seuratObj <- NULL
+		} else if (sum(toDrop) > 0) {
 			cells <- colnames(seuratObj)[!is.na(seuratObj@meta.data$scGateConsensus)]
 			seuratObj <- subset(seuratObj, cells = cells)
 			print(paste0('After dropping cells without scGateConsensus: ', length(colnames(x = seuratObj))))

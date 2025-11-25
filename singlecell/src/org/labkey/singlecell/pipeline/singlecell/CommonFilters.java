@@ -27,12 +27,12 @@ public class CommonFilters extends AbstractCellMembraneStep
                         put("minValue", 0);
                         put("maxValue", 1);
                         put("decimalPrecision", 3);
-                    }}, 0.5),
+                    }}, 0.1),
                     SeuratToolParameter.create("saturation.RNA.max", "Saturation.RNA Max", "Saturation.RNA max value", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("maxValue", 1);
                         put("decimalPrecision", 3);
-                    }}, 0.9),
+                    }}, 0.99),
                     SeuratToolParameter.create("saturation.ADT.min", "Saturation.ADT Min", "Saturation.ADT min value", "ldk-numberfield", new JSONObject(){{
                         put("minValue", 0);
                         put("maxValue", 1);

@@ -140,6 +140,7 @@
             </column>
             <column columnName="studyName">
                 <columnTitle>Study Name</columnTitle>
+                <nullable>false</nullable>
             </column>
             <column columnName="label">
                 <columnTitle>Label</columnTitle>
@@ -196,6 +197,7 @@
         <auditLogging>DETAILED</auditLogging>
         <columns>
             <column columnName="rowid">
+                <columnTitle>Cohort ID</columnTitle>
                 <isAutoInc>true</isAutoInc>
                 <shownInUpdateView>false</shownInUpdateView>
                 <shownInInsertView>false</shownInInsertView>
@@ -207,7 +209,7 @@
                     <fkDbSchema>studies</fkDbSchema>
                     <fkTable>studies</fkTable>
                     <fkColumnName>rowId</fkColumnName>
-                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                    <fkDisplayColumnName>labelOrName</fkDisplayColumnName>
                 </fk>
             </column>
             <column columnName="cohortName">
@@ -286,7 +288,7 @@
                     <fkDbSchema>studies</fkDbSchema>
                     <fkTable>studies</fkTable>
                     <fkColumnName>rowId</fkColumnName>
-                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                    <fkDisplayColumnName>labelOrName</fkDisplayColumnName>
                 </fk>
             </column>
             <column columnName="label">
@@ -351,7 +353,7 @@
                     <fkDbSchema>studies</fkDbSchema>
                     <fkTable>studies</fkTable>
                     <fkColumnName>rowId</fkColumnName>
-                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                    <fkDisplayColumnName>labelOrName</fkDisplayColumnName>
                 </fk>
             </column>
             <column columnName="cohortId">
@@ -360,7 +362,7 @@
                     <fkDbSchema>studies</fkDbSchema>
                     <fkTable>studyCohorts</fkTable>
                     <fkColumnName>rowId</fkColumnName>
-                    <fkDisplayColumnName>label</fkDisplayColumnName>
+                    <fkDisplayColumnName>labelOrName</fkDisplayColumnName>
                 </fk>
             </column>
             <column columnName="label">
@@ -523,6 +525,10 @@
                     <fkColumnName>rowId</fkColumnName>
                     <fkDisplayColumnName>label</fkDisplayColumnName>
                 </fk>
+            </column>
+            <column columnName="sourceRecord">
+                <columnTitle>Source Record</columnTitle>
+                <isHidden>true</isHidden>
             </column>
             <column columnName="dataSource">
                 <columnTitle>Data Source</columnTitle>

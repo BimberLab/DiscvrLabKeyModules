@@ -58,7 +58,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
-import static javax.swing.Spring.width;
 import static org.labkey.api.util.DOM.Attribute.valign;
 import static org.labkey.api.util.DOM.at;
 import static org.labkey.api.util.DOM.cl;

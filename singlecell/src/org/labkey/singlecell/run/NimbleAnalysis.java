@@ -29,7 +29,7 @@ public class NimbleAnalysis extends AbstractPipelineStep implements AnalysisStep
     {
         public Provider()
         {
-            super("NimbleAnalysis", "Nimble", null, "This will run Nimble to generate a supplemental feature count matrix for the provided libraries", NimbleAlignmentStep.getToolParameters(), new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/GenomeField.js", "singlecell/panel/NimbleAlignPanel.js")), null);
+            super("NimbleAnalysis", "Nimble", null, "This will run Nimble to generate a supplemental feature count matrix for the provided libraries. This should work using either CellRanger/scRNA-seq or bulk input data.", NimbleAlignmentStep.getToolParameters(), new LinkedHashSet<>(PageFlowUtil.set("sequenceanalysis/field/GenomeField.js", "singlecell/panel/NimbleAlignPanel.js")), null);
         }
 
         @Override
@@ -57,8 +57,6 @@ public class NimbleAnalysis extends AbstractPipelineStep implements AnalysisStep
         AnalysisOutputImpl output = new AnalysisOutputImpl();
         NimbleHelper helper = new NimbleHelper(getPipelineCtx(), getProvider(), getStepIdx());
         helper.doNimbleAlign(inputBam, output, rs, FileUtil.getBaseName(inputBam));
-
-        NimbleHelper.write10xBarcodes(inputBam, getPipelineCtx().getLogger(), rs, referenceGenome, output);
 
         return output;
     }

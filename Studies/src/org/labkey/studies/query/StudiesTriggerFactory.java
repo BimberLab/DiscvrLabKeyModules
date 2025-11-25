@@ -38,49 +38,76 @@ public class StudiesTriggerFactory implements TriggerFactory
         @Override
         public void beforeInsert(TableInfo table, Container c, User user, @Nullable Map<String, Object> newRow, ValidationException errors, Map<String, Object> extraContext, @Nullable Map<String, Object> existingRecord) throws ValidationException
         {
-            possiblyResolveStudy(newRow, c);
+            possiblyResolveStudy(table, newRow, existingRecord, c);
         }
 
         @Override
         public void beforeUpdate(TableInfo table, Container c, User user, @Nullable Map<String, Object> newRow, @Nullable Map<String, Object> oldRow, ValidationException errors, Map<String, Object> extraContext) throws ValidationException
         {
-            possiblyResolveStudy(newRow, c);
+            possiblyResolveStudy(table, newRow, oldRow, c);
         }
 
         /**
          * This allows incoming data to specify the study using the string name, which is resolved into the rowId
          */
-        private void possiblyResolveStudy(@Nullable Map<String, Object> row, Container c)
+        private void possiblyResolveStudy(TableInfo table, @Nullable Map<String, Object> row, @Nullable Map<String, Object> oldRow, Container c)
         {
             if (row == null)
             {
                 return;
             }
 
-            possiblyResolveStudy(row, c, "studyId");
-            if (row.get("studyId") == null & row.get("studyName") != null)
+            if (table.getColumn("studyId") != null)
             {
-                possiblyResolveStudy(row, c, "studyName");
+                possiblyResolveStudy(row, c, "studyId");
+                if (row.get("studyId") == null & row.get("studyName") != null)
+                {
+                    possiblyResolveStudy(row, c, "studyName");
+                }
+            }
+
+            if (table.getColumn("cohortId") != null)
+            {
+                possiblyResolveCohort(row, c, "cohortId");
+                if (row.get("cohortId") == null & row.get("cohortName") != null)
+                {
+                    possiblyResolveCohort(row, c, "cohortName");
+                }
             }
         }
 
         private void possiblyResolveStudy(@Nullable Map<String, Object> row, Container c, String sourceProperty)
         {
+            possiblyResolveStudyOrCohort(StudiesSchema.TABLE_STUDIES, row, c, sourceProperty, "studyId", "studyName");
+        }
+
+        private void possiblyResolveCohort(@Nullable Map<String, Object> row, Container c, String sourceProperty)
+        {
+            possiblyResolveStudyOrCohort(StudiesSchema.TABLE_COHORTS, row, c, sourceProperty, "cohortId", "cohortName");
+        }
+
+        private void possiblyResolveStudyOrCohort(String tableToQuery, @Nullable Map<String, Object> row, Container c, String sourceProperty, String targetFieldName, String filterFieldName)
+        {
             if (row == null)
             {
                 return;
             }
 
-            if (row.get(sourceProperty) != null & row.get(sourceProperty) instanceof String)
+            if (row.get(sourceProperty) instanceof Integer)
+            {
+                return;
+            }
+
+            if (row.get(sourceProperty) != null & row.get(sourceProperty) instanceof String & !String.valueOf(row.get(sourceProperty)).isEmpty())
             {
                 if (!NumberUtils.isCreatable(row.get(sourceProperty).toString()))
                 {
                     Container target = c.isWorkbookOrTab() ? c.getParent() : c;
-                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString("container"), target.getEntityId()).addCondition(FieldKey.fromString("studyName"), row.get(sourceProperty));
-                    List<Integer> rowIds = new TableSelector(StudiesSchema.getInstance().getSchema().getTable(StudiesSchema.TABLE_STUDIES), PageFlowUtil.set("rowId"), filter, null).getArrayList(Integer.class);
+                    SimpleFilter filter = new SimpleFilter(FieldKey.fromString("container"), target.getEntityId()).addCondition(FieldKey.fromString(filterFieldName), row.get(sourceProperty));
+                    List<Integer> rowIds = new TableSelector(StudiesSchema.getInstance().getSchema().getTable(tableToQuery), PageFlowUtil.set("rowId"), filter, null).getArrayList(Integer.class);
                     if (rowIds.size() == 1)
                     {
-                        row.put("studyId", rowIds.get(0));
+                        row.put(targetFieldName, rowIds.get(0));
                     }
                 }
             }

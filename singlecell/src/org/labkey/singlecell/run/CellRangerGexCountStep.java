@@ -5,6 +5,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
@@ -47,8 +48,10 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.SingleCellSchema;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -56,12 +59,14 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRangerWrapper> implements AlignmentStep
 {
     public static final String LOUPE_CATEGORY = "10x Loupe File";
 
-    public CellRangerGexCountStep(AlignmentStepProvider provider, PipelineContext ctx, CellRangerWrapper wrapper)
+    public CellRangerGexCountStep(AlignmentStepProvider<?> provider, PipelineContext ctx, CellRangerWrapper wrapper)
     {
         super(provider, ctx, wrapper);
     }
@@ -328,7 +333,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
             return false;
         }
 
-        return !_alwaysRetainBam &&  getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        return !_alwaysRetainBam && getProvider().getParameterByName(AbstractAlignmentStepProvider.DISCARD_BAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
     }
 
     private boolean _alwaysRetainBam = false;
@@ -349,7 +354,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         AbstractAlignmentStepProvider.ALIGNMENT_MODE mode = AbstractAlignmentStepProvider.ALIGNMENT_MODE.valueOf(alignmentMode);
 
         List<Pair<File, File>> inputFastqs = new ArrayList<>();
-        for (int i = 0; i < inputFastqs1.size();i++)
+        for (int i = 0; i < inputFastqs1.size(); i++)
         {
             File inputFastq1 = inputFastqs1.get(i);
             File inputFastq2 = inputFastqs2.get(i);
@@ -395,9 +400,9 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         File outdir = new File(outputDirectory, id);
         outdir = new File(outdir, "outs");
 
+        File bam = new File(outdir, "possorted_genome_bam.bam");
         if (!shouldDiscardBam())
         {
-            File bam = new File(outdir, "possorted_genome_bam.bam");
             if (!bam.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + bam.getPath());
@@ -612,5 +617,89 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                 Table.insert(getPipelineCtx().getJob().getUser(), singlecellDatasets, toInsert);
             }
         }
+    }
+
+    public enum Chemistry
+    {
+        // See: https://kb.10xgenomics.com/s/article/115004506263-What-is-a-barcode-inclusion-list-formerly-barcode-whitelist
+        // cellranger-x.y.z/lib/python/cellranger/barcodes/
+        FivePE_V3("Single Cell 5' PE v3", "3M-5pgex-jan-2023.txt.gz"),
+        FivePE_V2("Single Cell 5' PE v2", "737k-august-2016.txt");
+
+        final String _label;
+        final String _inclusionListFile;
+
+        Chemistry(String label, String inclusionListFile)
+        {
+            _label = label;
+            _inclusionListFile = inclusionListFile;
+        }
+
+        public File getInclusionListFile(Logger logger) throws PipelineJobException
+        {
+            File exe = new CellRangerWrapper(logger).getExe();
+            if (Files.isSymbolicLink(exe.toPath()))
+            {
+                try
+                {
+                    exe = Files.readSymbolicLink(exe.toPath()).toFile();
+                }
+                catch (IOException e)
+                {
+                    throw new PipelineJobException(e);
+                }
+            }
+
+            File il = new File(exe.getParentFile(), "lib/python/cellranger/barcodes/" + _inclusionListFile);
+            if (!il.exists())
+            {
+                throw new PipelineJobException("Unable to find file: " + il.getPath());
+            }
+
+            return il;
+        }
+
+        public static Chemistry getByLabel(String label)
+        {
+            for (Chemistry c : Chemistry.values())
+            {
+                if (c._label.equals(label))
+                {
+                    return c;
+                }
+            }
+
+            throw new IllegalArgumentException("Unknown chemistry: " + label);
+        }
+    }
+
+    public static Chemistry inferChemistry(File cloupeFile) throws PipelineJobException
+    {
+        File html = new File(cloupeFile.getPath().replaceAll("_cloupe.cloupe$", "_web_summary.html"));
+        if (!html.exists())
+        {
+            throw new IllegalArgumentException("Missing file: " + html.getPath());
+        }
+
+        final Pattern pattern = Pattern.compile("\\[\"Chemistry\",\"(.*?)\"],");
+        try (BufferedReader reader = Readers.getReader(html))
+        {
+            String line;
+            while ((line = reader.readLine()) != null)
+            {
+                Matcher m = pattern.matcher(line);
+                if (m.find())
+                {
+                    String chem = m.group(1);
+                    return Chemistry.getByLabel(chem);
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        throw new IllegalArgumentException("Unable to infer chemistry for file: " + html.getPath());
     }
 }
