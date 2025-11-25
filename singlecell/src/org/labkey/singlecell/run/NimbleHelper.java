@@ -594,7 +594,7 @@ public class NimbleHelper
         return new File(parentDir, "nimble." + resumeString + ".done");
     }
 
-    public static File runFastqToBam(PipelineStepOutput output, PipelineContext ctx, Readset rs, List<File> inputFastqs1, List<File> inputFastqs2, File cellBarcodeUmiMap) throws PipelineJobException
+    public static File runFastqToBam(PipelineStepOutput output, PipelineContext ctx, Readset rs, List<File> inputFastqs1, List<File> inputFastqs2, File loupeFile) throws PipelineJobException
     {
         List<File> outputBams = new ArrayList<>();
         int bamIdx = 0;
@@ -627,7 +627,8 @@ public class NimbleHelper
             args.add(inputFastqs2.get(bamIdx).getPath());
 
             args.add("--map");
-            args.add(cellBarcodeUmiMap.getPath());
+            CellRangerGexCountStep.Chemistry chem = CellRangerGexCountStep.inferChemistry(loupeFile);
+            args.add(chem.getInclusionListFile(ctx.getLogger()).getPath());
 
             args.add("--output");
             args.add(outputBam.getPath());

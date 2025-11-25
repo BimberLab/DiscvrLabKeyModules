@@ -333,3 +333,20 @@ then
 else
     echo "Already installed"
 fi
+
+
+if [[ ! -e ${LKTOOLS_DIR}/primer3_core || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf $LKTOOLS_DIR/primer3_core*
+    rm -Rf primer3*
+    rm -Rf v2.6.1.tar.gz
+
+    wget https://github.com/primer3-org/primer3/archive/refs/tags/v2.6.1.tar.gz
+    tar -xf v2.6.1.tar.gz
+    cd primer3-2.6.1/src
+    make
+    install primer3_core $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi
