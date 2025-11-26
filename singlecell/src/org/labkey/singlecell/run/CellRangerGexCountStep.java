@@ -637,12 +637,14 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
 
         public File getInclusionListFile(Logger logger) throws PipelineJobException
         {
-            File exe = new CellRangerWrapper(logger).getExe();
+            File exe = new CellRangerWrapper(logger).getExe().getAbsoluteFile();
+            logger.debug("cellranger executable: " + exe.getPath());
             if (Files.isSymbolicLink(exe.toPath()))
             {
                 try
                 {
-                    exe = Files.readSymbolicLink(exe.toPath()).toFile();
+                    exe = Files.readSymbolicLink(exe.toPath()).toRealPath().toFile();
+                    logger.debug("cellranger symlink target: " + exe.getPath());
                 }
                 catch (IOException e)
                 {
@@ -650,7 +652,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                 }
             }
 
-            File il = new File(exe.getAbsoluteFile().getParentFile(), "lib/python/cellranger/barcodes/" + _inclusionListFile);
+            File il = new File(exe.getParentFile(), "lib/python/cellranger/barcodes/" + _inclusionListFile);
             if (!il.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + il.getPath());
