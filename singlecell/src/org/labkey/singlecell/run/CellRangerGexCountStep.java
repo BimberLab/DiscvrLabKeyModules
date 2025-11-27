@@ -52,6 +52,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -643,8 +644,13 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
             {
                 try
                 {
-                    exe = Files.readSymbolicLink(exe.toPath()).resolve(exe.getParentFile().toPath()).toFile();
-                    logger.debug("cellranger symlink target: " + exe.getPath());
+                    Path exePath = Files.readSymbolicLink(exe.toPath());
+                    logger.debug("cellranger symlink target: " + exePath.toString());
+                    logger.debug("cellranger symlink absolute path: " + exePath.toAbsolutePath());
+                    logger.debug("cellranger symlink realpath path: " + exePath.toRealPath());
+
+                    exe = exePath.toFile();
+                    logger.debug("cellranger resolved symlink target: " + exe.getPath());
                 }
                 catch (IOException e)
                 {
