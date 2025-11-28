@@ -648,7 +648,13 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                     logger.debug("cellranger symlink target: " + exePath);
                     if (!exePath.isAbsolute())
                     {
-                        exePath = exe.getParentFile().toPath().resolve(exePath);
+                        File parent = exe.getParentFile();
+                        if (parent.getPath().endsWith("bin"))
+                        {
+                            parent = parent.getParentFile();
+                        }
+
+                        exePath = parent.toPath().resolve(exePath);
                         logger.debug("resolved symlink target: " + exePath);
                     }
 
