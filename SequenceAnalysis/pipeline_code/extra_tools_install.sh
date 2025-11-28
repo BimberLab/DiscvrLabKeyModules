@@ -350,3 +350,32 @@ then
 else
     echo "Already installed"
 fi
+
+
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Install hifiasm"
+echo ""
+cd $LKSRC_DIR
+if [[ ! -e ${LKTOOLS_DIR}/primer3_core || ! -z $FORCE_REINSTALL ]];
+then
+    echo "Cleaning up previous installs"
+    rm -Rf $LKTOOLS_DIR/hifiasm*
+    rm -Rf $LKTOOLS_DIR/yak*
+    rm -Rf hifiasm*
+    rm -Rf yak*
+
+    git clone https://github.com/chhylp123/hifiasm
+    cd hifiasm
+    make
+    install hifiasm $LKTOOLS_DIR/
+    cd ../
+
+    git clone https://github.com/lh3/yak
+    cd yak
+    make
+    install yak $LKTOOLS_DIR/
+else
+    echo "Already installed"
+fi
