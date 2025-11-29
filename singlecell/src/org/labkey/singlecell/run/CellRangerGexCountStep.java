@@ -649,11 +649,6 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                     if (!exePath.isAbsolute())
                     {
                         File parent = exe.getParentFile();
-                        if (parent.getPath().endsWith("bin"))
-                        {
-                            parent = parent.getParentFile();
-                        }
-
                         exePath = parent.toPath().resolve(exePath);
                         logger.debug("resolved symlink target: " + exePath);
                     }
@@ -667,7 +662,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                 }
             }
 
-            File il = new File(exe.getParentFile(), "lib/python/cellranger/barcodes/" + _inclusionListFile);
+            File il = new File(exe.getParentFile(), "../lib/python/cellranger/barcodes/" + _inclusionListFile);
             if (!il.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + il.getPath());
