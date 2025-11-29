@@ -69,6 +69,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import static org.labkey.api.exp.api.ExperimentService.asLong;
+
 /**
  * User: bimber
  * Date: 10/27/13
@@ -193,7 +195,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
-    public SequenceReadsetImpl getReadset(int readsetId, User u)
+    public SequenceReadsetImpl getReadset(long readsetId, User u)
     {
         TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_READSETS);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("rowid"), readsetId);
@@ -231,7 +233,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
             throw new UnauthorizedException("Cannot read data in container: " + c.getPath());
         }
 
-        ExpData d = ExperimentService.get().getExpData((Integer)map.get("fasta_file"));
+        ExpData d = ExperimentService.get().getExpData(asLong(map.get("fasta_file")));
         if (d.getFile() == null)
         {
             throw new PipelineJobException("No FASTA file found for genome: " + genomeId);
@@ -363,7 +365,7 @@ public class SequenceAnalysisServiceImpl extends SequenceAnalysisService
     }
 
     @Override
-    public Integer getExpRunIdForJob(PipelineJob job, boolean throwUnlessFound) throws PipelineJobException
+    public Long getExpRunIdForJob(PipelineJob job, boolean throwUnlessFound) throws PipelineJobException
     {
         return SequenceTaskHelper.getExpRunIdForJob(job, throwUnlessFound);
     }

@@ -495,7 +495,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         }
 
         File outsDir = outputForData.getFile().getParentFile();
-        Integer dataId = outputForData.getDataId();
+        Long dataId = outputForData.getDataId();
         if (dataId == null)
         {
             throw new PipelineJobException("Unable to find dataId for output file");

@@ -19,6 +19,7 @@ import htsjdk.samtools.SAMRecord;
 import htsjdk.samtools.reference.ReferenceSequence;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
+import org.labkey.api.collections.IntHashMap;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.ReferenceLibraryHelper;
 import org.labkey.sequenceanalysis.run.util.AASnp;
@@ -230,7 +231,7 @@ abstract public class AbstractAlignmentAggregator implements AlignmentAggregator
         return ref;
     }
 
-    private final Map<Integer, Map<Integer, Map<String, Double>>> _qualMap = new HashMap<>();
+    private final Map<Integer, Map<Integer, Map<String, Double>>> _qualMap = new IntHashMap<>();
 
     private Map<Integer, Map<String, Double>> getQualsForReference(Integer refId) throws PipelineJobException
     {

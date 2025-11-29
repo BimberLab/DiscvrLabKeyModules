@@ -129,6 +129,7 @@ WITH (OIDS=FALSE);
 -- ----------------------------
 -- Records of barcodes
 -- ----------------------------
+-- @SkipOnEmptySchemasBegin
 INSERT INTO sequenceanalysis.barcodes (tag_name, sequence, group_name) VALUES ('MID01', 'ACGAGTGCGT', 'GSMIDs');
 INSERT INTO sequenceanalysis.barcodes (tag_name, sequence, group_name) VALUES ('MID02', 'ACGCTCGACA', 'GSMIDs');
 INSERT INTO sequenceanalysis.barcodes (tag_name, sequence, group_name) VALUES ('MID03', 'AGACGCACTC', 'GSMIDs');
@@ -282,7 +283,7 @@ INSERT INTO sequenceanalysis.barcodes (tag_name, sequence, group_name) VALUES ('
 INSERT INTO sequenceanalysis.barcodes (tag_name, sequence, group_name) VALUES ('MID151', 'TGCTAGTCAG', 'GSMIDs');
 INSERT INTO sequenceanalysis.barcodes (tag_name, sequence, group_name) VALUES ('MID152', 'TGTATCACAG', 'GSMIDs');
 INSERT INTO sequenceanalysis.barcodes (tag_name, sequence, group_name) VALUES ('MID153', 'TGTGCGCGTG', 'GSMIDs');
-
+-- @SkipOnEmptySchemasEnd
 
 -- ----------------------------
 -- Table structure for sequenceAnalysis.ref_nt_sequences
@@ -1061,6 +1062,7 @@ WITH (OIDS=FALSE)
 -- ----------------------------
 -- Records of sequenceAnalysis.dna_adapters
 -- ----------------------------
+-- @SkipOnEmptySchemasBegin
 INSERT INTO sequenceanalysis.dna_adapters (name, group_name, sequence) VALUES
 ('Roche-454 FLX Amplicon A', 'Roche-454 FLX Amplicon', 'GCCTCCCTCGCGCCATCAG'),
 ('Roche-454 FLX Amplicon B', 'Roche-454 FLX Amplicon', 'GCCTTGCCAGCCCGCTCAG'),
@@ -1070,7 +1072,7 @@ INSERT INTO sequenceanalysis.dna_adapters (name, group_name, sequence) VALUES
 ('Roche-454 Titanium Library A', 'Roche-454 Titanium Library', 'CCATCTCATCCCTGCGTGTCTCCGACTCAG'),
 ('Roche-454 Titanium Library B', 'Roche-454 Titanium Library', 'CCTATCCCCTGTGTGCCTTGGCAGTCTCAG'),
 ('Nextera Transposon Adapter A', 'Nextera Adapters', 'AGATGTGTATAAGAGACAG');
-
+-- @SkipOnEmptySchemasEnd
 
 
 -- ----------------------------
@@ -1089,6 +1091,7 @@ WITH (OIDS=FALSE)
 -- ----------------------------
 -- Records of sequenceanalysis.dna_loci
 -- ----------------------------
+-- @SkipOnEmptySchemasBegin
 INSERT INTO sequenceanalysis.dna_loci
 VALUES
 ('MHC-A', '-a'),
@@ -1111,7 +1114,7 @@ VALUES
 ('HLA-A', 'hla-a'),
 ('HLA-B', 'hla-b'),
 ('HLA-C', 'hla-c');
-
+-- @SkipOnEmptySchemasEnd
 
 
 
@@ -1130,7 +1133,9 @@ WITH (OIDS=FALSE)
 -- ----------------------------
 -- Records of sequenceAnalysis.ref_nt_category
 -- ----------------------------
+-- @SkipOnEmptySchemasBegin
 INSERT INTO sequenceAnalysis.ref_nt_category (category) VALUES ('Virus'), ('DNA');
+-- @SkipOnEmptySchemasEnd
 
 -- ----------------------------
 -- Table structure for sequenceanalysis.dna_region
@@ -1146,7 +1151,9 @@ WITH (OIDS=FALSE);
 -- ----------------------------
 -- Records of sequenceAnalysis.dna_region
 -- ----------------------------
+-- @SkipOnEmptySchemasBegin
 INSERT INTO sequenceAnalysis.dna_region (region) VALUES ('KIR'), ('MHC');
+-- @SkipOnEmptySchemasEnd
 
 -- ----------------------------
 -- Table structure for sequenceanalysis.geographic_origins
@@ -1657,12 +1664,13 @@ CREATE TABLE sequenceanalysis.analysis_types (
 WITH (OIDS=FALSE)
 ;
 
+-- @SkipOnEmptySchemasBegin
 INSERT INTO sequenceanalysis.analysis_types
 (type) VALUES
 ('Virus'),
 ('SBT')
 ;
-
+-- @SkipOnEmptySchemasEnd
 
 
 --foreign keys not necessary.

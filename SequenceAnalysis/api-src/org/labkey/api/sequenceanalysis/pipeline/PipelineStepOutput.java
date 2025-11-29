@@ -92,12 +92,12 @@ public interface PipelineStepOutput extends PipelineOutputTracker
         private final File _file;
         private final String _label;
         private final String _category;
-        private final Integer _readsetId;
-        private final Integer _analysisId;
+        private final Long _readsetId;
+        private final Long _analysisId;
         private final Integer _genomeId;
         private final String _description;
 
-        public SequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId, @Nullable String description)
+        public SequenceOutput(File file, String label, String category, @Nullable Long readsetId, @Nullable Long analysisId, @Nullable Integer genomeId, @Nullable String description)
         {
             _file = file;
             _label = label;
@@ -123,12 +123,12 @@ public interface PipelineStepOutput extends PipelineOutputTracker
             return _category;
         }
 
-        public Integer getReadsetId()
+        public Long getReadsetId()
         {
             return _readsetId;
         }
 
-        public Integer getAnalysisId()
+        public Long getAnalysisId()
         {
             return _analysisId;
         }
@@ -148,7 +148,7 @@ public interface PipelineStepOutput extends PipelineOutputTracker
     {
         File _metricFile;
         File _inputFile;
-        Integer _readsetId;
+        Long _readsetId;
         TYPE _type;
 
         public enum TYPE
@@ -157,7 +157,7 @@ public interface PipelineStepOutput extends PipelineOutputTracker
             reads()
         }
 
-        public PicardMetricsOutput(File metricFile, File inputFile, Integer readsetId)
+        public PicardMetricsOutput(File metricFile, File inputFile, Long readsetId)
         {
             _metricFile = metricFile;
             _inputFile = inputFile;
@@ -170,7 +170,7 @@ public interface PipelineStepOutput extends PipelineOutputTracker
          * want to denote that these metrics will apply to the final file, but dont know its name yet.  This can be used instead of tying the
          * metrics to a specific file.
          */
-        public PicardMetricsOutput(File metricFile, TYPE type, Integer readsetId)
+        public PicardMetricsOutput(File metricFile, TYPE type, Long readsetId)
         {
             _metricFile = metricFile;
             _type = type;
@@ -187,7 +187,7 @@ public interface PipelineStepOutput extends PipelineOutputTracker
             return _inputFile;
         }
 
-        public Integer getReadsetId()
+        public Long getReadsetId()
         {
             return _readsetId;
         }

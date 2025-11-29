@@ -116,7 +116,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     }
 
     @Override
-    public void addSequenceOutput(File file, String label, String category, @Nullable Integer readsetId, @Nullable Integer analysisId, @Nullable Integer genomeId, @Nullable String description)
+    public void addSequenceOutput(File file, String label, String category, @Nullable Long readsetId, @Nullable Long analysisId, @Nullable Integer genomeId, @Nullable String description)
     {
         SequenceOutputFile so = new SequenceOutputFile();
         so.setFile(file);
@@ -357,11 +357,11 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     }
 
     @Override
-    public Set<SequenceOutputFile> createSequenceOutputRecords(@Nullable Integer analysisId) throws PipelineJobException
+    public Set<SequenceOutputFile> createSequenceOutputRecords(@Nullable Long analysisId) throws PipelineJobException
     {
         if (!_job.getOutputsToCreate().isEmpty())
         {
-            Integer runId = SequenceTaskHelper.getExpRunIdForJob(_job);
+            Long runId = SequenceTaskHelper.getExpRunIdForJob(_job);
             return SequenceOutputHandlerFinalTask.createOutputFiles(_job, runId, analysisId);
         }
         else
@@ -539,7 +539,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     }
 
     @Override
-    public void writeMetricsToDb(Map<Integer, Integer> readsetMap, Map<Integer, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap) throws PipelineJobException
+    public void writeMetricsToDb(Map<Long, Long> readsetMap, Map<Long, Map<PipelineStepOutput.PicardMetricsOutput.TYPE, File>> typeMap) throws PipelineJobException
     {
         if (PipelineJobService.get().getLocationType() != PipelineJobService.LocationType.WebServer)
         {
@@ -574,7 +574,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                     toInsert.put("createdby", _job.getUser().getUserId());
                     toInsert.put("created", new Date());
 
-                    Integer readsetId = Integer.parseInt(line[0]);
+                    Long readsetId = Long.parseLong(line[0]);
                     toInsert.put("readset", readsetId);
                     if (readsetMap.containsKey(readsetId))
                     {
@@ -582,7 +582,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                     }
 
                     String type = StringUtils.trimToNull(line[2]);
-                    Integer dataId = null;
+                    Long dataId = null;
                     if (typeMap.containsKey(readsetId) && type != null)
                     {
                         _job.getLogger().debug("importing metrics using readsetId");

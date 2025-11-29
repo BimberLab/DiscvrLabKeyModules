@@ -1,7 +1,7 @@
 import org.labkey.gradle.plugin.TeamCity
 import org.labkey.gradle.plugin.extension.ServerDeployExtension
 import org.labkey.gradle.plugin.extension.TeamCityExtension
-import org.labkey.gradle.task.DoThenSetup
+import org.labkey.gradle.task.SetUpProperties
 import org.labkey.gradle.util.BuildUtils
 import org.labkey.gradle.util.GroupNames
 import org.labkey.gradle.util.PropertiesUtils
@@ -195,13 +195,10 @@ if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null &
             })
             task.destinationDir = configDir
 
-            rootProject.allprojects {
-                task.mustRunAfter tasks.withType(DoThenSetup)
-            }
     }
-    testProject.tasks.named("startTomcat").configure {
+    testProject.tasks.withType(SetUpProperties).configureEach {
         dependsOn(createPipelineConfigTask)
-        it.doFirst {
+        it.doLast {
             new File(new File(BuildUtils.getEmbeddedConfigPath(project)), "application.properties")
                     << "\ncontext.pipelineConfig=${configDir.getAbsolutePath().replace("\\", "\\\\")}"
         }

@@ -33,7 +33,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -61,6 +60,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenomeManager;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Job;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.PageFlowUtil;
@@ -80,6 +80,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static org.labkey.api.exp.api.ExperimentService.asInteger;
 
 /**
  * User: bbimber
@@ -328,7 +330,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
         map.put("modified", new Date());
         map.put("modifiedby", getJob().getUser().getUserId());
         map.put("fileid", trackData.getRowId());
-        Integer jobId = PipelineService.get().getJobId(getJob().getUser(), genomeContainer, getJob().getJobGUID());
+        Long jobId = PipelineService.get().getJobId(getJob().getUser(), genomeContainer, getJob().getJobGUID());
         map.put("jobId", jobId);
 
         TableInfo trackTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_LIBRARY_TRACKS);
@@ -338,7 +340,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
             throw new PipelineJobException("Unable to find rowid for new track");
         }
 
-        return (Integer)map.get("rowid");
+        return asInteger(map.get("rowid"));
     }
 
     private void sortGxf(File gxf) throws PipelineJobException
@@ -354,7 +356,7 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
     }
     private File getOutputFile(File file, File tracksDir)
     {
-        return AssayFileWriter.findUniqueFileName(file.getName().replaceAll(" ", "_"), tracksDir);
+        return FileUtil.findUniqueFileName(file.getName().replaceAll(" ", "_"), tracksDir);
     }
 
     private Map<String, Pair<String, Integer>> getNameTranslationMap(List<RefNtSequenceModel> refNtSequenceModels) throws PipelineJobException

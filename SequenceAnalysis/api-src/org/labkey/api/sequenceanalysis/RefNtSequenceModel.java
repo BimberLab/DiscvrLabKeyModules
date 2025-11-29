@@ -61,8 +61,8 @@ public class RefNtSequenceModel implements Serializable
     private String _name;
     //deprecated
     private String _sequence;
-    private Integer _sequenceFile;
-    private Integer _jobId;
+    private Long _sequenceFile;
+    private Long _jobId;
     private String _category;
     private String _subset;
     private String _locus;
@@ -171,12 +171,12 @@ public class RefNtSequenceModel implements Serializable
         _sequence = sequence;
     }
 
-    public Integer getSequenceFile()
+    public Long getSequenceFile()
     {
         return _sequenceFile;
     }
 
-    public void setSequenceFile(Integer sequenceFile)
+    public void setSequenceFile(Long sequenceFile)
     {
         _sequenceFile = sequenceFile;
     }
@@ -361,12 +361,12 @@ public class RefNtSequenceModel implements Serializable
         _modified = modified;
     }
 
-    public Integer getJobId()
+    public Long getJobId()
     {
         return _jobId;
     }
 
-    public void setJobId(Integer jobId)
+    public void setJobId(Long jobId)
     {
         _jobId = jobId;
     }

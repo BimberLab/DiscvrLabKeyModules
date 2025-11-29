@@ -24,7 +24,6 @@ import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -67,6 +66,7 @@ import org.labkey.api.sequenceanalysis.GenomeTrigger;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Job;
 import org.labkey.api.util.JobRunner;
 import org.labkey.api.util.PageFlowUtil;
@@ -90,6 +90,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import static org.labkey.api.exp.api.ExperimentService.asInteger;
 
 public class SequenceAnalysisManager
 {
@@ -280,9 +282,9 @@ public class SequenceAnalysisManager
                 throw new IllegalArgumentException("Unable to find sequenceanalysis user schema");
             }
 
-            Set<Integer> bamsDeleted = new HashSet<>();
+            Set<Long> bamsDeleted = new HashSet<>();
             Set<Integer> outputFilesWithDataNotDeleted = new HashSet<>();
-            Set<Integer> expDataDeleted = new HashSet<>();
+            Set<Long> expDataDeleted = new HashSet<>();
             List<SequenceOutputFile> files = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), new SimpleFilter(FieldKey.fromString("rowid"), outputFileIds, CompareType.IN), null).getArrayList(SequenceOutputFile.class);
             for (SequenceOutputFile so : files)
             {
@@ -728,7 +730,7 @@ public class SequenceAnalysisManager
         }
     }
 
-    public List<Integer> importRefSequencesFromFasta(Container c, User u, File file, boolean splitWhitespace, Map<String, String> params, Logger log, @Nullable File outDir, @Nullable Integer jobId) throws IOException
+    public List<Integer> importRefSequencesFromFasta(Container c, User u, File file, boolean splitWhitespace, Map<String, String> params, Logger log, @Nullable File outDir, @Nullable Long jobId) throws IOException
     {
         PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
         if (root == null)
@@ -783,7 +785,7 @@ public class SequenceAnalysisManager
                         map.put("jobId", jobId);
 
                     map = Table.insert(u, dnaTable, map);
-                    sequenceIds.add((Integer) map.get("rowid"));
+                    sequenceIds.add(asInteger(map.get("rowid")));
 
                     RefNtSequenceModel m = new TableSelector(dnaTable, new SimpleFilter(FieldKey.fromString("rowid"), map.get("rowid")), null).getObject(RefNtSequenceModel.class);
 
@@ -827,7 +829,7 @@ public class SequenceAnalysisManager
 
         //create file
         String expectedName = "chain-" + genomeId1 + "to" + genomeId2 + ".chain";
-        File outputFile = AssayFileWriter.findUniqueFileName(expectedName, targetDir);
+        File outputFile = FileUtil.findUniqueFileName(expectedName, targetDir);
 
         FileUtils.moveFile(file, outputFile);
         ExpData chainFile = ExperimentService.get().createData(c, new DataType("Sequence Track"));

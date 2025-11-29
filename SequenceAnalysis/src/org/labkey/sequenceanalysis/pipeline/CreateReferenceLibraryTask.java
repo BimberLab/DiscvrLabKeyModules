@@ -69,6 +69,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.labkey.api.exp.api.ExperimentService.asInteger;
+
 /**
  * User: bbimber
  * Date: 8/6/12
@@ -209,7 +211,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                     throw errors;
                 }
                 libraryRow = new CaseInsensitiveHashMap<>(inserted.get(0));
-                rowId = (Integer) libraryRow.get("rowid");
+                rowId = asInteger(libraryRow.get("rowid"));
             }
             else
             {

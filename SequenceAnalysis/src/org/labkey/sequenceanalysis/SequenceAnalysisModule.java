@@ -494,10 +494,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         ExperimentService.get().registerExperimentDataHandler(new HtmlExpDataHandler());
 
-        SearchService ss = SearchService.get();
-
-        if (null != ss)
-            ss.addDocumentParser(new SequenceNoOpDocumentParser());
+        SearchService.get().addDocumentParser(new SequenceNoOpDocumentParser());
     }
 
     @Override
@@ -508,40 +505,35 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
     }
 
     @Override
-    @NotNull
-    public Set<Class> getIntegrationTests()
+    public @NotNull Set<Class<?>> getIntegrationTests()
     {
-        @SuppressWarnings({"unchecked"})
-        Set<Class> testClasses = new HashSet<>(Arrays.asList(
-                Barcoder.TestCase.class,
-                BamIterator.TestCase.class,
-                SequenceIntegrationTests.SequenceImportPipelineTestCase.class,
-                //SequenceIntegrationTests.SequenceAnalysisPipelineTestCase3.class,
-                SequenceIntegrationTests.SequenceAnalysisPipelineTestCase1.class,
-                SequenceIntegrationTests.SequenceAnalysisPipelineTestCase2.class,
-                OutputIntegrationTests.VariantProcessingTest.class,
-                SequenceRemoteIntegrationTests.class,
-                SequenceTriggerHelper.TestCase.class,
-                SequencePipelineServiceImpl.TestCase.class
-        ));
-
-        return testClasses;
+        return Set.of(
+            Barcoder.TestCase.class,
+            BamIterator.TestCase.class,
+            SequenceIntegrationTests.SequenceImportPipelineTestCase.class,
+            //SequenceIntegrationTests.SequenceAnalysisPipelineTestCase3.class,
+            SequenceIntegrationTests.SequenceAnalysisPipelineTestCase1.class,
+            SequenceIntegrationTests.SequenceAnalysisPipelineTestCase2.class,
+            OutputIntegrationTests.VariantProcessingTest.class,
+            SequenceRemoteIntegrationTests.class,
+            SequenceTriggerHelper.TestCase.class,
+            SequencePipelineServiceImpl.TestCase.class
+        );
     }
 
     @Override
-    @NotNull
-    public Set<Class> getUnitTests()
+    public @NotNull Set<Class<?>> getUnitTests()
     {
-        return PageFlowUtil.set(
-                SequenceAlignmentTask.TestCase.class,
-                SequenceAnalysisManager.TestCase.class,
-                SequenceJob.TestCase.class,
-                SequenceJobSupportImpl.TestCase.class,
-                ProcessVariantsHandler.TestCase.class,
-                VariantProcessingJob.TestCase.class,
-                ScatterGatherUtils.TestCase.class,
-                ChainFileValidator.TestCase.class,
-                FastqcRunner.TestCase.class
+        return Set.of(
+            SequenceAlignmentTask.TestCase.class,
+            SequenceAnalysisManager.TestCase.class,
+            SequenceJob.TestCase.class,
+            SequenceJobSupportImpl.TestCase.class,
+            ProcessVariantsHandler.TestCase.class,
+            VariantProcessingJob.TestCase.class,
+            ScatterGatherUtils.TestCase.class,
+            ChainFileValidator.TestCase.class,
+            FastqcRunner.TestCase.class
         );
     }
 

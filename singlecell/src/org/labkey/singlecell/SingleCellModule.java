@@ -310,12 +310,11 @@ public class SingleCellModule extends ExtendedSimpleModule
     }
 
     @Override
-    @NotNull
-    public Set<Class> getUnitTests()
+    public @NotNull Set<Class<?>> getUnitTests()
     {
-        return PageFlowUtil.set(
-                AbstractSingleCellHandler.TestCase.class,
-                PrepareRawCounts.TestCase.class
+        return Set.of(
+            AbstractSingleCellHandler.TestCase.class,
+            PrepareRawCounts.TestCase.class
         );
     }
 }

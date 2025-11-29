@@ -2,6 +2,7 @@ package org.labkey.singlecell.pipeline.singlecell;
 
 import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
+import org.labkey.api.collections.IntHashMap;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -21,7 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -88,7 +88,7 @@ public class AppendCiteSeq extends AbstractCellHashingCiteseqStep
     @Override
     protected Map<Integer, File> prepareCountData(SingleCellOutput output, SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
     {
-        Map<Integer, File> dataIdToCalls = new HashMap<>();
+        Map<Integer, File> dataIdToCalls = new IntHashMap<>();
 
         boolean dropAggregateBarcodes = getProvider().getParameterByName("dropAggregateBarcodes").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, true);
         for (SeuratObjectWrapper wrapper : inputObjects)

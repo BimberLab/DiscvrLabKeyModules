@@ -13,6 +13,8 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.labkey.api.collections.IntHashMap;
+import org.labkey.api.collections.StringHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -37,7 +39,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -119,7 +120,7 @@ public class BamHaplotyper
 
                     if (!found)
                     {
-                        Map<Integer, Integer> map = new HashMap<>();
+                        Map<Integer, Integer> map = new IntHashMap<>();
                         map.put(so.getRowid(), newPair.second);
                         combinedResults.add(Pair.of(newPair.first, map));
                     }
@@ -162,7 +163,7 @@ public class BamHaplotyper
     private Map<Integer, TreeSet<Integer>> getInsertionMap(List<Pair<Character[][], Map<Integer, Integer>>> combinedResults)
     {
         //build list of all insertions that are present
-        Map<Integer, TreeSet<Integer>> indels = new HashMap<>();
+        Map<Integer, TreeSet<Integer>> indels = new IntHashMap<>();
         for (Pair<Character[][], Map<Integer, Integer>> pair : combinedResults)
         {
             for (int idx = 0;idx < pair.first.length;idx++)
@@ -189,7 +190,7 @@ public class BamHaplotyper
     private Map<String, Map<Integer, Integer>> convertResults(List<Pair<Character[][], Map<Integer, Integer>>> combinedResults, byte[] refBases, Map<Integer, TreeSet<Integer>> indels)
     {
         //now iterate each array, convert to string and return results
-        Map<String, Map<Integer, Integer>> ret = new HashMap<>();
+        Map<String, Map<Integer, Integer>> ret = new StringHashMap<>();
         for (Pair<Character[][], Map<Integer, Integer>> pair : combinedResults)
         {
             StringBuilder sb = new StringBuilder();

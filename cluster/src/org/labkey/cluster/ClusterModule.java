@@ -122,23 +122,15 @@ public class ClusterModule extends ExtendedSimpleModule
     }
 
     @Override
-    @NotNull
-    public Set<Class> getIntegrationTests()
+    public @NotNull Set<Class<?>> getIntegrationTests()
     {
-        @SuppressWarnings({"unchecked"})
-        Set<Class> testClasses = new HashSet<>(List.of(
-                TestCase.class
-        ));
-
-        return testClasses;
+        return Set.of(TestCase.class);
     }
 
     @Override
-    public @NotNull Set<Class> getUnitTests()
+    public @NotNull Set<Class<?>> getUnitTests()
     {
-        return new HashSet<>(List.of(
-                SlurmExecutionEngine.TestCase.class
-        ));
+        return Set.of(SlurmExecutionEngine.TestCase.class);
     }
 
     @Override

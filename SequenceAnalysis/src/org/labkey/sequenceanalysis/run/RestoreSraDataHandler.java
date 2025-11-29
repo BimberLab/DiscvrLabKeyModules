@@ -350,7 +350,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
 
                     if (rd.getRunId() == null)
                     {
-                        Integer runId = SequenceTaskHelper.getExpRunIdForJob(job);
+                        Long runId = SequenceTaskHelper.getExpRunIdForJob(job);
                         toUpdate.put("runid", runId);
                     }
 
@@ -364,7 +364,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     if (!hasMetrics)
                     {
                         job.getLogger().debug("No existing metrics found for: " + rd.getFileId1());
-                        List<Integer> toAdd = new ArrayList<>();
+                        List<Long> toAdd = new ArrayList<>();
                         toAdd.add(rd.getFileId1());
 
                         if (rd.getFileId2() != null)
@@ -373,7 +373,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                         }
 
                         job.getLogger().debug("adding metrics for " + toAdd.size() + " total fastq files");
-                        for (int dataId : toAdd)
+                        for (long dataId : toAdd)
                         {
                             //then delete/add:
                             job.getLogger().debug("adding metrics for: " + dataId);

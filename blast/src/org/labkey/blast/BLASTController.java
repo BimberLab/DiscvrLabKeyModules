@@ -50,6 +50,7 @@ import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.util.ExceptionUtil;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.api.util.StringUtilsLabKey;
@@ -217,7 +218,7 @@ public class BLASTController extends SpringActionController
             try
             {
                 FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
+                return FileUtil.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
             }
             catch (ExperimentException e)
             {
@@ -265,7 +266,7 @@ public class BLASTController extends SpringActionController
                     try
                     {
                         FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                        FileLike input = AssayFileWriter.findUniqueFileName("blast", targetDirectory);
+                        FileLike input = FileUtil.findUniqueFileName("blast", targetDirectory);
                         input.createFile();
                         try (PrintWriter fw = PrintWriters.getPrintWriter(input.openOutputStream()))
                         {

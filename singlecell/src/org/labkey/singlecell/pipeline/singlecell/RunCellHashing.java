@@ -2,6 +2,7 @@ package org.labkey.singlecell.pipeline.singlecell;
 
 import au.com.bytecode.opencsv.CSVReader;
 import org.apache.commons.io.FileUtils;
+import org.labkey.api.collections.IntHashMap;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
@@ -25,7 +26,6 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -80,7 +80,7 @@ public class RunCellHashing extends AbstractCellHashingCiteseqStep
     @Override
     protected Map<Integer, File> prepareCountData(SingleCellOutput output, SequenceOutputHandler.JobContext ctx, List<SeuratObjectWrapper> inputObjects, String outputPrefix) throws PipelineJobException
     {
-        Map<Integer, File> dataIdToCalls = new HashMap<>();
+        Map<Integer, File> dataIdToCalls = new IntHashMap<>();
 
         for (SeuratObjectWrapper wrapper : inputObjects)
         {

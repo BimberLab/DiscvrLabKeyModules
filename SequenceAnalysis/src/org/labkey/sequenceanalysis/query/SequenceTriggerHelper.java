@@ -13,7 +13,7 @@ import org.biojava.nbio.core.sequence.template.Sequence;
 import org.biojava.nbio.core.sequence.transcription.TranscriptionEngine;
 import org.junit.Assert;
 import org.junit.Test;
-import org.labkey.api.assay.AssayFileWriter;
+import org.labkey.api.collections.IntHashMap;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
@@ -44,7 +44,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -60,7 +59,7 @@ public class SequenceTriggerHelper
 
     private static final TranscriptionEngine _engine = new TranscriptionEngine.Builder().dnaCompounds(AmbiguityDNACompoundSet.getDNACompoundSet()).rnaCompounds(AmbiguityRNACompoundSet.getRNACompoundSet()).initMet(false).trimStop(false).build();
 
-    private final Map<Integer, String> _sequenceMap = new HashMap<>();
+    private final Map<Integer, String> _sequenceMap = new IntHashMap<>();
 
     public SequenceTriggerHelper(int userId, String containerId)
     {
@@ -237,8 +236,8 @@ public class SequenceTriggerHelper
             }
         }
     }
-    
-    public int createExpData(String relPath) {
+
+    public long createExpData(String relPath) {
         PipeRoot pr = PipelineService.get().getPipelineRootSetting(getContainer());
         if (pr == null)
         {
@@ -256,7 +255,7 @@ public class SequenceTriggerHelper
         {
             return d.getRowId();
         }
-        
+
         d = ExperimentService.get().createData(getContainer(), new DataType("Output"));
         d.setDataFileURI(f.toURI());
         d.setName(f.getName());
@@ -267,7 +266,7 @@ public class SequenceTriggerHelper
 
     public void createReaddataForSra(int readsetId, String sraAccessions)
     {
-        SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(readsetId, _user);
+        SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(Long.valueOf(readsetId), _user);
         if (rs == null)
         {
             throw new IllegalArgumentException("Unable to find readset: " + readsetId);
@@ -285,7 +284,7 @@ public class SequenceTriggerHelper
 
             // Create new:
             ReadDataImpl rd1 = new ReadDataImpl();
-            rd1.setReadset(readsetId);
+            rd1.setReadset(Long.valueOf(readsetId));
             rd1.setContainer(rs.getContainer());
             rd1.setCreated(new Date());
             rd1.setModified(new Date());
@@ -304,7 +303,7 @@ public class SequenceTriggerHelper
 
             String folderName = "SequenceImport_RS" + rs.getRowId() + "_" + FileUtil.getTimestamp();
             FileLike sequenceImport = FileUtil.appendPath(pr.getRootFileLike(), Path.parse(ReadsetImportJob.NAME));
-            FileLike outDir = AssayFileWriter.findUniqueFileName(folderName, sequenceImport);
+            FileLike outDir = FileUtil.findUniqueFileName(folderName, sequenceImport);
 
             FileLike expectedFile1 = FileUtil.appendPath(outDir, Path.parse(token + "_1.fastq.gz"));
             ExpData exp1 = ExperimentService.get().createData(c, new DataType("Data"));

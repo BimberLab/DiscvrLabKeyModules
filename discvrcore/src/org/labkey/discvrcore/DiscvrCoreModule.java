@@ -87,7 +87,7 @@ public class DiscvrCoreModule extends DefaultModule
 
 
     @Override
-    public @NotNull Set<Class> getIntegrationTests()
+    public @NotNull Set<Class<?>> getIntegrationTests()
     {
         return PageFlowUtil.set(AuditSummaryUserSchema.TestCase.class);
     }

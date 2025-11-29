@@ -61,7 +61,7 @@ public class BlastJob implements Serializable
     private int _modifiedBy;
     private Date _modified;
     private String _jobId;
-    private Integer _htmlFile;
+    private Long _htmlFile;
     private File _outputDir = null;
     
     public BlastJob()
@@ -231,12 +231,12 @@ public class BlastJob implements Serializable
         _jobId = jobId;
     }
 
-    public Integer getHtmlFile()
+    public Long getHtmlFile()
     {
         return _htmlFile;
     }
 
-    public void setHtmlFile(Integer htmlFile)
+    public void setHtmlFile(Long htmlFile)
     {
         _htmlFile = htmlFile;
     }
@@ -341,7 +341,7 @@ public class BlastJob implements Serializable
             return false;
         }
 
-        Integer jobId = PipelineService.get().getJobId(u, ContainerManager.getForId(getContainer()), getJobId());
+        Long jobId = PipelineService.get().getJobId(u, ContainerManager.getForId(getContainer()), getJobId());
         PipelineStatusFile statusFile = PipelineService.get().getStatusFile(jobId);
         return "ERROR".equalsIgnoreCase(statusFile.getStatus());
     }

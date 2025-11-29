@@ -49,6 +49,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.labkey.api.exp.api.ExperimentService.asInteger;
+
 /**
  * Created by bimber on 9/18/2016.
  */
@@ -235,7 +237,7 @@ public class OutputIntegrationTests
 
             params = Table.insert(TestContext.get().getUser(), SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES), params);
 
-            return (Integer)params.get("rowid");
+            return asInteger(params.get("rowid"));
         }
     }
 }

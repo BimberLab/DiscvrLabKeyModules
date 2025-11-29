@@ -10,6 +10,8 @@ import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.collections.IntHashMap;
+import org.labkey.api.collections.LongHashMap;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -139,10 +141,10 @@ public class CellHashingServiceImpl extends CellHashingService
         File output = getCDNAInfoFile(sourceDir);
         File barcodeOutput = getValidHashingBarcodeFile(sourceDir);
         HashMap<String, Integer> gexReadsetToH5Map = new HashMap<>();
-        HashMap<Integer, Integer> readsetToHashingMap = new HashMap<>();
-        HashMap<Integer, Integer> readsetToCiteSeqMap = new HashMap<>();
-        HashMap<Integer, Integer> readsetToGexMap = new HashMap<>();
-        HashMap<Integer, Set<String>> gexToPanels = new HashMap<>();
+        HashMap<Long, Integer> readsetToHashingMap = new LongHashMap<>();
+        HashMap<Long, Integer> readsetToCiteSeqMap = new LongHashMap<>();
+        HashMap<Long, Integer> readsetToGexMap = new LongHashMap<>();
+        HashMap<Long, Set<String>> gexToPanels = new LongHashMap<>();
 
         List<Readset> cachedReadsets = support.getCachedReadsets();
         job.getLogger().debug("Total cached readsets: " + cachedReadsets.size() + ", using filter on: " + filterField);
@@ -279,7 +281,7 @@ public class CellHashingServiceImpl extends CellHashingService
             HashMap<String, File> readsetToCountMap = new HashMap<>();
             if (distinctHTOs.size() > 1)
             {
-                Set<Integer> hashingToRemove = new HashSet<>();
+                Set<Long> hashingToRemove = new HashSet<>();
                 readsetToHashingMap.forEach((readsetId, hashingReadsetId) -> {
                     if (cacheCountMatrixFiles)
                     {
@@ -342,7 +344,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 job.getLogger().info("distinct HTOs: " + distinctHTOs.size());
             }
 
-            Set<Integer> citeToRemove = new HashSet<>();
+            Set<Long> citeToRemove = new HashSet<>();
             readsetToCiteSeqMap.forEach((readsetId, citeseqReadsetId) -> {
                 if (cacheCountMatrixFiles)
                 {
@@ -433,7 +435,7 @@ public class CellHashingServiceImpl extends CellHashingService
         }
     }
 
-    private Map<String, Integer> cacheH5Files(PipelineJob job, SequenceAnalysisJobSupport support, Collection<Integer> uniqueGex, Map<Integer, Integer> readsetToGexMap) throws PipelineJobException
+    private Map<String, Integer> cacheH5Files(PipelineJob job, SequenceAnalysisJobSupport support, Collection<Integer> uniqueGex, Map<Long, Integer> readsetToGexMap) throws PipelineJobException
     {
         job.getLogger().debug("Caching H5 Files");
         Map<String, Integer> gexReadsetToH5Map = new HashMap<>();
@@ -441,7 +443,7 @@ public class CellHashingServiceImpl extends CellHashingService
         TableInfo ti = QueryService.get().getUserSchema(job.getUser(), job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer(), SingleCellSchema.SEQUENCE_SCHEMA_NAME).getTable("outputfiles");
         Set<Integer> cachedGenomes = support.getCachedGenomes().stream().map(ReferenceGenome::getGenomeId).collect(Collectors.toSet());
 
-        for (int readsetId : readsetToGexMap.keySet())
+        for (long readsetId : readsetToGexMap.keySet())
         {
             boolean isGEX = uniqueGex.contains(readsetId);
             int gexReadset = readsetToGexMap.get(readsetId);
@@ -514,17 +516,17 @@ public class CellHashingServiceImpl extends CellHashingService
         return gexReadsetToH5Map;
     }
 
-    public File getValidCiteSeqBarcodeFile(File sourceDir, int gexReadsetId)
+    public File getValidCiteSeqBarcodeFile(File sourceDir, long gexReadsetId)
     {
         return new File(sourceDir, "validADTS." + gexReadsetId + ".csv");
     }
 
-    public File getValidCiteSeqBarcodeMetadataFile(File sourceDir, int gexReadsetId)
+    public File getValidCiteSeqBarcodeMetadataFile(File sourceDir, long gexReadsetId)
     {
         return new File(sourceDir, "validADTS." + gexReadsetId + ".metadata.txt");
     }
 
-    private void writeCiteSeqBarcodes(PipelineJob job, Map<Integer, Set<String>> gexToPanels, File outputDir) throws PipelineJobException
+    private void writeCiteSeqBarcodes(PipelineJob job, Map<Long, Set<String>> gexToPanels, File outputDir) throws PipelineJobException
     {
         Container target = job.getContainer().isWorkbook() ? job.getContainer().getParent() : job.getContainer();
         UserSchema schema = QueryService.get().getUserSchema(job.getUser(), target, SingleCellSchema.NAME);
@@ -539,7 +541,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 FieldKey.fromString("antibody/barcodePattern")
         ));
 
-        for (int gexReadsetId : gexToPanels.keySet())
+        for (long gexReadsetId : gexToPanels.keySet())
         {
             job.getLogger().info("Writing all unique ADTs for readset: " + gexReadsetId);
             File barcodeOutput = getValidCiteSeqBarcodeFile(outputDir, gexReadsetId);
@@ -595,7 +597,7 @@ public class CellHashingServiceImpl extends CellHashingService
         }
 
         parameters.validate(true);
-        Map<Integer, Integer> readsetToHashing = getCachedHashingReadsetMap(ctx.getSequenceSupport());
+        Map<Long, Long> readsetToHashing = getCachedHashingReadsetMap(ctx.getSequenceSupport());
         if (readsetToHashing.isEmpty())
         {
             ctx.getLogger().info("No cached " + parameters.type.name() + " readsets, skipping");
@@ -721,7 +723,7 @@ public class CellHashingServiceImpl extends CellHashingService
         return callsFile;
     }
 
-    private Map<Integer, Integer> getCachedCiteSeqReadsetMap(SequenceAnalysisJobSupport support) throws PipelineJobException
+    private Map<Long, Long> getCachedCiteSeqReadsetMap(SequenceAnalysisJobSupport support) throws PipelineJobException
     {
         return support.getCachedObject(READSET_TO_CITESEQ_MAP, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, Integer.class));
     }
@@ -729,7 +731,7 @@ public class CellHashingServiceImpl extends CellHashingService
     @Override
     public boolean usesCellHashing(SequenceAnalysisJobSupport support, File sourceDir) throws PipelineJobException
     {
-        Map<Integer, Integer> gexToHashingMap = getCachedHashingReadsetMap(support);
+        Map<Long, Long> gexToHashingMap = getCachedHashingReadsetMap(support);
         if (gexToHashingMap == null || gexToHashingMap.isEmpty())
             return false;
 
@@ -745,7 +747,7 @@ public class CellHashingServiceImpl extends CellHashingService
     @Override
     public boolean usesCiteSeq(SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles) throws PipelineJobException
     {
-        Map<Integer, Integer> gexToCiteMap = getCachedCiteSeqReadsetMap(support);
+        Map<Long, Long> gexToCiteMap = getCachedCiteSeqReadsetMap(support);
         if (gexToCiteMap == null || gexToCiteMap.isEmpty())
             return false;
 
@@ -761,7 +763,7 @@ public class CellHashingServiceImpl extends CellHashingService
     }
 
     @Override
-    public File getH5FileForGexReadset(SequenceAnalysisJobSupport support, int readsetId, int genomeId) throws PipelineJobException
+    public File getH5FileForGexReadset(SequenceAnalysisJobSupport support, long readsetId, int genomeId) throws PipelineJobException
     {
         Map<String, Integer> map = support.getCachedObject(READSET_AND_GENOME_TO_H5_MAP, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, String.class, Integer.class));
         String key = readsetId + "-" + genomeId;
@@ -797,12 +799,12 @@ public class CellHashingServiceImpl extends CellHashingService
         return new File(sourceDir, "cDNAInfo.txt");
     }
     
-    public Map<Integer, Integer> getCachedHashingReadsetMap(SequenceAnalysisJobSupport support) throws PipelineJobException
+    public Map<Long, Long> getCachedHashingReadsetMap(SequenceAnalysisJobSupport support) throws PipelineJobException
     {
         return support.getCachedObject(READSET_TO_HASHING_MAP, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, Integer.class));
     }
 
-    public File getCachedReadsetToCountMatrix(SequenceAnalysisJobSupport support, int readsetId, CellHashingService.BARCODE_TYPE type) throws PipelineJobException
+    public File getCachedReadsetToCountMatrix(SequenceAnalysisJobSupport support, long readsetId, CellHashingService.BARCODE_TYPE type) throws PipelineJobException
     {
         Map<String, File> map = support.getCachedObject(READSET_TO_COUNTS_MAP, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, String.class, File.class));
         String key = type.name() + "-" + readsetId;
@@ -1367,7 +1369,7 @@ public class CellHashingServiceImpl extends CellHashingService
     @Override
     public File getExistingFeatureBarcodeCountDir(Readset parentReadset, BARCODE_TYPE type, SequenceAnalysisJobSupport support) throws PipelineJobException
     {
-        Integer childId = type == BARCODE_TYPE.hashing ? getCachedHashingReadsetMap(support).get(parentReadset.getReadsetId()) : getCachedCiteSeqReadsetMap(support).get(parentReadset.getReadsetId());
+        Long childId = type == BARCODE_TYPE.hashing ? getCachedHashingReadsetMap(support).get(parentReadset.getReadsetId()) : getCachedCiteSeqReadsetMap(support).get(parentReadset.getReadsetId());
         if (childId == null)
         {
             throw new PipelineJobException("Unable to find cached readset of type " + type.name() + " for parent: " + parentReadset.getReadsetId());
@@ -1416,9 +1418,9 @@ public class CellHashingServiceImpl extends CellHashingService
     }
 
     @Override
-    public Set<String> getHtosForParentReadset(Integer parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support, boolean throwIfNotFound) throws PipelineJobException
+    public Set<String> getHtosForParentReadset(Long parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support, boolean throwIfNotFound) throws PipelineJobException
     {
-        Integer htoReadset = getCachedHashingReadsetMap(support).get(parentReadsetId);
+        Long htoReadset = getCachedHashingReadsetMap(support).get(parentReadsetId);
         if (htoReadset == null)
         {
             if (throwIfNotFound)
@@ -1434,7 +1436,7 @@ public class CellHashingServiceImpl extends CellHashingService
         return getHtosForReadset(htoReadset, webserverJobDir);
     }
 
-    public Set<String> getHtosForReadset(Integer hashingReadsetId, File webserverJobDir) throws PipelineJobException
+    public Set<String> getHtosForReadset(Long hashingReadsetId, File webserverJobDir) throws PipelineJobException
     {
         Set<String> htosPerReadset = new HashSet<>();
         try (CSVReader reader = new CSVReader(Readers.getReader(CellHashingServiceImpl.get().getCDNAInfoFile(webserverJobDir)), '\t'))

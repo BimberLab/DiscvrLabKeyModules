@@ -1,5 +1,6 @@
 package org.labkey.sequenceanalysis;
 
+import org.labkey.api.collections.IntHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
@@ -14,7 +15,6 @@ import org.labkey.api.util.PageFlowUtil;
 
 import java.io.File;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,24 +23,24 @@ import java.util.Map;
  */
 public class ReadDataImpl implements ReadData
 {
-    private Integer _rowid;
-    private Integer _readset;
+    private Long _rowid;
+    private Long _readset;
     private String _platformUnit;
     private String _centerName;
     private Date _date;
-    private Integer _fileId1;
-    private Integer _fileId2;
+    private Long _fileId1;
+    private Long _fileId2;
     private String _description;
     private String _container;
     private Date _created;
     private Integer _createdBy;
     private Date _modified;
     private Integer _modifiedBy;
-    private Integer _runId;
+    private Long _runId;
     private boolean _archived = false;
     private String sra_accession;
 
-    private final Map<Integer, File> _cachedFiles = new HashMap<>();
+    private final Map<Integer, File> _cachedFiles = new IntHashMap<>();
 
     public ReadDataImpl()
     {
@@ -48,23 +48,23 @@ public class ReadDataImpl implements ReadData
     }
 
     @Override
-    public Integer getRowid()
+    public Long getRowid()
     {
         return _rowid;
     }
 
-    public void setRowid(Integer rowid)
+    public void setRowid(Long rowid)
     {
         _rowid = rowid;
     }
 
     @Override
-    public Integer getReadset()
+    public Long getReadset()
     {
         return _readset;
     }
 
-    public void setReadset(Integer readset)
+    public void setReadset(Long readset)
     {
         _readset = readset;
     }
@@ -103,23 +103,23 @@ public class ReadDataImpl implements ReadData
     }
 
     @Override
-    public Integer getFileId1()
+    public Long getFileId1()
     {
         return _fileId1;
     }
 
-    public void setFileId1(Integer fileId1)
+    public void setFileId1(Long fileId1)
     {
         _fileId1 = fileId1;
     }
 
     @Override
-    public Integer getFileId2()
+    public Long getFileId2()
     {
         return _fileId2;
     }
 
-    public void setFileId2(Integer fileId2)
+    public void setFileId2(Long fileId2)
     {
         _fileId2 = fileId2;
     }
@@ -131,12 +131,12 @@ public class ReadDataImpl implements ReadData
     }
 
     @Override
-    public Integer getRunId()
+    public Long getRunId()
     {
         return _runId;
     }
 
-    public void setRunId(Integer runId)
+    public void setRunId(Long runId)
     {
         _runId = runId;
     }
@@ -258,7 +258,7 @@ public class ReadDataImpl implements ReadData
     }
 
     @Transient
-    private File getFile(int fileIdx, Integer fileId, boolean allowArchived)
+    private File getFile(int fileIdx, Long fileId, boolean allowArchived)
     {
         if (isArchived() && !allowArchived)
         {

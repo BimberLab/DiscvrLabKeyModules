@@ -10,7 +10,6 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.exp.api.DataType;
@@ -68,7 +67,7 @@ import java.util.stream.Collectors;
 public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, HasJobParams, SequenceOutputTracker
 {
     private TaskId _taskPipelineId;
-    private Integer _experimentRunRowId;
+    private Long _experimentRunRowId;
     private String _jobName;
     private String _description;
     private FileLike _webserverJobDir;
@@ -164,7 +163,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
 
     private Path _getLogFile()
     {
-        var file = AssayFileWriter.findUniqueFileName((FileUtil.makeLegalName(_jobName) + ".log"), getDataDirectoryFileObject());
+        var file = FileUtil.findUniqueFileName((FileUtil.makeLegalName(_jobName) + ".log"), getDataDirectoryFileObject());
         return file.toNioPathForWrite();
     }
 
@@ -228,7 +227,7 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         }
 
         String folderName = FileUtil.makeLegalName(StringUtils.capitalize(_folderPrefix) + "_" + FileUtil.getTimestamp());
-        webserverOutDir = AssayFileWriter.findUniqueFileName(folderName, webserverOutDir);
+        webserverOutDir = FileUtil.findUniqueFileName(folderName, webserverOutDir);
         if (!webserverOutDir.exists())
         {
             webserverOutDir.mkdir();
@@ -558,12 +557,12 @@ public class SequenceJob extends PipelineJob implements FileAnalysisJobSupport, 
         return _folderFileRoot;
     }
 
-    public Integer getExperimentRunRowId()
+    public Long getExperimentRunRowId()
     {
         return _experimentRunRowId;
     }
 
-    public void setExperimentRunRowId(Integer experimentRunRowId)
+    public void setExperimentRunRowId(Long experimentRunRowId)
     {
         _experimentRunRowId = experimentRunRowId;
     }

@@ -194,7 +194,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                 action.addInputIfNotPresent(rd.getFile2(), "Input FASTQ");
             });
 
-            Integer gexReadsetId = ctx.getSequenceSupport().getCachedObject(FEATURE_TO_GEX, Integer.class);
+            Long gexReadsetId = ctx.getSequenceSupport().getCachedObject(FEATURE_TO_GEX, Long.class);
             if (gexReadsetId != null)
             {
                 ctx.getLogger().info("Adding GEX FASTQs");

@@ -36,8 +36,8 @@ public class LdapSyncAuditProvider extends AbstractAuditTypeProvider implements 
 
     static final List<FieldKey> defaultVisibleColumns = new ArrayList<>();
 
-    static {
-
+    static
+    {
         defaultVisibleColumns.add(FieldKey.fromParts(COLUMN_NAME_CREATED));
         defaultVisibleColumns.add(FieldKey.fromParts(COLUMN_NAME_CREATED_BY));
         defaultVisibleColumns.add(FieldKey.fromParts(COLUMN_NAME_IMPERSONATED_BY));
@@ -45,6 +45,11 @@ public class LdapSyncAuditProvider extends AbstractAuditTypeProvider implements 
         defaultVisibleColumns.add(FieldKey.fromParts(COLUMN_NAME_USERS_AND_GROUPS_REMOVED));
         defaultVisibleColumns.add(FieldKey.fromParts(COLUMN_NAME_MEMBERSHIPS_CHANGED));
         defaultVisibleColumns.add(FieldKey.fromParts(COLUMN_NAME_COMMENT));
+    }
+
+    public LdapSyncAuditProvider()
+    {
+        super(new LdapSyncAuditDomainKind());
     }
 
     @Override
@@ -68,7 +73,7 @@ public class LdapSyncAuditProvider extends AbstractAuditTypeProvider implements 
     @Override
     public TableInfo createTableInfo(UserSchema userSchema, ContainerFilter cf)
     {
-        DefaultAuditTypeTable table = new DefaultAuditTypeTable(this, createStorageTableInfo(), userSchema, cf, defaultVisibleColumns)
+        return new DefaultAuditTypeTable(LdapSyncAuditProvider.this, createStorageTableInfo(), userSchema, cf, defaultVisibleColumns)
         {
             @Override
             protected void initColumn(MutableColumnInfo col)
@@ -87,19 +92,12 @@ public class LdapSyncAuditProvider extends AbstractAuditTypeProvider implements 
                 }
             }
         };
-        return table;
     }
 
     @Override
     public List<FieldKey> getDefaultVisibleColumns()
     {
         return defaultVisibleColumns;
-    }
-
-    @Override
-    protected AbstractAuditDomainKind getDomainKind()
-    {
-        return new LdapSyncAuditDomainKind();
     }
 
     @Override

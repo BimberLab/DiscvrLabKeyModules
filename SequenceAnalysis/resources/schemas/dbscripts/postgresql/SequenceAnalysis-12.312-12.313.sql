@@ -6,9 +6,11 @@ CREATE TABLE sequenceanalysis.sequence_chemistries (
   CONSTRAINT PK_sequence_chemistries PRIMARY KEY (chemistry)
 );
 
+-- @SkipOnEmptySchemasBegin
 INSERT INTO sequenceanalysis.sequence_chemistries (chemistry) VALUES ('Illumina HiSeq3000');
 INSERT INTO sequenceanalysis.sequence_chemistries (chemistry) VALUES ('Illumina MiSeq 2x250');
 INSERT INTO sequenceanalysis.sequence_chemistries (chemistry) VALUES ('Illumina MiSeq 2x300');
 INSERT INTO sequenceanalysis.sequence_chemistries (chemistry) VALUES ('Illumina XTen');
 INSERT INTO sequenceanalysis.sequence_chemistries (chemistry) VALUES ('Illumina NextSeq MidOutput');
 INSERT INTO sequenceanalysis.sequence_chemistries (chemistry) VALUES ('Illumina NextSeq HighOutput');
+-- @SkipOnEmptySchemasEnd

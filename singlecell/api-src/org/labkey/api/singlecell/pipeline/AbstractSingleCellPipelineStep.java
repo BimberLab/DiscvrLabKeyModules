@@ -128,7 +128,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                     throw new PipelineJobException("Unable to parse readsetId: " + readsetIdVal);
                 }
 
-                outputs.add(new SeuratObjectWrapper(line[0], line[1], f, outputIdVal == null ? null : Integer.parseInt(outputIdVal), readsetIdVal == null ? null : Integer.parseInt(readsetIdVal)));
+                outputs.add(new SeuratObjectWrapper(line[0], line[1], f, outputIdVal == null ? null : Integer.parseInt(outputIdVal), readsetIdVal == null ? null : Long.parseLong(readsetIdVal)));
             }
         }
         catch (IOException e)

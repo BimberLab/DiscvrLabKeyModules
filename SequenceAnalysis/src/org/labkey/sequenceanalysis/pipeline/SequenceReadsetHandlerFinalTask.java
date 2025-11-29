@@ -71,7 +71,7 @@ public class SequenceReadsetHandlerFinalTask extends PipelineJob.Task<SequenceRe
     @Override
     public RecordedActionSet run() throws PipelineJobException
     {
-        Integer runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
+        Long runId = SequenceTaskHelper.getExpRunIdForJob(getJob());
         getPipelineJob().setExperimentRunRowId(runId);
 
         List<SequenceOutputFile> outputsCreated = new ArrayList<>();

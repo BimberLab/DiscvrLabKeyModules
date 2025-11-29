@@ -450,9 +450,16 @@ public class JBrowseTest extends BaseWebDriverTest
         beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgap&location=1:104..275");
         waitForJBrowseToLoad();
 
+        // This will wait for them, allowing the full browser to lod:
+        getVariantWithinTrack("mgap_hg38", "SNV C -> T");
+        getVariantWithinTrack("mgap_hg38", "SNV G -> C");
+
         Actions actions = new Actions(getDriver());
         WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).collect(JBrowseTestHelper.toSingleton()); // 1:137..137
-        actions.click(toClick).perform();
+        actions.moveToElement(toClick)
+            .pause(500)
+            .click()
+            .perform();
         waitForElement(Locator.tagWithText("div", "1:137"));
         assertElementPresent(Locator.tagWithText("td", "Minor Allele Frequency"));
     }

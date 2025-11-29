@@ -53,6 +53,8 @@ import org.labkey.api.action.SpringActionController;
 import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
+import org.labkey.api.collections.IntHashMap;
+import org.labkey.api.collections.IntHashSet;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -207,6 +209,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static org.labkey.api.exp.api.ExperimentService.asInteger;
 import static org.labkey.sequenceanalysis.SequenceIntegrationTests.PIPELINE_PROP_NAME;
 
 public class SequenceAnalysisController extends SpringActionController
@@ -503,15 +506,15 @@ public class SequenceAnalysisController extends SpringActionController
 
     public static class DeleteForm extends QueryForm
     {
-        private Integer[] _jobIds;
+        private Long[] _jobIds;
         private boolean _doDelete = false;
 
-        public Integer[] getJobIds()
+        public Long[] getJobIds()
         {
             return _jobIds;
         }
 
-        public void setJobIds(Integer[] jobIds)
+        public void setJobIds(Long[] jobIds)
         {
             _jobIds = jobIds;
         }
@@ -596,11 +599,11 @@ public class SequenceAnalysisController extends SpringActionController
                 keys.add(ConvertHelper.convert(key, Integer.class));
             }
 
-            Set<Integer> expRunsToDelete = new HashSet<>();
-            Set<Integer> readsetIds = new HashSet<>();
-            Set<Integer> readDataIds = new HashSet<>();
-            Set<Integer> analysisIds = new HashSet<>();
-            Set<Integer> outputFileIds = new HashSet<>();
+            Set<Integer> expRunsToDelete = new IntHashSet();
+            Set<Integer> readsetIds = new IntHashSet();
+            Set<Integer> readDataIds = new IntHashSet();
+            Set<Integer> analysisIds = new IntHashSet();
+            Set<Integer> outputFileIds = new IntHashSet();
 
             StringBuilder msg = new StringBuilder("Are you sure you want to delete the following " + keys.size() + " ");
             if (SequenceAnalysisSchema.TABLE_ANALYSES.equals(_table.getName()))
@@ -753,7 +756,7 @@ public class SequenceAnalysisController extends SpringActionController
 
         private void getAdditionalRuns(Set<Integer> readsetIds, Set<Integer> readDataIds, Set<Integer> analysisIds, Set<Integer> outputFileIds, Set<Integer> expRunsToDelete)
         {
-            Set<Integer> runIdsStillInUse = new HashSet<>();
+            Set<Integer> runIdsStillInUse = new IntHashSet();
 
             //work backwards, adding additional pipeline jobs that will become orphans:
             runIdsStillInUse.addAll(getRunIdsInUse(SequenceAnalysisSchema.TABLE_READSETS, expRunsToDelete, readsetIds));
@@ -786,7 +789,7 @@ public class SequenceAnalysisController extends SpringActionController
         {
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString(filterCol), keys, CompareType.IN);
             TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(tableName), PageFlowUtil.set(pkCol), filter, null);
-            Set<Integer> total = new HashSet<>(ts.getArrayList(Integer.class));
+            Set<Integer> total = new IntHashSet(ts.getArrayList(Integer.class));
             sb.append("<br>" + total.size() + " " + noun);
 
             return total;
@@ -1164,7 +1167,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                         if (readsets1.length > 0 || readsets2.length > 0)
                         {
-                            Set<Integer> ids = new HashSet<>();
+                            Set<Integer> ids = new IntHashSet();
                             ids.addAll(Arrays.asList(readsets1));
                             ids.addAll(Arrays.asList(readsets2));
 
@@ -2151,7 +2154,7 @@ public class SequenceAnalysisController extends SpringActionController
 
             File targetDirectory = root.getRootPath();
 
-            return AssayFileWriter.findUniqueFileName(filename, targetDirectory);
+            return FileUtil.findUniqueFileName(filename, targetDirectory);
         }
 
         @Override
@@ -2449,7 +2452,7 @@ public class SequenceAnalysisController extends SpringActionController
             try
             {
                 FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer(), "sequenceOutputs");
-                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
+                return FileUtil.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
             }
             catch (ExperimentException e)
             {
@@ -2582,7 +2585,7 @@ public class SequenceAnalysisController extends SpringActionController
             try
             {
                 FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
+                return FileUtil.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
             }
             catch (ExperimentException e)
             {
@@ -2747,7 +2750,7 @@ public class SequenceAnalysisController extends SpringActionController
             try
             {
                 FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                return AssayFileWriter.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
+                return FileUtil.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
             }
             catch (ExperimentException e)
             {
@@ -2916,7 +2919,7 @@ public class SequenceAnalysisController extends SpringActionController
                     String header = se.eval(rs.getFieldKeyRowMap());
                     RefNtSequenceModel model = new RefNtSequenceModel();
                     if (rs.getObject(FieldKey.fromString("sequenceFile")) != null)
-                        model.setSequenceFile(rs.getInt(FieldKey.fromString("sequenceFile")));
+                        model.setSequenceFile(rs.getLong(FieldKey.fromString("sequenceFile")));
 
                     model.setContainer(rs.getString(FieldKey.fromString("container")));
 
@@ -3237,8 +3240,8 @@ public class SequenceAnalysisController extends SpringActionController
                         continue;
                     }
 
-                    Integer dataId = (Integer) rowMap.get("dataid");
-                    Integer libraryId = (Integer) rowMap.get("library_id");
+                    Integer dataId = asInteger(rowMap.get("dataid"));
+                    Integer libraryId = asInteger(rowMap.get("library_id"));
                     ExpData d = ExperimentService.get().getExpData(dataId);
                     if (d == null)
                     {
@@ -3888,7 +3891,7 @@ public class SequenceAnalysisController extends SpringActionController
 
         protected void validateGenomes(List<SequenceOutputFile> inputs, SequenceOutputHandler<?> handler) throws IllegalArgumentException
         {
-            Set<Integer> genomes = new HashSet<>();
+            Set<Integer> genomes = new IntHashSet();
             inputs.forEach(x -> {
                 if (x.getLibrary_id() == null && (handler.requiresGenome() || handler.requiresSingleGenome()))
                 {
@@ -4089,7 +4092,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                 for (File file : toCreate.keySet())
                 {
-                    FileLike target = AssayFileWriter.findUniqueFileName(file.getName(), targetDirectory);
+                    FileLike target = FileUtil.findUniqueFileName(file.getName(), targetDirectory);
                     FileUtils.moveFile(file, target.toNioPathForWrite().toFile());
 
                     ExpData data = ExperimentService.get().createData(getContainer(), new DataType("Sequence Output"));
@@ -4897,7 +4900,7 @@ public class SequenceAnalysisController extends SpringActionController
         {
             Map<String, Object> resp = new HashMap<>();
 
-            Map<Integer, JSONObject> fileMap = new HashMap<>();
+            Map<Integer, JSONObject> fileMap = new IntHashMap<>();
             for (Integer rowId : form.getOutputFileIds())
             {
                 SequenceOutputFile f = SequenceOutputFile.getForId(rowId);

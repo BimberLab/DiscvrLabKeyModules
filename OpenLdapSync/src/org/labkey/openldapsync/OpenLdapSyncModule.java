@@ -23,6 +23,7 @@ import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.module.SpringModule;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
@@ -100,7 +101,8 @@ public class OpenLdapSyncModule extends SpringModule
         {
             modules = new HashSet<>(modules);
             modules.add(this);
-            ContainerManager.getSharedContainer().setActiveModules(modules);
+            if (ModuleLoader.getInstance().shouldInsertData())
+                ContainerManager.getSharedContainer().setActiveModules(modules);
         }
     }
 
@@ -117,7 +119,7 @@ public class OpenLdapSyncModule extends SpringModule
     }
 
     @Override
-    public @NotNull Set<Class> getIntegrationTests()
+    public @NotNull Set<Class<?>> getIntegrationTests()
     {
         return PageFlowUtil.set(LdapSyncRunner.TestCase.class);
     }

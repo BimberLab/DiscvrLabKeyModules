@@ -2,9 +2,11 @@
 -- insert into sequenceanalysis.aligners (haplotype,displayhaplotype,description,jsonconfig) values
 -- ('mosaik', 'Mosaik', 'Mosaik is suitable for longer reads and has the option to retain multiple hits per read.  The only downside is that it can be slower.  When this pipeline was first written, this aligner was preferred for sequence-based genotyping and similar applications which require retaining multiple hits.  It supports paired end reads.  The aligner is still good; however, Lastz also seems to perform well for SBT.', '[{"xtype":"hidden","name":"pairedEnd","value":"true"},{"name":"mosaik.output_multiple","fieldLabel":"Retain All Hits","xtype":"checkbox","renderData":{"helpPopup":"If selected, all hits above thresholds will be reported.  If not, only a single hit will be retained."},"checked":true},{"name":"mosaik.max_mismatch_pct","fieldLabel":"Max Mismatch Pct","renderData":{"helpPopup":"The maximum percent of bases allowed to mismatch per alignment.  Note: Ns are counted as mismatches"},"value":0.02,"minValue":0,"maxValue":1},{"name":"mosaik.hash_size","fieldLabel":"Hash Size","renderData":{"helpPopup":"The hash size used in alignment (see Mosaik documentation).  A large value is preferred for sequences expected to be highly similar to the reference"},"minValue":0,"value":32},{"name":"mosaik.local_alignment","fieldLabel":"Local Alignment Radius","renderData":{"helpPopup":"This option is only used for paired end data.  If a value is supplied, a local alignment will be performed around paired end reads in order to attempt to rescue mates"},"minValue":0},{"name":"mosaik.max_hash_positions","fieldLabel":"Max Hash Positions","renderData":{"helpPopup":"The maximum number of hash matches that are passed to local alignment."},"minValue":0,"value":200},{"name":"mosaik.align_threshold","fieldLabel":"Alignment Threshold","renderData":{"helpPopup":"The alignment score required for an alignment to continue to local alignment.  Because the latter is slow, a higher value can improve speed."},"value":55}]');
 
+-- @SkipOnEmptySchemasBegin
 INSERT INTO sequenceanalysis.haplotype_types (type) VALUES ('MHC-IA');
 INSERT INTO sequenceanalysis.haplotype_types (type) VALUES ('MHC-IB');
 INSERT INTO sequenceanalysis.haplotype_types (type) VALUES ('MHC-II');
+-- @SkipOnEmptySchemasEnd
 
 ALTER table sequenceanalysis.haplotype_sequences DROP column haplotypeid;
 ALTER table sequenceanalysis.haplotype_sequences ADD column haplotype varchar(100);
@@ -12,6 +14,7 @@ ALTER table sequenceanalysis.haplotype_sequences ADD column required boolean;
 UPDATE sequenceanalysis.haplotype_sequences SET required = true;
 
 TRUNCATE sequenceanalysis.haplotypes;
+-- @SkipOnEmptySchemasBegin
 INSERT INTO sequenceanalysis.haplotypes (name,type) VALUES ('A001', 'MHC-IA');
 INSERT INTO sequenceanalysis.haplotypes (name,type) VALUES ('A002a', 'MHC-IA');
 INSERT INTO sequenceanalysis.haplotypes (name,type) VALUES ('A003', 'MHC-IA');
@@ -46,8 +49,10 @@ INSERT INTO sequenceanalysis.haplotypes (name,type) VALUES ('B048', 'MHC-IB');
 INSERT INTO sequenceanalysis.haplotypes (name,type) VALUES ('B055', 'MHC-IB');
 INSERT INTO sequenceanalysis.haplotypes (name,type) VALUES ('B069a', 'MHC-IB');
 INSERT INTO sequenceanalysis.haplotypes (name,type) VALUES ('B069b', 'MHC-IB');
+-- @SkipOnEmptySchemasEnd
 
 TRUNCATE sequenceanalysis.haplotype_sequences;
+-- @SkipOnEmptySchemasBegin
 INSERT INTO sequenceanalysis.haplotype_sequences (haplotype,lineage,required) VALUES ('A001', 'Mamu-A1*001g', TRUE);
 INSERT INTO sequenceanalysis.haplotype_sequences (haplotype,lineage,required) VALUES ('A001', 'Mamu-A2*05g', FALSE);
 INSERT INTO sequenceanalysis.haplotype_sequences (haplotype,lineage,required) VALUES ('A002a', 'Mamu-A1*002g', TRUE);
@@ -210,4 +215,5 @@ INSERT INTO sequenceanalysis.haplotype_sequences (haplotype,lineage,required) VA
 INSERT INTO sequenceanalysis.haplotype_sequences (haplotype,lineage,required) VALUES ('B069b', 'Mamu-B*046g', FALSE);
 INSERT INTO sequenceanalysis.haplotype_sequences (haplotype,lineage,required) VALUES ('B069b', 'Mamu-B*060g', FALSE);
 INSERT INTO sequenceanalysis.haplotype_sequences (haplotype,lineage,required) VALUES ('B069b', 'Mamu-B*072g', FALSE);
+-- @SkipOnEmptySchemasEnd
 UPDATE sequenceanalysis.haplotype_sequences SET present = true;

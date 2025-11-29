@@ -376,10 +376,10 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
 
     public static class AlignmentGroupCompare
     {
-        private final int analysisId;
+        private final long analysisId;
         private final List<AlignmentGroup> groups = new ArrayList<>();
 
-        public AlignmentGroupCompare(final int analysisId, Container c, User u)
+        public AlignmentGroupCompare(final long analysisId, Container c, User u)
         {
             this.analysisId = analysisId;
 
@@ -544,7 +544,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
 
         public static class AlignmentGroup
         {
-            int analysisId;
+            long analysisId;
             Set<String> alleles = new TreeSet<>();
             String lineages;
             int totalLineages;

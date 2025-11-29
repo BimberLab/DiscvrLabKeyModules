@@ -77,7 +77,7 @@ public class MultiQCBamHandler extends AbstractParameterizedOutputHandler<Sequen
             action.setStartTime(new Date());
 
             Set<File> dirs = new HashSet<>();
-            Set<Integer> readsets = new HashSet<>();
+            Set<Long> readsets = new HashSet<>();
             Set<Integer> genomes = new HashSet<>();
             for (SequenceOutputFile so : inputFiles)
             {

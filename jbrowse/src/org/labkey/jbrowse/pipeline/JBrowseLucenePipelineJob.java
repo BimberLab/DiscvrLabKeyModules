@@ -3,7 +3,6 @@ package org.labkey.jbrowse.pipeline;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Logger;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.data.Container;
 import org.labkey.api.files.FileUrls;
 import org.labkey.api.module.Module;
@@ -59,7 +58,7 @@ public class JBrowseLucenePipelineJob extends PipelineJob
         _infoFields = infoFields;
         _allowLenientLuceneProcessing = allowLenientLuceneProcessing;
 
-        setLogFile(AssayFileWriter.findUniqueFileName("jbrowse-lucene" + new GUID() + ".log", JBrowseManager.get().getBaseDir(c, true)));
+        setLogFile(FileUtil.findUniqueFileName("jbrowse-lucene" + new GUID() + ".log", JBrowseManager.get().getBaseDir(c, true)));
     }
 
     public static class JBrowseLucenePipelineProvider extends PipelineProvider
