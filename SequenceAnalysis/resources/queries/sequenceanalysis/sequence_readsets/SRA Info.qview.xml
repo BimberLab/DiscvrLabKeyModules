@@ -20,6 +20,7 @@
        <column name="totalFiles" />
        <column name="readdataWithoutSra" />
        <column name="files" />
+       <column name="continer/title" />
    </columns>
    <sorts>
        <sort column="rowid" descending="true"/>
