@@ -14,7 +14,6 @@ import org.biojava.nbio.core.sequence.transcription.TranscriptionEngine;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.collections.IntHashMap;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.SimpleFilter;
