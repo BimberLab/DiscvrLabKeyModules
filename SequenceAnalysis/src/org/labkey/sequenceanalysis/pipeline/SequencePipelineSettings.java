@@ -31,8 +31,9 @@ import org.labkey.api.util.JsonUtil;
 import org.labkey.sequenceanalysis.FileGroup;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
+import org.labkey.vfs.FileLike;
+import org.labkey.vfs.FileSystemLike;
 
-import java.io.File;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -130,12 +131,12 @@ public class SequencePipelineSettings
             if (json.has("file1"))
             {
                 JSONObject fileJson = json.getJSONObject("file1");
-                p.file1 = resolveFile(fileJson, job, allowMissingFiles);
+                p.file1 = FileSystemLike.toFile(resolveFile(fileJson, job, allowMissingFiles));
             }
 
             if (json.has("file2"))
             {
-                p.file2 = resolveFile(json.getJSONObject("file2"), job, allowMissingFiles);
+                p.file2 = FileSystemLike.toFile(resolveFile(json.getJSONObject("file2"), job, allowMissingFiles));
             }
 
             fg.filePairs.add(p);
@@ -209,7 +210,7 @@ public class SequencePipelineSettings
         return model;
     }
 
-    private File resolveFile(JSONObject json, @Nullable SequenceJob job, boolean allowMissingFiles)
+    private FileLike resolveFile(JSONObject json, @Nullable SequenceJob job, boolean allowMissingFiles)
     {
         if (json.has("dataId"))
         {
@@ -224,14 +225,14 @@ public class SequencePipelineSettings
                         throw new IllegalArgumentException("Unable to find ExpData: " + json.get("dataId"));
                     }
 
-                    return d.getFile();
+                    return d.getFileLike();
                 }
                 else
                 {
                     if (job != null && job.getSequenceSupport().getCachedData(dataId) != null)
                     {
                         job.getLogger().debug("found using cached ExpData");
-                        return job.getSequenceSupport().getCachedData(dataId);
+                        return FileSystemLike.wrapFile(job.getSequenceSupport().getCachedData(dataId));
                     }
                 }
             }
@@ -242,7 +243,7 @@ public class SequencePipelineSettings
             //resolve based on inputs
             if (job != null)
             {
-                for (File input : job.getJobSupport(FileAnalysisJobSupport.class).getInputFiles())
+                for (FileLike input : job.getJobSupport(FileAnalysisJobSupport.class).getInputFiles())
                 {
                     if (input.getName().equals(json.getString("fileName")))
                     {
@@ -253,7 +254,7 @@ public class SequencePipelineSettings
                         else
                         {
                             //file might have been a copied input, check in analysis directory
-                            File test = new File(job.getJobSupport(FileAnalysisJobSupport.class).getAnalysisDirectory(), input.getName());
+                            FileLike test = job.getJobSupport(FileAnalysisJobSupport.class).getAnalysisDirectory().resolveChild(input.getName());
                             if (test.exists())
                             {
                                 return test;
@@ -268,7 +269,7 @@ public class SequencePipelineSettings
         {
             job.getLogger().error("unable to find file: " + json + ", active task: " + job.getActiveTaskId().getName(), new Exception());
             job.getLogger().debug("input files were: ");
-            for (File f : job.getJobSupport(FileAnalysisJobSupport.class).getInputFiles())
+            for (FileLike f : job.getJobSupport(FileAnalysisJobSupport.class).getInputFiles())
             {
                 job.getLogger().debug("[" + f.getPath() + "], exists: " + f.exists());
             }

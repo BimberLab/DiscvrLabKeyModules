@@ -87,6 +87,7 @@ import org.labkey.sequenceanalysis.run.util.MergeSamFilesWrapper;
 import org.labkey.sequenceanalysis.util.FastqMerger;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
+import org.labkey.vfs.FileLike;
 
 import java.io.File;
 import java.io.IOException;
@@ -440,39 +441,32 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         }
         else if (doCopy)
         {
-            try
-            {
-                RecordedAction action = new RecordedAction(COPY_REFERENCE_LIBRARY_ACTIONNAME);
-                Date start = new Date();
-                action.setStartTime(start);
+            RecordedAction action = new RecordedAction(COPY_REFERENCE_LIBRARY_ACTIONNAME);
+            Date start = new Date();
+            action.setStartTime(start);
 
-                String basename = FileUtil.getBaseName(refFasta);
-                File targetDir = new File(_wd.getDir(), "Shared");
-                for (File f : refFasta.getParentFile().listFiles())
+            String basename = FileUtil.getBaseName(refFasta);
+            File targetDir = new File(_wd.getDir().toNioPathForRead().toFile(), "Shared");
+            for (File f : refFasta.getParentFile().listFiles())
+            {
+                if (f.getName().startsWith(basename))
                 {
-                    if (f.getName().startsWith(basename))
-                    {
-                        getJob().getLogger().debug("copying reference file: " + f.getPath());
-                        File movedFile = _wd.inputFile(f, new File(targetDir, f.getName()), true);
-                        copiedInputs.put(f, movedFile);
-                        action.addInputIfNotPresent(f, "Reference File");
-                        action.addOutputIfNotPresent(movedFile, "Copied Reference File", true);
-                    }
+                    getJob().getLogger().debug("copying reference file: " + f.getPath());
+                    File movedFile = _wd.inputFile(f, new File(targetDir, f.getName()), true);
+                    copiedInputs.put(f, movedFile);
+                    action.addInputIfNotPresent(f, "Reference File");
+                    action.addOutputIfNotPresent(movedFile, "Copied Reference File", true);
                 }
-
-                Date end = new Date();
-                action.setEndTime(end);
-                getJob().getLogger().info("Copy Reference Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
-                actions.add(action);
-
-                referenceGenome.setWorkingFasta(new File(targetDir, refFasta.getName()));
-
-                getTaskFileManagerImpl().addIntermediateFile(targetDir);
             }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
+
+            Date end = new Date();
+            action.setEndTime(end);
+            getJob().getLogger().info("Copy Reference Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+            actions.add(action);
+
+            referenceGenome.setWorkingFasta(new File(targetDir, refFasta.getName()));
+
+            getTaskFileManagerImpl().addIntermediateFile(targetDir);
         }
         else
         {
@@ -1507,16 +1501,16 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         private Resumer(SequenceAlignmentTask task)
         {
-            super(task.getPipelineJob().getAnalysisDirectory(), task.getJob().getLogger(), task.getHelper().getFileManager());
+            super(task.getPipelineJob().getAnalysisDirectory().toNioPathForRead().toFile(), task.getJob().getLogger(), task.getHelper().getFileManager());
         }
 
         public static Resumer create(SequenceAlignmentJob job, SequenceAlignmentTask task) throws PipelineJobException
         {
             //NOTE: allow a file in either local working dir or webserver dir.  if both exist, use the file most recently modified
             File file = null;
-            for (File dir : Arrays.asList(job.getAnalysisDirectory(), task._wd.getDir()))
+            for (FileLike dir : Arrays.asList(job.getAnalysisDirectory(), task._wd.getDir()))
             {
-                File toCheck = getSerializedJson(dir, JSON_NAME);
+                File toCheck = getSerializedJson(dir.toNioPathForRead().toFile(), JSON_NAME);
                 if (toCheck.exists())
                 {
                     job.getLogger().debug("inspecting file: " + toCheck.getPath());
@@ -1554,23 +1548,16 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             Resumer ret = readFromJson(file, Resumer.class);
             ret._isResume = true;
             ret.setLogger(task.getJob().getLogger());
-            ret.setWebserverJobDir(task.getPipelineJob().getAnalysisDirectory());
+            ret.setWebserverJobDir(task.getPipelineJob().getAnalysisDirectory().toNioPathForRead().toFile());
             ret.getFileManager().onResume(job, task._wd);
 
             task._taskHelper.setFileManager(ret.getFileManager());
-            try
+            if (!ret._copiedInputs.isEmpty())
             {
-                if (!ret._copiedInputs.isEmpty())
+                for (File orig : ret._copiedInputs.keySet())
                 {
-                    for (File orig : ret._copiedInputs.keySet())
-                    {
-                        task._wd.inputFile(orig, ret._copiedInputs.get(orig), false);
-                    }
+                    task._wd.inputFile(orig, ret._copiedInputs.get(orig), false);
                 }
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
             }
 
             //debugging:

@@ -90,7 +90,7 @@ public class AlignmentMetricsHandler extends AbstractParameterizedOutputHandler<
             }
 
             List<File> bams = new ArrayList<>();
-            bams.addAll(job.getJobSupport(FileAnalysisJobSupport.class).getInputFiles());
+            bams.addAll(job.getJobSupport(FileAnalysisJobSupport.class).getInputFiles().stream().map(f -> f.toNioPathForRead().toFile()).toList());
             if (bams.isEmpty())
             {
                 job.error("No BAMS found, aborting");

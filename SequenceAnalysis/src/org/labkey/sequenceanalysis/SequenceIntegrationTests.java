@@ -1144,7 +1144,7 @@ public class SequenceIntegrationTests
 
         private File getBaseDir(PipelineJob job)
         {
-            return ((SequenceJob)job).getAnalysisDirectory();
+            return ((SequenceJob)job).getAnalysisDirectory().toNioPathForRead().toFile();
         }
 
         /**
@@ -1489,7 +1489,7 @@ public class SequenceIntegrationTests
         protected void validateAlignmentJob(Set<PipelineJob> jobs, Collection<String> additionalFiles, SequenceReadsetImpl rs, Integer aligned, Integer unaligned, boolean includeRefFiles) throws Exception
         {
             SequenceAlignmentJob job = getAlignmentJob(jobs, rs);
-            File basedir = job.getAnalysisDirectory();
+            File basedir = job.getAnalysisDirectory().toNioPathForRead().toFile();
             String outDir = SequenceTaskHelper.getUnzippedBaseName(rs.getReadDataImpl().get(0).getFile1());
 
             Set<File> expectedOutputs = new HashSet<>();
@@ -2982,7 +2982,7 @@ public class SequenceIntegrationTests
             //job1Files.add("paired1/Alignment/TestReadset1.insertsize.metrics");
             //job1Files.add("paired1/Alignment/TestReadset1.insertsize.metrics.pdf");
 
-            File basedir1 = getAlignmentJob(jobs, _readsets.get(0)).getAnalysisDirectory();
+            File basedir1 = getAlignmentJob(jobs, _readsets.get(0)).getAnalysisDirectory().toNioPathForRead().toFile();
             addOptionalFile(job1Files, basedir1, "paired1/Alignment/CpG_OB_TestReadset1.txt.gz");
             addOptionalFile(job1Files, basedir1, "paired1/Alignment/CpG_OT_TestReadset1.txt.gz");
             addOptionalFile(job1Files, basedir1, "paired1/Alignment/Non_CpG_OB_TestReadset1.bam.txt.gz");
@@ -3008,7 +3008,7 @@ public class SequenceIntegrationTests
             //job2Files.add("paired3/Alignment/TestReadset2.summary.metrics");
             //job2Files.add("paired3/Alignment/TestReadset2.insertsize.metrics");
 
-            File basedir2 = getAlignmentJob(jobs, _readsets.get(1)).getAnalysisDirectory();
+            File basedir2 = getAlignmentJob(jobs, _readsets.get(1)).getAnalysisDirectory().toNioPathForRead().toFile();
             addOptionalFile(job2Files, basedir2, "paired3/Alignment/CpG_OB_TestReadset2.txt.gz");
             addOptionalFile(job2Files, basedir2, "paired3/Alignment/CpG_OT_TestReadset2.txt.gz");
             addOptionalFile(job2Files, basedir2, "paired3/Alignment/Non_CpG_OB_TestReadset2.bam.txt.gz");
@@ -3032,7 +3032,7 @@ public class SequenceIntegrationTests
             //job3Files.add("paired4/Alignment/TestReadset3.summary.metrics");
             //job3Files.add("paired4/Alignment/TestReadset3.insertsize.metrics");
 
-            File basedir3 = getAlignmentJob(jobs, _readsets.get(2)).getAnalysisDirectory();
+            File basedir3 = getAlignmentJob(jobs, _readsets.get(2)).getAnalysisDirectory().toNioPathForRead().toFile();
             addOptionalFile(job3Files, basedir3, "paired4/Alignment/CpG_OB_TestReadset3.txt.gz");
             addOptionalFile(job3Files, basedir3, "paired4/Alignment/CpG_OT_TestReadset3.txt.gz");
             addOptionalFile(job3Files, basedir3, "paired4/Alignment/Non_CpG_OB_TestReadset3.bam.txt.gz");
@@ -3109,7 +3109,7 @@ public class SequenceIntegrationTests
             job1Files.add("paired1/Alignment/TestReadset1.insertsize.metrics");
             job1Files.add("paired1/Alignment/TestReadset1.insertsize.metrics.pdf");
 
-            File basedir1 = getAlignmentJob(jobs, _readsets.get(0)).getAnalysisDirectory();
+            File basedir1 = getAlignmentJob(jobs, _readsets.get(0)).getAnalysisDirectory().toNioPathForRead().toFile();
             addOptionalFile(job1Files, basedir1, "paired1/Alignment/CpG_OB_TestReadset1.txt.gz");
             addOptionalFile(job1Files, basedir1, "paired1/Alignment/CpG_OT_TestReadset1.txt.gz");
             addOptionalFile(job1Files, basedir1, "paired1/Alignment/Non_CpG_OB_TestReadset1.bam.txt.gz");
@@ -3132,7 +3132,7 @@ public class SequenceIntegrationTests
             job2Files.add("paired3/Alignment/TestReadset2.summary.metrics");
             //job2Files.add("paired3/Alignment/TestReadset2.insertsize.metrics");
 
-            File basedir2 = getAlignmentJob(jobs, _readsets.get(1)).getAnalysisDirectory();
+            File basedir2 = getAlignmentJob(jobs, _readsets.get(1)).getAnalysisDirectory().toNioPathForRead().toFile();
             addOptionalFile(job2Files, basedir2, "paired3/Alignment/CpG_OB_TestReadset2.txt.gz");
             addOptionalFile(job2Files, basedir2, "paired3/Alignment/CpG_OT_TestReadset2.txt.gz");
             addOptionalFile(job2Files, basedir2, "paired3/Alignment/Non_CpG_OB_TestReadset2.bam.txt.gz");
@@ -3154,7 +3154,7 @@ public class SequenceIntegrationTests
             job3Files.add("paired4/Alignment/TestReadset3.summary.metrics");
             //job3Files.add("paired4/Alignment/TestReadset3.insertsize.metrics");
 
-            File basedir3 = getAlignmentJob(jobs, _readsets.get(2)).getAnalysisDirectory();
+            File basedir3 = getAlignmentJob(jobs, _readsets.get(2)).getAnalysisDirectory().toNioPathForRead().toFile();
             addOptionalFile(job3Files, basedir3, "paired4/Alignment/CpG_OB_TestReadset3.txt.gz");
             addOptionalFile(job3Files, basedir3, "paired4/Alignment/CpG_OT_TestReadset3.txt.gz");
             addOptionalFile(job3Files, basedir3, "paired4/Alignment/Non_CpG_OB_TestReadset3.bam.txt.gz");

@@ -106,7 +106,7 @@ public class SequenceOutputHandlerWebserverTask extends PipelineJob.Task<Sequenc
             getJob().getLogger().warn("there are no sequence output files to process, this is probably an error");
         }
 
-        handler.getProcessor().processFilesOnWebserver(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getFiles(), getPipelineJob().getParameterJson(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);
+        handler.getProcessor().processFilesOnWebserver(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getFiles(), getPipelineJob().getParameterJson(), getPipelineJob().getAnalysisDirectory().toNioPathForRead().toFile(), actions, outputsToCreate);
 
         if (!outputsToCreate.isEmpty())
         {

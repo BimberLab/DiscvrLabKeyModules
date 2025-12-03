@@ -270,7 +270,7 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
 
     private File getJobToIntervalFile()
     {
-        return new File(isSplitJob() ? getDataDirectory().getParentFile() : getDataDirectory(), "jobsToInterval.txt");
+        return new File(isSplitJob() ? getDataDirectory().getParent().toNioPathForRead().toFile() : getDataDirectory().toNioPathForRead().toFile(), "jobsToInterval.txt");
     }
 
     private void writeJobToIntervalMap(Map<String, List<Interval>> jobToIntervalMap) throws IOException
@@ -410,7 +410,7 @@ public class VariantProcessingJob extends SequenceOutputHandlerJob
         {
             VariantProcessingJob job1 = new VariantProcessingJob(){
                 @Override
-                public FileLike getDataDirectoryFileLike()
+                public FileLike getDataDirectory()
                 {
                     return FileSystemLike.wrapFile(new File(System.getProperty("java.io.tmpdir")));
                 }

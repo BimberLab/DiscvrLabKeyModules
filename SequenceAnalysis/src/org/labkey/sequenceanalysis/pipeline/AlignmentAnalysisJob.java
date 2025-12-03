@@ -20,6 +20,7 @@ import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.AnalysisModelImpl;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
+import org.labkey.vfs.FileSystemLike;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -104,7 +105,7 @@ public class AlignmentAnalysisJob extends SequenceJob
 
             AlignmentAnalysisJob j = new AlignmentAnalysisJob(targetContainer, u, jobName, pr, params, model);
             j.setDescription(description);
-            j.setInputFiles(Collections.singletonList(model.getAlignmentFileObject()));
+            j.setInputFiles(Collections.singletonList(FileSystemLike.wrapFile(model.getAlignmentFileObject())));
 
             ret.add(j);
         }

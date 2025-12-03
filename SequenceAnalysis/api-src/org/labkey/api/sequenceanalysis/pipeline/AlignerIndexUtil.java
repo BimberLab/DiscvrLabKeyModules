@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.WorkDirectory;
+import org.labkey.vfs.FileSystemLike;
 
 import java.io.File;
 import java.io.IOException;
@@ -89,7 +90,7 @@ public class AlignerIndexUtil
                         if (doCopy)
                         {
                             ctx.getLogger().info("copying index files to work location");
-                            File localSharedDir = new File(wd.getDir(), "Shared");
+                            File localSharedDir = new File(wd.getDir().toNioPathForRead().toFile(), "Shared");
                             File destination = new File(localSharedDir, localName);
                             ctx.getLogger().debug(destination.getPath());
                             File[] files = webserverIndexDir.listFiles();
@@ -98,7 +99,7 @@ public class AlignerIndexUtil
                                 return false;
                             }
 
-                            destination = wd.inputFile(webserverIndexDir, destination, true);
+                            destination = wd.inputFile(FileSystemLike.wrapFile(webserverIndexDir), FileSystemLike.wrapFile(destination), true).toNioPathForRead().toFile();
                             if (output != null && !destination.equals(webserverIndexDir))
                             {
                                 ctx.getLogger().debug("adding deferred delete file: " + destination.getPath());

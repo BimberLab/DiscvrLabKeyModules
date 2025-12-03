@@ -14,8 +14,8 @@ import org.labkey.api.security.User;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
+import org.labkey.vfs.FileLike;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
@@ -39,7 +39,7 @@ public class AlignmentImportJob extends SequenceJob
         super(SequencePipelineProvider.NAME, c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), FOLDER_NAME);
     }
 
-    public static List<AlignmentImportJob> create(Container c, User u, String jobName, String description, JSONObject params, Collection<File> inputFiles) throws IOException, PipelineValidationException
+    public static List<AlignmentImportJob> create(Container c, User u, String jobName, String description, JSONObject params, Collection<FileLike> inputFiles) throws IOException, PipelineValidationException
     {
         PipeRoot pr = PipelineService.get().findPipelineRoot(c);
         if (pr == null || !pr.isValid())

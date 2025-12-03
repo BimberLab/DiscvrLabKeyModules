@@ -293,7 +293,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
             getPipelineJob().setLibraryId(rowId);
 
             String basename = FileUtil.makeLegalName(rowId + "_" + getPipelineJob().getLibraryName().replace(" ", "_"));
-            File outputDir = new File(getPipelineJob().getAnalysisDirectory(), rowId.toString());
+            File outputDir = getPipelineJob().getAnalysisDirectory().resolveChild(rowId.toString()).toNioPathForRead().toFile();
             if (!outputDir.exists())
             {
                 outputDir.mkdirs();

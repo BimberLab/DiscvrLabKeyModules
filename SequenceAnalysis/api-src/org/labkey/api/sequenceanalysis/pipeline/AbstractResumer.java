@@ -7,6 +7,7 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.util.Pair;
+import org.labkey.vfs.FileSystemLike;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -240,7 +241,7 @@ abstract public class AbstractResumer implements Serializable
                 {
                     for (File orig : ret.getCopiedInputs().keySet())
                     {
-                        ctx.getWorkDir().inputFile(orig, ret._copiedInputs.get(orig), false);
+                        ctx.getWorkDir().inputFile(FileSystemLike.wrapFile(orig), FileSystemLike.wrapFile(ret._copiedInputs.get(orig)), false);
                     }
                 }
             }

@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.api.util.Pair;
+import org.labkey.vfs.FileLike;
 
 import java.io.File;
 import java.util.Arrays;
@@ -45,6 +46,11 @@ public class SamToFastqWrapper extends PicardWrapper
         execute(args);
 
         return Arrays.asList(outDir.listFiles());
+    }
+
+    public Pair<File, File> executeCommand(FileLike f, String outputName1, @Nullable String outputName2) throws PipelineJobException
+    {
+        return executeCommand(f.toNioPathForRead().toFile(), outputName1, outputName2);
     }
 
     public Pair<File, File> executeCommand(File file, String outputName1, @Nullable String outputName2) throws PipelineJobException

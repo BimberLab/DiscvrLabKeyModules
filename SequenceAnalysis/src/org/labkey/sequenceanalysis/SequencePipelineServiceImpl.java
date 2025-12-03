@@ -514,7 +514,7 @@ public class SequencePipelineServiceImpl extends SequencePipelineService
             return null;
         }
 
-        return ((SequenceJob) job).getInputFiles();
+        return ((SequenceJob) job).getInputFiles().stream().map(f -> f.toNioPathForRead().toFile()).toList();
     }
 
     @Override

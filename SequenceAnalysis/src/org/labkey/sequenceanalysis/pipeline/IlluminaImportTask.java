@@ -46,6 +46,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
+import org.labkey.vfs.FileLike;
 
 import java.io.File;
 import java.io.IOException;
@@ -131,7 +132,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         job.getLogger().info("Starting analysis");
         String prefix = job.getParameters().get("fastqPrefix");
 
-        List<File> inputFiles = getSupport().getInputFiles();
+        List<FileLike> inputFiles = getSupport().getInputFiles();
         if (inputFiles.isEmpty())
             throw new PipelineJobException("No input files");
 
@@ -140,7 +141,7 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         handleInstrumentRun(schema);
 
         //iterate over each CSV
-        for (File input : inputFiles)
+        for (FileLike input : inputFiles)
         {
             RecordedAction action = new RecordedAction(ACTION_NAME);
             action.addInputIfNotPresent(input, "Illumina Sample CSV");
@@ -150,9 +151,9 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
             //NOTE: it might be just as easy to match filename based on expected pattern
 
             //this step will be slow
-            IlluminaFastqSplitter<Long> parser = new IlluminaFastqSplitter<>("Illumina", sampleMap, job.getLogger(), input.getParent(), prefix);
+            IlluminaFastqSplitter<Long> parser = new IlluminaFastqSplitter<>("Illumina", sampleMap, job.getLogger(), input.toNioPathForRead().toFile().getParent(), prefix);
             parser.setOutputGzip(true);
-            parser.setDestinationDir(getSupport().getAnalysisDirectory());
+            parser.setDestinationDir(getSupport().getAnalysisDirectory().toNioPathForRead().toFile());
 
             // the first element of the pair is the sample ID.  the second is either 1 or 2,
             // depending on whether the file represents the forward or reverse reads
@@ -328,10 +329,10 @@ public class IlluminaImportTask extends WorkDirectoryTask<IlluminaImportTask.Fac
         return SequenceTaskHelper.createExpData(f, getJob());
     }
 
-    private Map<String, Long> parseCsv(File sampleFile, DbSchema schema) throws PipelineJobException
+    private Map<String, Long> parseCsv(FileLike sampleFile, DbSchema schema) throws PipelineJobException
     {
         getJob().getLogger().info("Parsing Sample File: " + sampleFile.getName());
-        try (CSVReader reader = new CSVReader(Readers.getReader(sampleFile)))
+        try (CSVReader reader = new CSVReader(Readers.getReader(sampleFile.openInputStream())))
         {
             //parse the samples file
             String [] nextLine;

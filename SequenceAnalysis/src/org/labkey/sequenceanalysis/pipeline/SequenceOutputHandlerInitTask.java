@@ -131,7 +131,7 @@ public class SequenceOutputHandlerInitTask extends PipelineJob.Task<SequenceOutp
             }
         }
 
-        TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), getPipelineJob().getAnalysisDirectory(), null);
+        TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), getPipelineJob().getAnalysisDirectory().toNioPathForRead().toFile(), null);
         JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), getPipelineJob().getAnalysisDirectory(), manager, null);
         handler.getProcessor().init(ctx, getPipelineJob().getFiles(), actions, outputsToCreate);
 

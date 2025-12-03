@@ -26,8 +26,8 @@ import org.labkey.api.view.NotFoundException;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.util.NucleotideSequenceFileType;
+import org.labkey.vfs.FileLike;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -55,7 +55,7 @@ public class ReadsetImportJob extends SequenceJob
     {
     }
 
-    public static List<ReadsetImportJob> create(Container c, User u, String jobName, String description, JSONObject params, List<File> inputFiles) throws PipelineJobException, IOException, PipelineValidationException
+    public static List<ReadsetImportJob> create(Container c, User u, String jobName, String description, JSONObject params, List<FileLike> inputFiles) throws PipelineJobException, IOException, PipelineValidationException
     {
         Map<Container, PipeRoot> containerToPipeRootMap = new HashMap<>();
 
@@ -137,7 +137,7 @@ public class ReadsetImportJob extends SequenceJob
                     job.getLogger().debug("job was submitted to an alternate folder: " + targetContainer.getPath());
                 }
 
-                List<File> inputFilesSubset = new ArrayList<>();
+                List<FileLike> inputFilesSubset = new ArrayList<>();
                 JSONArray files = fileGroup.getJSONArray("files");
                 for (int i = 0; i < files.length(); i++)
                 {
@@ -165,7 +165,7 @@ public class ReadsetImportJob extends SequenceJob
         }
     }
 
-    private static File findFile(JSONObject file, List<File> inputFiles)
+    private static FileLike findFile(JSONObject file, List<FileLike> inputFiles)
     {
         if (!file.isNull("dataId") && StringUtils.trimToNull(file.get("dataId").toString()) != null)
         {
@@ -178,7 +178,7 @@ public class ReadsetImportJob extends SequenceJob
                     throw new IllegalArgumentException("Unable to find file with ID: " + file.getInt("dataId"));
                 }
 
-                return d.getFile();
+                return d.getFileLike();
             }
             catch (ConversionException | NullPointerException e)
             {
@@ -187,7 +187,7 @@ public class ReadsetImportJob extends SequenceJob
         }
         else if (!file.isNull("fileName") && StringUtils.trimToNull(file.getString("fileName")) != null)
         {
-            List<File> hits = new ArrayList<>();
+            List<FileLike> hits = new ArrayList<>();
             inputFiles.forEach(x -> {
                 if (x.getName().equals(file.getString("fileName")))
                 {

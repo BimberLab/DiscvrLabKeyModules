@@ -65,10 +65,9 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
         }
 
         @Override
-        public PipelineJob.Task createTask(PipelineJob job)
+        public AlignmentAnalysisWorkTask createTask(PipelineJob job)
         {
-            AlignmentAnalysisWorkTask task = new AlignmentAnalysisWorkTask(this, job);
-            return task;
+            return new AlignmentAnalysisWorkTask(this, job);
         }
 
         @Override
@@ -124,7 +123,7 @@ public class AlignmentAnalysisWorkTask extends WorkDirectoryTask<AlignmentAnalys
             throw new PipelineJobException("Unable to find reference FASTA for analysis: " + getPipelineJob().getAnalyisId());
         }
 
-        File outDir = new File(getTaskHelper().getJob().getAnalysisDirectory(), FileUtil.getBaseName(m.getAlignmentFileObject()));
+        File outDir = getTaskHelper().getJob().getAnalysisDirectory().resolveChild(FileUtil.getBaseName(m.getAlignmentFileObject())).toNioPathForRead().toFile();
         if (!outDir.exists())
         {
             outDir.mkdirs();

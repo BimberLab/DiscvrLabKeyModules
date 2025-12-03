@@ -15,8 +15,8 @@ import org.labkey.api.security.User;
 import org.labkey.api.util.FileType;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
+import org.labkey.vfs.FileLike;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,14 +42,14 @@ public class IlluminaImportJob extends SequenceJob
         super(SequencePipelineProvider.NAME, c, u, jobName, root, params, new TaskId(FileAnalysisTaskPipeline.class, NAME), FOLDER_NAME);
     }
 
-    public static List<IlluminaImportJob> create(Container c, User u, String jobName, String description, JSONObject params, Collection<File> inputFiles) throws ClassNotFoundException, IOException, PipelineValidationException
+    public static List<IlluminaImportJob> create(Container c, User u, String jobName, String description, JSONObject params, Collection<FileLike> inputFiles) throws ClassNotFoundException, IOException, PipelineValidationException
     {
         PipeRoot pr = PipelineService.get().findPipelineRoot(c);
         if (pr == null || !pr.isValid())
             throw new NotFoundException();
 
         List<IlluminaImportJob> ret = new ArrayList<>();
-        for (File csv : inputFiles)
+        for (FileLike csv : inputFiles)
         {
             IlluminaImportJob job = new IlluminaImportJob(c, u, jobName, pr, params);
             job.setDescription(description);

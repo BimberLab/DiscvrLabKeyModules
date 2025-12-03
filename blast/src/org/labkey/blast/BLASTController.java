@@ -212,13 +212,13 @@ public class BLASTController extends SpringActionController
         }
 
         @Override
-        protected File getTargetFile(String filename) throws IOException
+        protected FileLike getTargetFile(String filename) throws IOException
         {
             AssayFileWriter writer = new AssayFileWriter();
             try
             {
                 FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                return FileUtil.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
+                return FileUtil.findUniqueFileName(filename, targetDirectory);
             }
             catch (ExperimentException e)
             {
@@ -227,7 +227,7 @@ public class BLASTController extends SpringActionController
         }
 
         @Override
-        public String getResponse(RunBlastForm form, Map<String, Pair<File, String>> files)
+        public String getResponse(RunBlastForm form, Map<String, Pair<FileLike, String>> files)
         {
             JSONObject resp = new JSONObject();
             Map<String, String> params = new HashMap<>();
@@ -251,10 +251,10 @@ public class BLASTController extends SpringActionController
                 params.put("perc_identity", form.getPctIdentity());
             }
 
-            List<File> inputFiles = new ArrayList<>();
+            List<FileLike> inputFiles = new ArrayList<>();
             try
             {
-                for (Map.Entry<String, Pair<File, String>> entry : files.entrySet())
+                for (Map.Entry<String, Pair<FileLike, String>> entry : files.entrySet())
                 {
                     inputFiles.add(entry.getValue().getKey());
                 }
@@ -272,7 +272,7 @@ public class BLASTController extends SpringActionController
                         {
                             fw.write(form.getQuery());
                         }
-                        inputFiles.add(input.toNioPathForRead().toFile());
+                        inputFiles.add(input);
                     }
                     catch (ExperimentException e)
                     {
@@ -282,9 +282,9 @@ public class BLASTController extends SpringActionController
 
                 if (!inputFiles.isEmpty())
                 {
-                    for (File input : inputFiles)
+                    for (FileLike input : inputFiles)
                     {
-                        String jobId = BLASTManager.get().runBLASTN(getContainer(), getUser(), form.getDatabase(), input, form.getTask(), form.getTitle(), form.getSaveResults(), params, true);
+                        String jobId = BLASTManager.get().runBLASTN(getContainer(), getUser(), form.getDatabase(), input.toNioPathForRead().toFile(), form.getTask(), form.getTitle(), form.getSaveResults(), params, true);
                         resp.put("jobId", jobId);
                     }
                 }

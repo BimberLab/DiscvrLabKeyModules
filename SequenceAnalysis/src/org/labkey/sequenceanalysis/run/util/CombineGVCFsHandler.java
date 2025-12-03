@@ -20,6 +20,7 @@ import org.labkey.sequenceanalysis.ScatterGatherUtils;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
+import org.labkey.vfs.FileSystemLike;
 
 import java.io.File;
 import java.io.IOException;
@@ -198,7 +199,7 @@ public class CombineGVCFsHandler extends AbstractParameterizedOutputHandler<Sequ
                     //NOTE: the VCF was copied back to the source dir, so translate paths
                     try
                     {
-                        String path = ctx.getWorkDir().getRelativePath(outputFile);
+                        String path = ctx.getWorkDir().getRelativePath(FileSystemLike.wrapFile(outputFile));
                         File movedOutputFile = new File(ctx.getSourceDirectory(), path);
                         job.getScatterJobOutputs().put(job.getIntervalSetName(), movedOutputFile);
                     }

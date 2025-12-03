@@ -16,6 +16,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
+import org.labkey.vfs.FileLike;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -111,8 +112,9 @@ public class AlignmentAnalysisRemoteWorkTask extends WorkDirectoryTask<Alignment
         Map<String, AnalysisModel> alignmentMap = getAnalysisMap();
 
         List<AnalysisStep.Output> outputs = new ArrayList<>();
-        for (File inputBam : getTaskHelper().getSupport().getInputFiles())
+        for (FileLike inputFileLike : getTaskHelper().getSupport().getInputFiles())
         {
+            File inputBam = inputFileLike.toNioPathForRead().toFile();
             AnalysisModel m = alignmentMap.get(inputBam.getName());
             if (m == null)
             {

@@ -109,7 +109,7 @@ public class ReferenceLibraryPipelineJob extends SequenceJob
 
     public File getSerializedLibraryMembersFile()
     {
-        return FileUtil.appendName(getDataDirectory(), FileUtil.getBaseName(getLogFile()) + ".json");
+        return getDataDirectory().resolveChild(FileUtil.getBaseName(getLogFile()) + ".json").toNioPathForRead().toFile();
     }
 
     //for recreating an existing library

@@ -151,7 +151,7 @@ public class SequenceOutputHandlerFinalTask extends PipelineJob.Task<SequenceOut
         }
 
         //run final handler
-        TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), getPipelineJob().getAnalysisDirectory(), null);
+        TaskFileManagerImpl manager = new TaskFileManagerImpl(getPipelineJob(), getPipelineJob().getAnalysisDirectory().toNioPathForRead().toFile(), null);
         JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), getPipelineJob().getAnalysisDirectory(), manager, null);
         getPipelineJob().getHandler().getProcessor().complete(ctx, getPipelineJob().getFiles(), outputsCreated);
 

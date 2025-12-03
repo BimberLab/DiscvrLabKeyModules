@@ -55,6 +55,8 @@ import org.labkey.sequenceanalysis.util.FastqMerger;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.NucleotideSequenceFileType;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
+import org.labkey.vfs.FileLike;
+import org.labkey.vfs.FileSystemLike;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -164,16 +166,16 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         return (ReadsetImportJob)getJob();
     }
 
-    private static List<File> getFilesToNormalize(PipelineJob job, List<File> files, boolean allowMissingFiles) throws FileNotFoundException
+    private static List<File> getFilesToNormalize(PipelineJob job, List<FileLike> files, boolean allowMissingFiles) throws FileNotFoundException
     {
         SequencePipelineSettings settings = new SequencePipelineSettings(job.getParameters());
         if (settings.isDoBarcode())
         {
-            return files;
+            return files.stream().map(f -> f.toNioPathForRead().toFile()).toList();
         }
 
         List<File> toNormalize = new ArrayList<>();
-        for (File f : files)
+        for (FileLike f : files)
         {
             if (!f.exists())
             {
@@ -184,7 +186,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             }
 
             if (isNormalizationRequired(job, f))
-                toNormalize.add(f);
+                toNormalize.add(f.toNioPathForRead().toFile());
         }
 
         try
@@ -230,7 +232,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         return toNormalize;
     }
 
-    private static boolean isNormalizationRequired(PipelineJob job, File f)
+    private static boolean isNormalizationRequired(PipelineJob job, FileLike f)
     {
         try
         {
@@ -249,7 +251,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
                 try
                 {
-                    if (!SequenceUtil.hasMinLineCount(f, 4))
+                    if (!SequenceUtil.hasMinLineCount(f.toNioPathForRead().toFile(), 4))
                     {
                         job.getLogger().warn("file has fewer than 4 lines: " + f.getPath());
                         return false;
@@ -261,7 +263,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                 }
 
                 QualityEncodingDetector detector = new QualityEncodingDetector();
-                try (FastqReader reader = new FastqReader(f))
+                try (FastqReader reader = new FastqReader(f.toNioPathForRead().toFile()))
                 {
                     detector.add(QualityEncodingDetector.DEFAULT_MAX_RECORDS_TO_ITERATE * 10, reader);
                 }
@@ -316,7 +318,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
         List<RecordedAction> actions = new ArrayList<>();
 
         getJob().getLogger().info("Starting Normalization Task");
-        File normalizationDir = new File(_wd.getDir(), SequenceTaskHelper.NORMALIZATION_SUBFOLDER_NAME);
+        File normalizationDir = new File(_wd.getDir().toNioPathForRead().toFile(), SequenceTaskHelper.NORMALIZATION_SUBFOLDER_NAME);
         normalizationDir.mkdirs();
 
         try
@@ -333,7 +335,8 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
                 {
                     for (FileGroup.FilePair fp : lane)
                     {
-                        File localCopy = _wd.getWorkingCopyForInput(fp.file1);
+                        FileLike localCopyFileLike = _wd.getWorkingCopyForInput(FileSystemLike.wrapFile(fp.file1));
+                        File localCopy = localCopyFileLike == null ? null : localCopyFileLike.toNioPathForRead().toFile();
                         if (localCopy != null)
                         {
                             getJob().getLogger().debug("using local working copy for file: " + fp.file1.getPath());
@@ -362,7 +365,8 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
                         if (fp.file2 != null)
                         {
-                            localCopy = _wd.getWorkingCopyForInput(fp.file2);
+                            localCopyFileLike = _wd.getWorkingCopyForInput(FileSystemLike.wrapFile(fp.file2));
+                            localCopy = localCopyFileLike == null ? null : localCopyFileLike.toNioPathForRead().toFile();
                             if (localCopy != null)
                             {
                                 getJob().getLogger().debug("using local working copy for file: " + fp.file2.getPath());
@@ -634,7 +638,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
             }
 
             //add final action for later tracking based on role
-            File baseDirectory = new File(_wd.getDir(), SequenceTaskHelper.NORMALIZATION_SUBFOLDER_NAME);
+            File baseDirectory = new File(_wd.getDir().toNioPathForRead().toFile(), SequenceTaskHelper.NORMALIZATION_SUBFOLDER_NAME);
             baseDirectory.mkdirs();
 
             Set<File> finalOutputs = ReadsetInitTask.handleInputs(getPipelineJob(), getHelper().getFileManager().getInputFileTreatment(), actions, _finalOutputs, null);
@@ -880,7 +884,7 @@ public class SequenceNormalizationTask extends WorkDirectoryTask<SequenceNormali
 
         getJob().getLogger().info("\tFile format: " + type.getPrimaryExtension());
 
-        File baseDirectory = new File(_wd.getDir(), SequenceTaskHelper.NORMALIZATION_SUBFOLDER_NAME);
+        File baseDirectory = new File(_wd.getDir().toNioPathForWrite().toFile(), SequenceTaskHelper.NORMALIZATION_SUBFOLDER_NAME);
         baseDirectory.mkdirs();
 
         File workingDir = new File(baseDirectory, basename);

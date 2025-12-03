@@ -36,6 +36,8 @@ import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
+import org.labkey.vfs.FileLike;
+import org.labkey.vfs.FileSystemLike;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -79,6 +81,11 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
 
     }
 
+    public TaskFileManagerImpl(SequenceJob job, FileLike workDir, WorkDirectory wd)
+    {
+        this(job, workDir.toNioPathForRead().toFile(), wd);
+    }
+
     public TaskFileManagerImpl(SequenceJob job, File workDir, WorkDirectory wd)
     {
         _job = job;
@@ -95,7 +102,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         }
 
         _job = (SequenceJob)job;
-        _workLocation = wd.getDir();
+        _workLocation = wd.getDir().toNioPathForRead().toFile();
         _wd = wd;
     }
 
@@ -243,7 +250,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
 
     private File getDeferredDeleteLog(boolean create)
     {
-        File logFile = new File(getSupport().getAnalysisDirectory(), "toDelete.txt");
+        File logFile = new File(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), "toDelete.txt");
         if (create && !logFile.exists())
         {
             try
@@ -262,7 +269,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
 
     private File getMetricsLog(boolean create)
     {
-        File logFile = new File(getSupport().getAnalysisDirectory(), "metricsToCreate.txt");
+        File logFile = new File(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), "metricsToCreate.txt");
         if (create && !logFile.exists())
         {
             try (PrintWriter writer = PrintWriters.getPrintWriter(logFile))
@@ -381,7 +388,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         File f = new File(_workLocation, line);
         if (!f.exists())
         {
-            File test = new File(getSupport().getAnalysisDirectory(), line);
+            File test = new File(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), line);
             if (test.exists())
             {
                 f = test;
@@ -521,7 +528,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
             metricLog = getMetricsLog(true);
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(metricLog, true)))
             {
-                String bamRelPath = mf.getInputFile() == null ? "" : FilenameUtils.normalize(_wd.getRelativePath(mf.getInputFile()));
+                String bamRelPath = mf.getInputFile() == null ? "" : FilenameUtils.normalize(_wd.getRelativePath(FileSystemLike.wrapFile(mf.getInputFile())));
                 String type = mf.getType() == null ? "" : mf.getType().name();
 
                 List<Map<String, Object>> metricLines = PicardMetricsUtil.processFile(mf.getMetricFile(), _job.getLogger());
@@ -724,9 +731,9 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     private Set<String> getInputPaths()
     {
         Set<String> inputPaths = new HashSet<>();
-        for (File f : getSupport().getInputFiles())
+        for (FileLike f : getSupport().getInputFiles())
         {
-            inputPaths.add(f.getPath());
+            inputPaths.add(f.toNioPathForRead().toFile().getPath());
         }
         return inputPaths;
     }
@@ -910,7 +917,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
 
                 //NOTE: preserving relative locations is a pain.  therefore we copy all outputs, including directories
                 //then sort out which files were specified as named outputs later
-                for (File input : _wd.getDir().listFiles())
+                for (File input : _wd.getDir().toNioPathForRead().toFile().listFiles())
                 {
                     if (input.getName().matches("^core.[0-9]+$") || input.getName().endsWith(".hprof"))
                     {
@@ -979,8 +986,8 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
             return;
         }
 
-        String path = _wd.getRelativePath(input);
-        File dest = new File(getSupport().getAnalysisDirectory(), path);
+        String path = _wd.getRelativePath(FileSystemLike.wrapFile(input));
+        File dest = new File(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), path);
         _job.getLogger().debug("to: " + dest.getPath());
 
         boolean doMove = true;
@@ -1018,7 +1025,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                 Files.delete(input.toPath());
             }
 
-            dest = _wd.outputFile(input, dest);
+            dest = _wd.outputFile(FileSystemLike.wrapFile(input), FileSystemLike.wrapFile(dest)).toNioPathForRead().toFile();
             processCopiedFile(input, dest, actions, resumer);
         }
     }
@@ -1048,7 +1055,6 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
     @Override
     public void decompressInputFiles(Pair<File, File> pair, List<RecordedAction> actions)
     {
-        List<File> list = new ArrayList<>();
         if (pair.first != null)
             pair.first = decompressFile(pair.first, actions);
         if (pair.second != null)
@@ -1070,7 +1076,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
             //NOTE: we use relative paths in all cases here
             _job.getLogger().info("Decompressing file: " + i.getPath());
 
-            unzipped = new File(_wd.getDir(), i.getName().replaceAll(".gz$", ""));
+            unzipped = new File(_wd.getDir().toNioPathForRead().toFile(), i.getName().replaceAll(".gz$", ""));
             unzipped = Compress.decompressGzip(i, unzipped);
             _job.getLogger().debug("\tunzipped: " + unzipped.getPath());
 

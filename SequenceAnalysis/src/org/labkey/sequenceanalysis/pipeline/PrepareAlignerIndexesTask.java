@@ -192,7 +192,7 @@ public class PrepareAlignerIndexesTask extends WorkDirectoryTask<PrepareAlignerI
         getJob().getLogger().debug("location of source FASTA: " + getPipelineJob().getTargetGenome().getSourceFastaFile().getPath());
 
         //NOTE: always create the index back in the local working dir, since we'll need to move it back there anyway
-        File localSharedDirectory = new File(getHelper().getJob().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
+        File localSharedDirectory = new File(getHelper().getJob().getAnalysisDirectory().toNioPathForRead().toFile(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
         if (!localSharedDirectory.exists())
         {
             localSharedDirectory.mkdirs();

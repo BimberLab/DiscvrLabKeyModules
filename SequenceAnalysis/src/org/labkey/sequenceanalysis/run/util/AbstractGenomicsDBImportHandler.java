@@ -30,10 +30,12 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.Path;
 import org.labkey.sequenceanalysis.ScatterGatherUtils;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.VariantProcessingJob;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
+import org.labkey.vfs.FileLike;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -278,7 +280,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         job.setStatus(PipelineJob.TaskStatus.running, "Creating merged workspace from " + jobToIntervalMap.size() + " jobs");
 
         VariantProcessingJob variantProcessingJob = getPipelineJob(job);
-        File destinationWorkspace = getWorkspaceOutput(variantProcessingJob.getDataDirectory(), variantProcessingJob.getParameterJson().getString("fileBaseName"));
+        File destinationWorkspace = getWorkspaceOutput(variantProcessingJob.getDataDirectory().toNioPathForRead().toFile(), variantProcessingJob.getParameterJson().getString("fileBaseName"));
         if (!destinationWorkspace.exists())
         {
             destinationWorkspace.mkdirs();
@@ -296,7 +298,7 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
         Map<String, File> scatterOutputs = getPipelineJob(job).getScatterJobOutputs();
         for (String name : jobToIntervalMap.keySet())
         {
-            File overallCopyDone = new File(variantProcessingJob.getDataDirectory(), name + "/copyToWebserver.done");
+            File overallCopyDone = variantProcessingJob.getDataDirectory().resolveFile(Path.parse(name + "/copyToWebserver.done")).toNioPathForRead().toFile();
             if (overallCopyDone.exists())
             {
                 overallCopyDone.delete();
@@ -342,12 +344,12 @@ abstract public class AbstractGenomicsDBImportHandler extends AbstractParameteri
 
     private Set<String> _contigsInInputs = null;
 
-    Set<String> getContigsInInputs(List<File> inputVCFs, Logger log) throws PipelineJobException
+    Set<String> getContigsInInputs(List<FileLike> inputVCFs, Logger log) throws PipelineJobException
     {
         if (_contigsInInputs == null)
         {
             Set<String> ret = new HashSet<>();
-            for (File f : inputVCFs)
+            for (FileLike f : inputVCFs)
             {
                 ret.addAll(SequenceUtil.getContigsInVcf(f));
             }

@@ -1,8 +1,8 @@
 package org.labkey.api.sequenceanalysis.pipeline;
 
 import org.json.JSONObject;
+import org.labkey.vfs.FileLike;
 
-import java.io.File;
 import java.util.Map;
 
 /**
@@ -14,5 +14,5 @@ public interface HasJobParams
 
     JSONObject getParameterJson();
 
-    File getParametersFile();
+    FileLike getParametersFile();
 }

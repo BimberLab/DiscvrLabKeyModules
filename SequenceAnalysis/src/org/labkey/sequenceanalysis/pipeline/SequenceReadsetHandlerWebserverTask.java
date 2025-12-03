@@ -51,7 +51,7 @@ public class SequenceReadsetHandlerWebserverTask extends PipelineJob.Task<Sequen
         public List<String> getProtocolActionNames()
         {
             List<String> allowableNames = new ArrayList<>();
-            for (SequenceOutputHandler handler : SequenceAnalysisServiceImpl.get().getFileHandlers(SequenceOutputHandler.TYPE.Readset))
+            for (SequenceOutputHandler<?> handler : SequenceAnalysisServiceImpl.get().getFileHandlers(SequenceOutputHandler.TYPE.Readset))
             {
                 allowableNames.add(handler.getName());
             }
@@ -75,7 +75,7 @@ public class SequenceReadsetHandlerWebserverTask extends PipelineJob.Task<Sequen
         }
 
         @Override
-        public PipelineJob.Task createTask(PipelineJob job)
+        public SequenceReadsetHandlerWebserverTask createTask(PipelineJob job)
         {
             return new SequenceReadsetHandlerWebserverTask(this, job);
         }
@@ -106,7 +106,7 @@ public class SequenceReadsetHandlerWebserverTask extends PipelineJob.Task<Sequen
             getJob().getLogger().warn("there are no sequence output files to process, this is probably an error");
         }
 
-        handler.getProcessor().processFilesOnWebserver(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getReadsets(), getPipelineJob().getParameterJson(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);
+        handler.getProcessor().processFilesOnWebserver(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getReadsets(), getPipelineJob().getParameterJson(), getPipelineJob().getAnalysisDirectory().toNioPathForRead().toFile(), actions, outputsToCreate);
 
         if (!outputsToCreate.isEmpty())
         {

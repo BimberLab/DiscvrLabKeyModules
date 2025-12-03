@@ -52,6 +52,7 @@ import org.labkey.sequenceanalysis.run.util.AbstractGenomicsDBImportHandler;
 import org.labkey.sequenceanalysis.run.util.MergeVcfsAndGenotypesWrapper;
 import org.labkey.sequenceanalysis.run.variant.OutputVariantsStartingInIntervalsStep;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
+import org.labkey.vfs.FileLike;
 
 import java.io.File;
 import java.io.IOException;
@@ -354,6 +355,12 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
     {
         providerName = FileUtil.makeLegalName(providerName);
         return new File(outputDir, providerName + ".ped");
+    }
+
+    public static FileLike getPedigreeFile(FileLike outputDir, String providerName)
+    {
+        providerName = FileUtil.makeLegalName(providerName);
+        return outputDir.resolveChild(providerName + ".ped");
     }
 
     public static List<Interval> getIntervals(JobContext ctx)
@@ -730,7 +737,7 @@ public class ProcessVariantsHandler implements SequenceOutputHandler<SequenceOut
         @Override
         public void complete(JobContext ctx, List<SequenceOutputFile> inputs, List<SequenceOutputFile> outputsCreated) throws PipelineJobException
         {
-            SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(ctx.getJob()), getPipelineJob(ctx.getJob()).getDataDirectory());
+            SequenceTaskHelper taskHelper = new SequenceTaskHelper(getPipelineJob(ctx.getJob()), getPipelineJob(ctx.getJob()).getDataDirectory().toNioPathForRead().toFile());
             List<PipelineStepCtx<VariantProcessingStep>> providers = SequencePipelineService.get().getSteps(ctx.getJob(), VariantProcessingStep.class);
             for (PipelineStepCtx<VariantProcessingStep> stepCtx : providers)
             {

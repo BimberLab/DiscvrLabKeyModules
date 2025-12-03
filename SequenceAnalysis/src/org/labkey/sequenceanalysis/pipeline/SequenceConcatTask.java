@@ -93,7 +93,7 @@ public class SequenceConcatTask extends PipelineJob.Task<SequenceConcatTask.Fact
 
         try
         {
-            createConcatenatedSequence(sequenceIds, getPipelineJob().getParameterJson().getString("sequenceName"), getPipelineJob().getParameterJson().getString("sequenceDescription"), getJob().getContainer(), getJob().getUser(), getPipelineJob().getAnalysisDirectory());
+            createConcatenatedSequence(sequenceIds, getPipelineJob().getParameterJson().getString("sequenceName"), getPipelineJob().getParameterJson().getString("sequenceDescription"), getJob().getContainer(), getJob().getUser(), getPipelineJob().getAnalysisDirectory().toNioPathForRead().toFile());
         }
         catch (IOException e)
         {

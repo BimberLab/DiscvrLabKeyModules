@@ -21,8 +21,9 @@ import org.labkey.sequenceanalysis.SequenceAnalysisModule;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
+import org.labkey.vfs.FileLike;
+import org.labkey.vfs.FileSystemLike;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -74,7 +75,7 @@ public class SequenceAlignmentJob extends SequenceJob
             SequenceAlignmentJob j = new SequenceAlignmentJob(targetContainer, u, jobName, pr, params, readset);
             j.setDescription(description);
 
-            List<File> inputFiles = new ArrayList<>();
+            List<FileLike> inputFiles = new ArrayList<>();
             for (ReadData rd : readset.getReadData())
             {
                 if (rd.getFileId1() != null)
@@ -86,7 +87,7 @@ public class SequenceAlignmentJob extends SequenceJob
                     }
                     else
                     {
-                        inputFiles.add(d1.getFile());
+                        inputFiles.add(FileSystemLike.wrapFile(d1.getFile()));
                     }
                 }
 
@@ -99,7 +100,7 @@ public class SequenceAlignmentJob extends SequenceJob
                     }
                     else
                     {
-                        inputFiles.add(d2.getFile());
+                        inputFiles.add(FileSystemLike.wrapFile(d2.getFile()));
                     }
                 }
             }

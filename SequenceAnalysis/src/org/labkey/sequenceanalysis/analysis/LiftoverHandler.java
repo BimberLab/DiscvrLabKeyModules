@@ -226,7 +226,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
             action.addInput(f.getFile(), "Input File");
             action.addInput(chainFile, "Chain File");
 
-            File outDir = ((FileAnalysisJobSupport) job).getAnalysisDirectory();
+            File outDir = ((FileAnalysisJobSupport) job).getAnalysisDirectory().toNioPathForRead().toFile();
             String baseName = SequenceAnalysisService.get().getUnzippedBaseName(f.getFile().getName());
             File lifted = new File(outDir, baseName + ".lifted-" + targetGenomeId + getOutputExtension(f.getFile()));
             File unmappedOutput = retainUnmapped ? getUnmappedOutputFile(lifted) : null;

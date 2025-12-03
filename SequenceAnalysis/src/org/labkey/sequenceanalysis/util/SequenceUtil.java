@@ -46,6 +46,7 @@ import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.run.util.BgzipRunner;
 import org.labkey.sequenceanalysis.run.variant.GatherVcfsCloudWrapper;
+import org.labkey.vfs.FileLike;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -602,7 +603,7 @@ public class SequenceUtil
         return outputGzip;
     }
 
-    public static Set<String> getContigsInVcf(File vcf) throws PipelineJobException
+    public static Set<String> getContigsInVcf(FileLike vcf) throws PipelineJobException
     {
         try
         {
@@ -610,7 +611,7 @@ public class SequenceUtil
             try (PrintWriter writer = PrintWriters.getPrintWriter(script))
             {
                 writer.println("#!/bin/bash");
-                String cat = vcf.getPath().toLowerCase().endsWith(".gz") ? "zcat" : "cat";
+                String cat = vcf.getName().toLowerCase().endsWith(".gz") ? "zcat" : "cat";
                 writer.println(cat + " '" + vcf.getPath() + "' | grep -v '#' | awk ' { print $1 } ' | sort | uniq");
             }
 

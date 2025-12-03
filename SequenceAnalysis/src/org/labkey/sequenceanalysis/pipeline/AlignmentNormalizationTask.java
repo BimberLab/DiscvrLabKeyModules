@@ -27,6 +27,8 @@ import org.labkey.sequenceanalysis.run.util.BuildBamIndexWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectInsertSizeMetricsWrapper;
 import org.labkey.sequenceanalysis.run.util.CollectWgsMetricsWrapper;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
+import org.labkey.vfs.FileLike;
+import org.labkey.vfs.FileSystemLike;
 
 import java.io.File;
 import java.io.IOException;
@@ -111,10 +113,10 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
             //move and make sure BAMs are coordinate sorted and indexed
             FileType bamFile = new FileType("bam");
             Map<String, File> bamMap = new HashMap<>();
-            for (File f : getTaskHelper().getJob().getInputFiles())
+            for (FileLike f : getTaskHelper().getJob().getInputFiles())
             {
                 getJob().getLogger().debug("input file: " + f.getPath());
-                bamMap.put(f.getName(), f);
+                bamMap.put(f.getName(), FileSystemLike.toFile(f));
             }
 
 
@@ -195,7 +197,7 @@ public class AlignmentNormalizationTask extends WorkDirectoryTask<AlignmentNorma
                 getTaskHelper().getFileManager().addInput(moveAction, "Input BAM", bam);
                 actions.add(moveAction);
 
-                File finalDestination = new File(getTaskHelper().getJob().getAnalysisDirectory(), originalFile.getName());
+                File finalDestination = FileSystemLike.toFile(getTaskHelper().getJob().getAnalysisDirectory().resolveChild(originalFile.getName()));
                 if (TaskFileManager.InputFileTreatment.leaveInPlace == getTaskHelper().getFileManager().getInputFileTreatment())
                 {
                     if (bam.equals(originalFile))

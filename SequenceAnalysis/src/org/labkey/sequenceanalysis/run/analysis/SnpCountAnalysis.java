@@ -103,7 +103,7 @@ public class SnpCountAnalysis extends AbstractPipelineStep implements AnalysisSt
             fastaIndexFile = null;
         }
 
-        File outputFile = new File(getPipelineCtx().getJob().getJobSupport(FileAnalysisJobSupport.class).getAnalysisDirectory(), FileUtil.getBaseName(inputBam) + ".snps.txt");
+        File outputFile = getPipelineCtx().getJob().getJobSupport(FileAnalysisJobSupport.class).getAnalysisDirectory().resolveChild(FileUtil.getBaseName(inputBam) + ".snps.txt").toNioPathForRead().toFile();
         SequenceReadsetImpl rs = SequenceAnalysisServiceImpl.get().getReadset(model.getReadset(), getPipelineCtx().getJob().getUser());
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile, true));IndexedFastaSequenceFile indexedFastaSequenceFile = new IndexedFastaSequenceFile(referenceFasta, new FastaSequenceIndex(fastaIndexFile)))

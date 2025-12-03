@@ -119,7 +119,7 @@ public class SequenceReadsetHandlerInitTask extends PipelineJob.Task<SequenceRea
             }
         }
 
-        handler.getProcessor().init(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getReadsets(), getPipelineJob().getParameterJson(), getPipelineJob().getAnalysisDirectory(), actions, outputsToCreate);
+        handler.getProcessor().init(getJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getReadsets(), getPipelineJob().getParameterJson(), getPipelineJob().getAnalysisDirectory().toNioPathForRead().toFile(), actions, outputsToCreate);
 
         if (!outputsToCreate.isEmpty())
         {

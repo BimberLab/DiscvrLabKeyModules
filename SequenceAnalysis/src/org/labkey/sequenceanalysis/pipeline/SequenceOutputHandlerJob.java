@@ -18,6 +18,8 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
+import org.labkey.vfs.FileLike;
+import org.labkey.vfs.FileSystemLike;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -164,7 +166,7 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
             return new File(getWebserverDir(true), logName + ".outputs.json.gz");
         }
 
-        return new File(getDataDirectory(), FileUtil.getBaseName(getLogFile()) + ".outputs.json.gz");
+        return getDataDirectory().resolveChild(FileUtil.getBaseName(getLogFile()) + ".outputs.json.gz").toNioPathForRead().toFile();
     }
 
     @Override
@@ -199,14 +201,14 @@ public class SequenceOutputHandlerJob extends SequenceJob implements HasJobParam
     }
 
     @Override
-    public List<File> getInputFiles()
+    public List<FileLike> getInputFiles()
     {
         try
         {
-            List<File> ret = new ArrayList<>();
+            List<FileLike> ret = new ArrayList<>();
             for (SequenceOutputFile o : getFiles())
             {
-                ret.add(o.getFile());
+                ret.add(FileSystemLike.wrapFile(o.getFile()));
             }
 
             return ret;

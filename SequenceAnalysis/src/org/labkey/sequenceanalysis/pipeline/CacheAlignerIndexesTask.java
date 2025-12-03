@@ -17,7 +17,9 @@ import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenomeManager;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
 import org.labkey.sequenceanalysis.run.util.FastaIndexer;
+import org.labkey.vfs.FileSystemLike;
 
 import java.io.File;
 import java.io.IOException;
@@ -122,19 +124,20 @@ public class CacheAlignerIndexesTask extends WorkDirectoryTask<CacheAlignerIndex
         //pre-cache aligner indexes
         for (PipelineStepProvider<AlignmentStep> provider : SequencePipelineService.get().getProviders(AlignmentStep.class))
         {
-            if (provider instanceof AbstractAlignmentStepProvider)
+            if (provider instanceof AbstractAlignmentStepProvider<?> aasp)
             {
-                if (((AbstractAlignmentStepProvider)provider).isAlwaysCacheIndex())
+                if (aasp.isAlwaysCacheIndex())
                 {
                     getJob().getLogger().info("preparing index for: " + provider.getName());
                     AlignmentStep alignmentStep = provider.create(ctx);
 
                     boolean hasIndex = AlignerIndexUtil.hasCachedIndex(alignmentStep.getPipelineCtx(), alignmentStep.getIndexCachedDirName(getJob()), referenceGenome);
-                    File outDir = new File(_wd.getDir(), alignmentStep.getIndexCachedDirName(getJob()));
+                    File dir = FileSystemLike.toFile(_wd.getDir());
+                    File outDir = FileUtil.appendName(dir, alignmentStep.getIndexCachedDirName(getJob()));
                     if (!hasIndex)
                     {
                         //create locally first
-                        alignmentStep.createIndex(referenceGenome, _wd.getDir());
+                        alignmentStep.createIndex(referenceGenome, dir);
 
                         //NOTE: the AlignerSteps are doing this themselves.  not sure if that is the right behavior
                         if (!AlignerIndexUtil.hasCachedIndex(ctx, provider.getName(), referenceGenome))

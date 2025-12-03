@@ -34,6 +34,7 @@ import org.labkey.api.util.TestContext;
 import org.labkey.api.view.ViewServlet;
 import org.labkey.sequenceanalysis.pipeline.ProcessVariantsHandler;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
+import org.labkey.vfs.FileLike;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.bind.annotation.RequestMethod;
 
@@ -110,15 +111,15 @@ public class OutputIntegrationTests
                 SequenceOutputHandlerJob job = (SequenceOutputHandlerJob)j;
 
                 Set<File> extraFiles = new HashSet<>();
-                extraFiles.add(new File(job.getAnalysisDirectory(), jobName + "." + outputFileId + ".log"));
-                extraFiles.add(new File(job.getAnalysisDirectory(), "sequenceOutput.json"));
-                extraFiles.add(new File(job.getAnalysisDirectory(), "sequenceSupport.json.gz"));
-                extraFiles.add(ProcessVariantsHandler.getPedigreeFile(job.getAnalysisDirectory(), "laboratory.subjects"));
-                extraFiles.add(new File(job.getAnalysisDirectory(), basename + ".gfiltered.selectVariants.annotated.filtered.vcf.gz"));
-                extraFiles.add(new File(job.getAnalysisDirectory(), basename + ".gfiltered.selectVariants.annotated.filtered.vcf.gz.tbi"));
-                extraFiles.add(new File(job.getAnalysisDirectory(), job.getBaseName() + ".pipe.xar.xml"));
+                extraFiles.add(job.getAnalysisDirectory().resolveChild(jobName + "." + outputFileId + ".log").toNioPathForRead().toFile());
+                extraFiles.add(job.getAnalysisDirectory().resolveChild("sequenceOutput.json").toNioPathForRead().toFile());
+                extraFiles.add(job.getAnalysisDirectory().resolveChild("sequenceSupport.json.gz").toNioPathForRead().toFile());
+                extraFiles.add(ProcessVariantsHandler.getPedigreeFile(job.getAnalysisDirectory(), "laboratory.subjects").toNioPathForRead().toFile());
+                extraFiles.add(job.getAnalysisDirectory().resolveChild(basename + ".gfiltered.selectVariants.annotated.filtered.vcf.gz").toNioPathForRead().toFile());
+                extraFiles.add(job.getAnalysisDirectory().resolveChild(basename + ".gfiltered.selectVariants.annotated.filtered.vcf.gz.tbi").toNioPathForRead().toFile());
+                extraFiles.add(job.getAnalysisDirectory().resolveChild(job.getBaseName() + ".pipe.xar.xml").toNioPathForRead().toFile());
 
-                verifyFileOutputs(job.getAnalysisDirectory(), extraFiles);
+                verifyFileOutputs(job.getAnalysisDirectory().toNioPathForRead().toFile(), extraFiles);
 
                 //verify outputfile created:
                 TableSelector ts = new TableSelector(ti, PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("runId/jobid/job"), job.getJobGUID()), null);

@@ -92,7 +92,7 @@ public class SplitVcfBySamplesStep extends AbstractCommandPipelineStep<SplitVcfB
     public void performAdditionalMergeTasks(SequenceOutputHandler.JobContext ctx, PipelineJob job, ReferenceGenome genome, List<File> orderedScatterOutputs, List<String> orderedJobDirs) throws PipelineJobException
     {
         job.getLogger().info("Merging additional track VCFs");
-        File inputVCF = ((SequenceJob)getPipelineCtx().getJob()).getInputFiles().get(0);
+        File inputVCF = ((SequenceJob)getPipelineCtx().getJob()).getInputFiles().get(0).toNioPathForRead().toFile();
         List<File> firstJobOutputs = findProducedVcfs(inputVCF, new File(ctx.getSourceDirectory(), orderedJobDirs.get(0)));
         job.getLogger().info("total VCFs found in job dir: " + firstJobOutputs.size());
         if (firstJobOutputs.isEmpty())

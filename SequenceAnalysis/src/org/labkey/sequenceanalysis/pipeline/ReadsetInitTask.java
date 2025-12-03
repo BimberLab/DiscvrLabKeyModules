@@ -39,6 +39,7 @@ import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.model.BarcodeModel;
 import org.labkey.sequenceanalysis.util.FastqUtils;
 import org.labkey.sequenceanalysis.util.NucleotideSequenceFileType;
+import org.labkey.vfs.FileLike;
 
 import java.io.File;
 import java.io.IOException;
@@ -147,7 +148,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
 
         getJob().getLogger().info("Preparing to import sequence data");
         getJob().getLogger().info("input files:");
-        for (File input : getPipelineJob().getInputFiles())
+        for (FileLike input : getPipelineJob().getInputFiles())
         {
             getJob().getLogger().info(input.getPath());
         }
@@ -280,7 +281,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
         if (!gz.isType(f))
         {
             getJob().getLogger().info("\tcompressing input file: " + f.getName());
-            output = new File(getHelper().getJob().getAnalysisDirectory(), f.getName() + ".gz");
+            output = new File(getHelper().getJob().getAnalysisDirectory().toNioPathForRead().toFile(), f.getName() + ".gz");
             //note: the non-compressed file will potentially be deleted during cleanup, depending on the selection for input handling
             Compress.compressGzip(f, output);
         }
@@ -293,7 +294,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
             }
             else
             {
-                output = new File(getHelper().getJob().getAnalysisDirectory(), f.getName());
+                output = new File(getHelper().getJob().getAnalysisDirectory().toNioPathForRead().toFile(), f.getName());
                 if (!output.exists())
                 {
                     if (getHelper().getFileManager().getInputFileTreatment() == TaskFileManager.InputFileTreatment.delete || getHelper().getFileManager().getInputFileTreatment() == TaskFileManager.InputFileTreatment.compress)
@@ -352,13 +353,12 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
 
     public static File getExtraBarcodesFile(SequenceTaskHelper helper)
     {
-        return new File(helper.getJob().getAnalysisDirectory(), "extraBarcodes.txt");
+        return helper.getJob().getAnalysisDirectory().resolveChild("extraBarcodes.txt").toNioPathForRead().toFile();
     }
 
     public static Set<File> handleInputs(SequenceJob job, TaskFileManager.InputFileTreatment inputFileTreatment, Collection<RecordedAction> actions, Set<File> outputFiles, @Nullable Set<File> unalteredInputs) throws PipelineJobException
     {
-        Set<File> inputs = new HashSet<>();
-        inputs.addAll(job.getInputFiles());
+        Set<File> inputs = new HashSet<>(job.getInputFiles().stream().map(f -> f.toNioPathForRead().toFile()).toList());
 
         job.getLogger().info("Cleaning up input files");
 
@@ -451,7 +451,7 @@ public class ReadsetInitTask extends WorkDirectoryTask<ReadsetInitTask.Factory>
         try
         {
             //NOTE: we assume the input is gzipped already
-            File outputDir = job.getAnalysisDirectory();
+            File outputDir = job.getAnalysisDirectory().toNioPathForRead().toFile();
             File output = new File(outputDir, input.getName());
             job.getLogger().debug("Destination: " + output.getPath());
             boolean alreadyMoved = false;

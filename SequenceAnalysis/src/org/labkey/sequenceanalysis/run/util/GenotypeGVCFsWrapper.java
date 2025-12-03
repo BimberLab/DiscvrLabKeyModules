@@ -129,7 +129,7 @@ public class GenotypeGVCFsWrapper extends AbstractGatk4Wrapper
             // If the cache directory is under the current working dir, mark to delete when done.
             // If localWorkDir is null, this indicates we're using /tmp, so also delete.
             // Otherwise this indicates a shared cache dir probably used by multiple scatter/gather jobs, and allow the merge task to do cleanup
-            boolean reportFilesForDeletion = localWorkDir == null || localWorkDir.getAbsolutePath().startsWith(ctx.getWorkDir().getDir().getAbsolutePath());
+            boolean reportFilesForDeletion = localWorkDir == null || localWorkDir.getAbsolutePath().startsWith(ctx.getWorkDir().getDir().toNioPathForRead().toFile().getAbsolutePath());
 
             if (localWorkDir == null)
             {

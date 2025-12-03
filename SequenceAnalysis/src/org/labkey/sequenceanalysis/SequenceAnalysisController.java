@@ -1876,14 +1876,14 @@ public class SequenceAnalysisController extends SpringActionController
             return getJobParameters() != null && getJobParameters().optBoolean("submitJobToReadsetContainer", false);
         }
 
-        public List<File> getFiles(PipeRoot pr) throws PipelineValidationException
+        public List<FileLike> getFiles(PipeRoot pr) throws PipelineValidationException
         {
             if (getJobParameters() == null || getJobParameters().get("inputFiles") == null)
             {
                 return null;
             }
 
-            List<File> ret = new ArrayList<>();
+            List<FileLike> ret = new ArrayList<>();
             JSONArray inputFiles = getJobParameters().getJSONArray("inputFiles");
             String path = getJobParameters().optString("path");
             for (JSONObject o : JsonUtil.toJSONObjectList(inputFiles))
@@ -1900,7 +1900,7 @@ public class SequenceAnalysisController extends SpringActionController
                         throw new PipelineValidationException("Missing file for data: " + o.get("dataId"));
                     }
 
-                    ret.add(d.getFile());
+                    ret.add(d.getFileLike());
                 }
                 else if (o.has("relPath") || o.has("fileName"))
                 {
@@ -1927,7 +1927,7 @@ public class SequenceAnalysisController extends SpringActionController
                         throw new PipelineValidationException("Unknown file: " + o.getString("relPath") + " / " + o.getString("fileName"));
                     }
 
-                    ret.add(f.toNioPathForRead().toFile());
+                    ret.add(f);
                 }
                 else if (o.opt("filePath") != null)
                 {
@@ -2145,27 +2145,24 @@ public class SequenceAnalysisController extends SpringActionController
         }
 
         @Override
-        protected File getTargetFile(String filename) throws IOException
+        protected FileLike getTargetFile(String filename) throws IOException
         {
             if (!PipelineService.get().hasValidPipelineRoot(getContainer()))
                 throw new UploadException("Pipeline root must be configured before uploading FASTA files", HttpServletResponse.SC_NOT_FOUND);
 
             PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
-
-            File targetDirectory = root.getRootPath();
-
-            return FileUtil.findUniqueFileName(filename, targetDirectory);
+            return FileUtil.findUniqueFileName(filename, root.getRootFileLike());
         }
 
         @Override
-        public String getResponse(ImportFastaSequencesForm form, Map<String, Pair<File, String>> files)
+        public String getResponse(ImportFastaSequencesForm form, Map<String, Pair<FileLike, String>> files)
         {
             JSONObject resp = new JSONObject();
             try
             {
-                for (Map.Entry<String, Pair<File, String>> entry : files.entrySet())
+                for (Map.Entry<String, Pair<FileLike, String>> entry : files.entrySet())
                 {
-                    File file = entry.getValue().getKey();
+                    File file = entry.getValue().getKey().toNioPathForRead().toFile();
 
                     Map<String, String> params = form.getNtParams();
                     Map<String, Object> libraryParams = form.getLibraryParams();
@@ -2444,7 +2441,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
 
         @Override
-        protected File getTargetFile(String filename) throws IOException
+        protected FileLike getTargetFile(String filename) throws IOException
         {
             if (!PipelineService.get().hasValidPipelineRoot(getContainer()))
                 throw new UploadException("Pipeline root must be configured before uploading files", HttpServletResponse.SC_NOT_FOUND);
@@ -2452,7 +2449,7 @@ public class SequenceAnalysisController extends SpringActionController
             try
             {
                 FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer(), "sequenceOutputs");
-                return FileUtil.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
+                return FileUtil.findUniqueFileName(filename, targetDirectory);
             }
             catch (ExperimentException e)
             {
@@ -2461,14 +2458,14 @@ public class SequenceAnalysisController extends SpringActionController
         }
 
         @Override
-        public String getResponse(ImportOutputFileForm form, Map<String, Pair<File, String>> files)
+        public String getResponse(ImportOutputFileForm form, Map<String, Pair<FileLike, String>> files)
         {
             JSONObject resp = new JSONObject();
             try
             {
-                for (Map.Entry<String, Pair<File, String>> entry : files.entrySet())
+                for (Map.Entry<String, Pair<FileLike, String>> entry : files.entrySet())
                 {
-                    File file = entry.getValue().getKey();
+                    FileLike file = entry.getValue().getKey();
 
                     Map<String, Object> params = new CaseInsensitiveHashMap<>();
                     params.put("name", form.getName());
@@ -2577,7 +2574,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
 
         @Override
-        protected File getTargetFile(String filename) throws IOException
+        protected FileLike getTargetFile(String filename) throws IOException
         {
             if (!PipelineService.get().hasValidPipelineRoot(getContainer()))
                 throw new UploadException("Pipeline root must be configured before uploading files", HttpServletResponse.SC_NOT_FOUND);
@@ -2585,7 +2582,7 @@ public class SequenceAnalysisController extends SpringActionController
             try
             {
                 FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                return FileUtil.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
+                return FileUtil.findUniqueFileName(filename, targetDirectory);
             }
             catch (ExperimentException e)
             {
@@ -2610,7 +2607,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
 
         @Override
-        public String getResponse(ImportTrackForm form, Map<String, Pair<File, String>> files) throws UploadException
+        public String getResponse(ImportTrackForm form, Map<String, Pair<FileLike, String>> files) throws UploadException
         {
             JSONObject resp = new JSONObject();
             if (form.getTrackName() == null || form.getLibraryId() == null)
@@ -2620,9 +2617,9 @@ public class SequenceAnalysisController extends SpringActionController
 
             try
             {
-                for (Map.Entry<String, Pair<File, String>> entry : files.entrySet())
+                for (Map.Entry<String, Pair<FileLike, String>> entry : files.entrySet())
                 {
-                    File file = entry.getValue().getKey();
+                    File file = entry.getValue().getKey().toNioPathForRead().toFile();
 
                     try
                     {
@@ -2742,7 +2739,7 @@ public class SequenceAnalysisController extends SpringActionController
         }
 
         @Override
-        protected File getTargetFile(String filename) throws IOException
+        protected FileLike getTargetFile(String filename) throws IOException
         {
             if (!PipelineService.get().hasValidPipelineRoot(getContainer()))
                 throw new UploadException("Pipeline root must be configured before uploading files", HttpServletResponse.SC_NOT_FOUND);
@@ -2750,7 +2747,7 @@ public class SequenceAnalysisController extends SpringActionController
             try
             {
                 FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
-                return FileUtil.findUniqueFileName(filename, targetDirectory).toNioPathForWrite().toFile();
+                return FileUtil.findUniqueFileName(filename, targetDirectory);
             }
             catch (ExperimentException e)
             {
@@ -2759,14 +2756,14 @@ public class SequenceAnalysisController extends SpringActionController
         }
 
         @Override
-        public String getResponse(ImportChainFileForm form, Map<String, Pair<File, String>> files)
+        public String getResponse(ImportChainFileForm form, Map<String, Pair<FileLike, String>> files)
         {
             JSONObject resp = new JSONObject();
             try
             {
-                for (Map.Entry<String, Pair<File, String>> entry : files.entrySet())
+                for (Map.Entry<String, Pair<FileLike, String>> entry : files.entrySet())
                 {
-                    File file = entry.getValue().getKey();
+                    File file = entry.getValue().getKey().toNioPathForRead().toFile();
 
                     if (form.getGenomeId1() == null || form.getGenomeId2() == null)
                     {

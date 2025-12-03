@@ -93,7 +93,7 @@ public class SequenceTaskHelper implements PipelineContext
     {
         _job = job;
         _wd = wd;
-        _workLocation = workLocation == null ? wd.getDir() : workLocation;  //TODO: is this the right behavior??
+        _workLocation = workLocation == null ? wd.getDir().toNioPathForRead().toFile() : workLocation;  //TODO: is this the right behavior??
         _fileManager = new TaskFileManagerImpl(_job, getWorkingDirectory(), wd);
         _settings = new SequencePipelineSettings(_job.getParameters());
     }

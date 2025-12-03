@@ -11,6 +11,7 @@ import org.labkey.api.pipeline.WorkDirectoryTask;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.FileType;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
+import org.labkey.vfs.FileSystemLike;
 
 import java.io.File;
 import java.io.IOException;
@@ -97,7 +98,7 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
         SequenceTaskHelper.logModuleVersions(getJob().getLogger());
 
         SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
-        JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir(), new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd), _wd);
+        JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir().toNioPathForRead().toFile(), new TaskFileManagerImpl(getPipelineJob(), _wd.getDir().toNioPathForRead().toFile(), _wd), _wd);
 
         List<Interval> intervals = getPipelineJob().getIntervalsForTask();
         if (intervals != null)
@@ -123,10 +124,10 @@ public class VariantProcessingRemoteSplitTask extends WorkDirectoryTask<VariantP
                         ctx.getLogger().debug("No output produced, adding null to scatter outputs");
                         getPipelineJob().getScatterJobOutputs().put(getPipelineJob().getIntervalSetName(), null);
                     }
-                    else if (output.getPath().startsWith(_wd.getDir().getPath()))
+                    else if (output.getPath().startsWith(_wd.getDir().toNioPathForRead().toFile().getPath()))
                     {
                         //NOTE: the VCF will be copied back to the source dir, so translate paths
-                        String path = _wd.getRelativePath(output);
+                        String path = _wd.getRelativePath(FileSystemLike.wrapFile(output));
                         output = new File(ctx.getSourceDirectory(), path);
                         getPipelineJob().getScatterJobOutputs().put(getPipelineJob().getIntervalSetName(), output);
                     }

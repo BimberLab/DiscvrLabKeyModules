@@ -14,6 +14,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineStepCtx;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.util.FileType;
+import org.labkey.vfs.FileSystemLike;
 
 import java.io.File;
 import java.util.Collections;
@@ -136,13 +137,13 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
             }
             else
             {
-                getHelper().getFileManager().addInput(action, "Job Parameters", getHelper().getJob().getParametersFile());
+                getHelper().getFileManager().addInput(action, "Job Parameters", FileSystemLike.toFile(getHelper().getJob().getParametersFile()));
                 getJob().getLogger().info("Creating Reference Library FASTA");
 
                 ReferenceLibraryStep step = steps.get(0).getProvider().create(getHelper());
 
                 //ensure the FASTA exists
-                File sharedDirectory = new File(getHelper().getJob().getAnalysisDirectory(), SequenceTaskHelper.SHARED_SUBFOLDER_NAME);
+                File sharedDirectory = FileSystemLike.toFile(getHelper().getJob().getAnalysisDirectory().resolveChild(SequenceTaskHelper.SHARED_SUBFOLDER_NAME));
                 if (!sharedDirectory.exists())
                 {
                     sharedDirectory.mkdirs();

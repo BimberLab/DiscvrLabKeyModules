@@ -100,7 +100,7 @@ public class SequenceReadsetHandlerRemoteTask extends WorkDirectoryTask<Sequence
     public RecordedActionSet run() throws PipelineJobException
     {
         SequenceOutputHandler<SequenceOutputHandler.SequenceReadsetProcessor> handler = getPipelineJob().getHandler();
-        JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir(), new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd), _wd);
+        JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir().toNioPathForRead().toFile(), new TaskFileManagerImpl(getPipelineJob(), _wd.getDir().toNioPathForRead().toFile(), _wd), _wd);
 
         getJob().setStatus(PipelineJob.TaskStatus.running, "Running: " + handler.getName());
         handler.getProcessor().processFilesRemote(getPipelineJob().getReadsets(), ctx);

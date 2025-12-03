@@ -11,6 +11,8 @@ import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.sequenceanalysis.pipeline.TaskFileManager;
+import org.labkey.vfs.FileLike;
+import org.labkey.vfs.FileSystemLike;
 
 import java.io.File;
 import java.util.Arrays;
@@ -29,6 +31,11 @@ public class JobContextImpl implements SequenceOutputHandler.MutableJobContext
     private final LinkedHashSet<RecordedAction> _actions = new LinkedHashSet<>();
     private TaskFileManager _fileManager;
     private final WorkDirectory _wd;
+
+    public JobContextImpl(SequenceJob job, SequenceAnalysisJobSupport support, JSONObject params, FileLike outputDir, TaskFileManager fileManager, @Nullable WorkDirectory workDirectory)
+    {
+        this(job, support, params, FileSystemLike.toFile(outputDir), fileManager, workDirectory);
+    }
 
     public JobContextImpl(SequenceJob job, SequenceAnalysisJobSupport support, JSONObject params, File outputDir, TaskFileManager fileManager, @Nullable WorkDirectory workDirectory)
     {
@@ -110,7 +117,7 @@ public class JobContextImpl implements SequenceOutputHandler.MutableJobContext
     @Override
     public File getWorkingDirectory()
     {
-        return _wd.getDir();
+        return FileSystemLike.toFile(_wd.getDir());
     }
 
     @Override

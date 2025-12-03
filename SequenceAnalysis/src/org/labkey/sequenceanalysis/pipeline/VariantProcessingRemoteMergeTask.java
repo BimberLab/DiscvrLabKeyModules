@@ -109,7 +109,8 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
     {
         SequenceTaskHelper.logModuleVersions(getJob().getLogger());
         RecordedAction action = new RecordedAction(ACTION_NAME);
-        JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), _wd.getDir(), new TaskFileManagerImpl(getPipelineJob(), _wd.getDir(), _wd), _wd);
+        File dir = _wd.getDir().toNioPathForRead().toFile();
+        JobContextImpl ctx = new JobContextImpl(getPipelineJob(), getPipelineJob().getSequenceSupport(), getPipelineJob().getParameterJson(), dir, new TaskFileManagerImpl(getPipelineJob(), dir, _wd), _wd);
 
         File finalOut;
         SequenceOutputHandler<SequenceOutputHandler.SequenceOutputProcessor> handler = getPipelineJob().getHandler();
@@ -207,7 +208,7 @@ public class VariantProcessingRemoteMergeTask extends WorkDirectoryTask<VariantP
         if (!toConcat.isEmpty())
         {
             String basename = SequenceAnalysisService.get().getUnzippedBaseName(toConcat.get(0).getName());
-            combined = new File(getPipelineJob().getAnalysisDirectory(), basename + ".vcf.gz");
+            combined = new File(getPipelineJob().getAnalysisDirectory().toNioPathForRead().toFile(), basename + ".vcf.gz");
             File combinedIdx = new File(combined.getPath() + ".tbi");
             if (combinedIdx.exists())
             {

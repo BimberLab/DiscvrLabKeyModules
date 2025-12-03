@@ -14,8 +14,9 @@ import org.labkey.api.sequenceanalysis.pipeline.HasJobParams;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
+import org.labkey.vfs.FileLike;
+import org.labkey.vfs.FileSystemLike;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,23 +75,23 @@ public class SequenceReadsetHandlerJob extends SequenceJob implements HasJobPara
     }
 
     @Override
-    public List<File> getInputFiles()
+    public List<FileLike> getInputFiles()
     {
         try
         {
-            List<File> ret = new ArrayList<>();
+            List<FileLike> ret = new ArrayList<>();
             for (Readset rs : getReadsets())
             {
                 for (ReadData d : rs.getReadData())
                 {
                     if (d.getFile1() != null)
                     {
-                        ret.add(d.getFile1());
+                        ret.add(FileSystemLike.wrapFile(d.getFile1()));
                     }
 
                     if (d.getFile2() != null)
                     {
-                        ret.add(d.getFile2());
+                        ret.add(FileSystemLike.wrapFile(d.getFile2()));
                     }
                 }
             }
