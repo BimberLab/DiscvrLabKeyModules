@@ -370,7 +370,7 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                 StringBuilder description = new StringBuilder();
                 if (vcfFile > -1)
                 {
-                    description.append("Reference VCF ID: \n").append(vcfFile);
+                    description.append("Reference VCF ID: \n").append(vcfFile).append("\n");
                 }
 
                 File summary = new File(ctx.getOutputDir(), "summary.tsv");
