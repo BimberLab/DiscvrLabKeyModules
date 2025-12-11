@@ -19,7 +19,7 @@ public class PerformTcrClustering extends AbstractTcrClustRStep
     {
         public Provider()
         {
-            super("tcrClustR", "tcrClustR", "tcrClustR", "This will run tcrClustR to cluster TCRs by similarity.", List.of(
+            super("PerformTcrClustering", "tcrClustR", "tcrClustR", "This will run tcrClustR to cluster TCRs by similarity.", List.of(
                 SeuratToolParameter.create("organism", "Organism", "The organism to use",  "ldk-simplecombo", new JSONObject()
                     {{
                         put("multiSelect", false);
