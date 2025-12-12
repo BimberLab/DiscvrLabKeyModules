@@ -963,6 +963,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 int lowOrNegative = 0;
                 int totalDoublet = 0;
                 double totalSaturation = 0.0;
+                Set<String> subjectIds = new HashSet<>();
 
                 int hashingIdx = -1;
                 int saturationIdx = -1;
@@ -972,6 +973,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 int trbIdx = -1;
                 int trdIdx = -1;
                 int trgIdx = -1;
+                int subjectIdIdx = -1;
 
                 int totalTNK = 0;
                 int cellsWithTRA = 0;
@@ -998,6 +1000,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                         trdIdx = Arrays.asList(line).indexOf("TRD");
                         trgIdx = Arrays.asList(line).indexOf("TRG");
                         riraIdx = Arrays.asList(line).indexOf("RIRA_Immune_v2.cellclass");
+                        subjectIdIdx = Arrays.asList(line).indexOf("SubjectIdId");
                     }
                     else
                     {
@@ -1085,6 +1088,15 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                                 }
                             }
                         }
+
+                        if (subjectIdIdx > 0)
+                        {
+                            String subjectId = StringUtils.trimToNull(line[subjectIdIdx]);
+                            if (subjectId != null && !"NA".equals(subjectId))
+                            {
+                                subjectIds.add(subjectId);
+                            }
+                        }
                     }
                 }
 
@@ -1125,6 +1137,11 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 else if (riraIdx == -1 || traIdx == -1)
                 {
                     descriptions.add("TCR information not present");
+                }
+
+                if (!subjectIds.isEmpty())
+                {
+                    descriptions.add("Distinct SubjectIds: " + subjectIds.size());
                 }
             }
             catch (IOException e)
