@@ -29,6 +29,7 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.data.WorkbookContainerType;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
@@ -490,7 +491,7 @@ public class SequenceIntegrationTests
             Assert.assertEquals("Incorrect number of outputs created", expectedOutputs.size(), files.size());
         }
 
-        protected Set<PipelineJob> createPipelineJob(String jobName, JSONObject config, SequenceAnalysisController.AnalyzeForm.TYPE type) throws Exception
+        protected Set<PipelineJob> createPipelineJob(String jobName, JSONObject config, SequenceAnalysisController.AnalyzeForm.TYPE type, boolean createNewWorkbook) throws Exception
         {
             Map<String, Object> headers = new HashMap<>();
             headers.put("Content-Type", "application/json");
@@ -503,7 +504,13 @@ public class SequenceIntegrationTests
             json.put("type", type.name());
             String requestContent = json.toString();
 
-            HttpServletRequest request = ViewServlet.mockRequest(RequestMethod.POST.name(), DetailsURL.fromString("/sequenceanalysis/startPipelineJob.view").copy(_project).getActionURL(), _context.getUser(), headers, requestContent);
+            Container pipelineJobContainer = _project;
+            if (createNewWorkbook)
+            {
+                pipelineJobContainer = ContainerManager.createContainer(_project, null, "Workbook: " + jobName, null, WorkbookContainerType.NAME, TestContext.get().getUser());
+            }
+
+            HttpServletRequest request = ViewServlet.mockRequest(RequestMethod.POST.name(), DetailsURL.fromString("/sequenceanalysis/startPipelineJob.view").copy(pipelineJobContainer).getActionURL(), _context.getUser(), headers, requestContent);
 
             MockHttpServletResponse response = ViewServlet.mockDispatch(request, null);
             JSONObject responseJson = new JSONObject(response.getContentAsString());
@@ -783,7 +790,7 @@ public class SequenceIntegrationTests
 
             appendSamplesForImport(config, List.of(g));
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport, true);
             waitForJobs(jobs);
 
             Set<File> expectedOutputs = new HashSet<>();
@@ -828,7 +835,7 @@ public class SequenceIntegrationTests
             appendSamplesForImport(config, List.of(g));
             config.put("inputFileTreatment", "leaveInPlace");
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport, false);
             waitForJobs(jobs);
 
             Set<File> expectedOutputs = new HashSet<>();
@@ -906,7 +913,7 @@ public class SequenceIntegrationTests
             config.put("inputfile.runFastqc", true);
             appendSamplesForImport(config, Arrays.asList(g, g2, g3));
 
-            Set<PipelineJob> jobsUnsorted = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport);
+            Set<PipelineJob> jobsUnsorted = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport, true);
             waitForJobs(jobsUnsorted);
 
             List<PipelineJob> jobs = new ArrayList<>(jobsUnsorted);
@@ -1117,7 +1124,7 @@ public class SequenceIntegrationTests
             String[] fileNames = new String[]{DUAL_BARCODE_FILENAME};
 
             JSONObject config = getBarcodeConfig(jobName, fileNames, prefix);
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport, true);
             waitForJobs(jobs);
 
             File basedir = getBaseDir(jobs.iterator().next());
@@ -1166,7 +1173,7 @@ public class SequenceIntegrationTests
             config.put("deleteIntermediateFiles", true);
             config.put("inputFileTreatment", "compress");
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport, true);
             waitForJobs(jobs);
 
             File basedir = getBaseDir(jobs.iterator().next());
@@ -1227,7 +1234,7 @@ public class SequenceIntegrationTests
 
             appendSamplesForImport(config, List.of(g));
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport, true);
             waitForJobs(jobs);
 
             Set<File> expectedOutputs = new HashSet<>();
@@ -1281,7 +1288,7 @@ public class SequenceIntegrationTests
 
             appendSamplesForImport(config, List.of(g));
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport, false);
             waitForJobs(jobs);
 
             Set<File> expectedOutputs = new HashSet<>();
@@ -1337,7 +1344,7 @@ public class SequenceIntegrationTests
 
             appendSamplesForImport(config, List.of(g));
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport, true);
             waitForJobs(jobs);
 
             Set<File> expectedOutputs = new HashSet<>();
@@ -1834,7 +1841,7 @@ public class SequenceIntegrationTests
 
             appendSamplesForAlignment(config, _readsets);
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, true);
             waitForJobs(jobs);
 
             validateInputs();
@@ -1882,7 +1889,7 @@ public class SequenceIntegrationTests
 
             appendSamplesForAlignment(config, _readsets);
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, true);
             waitForJobs(jobs);
 
             List<String> extraFiles = new ArrayList<>();
@@ -1981,7 +1988,7 @@ public class SequenceIntegrationTests
 
             appendSamplesForAlignment(config, _readsets);
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, false);
             waitForJobs(jobs);
 
             Set<String> extraFiles = new HashSet<>();
@@ -2040,7 +2047,7 @@ public class SequenceIntegrationTests
             config.put("deleteIntermediateFiles", true);
             appendSamplesForAlignment(config, _readsets);
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, true);
             waitForJobs(jobs);
 
             Set<String> extraFiles = new HashSet<>();
@@ -2094,7 +2101,7 @@ public class SequenceIntegrationTests
             config.put("alignment", "BWA-SW");
             appendSamplesForAlignment(config, _readsets);
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, true);
             waitForJobs(jobs);
 
             Set<String> extraFiles = new HashSet<>();
@@ -2158,7 +2165,7 @@ public class SequenceIntegrationTests
             config.put("alignment", "BWA-Mem");
             appendSamplesForAlignment(config, _readsets);
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, true);
             waitForJobs(jobs);
 
             Set<String> extraFiles = new HashSet<>();
@@ -2226,7 +2233,7 @@ public class SequenceIntegrationTests
 
             appendSamplesForAlignment(config, _readsets);
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, true);
             waitForJobs(jobs);
 
             Set<String> extraFiles = new HashSet<>();
@@ -2327,7 +2334,7 @@ public class SequenceIntegrationTests
             config.put("alignment", "BWA");
             appendSamplesForAlignment(config, _readsets);
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, true);
             waitForJobs(jobs);
 
             Set<String> extraFiles = new HashSet<>();
@@ -2397,7 +2404,7 @@ public class SequenceIntegrationTests
             config.put("alignment", "Bowtie");
             appendSamplesForAlignment(config, _readsets);
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, true);
             waitForJobs(jobs);
 
             Set<String> extraFiles = new HashSet<>();
@@ -2468,7 +2475,7 @@ public class SequenceIntegrationTests
             config.put("deleteIntermediateFiles", true);
             appendSamplesForAlignment(config, _readsets);
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, true);
             waitForJobs(jobs);
 
             Set<String> extraFiles = new HashSet<>();
@@ -2538,7 +2545,7 @@ public class SequenceIntegrationTests
             config.put("referenceLibraryCreation.SavedLibrary.libraryId", libraryId);
             appendSamplesForAlignment(config, Collections.singletonList(_readsets.get(0)));
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, true);
             waitForJobs(jobs);
 
             //we expect the index to get copied back to the reference library location
@@ -2619,7 +2626,7 @@ public class SequenceIntegrationTests
             config.put("referenceLibraryCreation.SavedLibrary.libraryId", libraryId);
             appendSamplesForAlignment(config, _readsets);
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, false);
             waitForJobs(jobs);
 
             Set<String> extraFiles = new HashSet<>();
@@ -2697,7 +2704,7 @@ public class SequenceIntegrationTests
 
             appendSamplesForAlignment(config, models);
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, true);
             waitForJobs(jobs);
 
             Set<String> extraFiles = new HashSet<>();
@@ -2749,7 +2756,7 @@ public class SequenceIntegrationTests
             config.put("alignment", "Bowtie2");
             appendSamplesForAlignment(config, _readsets);
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, true);
             waitForJobs(jobs);
 
             Set<String> extraFiles = new HashSet<>();
@@ -2849,7 +2856,7 @@ public class SequenceIntegrationTests
             config.put("alignment", "STAR");
             appendSamplesForAlignment(config, _readsets);
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, true);
             waitForJobs(jobs);
 
             Set<String> extraFiles = new HashSet<>();
@@ -2939,7 +2946,7 @@ public class SequenceIntegrationTests
             config.put("fastqProcessing.AdapterTrimming.adapters", "[[\"Nextera Transposon Adapter A\",\"AGATGTGTATAAGAGACAG\",true,true]]");
             appendSamplesForAlignment(config, _readsets);
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, true);
             waitForJobs(jobs);
 
             //we expect the index to get copied back to the reference library location
@@ -3091,7 +3098,7 @@ public class SequenceIntegrationTests
             config.put("fastqProcessing.AdapterTrimming.adapters", "[[\"Nextera Transposon Adapter A\",\"AGATGTGTATAAGAGACAG\",true,true]]");
             appendSamplesForAlignment(config, _readsets);
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.alignment, true);
             waitForJobs(jobs);
 
             Set<String> extraFiles = new HashSet<>();
