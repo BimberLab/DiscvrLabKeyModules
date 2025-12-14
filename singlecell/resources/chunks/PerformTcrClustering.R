@@ -16,6 +16,16 @@ for (datasetId in names(seuratObjects)) {
       clusterSizeThreshold = 1
     )
 
+    print(paste0('Summary of distances: '))
+    if (!'TCR_Distances' %in% names(seuratObj@misc)) {
+      warning('No TCR_Distances were found, this could indicate a problem with processing')
+    } else {
+      for (an in names(seuratObj@misc$TCR_Distances)) {
+        ad <- seuratObj@misc$TCR_Distances[[an]]
+        print(paste0('Assay: ', an, ', total clones: ', nrow(ad)))
+      }
+    }
+
     saveData(seuratObj, datasetId)
 
     # Cleanup
