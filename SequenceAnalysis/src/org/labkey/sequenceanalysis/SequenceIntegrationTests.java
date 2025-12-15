@@ -216,7 +216,6 @@ public class SequenceIntegrationTests
 
         protected Container _project;
         protected TestContext _context;
-        protected File _pipelineRoot;
         protected File _sampleData;
 
         protected Boolean _isExternalPipelineEnabled = null;
@@ -269,9 +268,7 @@ public class SequenceIntegrationTests
         {
             _context = TestContext.get();
             _sampleData = getSampleDataDir();
-
             _project = ContainerManager.getForPath(getProjectName());
-            _pipelineRoot = PipelineService.get().getPipelineRootSetting(_project).getRootPath();
 
             String path = PipelineJobService.get().getConfigProperties().getSoftwarePackagePath(SequencePipelineService.SEQUENCE_TOOLS_PARAM);
             path = StringUtils.trimToNull(path);
@@ -396,14 +393,16 @@ public class SequenceIntegrationTests
             }
         }
 
-        protected void verifyFileInputs(File basedir, String[] fileNames, JSONObject config, String prefix)
+        protected void verifyFileInputs(File basedir, String[] fileNames, JSONObject config, String prefix, Container jobContainer)
         {
+            File pipelineRoot = PipelineService.get().findPipelineRoot(jobContainer).getRootPath();
+
             String handling = config.getString("inputFileTreatment");
             if ("none".equals(handling))
             {
                 for (String fn : fileNames)
                 {
-                    File input = FileUtil.appendName(_pipelineRoot, prefix + fn);
+                    File input = FileUtil.appendName(pipelineRoot, prefix + fn);
                     Assert.assertTrue("Input file missing: " + input.getPath(), input.exists());
                 }
             }
@@ -413,7 +412,7 @@ public class SequenceIntegrationTests
 
                 for (String fn : fileNames)
                 {
-                    File input = FileUtil.appendName(_pipelineRoot, prefix + fn);
+                    File input = FileUtil.appendName(pipelineRoot, prefix + fn);
                     Assert.assertFalse("Input file still exists: " + input.getPath(), input.exists());
 
                     File compressed;
@@ -429,7 +428,7 @@ public class SequenceIntegrationTests
             {
                 for (String fn : fileNames)
                 {
-                    File input = FileUtil.appendName(_pipelineRoot, prefix + fn);
+                    File input = FileUtil.appendName(pipelineRoot, prefix + fn);
                     Assert.assertFalse("Input file still present: " + input.getPath(), input.exists());
                 }
             }
@@ -738,6 +737,11 @@ public class SequenceIntegrationTests
                 ContainerManager.deleteAll(project, TestContext.get().getUser());
             }
         }
+
+        protected File getPipelineRoot(Container c)
+        {
+            return PipelineService.get().getPipelineRootSetting(c).getRootPath();
+        }
     }
 
     public static class SequenceImportPipelineTestCase extends AbstractPipelineTestCase
@@ -799,7 +803,7 @@ public class SequenceIntegrationTests
             try
             {
                 verifyFileOutputs(basedir, expectedOutputs);
-                verifyFileInputs(basedir, fileNames, config, prefix);
+                verifyFileInputs(basedir, fileNames, config, prefix, workbook);
                 validateReadsets(jobs, config);
 
                 Assert.assertEquals("Incorrect read number", 3260L, FastqUtils.getSequenceCount(fq));
@@ -836,7 +840,7 @@ public class SequenceIntegrationTests
             Set<File> expectedOutputs = new HashSet<>();
             File basedir = getBaseDir(jobs.iterator().next());
             Assert.assertFalse("Unexpected file found", FileUtil.appendName(basedir, prefix + PAIRED_FILENAME1).exists());
-            File fq = FileUtil.appendName(_pipelineRoot, prefix + PAIRED_FILENAME1);
+            File fq = FileUtil.appendName(getPipelineRoot(c), prefix + PAIRED_FILENAME1);
             Assert.assertTrue("File not found", fq.exists());
             expectedOutputs.add(FileUtil.appendName(basedir, "sequenceImport.json"));
             expectedOutputs.add(FileUtil.appendName(basedir, "sequenceSupport.json.gz"));
@@ -846,7 +850,7 @@ public class SequenceIntegrationTests
             try
             {
                 verifyFileOutputs(basedir, expectedOutputs);
-                verifyFileInputs(basedir, fileNames, config, prefix);
+                verifyFileInputs(basedir, fileNames, config, prefix, c);
                 validateReadsets(jobs, config);
 
                 Assert.assertEquals("Incorrect read number", 211L, FastqUtils.getSequenceCount(fq));
@@ -950,7 +954,7 @@ public class SequenceIntegrationTests
                 expectedOutputs.add(FileUtil.appendName(basedir, prefix + PAIRED_FILENAME2_L1b));
             }
 
-            verifyJob(basedir, jobName, expectedOutputs, new String[]{PAIRED_FILENAME_L1a, PAIRED_FILENAME2_L1a, PAIRED_FILENAME_L1b, PAIRED_FILENAME2_L1b, PAIRED_FILENAME_L2, PAIRED_FILENAME2_L2}, prefix, config);
+            verifyJob(basedir, jobName, expectedOutputs, new String[]{PAIRED_FILENAME_L1a, PAIRED_FILENAME2_L1a, PAIRED_FILENAME_L1b, PAIRED_FILENAME2_L1b, PAIRED_FILENAME_L2, PAIRED_FILENAME2_L2}, prefix, config, _project);
 
             Assert.assertEquals("Incorrect read number", 422L, FastqUtils.getSequenceCount(merge1));
             Assert.assertEquals("Incorrect read number", 422L, FastqUtils.getSequenceCount(merge2));
@@ -967,7 +971,7 @@ public class SequenceIntegrationTests
             expectedOutputs.add(FileUtil.appendName(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2)) + "_fastqc.html.gz"));
             expectedOutputs.add(FileUtil.appendName(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(PAIRED_FILENAME2)) + "_fastqc.zip"));
 
-            verifyJob(basedir, jobName, expectedOutputs, new String[]{PAIRED_FILENAME1, PAIRED_FILENAME2}, prefix, config);
+            verifyJob(basedir, jobName, expectedOutputs, new String[]{PAIRED_FILENAME1, PAIRED_FILENAME2}, prefix, config, _project);
 
             //job3: g3
             expectedOutputs = new HashSet<>();
@@ -976,11 +980,11 @@ public class SequenceIntegrationTests
             expectedOutputs.add(FileUtil.appendName(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(UNPAIRED_FILENAME)) + "_fastqc.html.gz"));
             expectedOutputs.add(FileUtil.appendName(basedir, prefix + FileUtil.getBaseName(FileUtil.getBaseName(UNPAIRED_FILENAME)) + "_fastqc.zip"));
 
-            verifyJob(basedir, jobName, expectedOutputs, new String[]{UNPAIRED_FILENAME}, prefix, config);
+            verifyJob(basedir, jobName, expectedOutputs, new String[]{UNPAIRED_FILENAME}, prefix, config, _project);
             validateReadsets(jobs, config, 1);  //we expect one per job, total of 3
         }
         
-        private void verifyJob(File basedir, String jobName, Set<File> expectedOutputs, String[] fileNames, String prefix, JSONObject config) throws Exception
+        private void verifyJob(File basedir, String jobName, Set<File> expectedOutputs, String[] fileNames, String prefix, JSONObject config, Container c) throws Exception
         {
             expectedOutputs.add(FileUtil.appendName(basedir, basedir.getName() + ".pipe.xar.xml"));
             expectedOutputs.add(FileUtil.appendName(basedir, "sequenceImport.json"));
@@ -991,7 +995,7 @@ public class SequenceIntegrationTests
             try
             {
                 verifyFileOutputs(basedir, expectedOutputs);
-                verifyFileInputs(basedir, fileNames, config, prefix);
+                verifyFileInputs(basedir, fileNames, config, prefix, c);
             }
             catch (Exception e)
             {
@@ -1129,7 +1133,7 @@ public class SequenceIntegrationTests
             try
             {
                 verifyFileOutputs(basedir, expectedOutputs);
-                verifyFileInputs(basedir, fileNames, config, prefix);
+                verifyFileInputs(basedir, fileNames, config, prefix, workbook);
                 validateReadsets(jobs, config, 4);
                 validateBarcodeFastqs(expectedOutputs);
             }
@@ -1175,7 +1179,7 @@ public class SequenceIntegrationTests
             try
             {
                 verifyFileOutputs(basedir, expectedOutputs);
-                verifyFileInputs(basedir, fileNames, config, prefix);
+                verifyFileInputs(basedir, fileNames, config, prefix, _project);
                 validateReadsets(jobs, config, 4);
                 validateBarcodeFastqs(expectedOutputs);
             }
@@ -1245,7 +1249,7 @@ public class SequenceIntegrationTests
             try
             {
                 verifyFileOutputs(basedir, expectedOutputs);
-                verifyFileInputs(basedir, fileNames, config, prefix);
+                verifyFileInputs(basedir, fileNames, config, prefix, c);
                 validateReadsets(jobs, config);
             }
             catch (Exception e)
@@ -1303,7 +1307,7 @@ public class SequenceIntegrationTests
             try
             {
                 verifyFileOutputs(basedir, expectedOutputs);
-                verifyFileInputs(basedir, fileNames, config, prefix);
+                verifyFileInputs(basedir, fileNames, config, prefix, _project);
                 validateReadsets(jobs, config);
             }
             catch (Exception e)
@@ -1361,7 +1365,7 @@ public class SequenceIntegrationTests
             try
             {
                 verifyFileOutputs(basedir, expectedOutputs);
-                verifyFileInputs(basedir, fileNames, config, prefix);
+                verifyFileInputs(basedir, fileNames, config, prefix, workbook);
                 validateReadsets(jobs, config);
             }
             catch (Exception e)
@@ -1508,7 +1512,7 @@ public class SequenceIntegrationTests
 
             for (String fn : additionalFiles)
             {
-                expectedOutputs.add(FileUtil.appendName(basedir, fn));
+                expectedOutputs.add(FileUtil.appendPath(basedir, Path.parse(fn)));
             }
 
             File bam = FileUtil.appendPath(basedir, Path.parse(outDir + "/Alignment/" + rs.getName() + ".bam"));
@@ -1572,21 +1576,22 @@ public class SequenceIntegrationTests
 
         protected void copyInputFiles() throws Exception
         {
-            File file3 = FileUtil.appendName(_pipelineRoot, PAIRED_FILENAME1);
+            File pipelineRoot = getPipelineRoot(_project);
+            File file3 = FileUtil.appendName(pipelineRoot, PAIRED_FILENAME1);
             if (!file3.exists())
                 FileUtils.copyFile(FileUtil.appendName(_sampleData, PAIRED_FILENAME1), file3);
 
-            File file4 = FileUtil.appendName(_pipelineRoot, PAIRED_FILENAME2);
+            File file4 = FileUtil.appendName(pipelineRoot, PAIRED_FILENAME2);
             if (!file4.exists())
                 FileUtils.copyFile(FileUtil.appendName(_sampleData, PAIRED_FILENAME2), file4);
 
-            File file5 = FileUtil.appendName(_pipelineRoot, UNZIPPED_PAIRED_FILENAME1);
+            File file5 = FileUtil.appendName(pipelineRoot, UNZIPPED_PAIRED_FILENAME1);
             if (!file5.exists())
             {
                 decompressAndCleanFastq(FileUtil.appendName(_sampleData, PAIRED_FILENAME1), file5);
             }
 
-            File file6 = FileUtil.appendName(_pipelineRoot, UNZIPPED_PAIRED_FILENAME2);
+            File file6 = FileUtil.appendName(pipelineRoot, UNZIPPED_PAIRED_FILENAME2);
             if (!file6.exists())
             {
                 decompressAndCleanFastq(FileUtil.appendName(_sampleData, PAIRED_FILENAME2), file6);
@@ -1596,16 +1601,16 @@ public class SequenceIntegrationTests
         protected List<SequenceReadsetImpl> createReadsets() throws Exception
         {
             List<SequenceReadsetImpl> models = new ArrayList<>();
-
-            File file1 = FileUtil.appendName(_pipelineRoot, PAIRED_FILENAME1);
-            File file2 = FileUtil.appendName(_pipelineRoot, PAIRED_FILENAME2);
+            File pipelineRoot = getPipelineRoot(_project);
+            File file1 = FileUtil.appendName(pipelineRoot, PAIRED_FILENAME1);
+            File file2 = FileUtil.appendName(pipelineRoot, PAIRED_FILENAME2);
             models.add(createReadset("TestReadset1", List.of(Pair.of(file1, file2)), false));
 
 
-            File file3 = FileUtil.appendName(_pipelineRoot, UNZIPPED_PAIRED_FILENAME1);
+            File file3 = FileUtil.appendName(pipelineRoot, UNZIPPED_PAIRED_FILENAME1);
             models.add(createReadset("TestReadset2", List.of(Pair.of(file3, null)), true));
 
-            File file4 = FileUtil.appendName(_pipelineRoot, UNZIPPED_PAIRED_FILENAME2);
+            File file4 = FileUtil.appendName(pipelineRoot, UNZIPPED_PAIRED_FILENAME2);
             models.add(createReadset("TestReadset3", List.of(Pair.of(file4, null)), true));
 
             return models;
@@ -1677,17 +1682,17 @@ public class SequenceIntegrationTests
         protected void validateInputs()
         {
             //all files have 204 reads
-
-            File file1 = FileUtil.appendName(_pipelineRoot, PAIRED_FILENAME1);
+            File pipelineRoot = getPipelineRoot(_project);
+            File file1 = FileUtil.appendName(pipelineRoot, PAIRED_FILENAME1);
             Assert.assertTrue("Unable to find input: " + file1.getPath(), file1.exists());
 
-            File file2 = FileUtil.appendName(_pipelineRoot, PAIRED_FILENAME2);
+            File file2 = FileUtil.appendName(pipelineRoot, PAIRED_FILENAME2);
             Assert.assertTrue("Unable to find input: " + file2.getPath(), file2.exists());
 
-            File file3 = FileUtil.appendName(_pipelineRoot, UNZIPPED_PAIRED_FILENAME1);
+            File file3 = FileUtil.appendName(pipelineRoot, UNZIPPED_PAIRED_FILENAME1);
             Assert.assertTrue("Unable to find input: " + file3.getPath(), file3.exists());
 
-            File file4 = FileUtil.appendName(_pipelineRoot, UNZIPPED_PAIRED_FILENAME2);
+            File file4 = FileUtil.appendName(pipelineRoot, UNZIPPED_PAIRED_FILENAME2);
             Assert.assertTrue("Unable to find input: " + file4.getPath(), file4.exists());
         }
 
@@ -2654,16 +2659,17 @@ public class SequenceIntegrationTests
             JSONObject config = substituteParams(FileUtil.appendName(_sampleData, ALIGNMENT_JOB), jobName);
             config.put("alignment", "BWA-Mem");
 
+            File pipelineRoot = getPipelineRoot(_project);
             for (String fn : Arrays.asList(PAIRED_FILENAME_L1a, PAIRED_FILENAME_L2))
             {
-                File file3 = FileUtil.appendName(_pipelineRoot, fn);
+                File file3 = FileUtil.appendName(pipelineRoot, fn);
                 if (!file3.exists())
                     FileUtils.copyFile(FileUtil.appendName(_sampleData, PAIRED_FILENAME1), file3);
             }
 
             for (String fn : Arrays.asList(PAIRED_FILENAME2_L1a, PAIRED_FILENAME2_L2))
             {
-                File file4 = FileUtil.appendName(_pipelineRoot, fn);
+                File file4 = FileUtil.appendName(pipelineRoot, fn);
                 if (!file4.exists())
                     FileUtils.copyFile(FileUtil.appendName(_sampleData, PAIRED_FILENAME2), file4);
             }
@@ -2671,8 +2677,8 @@ public class SequenceIntegrationTests
             List<SequenceReadsetImpl> models = new ArrayList<>();
 
             models.add(createReadset("TestMergedReadset", Arrays.asList(
-                    Pair.of(FileUtil.appendName(_pipelineRoot, PAIRED_FILENAME_L1a), FileUtil.appendName(_pipelineRoot, PAIRED_FILENAME2_L1a)),
-                    Pair.of(FileUtil.appendName(_pipelineRoot, PAIRED_FILENAME_L2), FileUtil.appendName(_pipelineRoot, PAIRED_FILENAME2_L2))
+                    Pair.of(FileUtil.appendName(pipelineRoot, PAIRED_FILENAME_L1a), FileUtil.appendName(pipelineRoot, PAIRED_FILENAME2_L1a)),
+                    Pair.of(FileUtil.appendName(pipelineRoot, PAIRED_FILENAME_L2), FileUtil.appendName(pipelineRoot, PAIRED_FILENAME2_L2))
             ), true));
 
             appendSamplesForAlignment(config, models);
