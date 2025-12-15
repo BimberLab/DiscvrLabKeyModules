@@ -1511,12 +1511,12 @@ public class SequenceIntegrationTests
                 expectedOutputs.add(FileUtil.appendName(basedir, fn));
             }
 
-            File bam = FileUtil.appendName(basedir, outDir + "/Alignment/" + rs.getName() + ".bam");
+            File bam = FileUtil.appendPath(basedir, Path.parse(outDir + "/Alignment/" + rs.getName() + ".bam"));
             expectedOutputs.add(bam);
 
-            expectedOutputs.add(FileUtil.appendName(basedir, outDir + "/Alignment/" + rs.getName() + ".bam.bai"));
+            expectedOutputs.add(FileUtil.appendPath(basedir, Path.parse(outDir + "/Alignment/" + rs.getName() + ".bam.bai")));
 
-            expectedOutputs.add(FileUtil.appendName(basedir, outDir + "/Alignment/idxstats.txt"));
+            expectedOutputs.add(FileUtil.appendPath(basedir, Path.parse(outDir + "/Alignment/idxstats.txt")));
 
             File log = FileUtil.appendName(basedir, job.getProtocolName() + ".log");
             try
@@ -1542,10 +1542,10 @@ public class SequenceIntegrationTests
             extraFiles.add(FileUtil.appendName(basedir, basedir.getName() + ".pipe.xar.xml"));
 
             extraFiles.add(FileUtil.appendName(basedir, outDir));
-            extraFiles.add(FileUtil.appendName(basedir, outDir + "/Alignment"));
-            extraFiles.add(FileUtil.appendName(basedir, outDir + "/Alignment/" + rs.getName() + ".summary.metrics"));
+            extraFiles.add(FileUtil.appendPath(basedir, Path.parse(outDir + "/Alignment")));
+            extraFiles.add(FileUtil.appendPath(basedir, Path.parse(outDir + "/Alignment/" + rs.getName() + ".summary.metrics")));
 
-            extraFiles.add(FileUtil.appendName(basedir, outDir + "/Alignment/" + rs.getName() + ".bam.bai"));
+            extraFiles.add(FileUtil.appendPath(basedir, Path.parse(outDir + "/Alignment/" + rs.getName() + ".bam.bai")));
 
             return extraFiles;
         }
@@ -2505,7 +2505,7 @@ public class SequenceIntegrationTests
             Integer libraryId = createSavedLibrary();
             Integer dataId = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("fasta_file"), new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getObject(Integer.class);
             ExpData data = ExperimentService.get().getExpData(dataId);
-            File alignmentIndexDir = FileUtil.appendName(data.getFile().getParentFile(), AlignerIndexUtil.INDEX_DIR + "/bwa");
+            File alignmentIndexDir = FileUtil.appendPath(data.getFile().getParentFile(), Path.parse(AlignerIndexUtil.INDEX_DIR + "/bwa"));
             if (alignmentIndexDir.exists())
             {
                 FileUtils.deleteDirectory(alignmentIndexDir);
@@ -2827,7 +2827,7 @@ public class SequenceIntegrationTests
             Integer libraryId = createSavedLibrary();
             Integer dataId = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("fasta_file"), new SimpleFilter(FieldKey.fromString("rowid"), libraryId), null).getObject(Integer.class);
             ExpData data = ExperimentService.get().getExpData(dataId);
-            File alignmentIndexDir = FileUtil.appendName(data.getFile().getParentFile(), AlignerIndexUtil.INDEX_DIR + "/Bismark");
+            File alignmentIndexDir = FileUtil.appendPath(data.getFile().getParentFile(), Path.parse(AlignerIndexUtil.INDEX_DIR + "/Bismark"));
             if (alignmentIndexDir.exists())
             {
                 FileUtils.deleteDirectory(alignmentIndexDir);
