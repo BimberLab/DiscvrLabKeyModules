@@ -1288,7 +1288,7 @@ public class SequenceIntegrationTests
 
             appendSamplesForImport(config, List.of(g));
 
-            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport, _project);
+            Set<PipelineJob> jobs = createPipelineJob(jobName, config, SequenceAnalysisController.AnalyzeForm.TYPE.readsetImport, workbook);
             waitForJobs(jobs);
 
             Set<File> expectedOutputs = new HashSet<>();
@@ -1307,7 +1307,7 @@ public class SequenceIntegrationTests
             try
             {
                 verifyFileOutputs(basedir, expectedOutputs);
-                verifyFileInputs(basedir, fileNames, config, prefix, _project);
+                verifyFileInputs(basedir, fileNames, config, prefix, workbook);
                 validateReadsets(jobs, config);
             }
             catch (Exception e)
