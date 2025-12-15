@@ -221,7 +221,7 @@ public class OutputIntegrationTests
                 writer.add(vcb.make());
             }
 
-            ExpData d = createExpData(vcf);
+            ExpData d = createExpData(vcf, _project);
             Map<String, Object> params = new CaseInsensitiveHashMap<>();
             params.put("name", "TestVcf");
             params.put("description", "Description");
