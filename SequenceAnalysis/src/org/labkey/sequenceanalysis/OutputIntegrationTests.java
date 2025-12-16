@@ -62,7 +62,7 @@ public class OutputIntegrationTests
         private static final String PROJECT_NAME = "VariantProcessingTestProject";
 
         @BeforeClass
-        public static void initialSetUp() throws Exception
+        public static void initialSetUp()
         {
             doInitialSetUp(PROJECT_NAME);
         }
@@ -90,12 +90,12 @@ public class OutputIntegrationTests
 
             //create VCF, import as outputfile
             String basename = "TestFile_" + FileUtil.getTimestamp();
-            File vcf = new File(_pipelineRoot, basename + ".vcf.gz");
+            File vcf = FileUtil.appendName(getPipelineRoot(_project), basename + ".vcf.gz");
             Integer outputFileId = createTestVcf(genomeId, vcf);
 
             //make job params
             String jobName = "TestVariantProcessing";
-            JSONObject config = substituteParams(new File(_sampleData, VARIANT_JOB), jobName);
+            JSONObject config = substituteParams(FileUtil.appendName(_sampleData, VARIANT_JOB), jobName);
             Set<Integer> outputFileIds = Collections.singleton(outputFileId);
 
             TableInfo ti = QueryService.get().getUserSchema(TestContext.get().getUser(), _project, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES, null);
@@ -110,13 +110,13 @@ public class OutputIntegrationTests
                 SequenceOutputHandlerJob job = (SequenceOutputHandlerJob)j;
 
                 Set<File> extraFiles = new HashSet<>();
-                extraFiles.add(new File(job.getAnalysisDirectory(), jobName + "." + outputFileId + ".log"));
-                extraFiles.add(new File(job.getAnalysisDirectory(), "sequenceOutput.json"));
-                extraFiles.add(new File(job.getAnalysisDirectory(), "sequenceSupport.json.gz"));
+                extraFiles.add(FileUtil.appendName(job.getAnalysisDirectory(), jobName + "." + outputFileId + ".log"));
+                extraFiles.add(FileUtil.appendName(job.getAnalysisDirectory(), "sequenceOutput.json"));
+                extraFiles.add(FileUtil.appendName(job.getAnalysisDirectory(), "sequenceSupport.json.gz"));
                 extraFiles.add(ProcessVariantsHandler.getPedigreeFile(job.getAnalysisDirectory(), "laboratory.subjects"));
-                extraFiles.add(new File(job.getAnalysisDirectory(), basename + ".gfiltered.selectVariants.annotated.filtered.vcf.gz"));
-                extraFiles.add(new File(job.getAnalysisDirectory(), basename + ".gfiltered.selectVariants.annotated.filtered.vcf.gz.tbi"));
-                extraFiles.add(new File(job.getAnalysisDirectory(), job.getBaseName() + ".pipe.xar.xml"));
+                extraFiles.add(FileUtil.appendName(job.getAnalysisDirectory(), basename + ".gfiltered.selectVariants.annotated.filtered.vcf.gz"));
+                extraFiles.add(FileUtil.appendName(job.getAnalysisDirectory(), basename + ".gfiltered.selectVariants.annotated.filtered.vcf.gz.tbi"));
+                extraFiles.add(FileUtil.appendName(job.getAnalysisDirectory(), job.getBaseName() + ".pipe.xar.xml"));
 
                 verifyFileOutputs(job.getAnalysisDirectory(), extraFiles);
 
@@ -128,7 +128,7 @@ public class OutputIntegrationTests
             }
         }
 
-        protected Set<PipelineJob> createOutputHandlerJob(String jobName, JSONObject config, Class handlerClass, Set<Integer> outputFileIDs) throws Exception
+        protected Set<PipelineJob> createOutputHandlerJob(String jobName, JSONObject config, Class<?> handlerClass, Set<Integer> outputFileIDs) throws Exception
         {
             Map<String, Object> headers = new HashMap<>();
             headers.put("Content-Type", "application/json");
@@ -199,7 +199,7 @@ public class OutputIntegrationTests
             Integer dataId = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("fasta_file"), new SimpleFilter(FieldKey.fromString("rowid"), genomeId), null).getObject(Integer.class);
             ExpData data = ExperimentService.get().getExpData(dataId);
 
-            File dictFile = new File(data.getFile().getParent(), FileUtil.getBaseName(data.getFile().getName()) + ".dict");
+            File dictFile = FileUtil.appendName(data.getFile().getParentFile(), FileUtil.getBaseName(data.getFile().getName()) + ".dict");
             if (dictFile.exists())
             {
                 SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(dictFile.toPath());
@@ -221,7 +221,7 @@ public class OutputIntegrationTests
                 writer.add(vcb.make());
             }
 
-            ExpData d = createExpData(vcf);
+            ExpData d = createExpData(vcf, _project);
             Map<String, Object> params = new CaseInsensitiveHashMap<>();
             params.put("name", "TestVcf");
             params.put("description", "Description");

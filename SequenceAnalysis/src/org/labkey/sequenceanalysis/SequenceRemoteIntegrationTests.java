@@ -15,6 +15,7 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.reader.Readers;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.pipeline.AlignmentInitTask;
 import org.labkey.sequenceanalysis.pipeline.PrepareAlignerIndexesTask;
@@ -25,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
+import java.util.Objects;
 
 import static org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService.SEQUENCE_TOOLS_PARAM;
 
@@ -40,35 +42,35 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
     }
 
     @BeforeClass
-    public static void initialSetUp() throws Exception
+    public static void initialSetUp()
     {
         doInitialSetUp(PROJECT_NAME);
     }
 
     private File setupConfigDir(File outDir) throws IOException
     {
-        File baseDir = new File(outDir, "config");
+        File baseDir = FileUtil.appendName(outDir, "config");
         if (baseDir.exists())
         {
             FileUtils.deleteDirectory(baseDir);
         }
 
-        baseDir.mkdirs();
+        FileUtil.mkdirs(baseDir);
 
         if (_sampleData == null)
         {
             throw new IOException("_sampleData was null");
         }
 
-        File source = new File(_sampleData, "remotePipeline");
+        File source = FileUtil.appendName(_sampleData, "remotePipeline");
         if (!source.exists())
         {
             throw new IOException("Unable to find file: " + source.getPath());
         }
 
-        FileUtils.copyFile(new File(source, "sequenceanalysisConfig.xml"), new File(baseDir, "sequenceanalysisConfig.xml"));
+        FileUtils.copyFile(FileUtil.appendName(source, "sequenceanalysisConfig.xml"), FileUtil.appendName(baseDir, "sequenceanalysisConfig.xml"));
 
-        try (PrintWriter writer = PrintWriters.getPrintWriter(new File(baseDir, "pipelineConfig.xml")); BufferedReader reader = Readers.getReader(new File(source, "pipelineConfig.xml")))
+        try (PrintWriter writer = PrintWriters.getPrintWriter(FileUtil.appendName(baseDir, "pipelineConfig.xml")); BufferedReader reader = Readers.getReader(FileUtil.appendName(source, "pipelineConfig.xml")))
         {
             String line;
             while ((line = reader.readLine()) != null)
@@ -83,12 +85,10 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
 
                     path = path.replaceAll("\\\\", "/");
                     line = line.replaceAll("@@SEQUENCEANALYSIS_TOOLS@@", path);
-                    _log.info("Writing to pipelineConfig.xml: " + line);
                 }
                 else if (line.contains("@@WORK_DIR@@"))
                 {
                     line = line.replaceAll("@@WORK_DIR@@", outDir.getPath().replaceAll("\\\\", "/"));
-                    _log.info("Writing to pipelineConfig.xml: " + line);
                 }
 
                 writer.println(line);
@@ -113,13 +113,13 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
     @Test
     public void BasicRemoteJob() throws Exception
     {
-        File outDir = new File(_pipelineRoot, "clusterBootstrap");
+        File outDir = FileUtil.appendName(getPipelineRoot(_project), "clusterBootstrap");
         if (outDir.exists())
         {
             FileUtils.deleteDirectory(outDir);
         }
 
-        outDir.mkdirs();
+        FileUtil.mkdirs(outDir);
 
         executeJobRemote(outDir, null);
 
@@ -143,19 +143,19 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
             return;
 
         String jobName = "TestBWAMem_" + System.currentTimeMillis();
-        JSONObject config = substituteParams(new File(_sampleData, ALIGNMENT_JOB), jobName);
+        JSONObject config = substituteParams(FileUtil.appendName(_sampleData, ALIGNMENT_JOB), jobName);
         config.put("alignment", "BWA-Mem");
         appendSamplesForAlignment(config, _readsets);
 
         SequenceAlignmentJob job = SequenceAlignmentJob.createForReadsets(_project, _context.getUser(), "RemoteJob1", "Test of remote pipeline", config, config.getJSONArray("readsetIds"), false).get(0);
-        File outDir = new File(_pipelineRoot, "remoteBwa");
+        File outDir = FileUtil.appendName(getPipelineRoot(_project), "remoteBwa");
         if (outDir.exists())
         {
             FileUtils.deleteDirectory(outDir);
         }
 
-        outDir.mkdirs();
-        job.getLogFile().getParentFile().mkdirs();
+        FileUtil.mkdirs(outDir);
+        FileUtil.mkdirs(job.getLogFile().getParentFile());
 
         _readsets.forEach(rs -> job.getSequenceSupport().cacheReadset(rs));
 
@@ -171,7 +171,7 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
         //Now move to remote tasks
         job.setActiveTaskId(new TaskId(PrepareAlignerIndexesTask.class));
 
-        File jobFile = new File(outDir, "bwaRemote.job.json.txt");
+        File jobFile = FileUtil.appendName(outDir, "bwaRemote.job.json.txt");
         job.writeToFile(jobFile);
 
         executeJobRemote(outDir, jobFile);
@@ -191,7 +191,7 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
             writeJobLogToLog(job);
 
             _log.info("Files in job folder: " + job.getLogFile().getParentFile().getPath());
-            for (File f : job.getLogFile().getParentFile().listFiles())
+            for (File f : Objects.requireNonNull(job.getLogFile().getParentFile().listFiles()))
             {
                 _log.info(f.getName());
             }
@@ -215,14 +215,14 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
         ProcessBuilder pb = new ProcessBuilder(args);
         pb.directory(workDir);
 
-        _log.info("Executing job in '" + pb.directory().getAbsolutePath() + "': " + String.join(" ", pb.command()));
+        _log.info("Executing job in '{}': {}", pb.directory().getAbsolutePath(), String.join(" ", pb.command()));
 
         Process proc;
         try
         {
             pb.redirectErrorStream(true);
             proc = pb.start();
-            File logFile = new File(workDir, "clusterBootstrap.txt");
+            File logFile = FileUtil.appendName(workDir, "clusterBootstrap.txt");
             try (BufferedReader procReader = Readers.getReader(proc.getInputStream());PrintWriter writer = PrintWriters.getPrintWriter(logFile))
             {
                 String line;
