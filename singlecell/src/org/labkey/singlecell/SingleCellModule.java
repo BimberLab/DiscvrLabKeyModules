@@ -29,7 +29,6 @@ import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
 import org.labkey.api.singlecell.CellHashingService;
 import org.labkey.api.singlecell.pipeline.SingleCellRawDataStep;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.singlecell.analysis.AbstractSingleCellHandler;
 import org.labkey.singlecell.analysis.CellRangerRawDataHandler;
@@ -76,6 +75,7 @@ import org.labkey.singlecell.pipeline.singlecell.MergeSeurat;
 import org.labkey.singlecell.pipeline.singlecell.NormalizeAndScale;
 import org.labkey.singlecell.pipeline.singlecell.PerformDefaultNimbleAppend;
 import org.labkey.singlecell.pipeline.singlecell.PerformMhcDimRedux;
+import org.labkey.singlecell.pipeline.singlecell.PerformTcrClustering;
 import org.labkey.singlecell.pipeline.singlecell.PhenotypePlots;
 import org.labkey.singlecell.pipeline.singlecell.PlotAssayFeatures;
 import org.labkey.singlecell.pipeline.singlecell.PlotAverageCiteSeqCounts;
@@ -305,6 +305,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new CalculateTcrRepertoireStats.Provider());
         SequencePipelineService.get().registerPipelineStep(new PredictTcellActivation.Provider());
         SequencePipelineService.get().registerPipelineStep(new IdentifyAndStoreActiveClonotypes.Provider());
+        SequencePipelineService.get().registerPipelineStep(new PerformTcrClustering.Provider());
 
         SequenceAnalysisService.get().registerReadsetListener(new SingleCellReadsetListener());
     }

@@ -1924,7 +1924,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                     if (f == null || !f.exists())
                     {
-                        throw new PipelineValidationException("Unknown file: " + o.getString("relPath") + " / " + o.getString("fileName"));
+                        throw new PipelineValidationException("Unknown file: " + o.optString("relPath") + " / " + o.optString("fileName"));
                     }
 
                     ret.add(f);
