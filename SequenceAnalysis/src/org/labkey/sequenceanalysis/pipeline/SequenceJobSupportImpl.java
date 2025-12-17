@@ -320,6 +320,11 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
             js1._cachedObjects.put("cachedString", "foo");
             js1._cachedObjects.put("cachedLong", 2L);
 
+            LongHashMap<Long> longMap = new LongHashMap<>();
+            longMap.put(1L, 2L);
+
+            js1._cachedObjects.put("cachedLongMap", longMap);
+
             ObjectMapper mapper = PipelineJob.createObjectMapper();
 
             StringWriter writer = new StringWriter();
@@ -341,10 +346,13 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
             //NOTE: this is not serializing properly.  the keys are serialized as Strings
             Map serializedMap = deserialized.getCachedObject("cachedMap", mapper.getTypeFactory().constructParametricType(Map.class, Integer.class, Integer.class));
             assertEquals("Map not serialized properly", 1, serializedMap.size());
-
-            //TODO: determine if we can coax jackson into serializing these properly
             assertEquals("Object not serialized with correct key type", Integer.class, serializedMap.keySet().iterator().next().getClass());
             assertNotNull("Map keys not serialized properly", serializedMap.get(1));
+
+            LongHashMap<Long> serializedLongMap = (LongHashMap<Long>)deserialized.getCachedObject("cachedLongMap", LongHashMap.class);
+            assertEquals("LongMap not serialized properly", 1, serializedLongMap.size());
+            assertEquals("Object not serialized with correct key type", Long.class, serializedLongMap.keySet().iterator().next().getClass());
+            assertNotNull("LongMap keys not serialized properly", serializedLongMap.get(1L));
         }
 
         @Test
