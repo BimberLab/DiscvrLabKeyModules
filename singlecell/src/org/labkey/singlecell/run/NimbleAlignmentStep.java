@@ -31,7 +31,6 @@ import org.labkey.singlecell.SingleCellSchema;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -117,7 +116,7 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
 
     private File getCachedLoupeFile(Readset rs, boolean throwIfNotFound) throws PipelineJobException
     {
-        Map<Long, Long> map = getPipelineCtx().getSequenceSupport().getCachedObject(CACHE_KEY, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Long.class, Long.class));
+        Map<Long, Long> map = getPipelineCtx().getSequenceSupport().getCachedObject(CACHE_KEY, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(LongHashMap.class, Long.class, Long.class));
         Long dataId = map.get(rs.getReadsetId());
         if (dataId == null)
         {
