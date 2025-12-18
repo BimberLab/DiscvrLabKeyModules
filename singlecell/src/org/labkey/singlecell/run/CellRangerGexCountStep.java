@@ -693,7 +693,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
             throw new IllegalArgumentException("Missing file: " + html.getPath());
         }
 
-        final Pattern pattern = Pattern.compile("\\[\"Chemistry\",\"(.*?)\"],");
+        final Pattern pattern = Pattern.compile("\\[\"Chemistry\",[ ]{0,1}\"(.*?)\"],");
         try (BufferedReader reader = Readers.getReader(html))
         {
             String line;
