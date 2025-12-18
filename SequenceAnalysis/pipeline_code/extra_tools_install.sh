@@ -358,7 +358,7 @@ echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 echo "Install hifiasm"
 echo ""
 cd $LKSRC_DIR
-if [[ ! -e ${LKTOOLS_DIR}/primer3_core || ! -z $FORCE_REINSTALL ]];
+if [[ ! -e ${LKTOOLS_DIR}/hifiasm || ! -z $FORCE_REINSTALL ]];
 then
     echo "Cleaning up previous installs"
     rm -Rf $LKTOOLS_DIR/hifiasm*
