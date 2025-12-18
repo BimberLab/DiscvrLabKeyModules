@@ -625,7 +625,8 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         // See: https://kb.10xgenomics.com/s/article/115004506263-What-is-a-barcode-inclusion-list-formerly-barcode-whitelist
         // cellranger-x.y.z/lib/python/cellranger/barcodes/
         FivePE_V3("Single Cell 5' PE v3", "3M-5pgex-jan-2023.txt.gz"),
-        FivePE_V2("Single Cell 5' PE v2", "737k-august-2016.txt");
+        FivePE_V2("Single Cell 5' PE v2", "737k-august-2016.txt"),
+        FivePE_V1("Single Cell 5' PE", "737k-april-2014_rc.txt");
 
         final String _label;
         final String _inclusionListFile;
@@ -681,7 +682,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                 }
             }
 
-            throw new IllegalArgumentException("Unknown chemistry: " + label);
+            throw new IllegalArgumentException("Unknown chemistry: [" + label + "]");
         }
     }
 
