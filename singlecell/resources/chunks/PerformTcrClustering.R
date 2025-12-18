@@ -29,6 +29,8 @@ for (datasetId in names(seuratObjects)) {
       }
     }
 
+    VisualizeTcrDistances(seuratObj)
+
     saveData(seuratObj, datasetId)
 
     # Cleanup
