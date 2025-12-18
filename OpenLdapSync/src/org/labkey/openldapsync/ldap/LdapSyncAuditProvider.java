@@ -101,17 +101,6 @@ public class LdapSyncAuditProvider extends AbstractAuditTypeProvider implements 
     }
 
     @Override
-    public Map<FieldKey, String> legacyNameMap()
-    {
-        Map<FieldKey, String> legacyMap =  super.legacyNameMap();
-        legacyMap.put(FieldKey.fromParts("intKey1"), COLUMN_NAME_USERS_AND_GROUPS_ADDED);
-        legacyMap.put(FieldKey.fromParts("intKey2"), COLUMN_NAME_USERS_AND_GROUPS_REMOVED);
-        legacyMap.put(FieldKey.fromParts("intKey3"), COLUMN_NAME_MEMBERSHIPS_CHANGED);
-
-        return legacyMap;
-    }
-
-    @Override
     public <K extends AuditTypeEvent> Class<K> getEventClass()
     {
         return (Class<K>)LdapSyncAuditEvent.class;
