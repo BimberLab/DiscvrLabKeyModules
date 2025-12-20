@@ -8,7 +8,7 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
-    seuratObj <- CellMembrane::RunEscape(seuratObj, outputAssayBaseName = outputAssayBaseName, doPlot = TRUE, performDimRedux = performDimRedux, escapeMethod = escapeMethod, nCores = nCores)
+    seuratObj <- CellMembrane::RunEscape(seuratObj, outputAssayBaseName = outputAssayBaseName, doPlot = TRUE, heatmapGroupingVars = heatmapGroupingVars, performDimRedux = performDimRedux, escapeMethod = escapeMethod, nCores = nCores)
 
     saveData(seuratObj, datasetId)
 

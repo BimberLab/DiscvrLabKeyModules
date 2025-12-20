@@ -7,6 +7,7 @@ import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
 import org.labkey.api.singlecell.pipeline.SingleCellStep;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class RunEscape extends AbstractCellMembraneStep
 {
@@ -34,8 +35,15 @@ public class RunEscape extends AbstractCellMembraneStep
                     }}, null),
                     SeuratToolParameter.create("performDimRedux", "Perform DimRedux", "If true, the standard seurat PCA/FindClusters/UMAP process will be run on the escape data. This may be most useful when using a customGeneSet or a smaller set of features/pathways", "checkbox", new JSONObject(){{
 
-                    }}, false, null, true)
-            ), null, null);
+                    }}, false, null, true),
+                    SeuratToolParameter.create("heatmapGroupingVars", "Heatmap Grouping Vars", "Enter one field name per line, which will be used to generate a heatmap of results", "sequenceanalysis-trimmingtextarea", new JSONObject()
+                    {{
+                        put("allowBlank", true);
+                        put("height", 150);
+                        put("delimiter", ",");
+                        put("stripCharsRe", "/['\"]/g");
+                    }}, "ClusterNames_0.2", null, true, true).delimiter(",")
+            ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
         @Override
