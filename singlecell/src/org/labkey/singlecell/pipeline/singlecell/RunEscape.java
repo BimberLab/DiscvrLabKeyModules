@@ -23,6 +23,15 @@ public class RunEscape extends AbstractCellMembraneStep
                     SeuratToolParameter.create("outputAssayBaseName", "Output Assay Basename", "The name of the assay to store results", "textfield", new JSONObject(){{
                         put("allowBank", false);
                     }}, "escape."),
+                    SeuratToolParameter.create("escapeMethod", "Escape Method", "Passed directly to escape::runEscape()", "ldk-simplecombo", new JSONObject()
+                    {{
+                        put("multiSelect", false);
+                        put("allowBlank", false);
+                        put("storeValues", "ssGSEA;GSVA;UCell;AUCell");
+                        put("initialValues", "ssGSEA");
+                        put("delimiter", ";");
+                        put("joinReturnValue", true);
+                    }}, null),
                     SeuratToolParameter.create("performDimRedux", "Perform DimRedux", "If true, the standard seurat PCA/FindClusters/UMAP process will be run on the escape data. This may be most useful when using a customGeneSet or a smaller set of features/pathways", "checkbox", new JSONObject(){{
 
                     }}, false, null, true)
