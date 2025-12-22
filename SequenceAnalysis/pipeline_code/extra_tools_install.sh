@@ -379,3 +379,32 @@ then
 else
     echo "Already installed"
 fi
+
+#
+#clustalw
+#
+
+echo ""
+echo ""
+echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+echo "Installing ClustalW"
+echo ""
+cd $LKSRC_DIR
+
+if [[ ! -e ${LKTOOLS_DIR}/clustalw2 || ! -z $FORCE_REINSTALL ]];
+then
+    rm -Rf clustal*
+    rm -Rf 1.2.4-cmake.tar.gz
+    rm -Rf $LKTOOLS_DIR/clustalw2
+
+    wget $WGET_OPTS https://github.com/GSLBiotech/clustal-omega/archive/refs/tags/1.2.4-cmake.tar.gz
+    tar -xf 1.2.4-cmake.tar.gz
+    cd clustal-omega-1.2.4-cmake
+    ./configure
+    make
+
+    install ./src/clustalw2 $LKTOOLS_DIR/clustalw2
+
+else
+    echo "Already installed"
+fi
