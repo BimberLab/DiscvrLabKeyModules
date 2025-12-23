@@ -598,7 +598,7 @@ public class CellHashingServiceImpl extends CellHashingService
         }
 
         parameters.validate(true);
-        Map<Long, Long> readsetToHashing = getCachedHashingReadsetMap(ctx.getSequenceSupport());
+        Map<Long, Integer> readsetToHashing = getCachedHashingReadsetMap(ctx.getSequenceSupport());
         if (readsetToHashing.isEmpty())
         {
             ctx.getLogger().info("No cached " + parameters.type.name() + " readsets, skipping");
@@ -622,7 +622,7 @@ public class CellHashingServiceImpl extends CellHashingService
         ctx.getLogger().debug("total cached readset/" + parameters.type.name() + " readset pairs: " + readsetToHashing.size());
         ctx.getLogger().debug("unique indexes: " + lineCount);
 
-        Readset htoReadset = ctx.getSequenceSupport().getCachedReadset(readsetToHashing.get(parentReadset.getReadsetId()));
+        Readset htoReadset = ctx.getSequenceSupport().getCachedReadset((long)readsetToHashing.get(parentReadset.getReadsetId()));
         if (htoReadset == null)
         {
             throw new PipelineJobException("Unable to find HTO readset for readset: " + parentReadset.getRowId());
@@ -724,7 +724,7 @@ public class CellHashingServiceImpl extends CellHashingService
         return callsFile;
     }
 
-    private Map<Long, Long> getCachedCiteSeqReadsetMap(SequenceAnalysisJobSupport support) throws PipelineJobException
+    private Map<Long, Integer> getCachedCiteSeqReadsetMap(SequenceAnalysisJobSupport support) throws PipelineJobException
     {
         return support.getCachedObject(READSET_TO_CITESEQ_MAP, LongHashMap.class);
     }
@@ -732,7 +732,7 @@ public class CellHashingServiceImpl extends CellHashingService
     @Override
     public boolean usesCellHashing(SequenceAnalysisJobSupport support, File sourceDir) throws PipelineJobException
     {
-        Map<Long, Long> gexToHashingMap = getCachedHashingReadsetMap(support);
+        Map<Long, Integer> gexToHashingMap = getCachedHashingReadsetMap(support);
         if (gexToHashingMap == null || gexToHashingMap.isEmpty())
             return false;
 
@@ -748,7 +748,7 @@ public class CellHashingServiceImpl extends CellHashingService
     @Override
     public boolean usesCiteSeq(SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles) throws PipelineJobException
     {
-        Map<Long, Long> gexToCiteMap = getCachedCiteSeqReadsetMap(support);
+        Map<Long, Integer> gexToCiteMap = getCachedCiteSeqReadsetMap(support);
         if (gexToCiteMap == null || gexToCiteMap.isEmpty())
             return false;
 
@@ -800,7 +800,7 @@ public class CellHashingServiceImpl extends CellHashingService
         return FileUtil.appendName(sourceDir, "cDNAInfo.txt");
     }
     
-    public Map<Long, Long> getCachedHashingReadsetMap(SequenceAnalysisJobSupport support) throws PipelineJobException
+    public Map<Long, Integer> getCachedHashingReadsetMap(SequenceAnalysisJobSupport support) throws PipelineJobException
     {
         return support.getCachedObject(READSET_TO_HASHING_MAP, LongHashMap.class);
     }
@@ -1370,13 +1370,13 @@ public class CellHashingServiceImpl extends CellHashingService
     @Override
     public File getExistingFeatureBarcodeCountDir(Readset parentReadset, BARCODE_TYPE type, SequenceAnalysisJobSupport support) throws PipelineJobException
     {
-        Long childId = type == BARCODE_TYPE.hashing ? getCachedHashingReadsetMap(support).get(parentReadset.getReadsetId()) : getCachedCiteSeqReadsetMap(support).get(parentReadset.getReadsetId());
+        Integer childId = type == BARCODE_TYPE.hashing ? getCachedHashingReadsetMap(support).get(parentReadset.getReadsetId()) : getCachedCiteSeqReadsetMap(support).get(parentReadset.getReadsetId());
         if (childId == null)
         {
             throw new PipelineJobException("Unable to find cached readset of type " + type.name() + " for parent: " + parentReadset.getReadsetId());
         }
 
-        File ret = getCachedReadsetToCountMatrix(support, childId, type);
+        File ret = getCachedReadsetToCountMatrix(support, (long)childId, type);
         if (ret == null)
         {
             throw new PipelineJobException("Unable to find cached count matrix of type " + type.name() + " for parent: " + parentReadset.getReadsetId());
@@ -1421,7 +1421,7 @@ public class CellHashingServiceImpl extends CellHashingService
     @Override
     public Set<String> getHtosForParentReadset(Long parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support, boolean throwIfNotFound) throws PipelineJobException
     {
-        Long htoReadset = getCachedHashingReadsetMap(support).get(parentReadsetId);
+        Integer htoReadset = getCachedHashingReadsetMap(support).get(parentReadsetId);
         if (htoReadset == null)
         {
             if (throwIfNotFound)
@@ -1434,7 +1434,7 @@ public class CellHashingServiceImpl extends CellHashingService
             }
         }
 
-        return getHtosForReadset(htoReadset, webserverJobDir);
+        return getHtosForReadset((long)htoReadset, webserverJobDir);
     }
 
     public Set<String> getHtosForReadset(Long hashingReadsetId, File webserverJobDir) throws PipelineJobException
