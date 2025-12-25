@@ -28,7 +28,16 @@ public class PerformTcrClustering extends AbstractTcrClustRStep
                         put("initialValues", "human");
                         put("delimiter", ";");
                         put("joinReturnValue", true);
-                    }}, null)
+                    }}, null),
+                    SeuratToolParameter.create("chains", "Chains", "The chains to process",  "ldk-simplecombo", new JSONObject()
+                    {{
+                        put("multiSelect", true);
+                        put("allowBlank", false);
+                        put("storeValues", "TRA;TRB;TRG;TRD");
+                        put("initialValues", "TRA;TRB;TRG;TRD");
+                        put("delimiter", ";");
+                        put("joinReturnValue", true);
+                    }}, "TRA;TRB;TRG;TRD", null, true, true)
             ), null, "https://github.com/bimberlabinternal/tcrClustR/");
         }
 

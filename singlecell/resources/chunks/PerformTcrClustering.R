@@ -5,7 +5,7 @@ for (datasetId in names(seuratObjects)) {
     print(paste0('Calculating distances for: ', datasetId))
     seuratObj <- tcrClustR::CalculateTcrDistances(
       inputData = seuratObj,
-      chains = c('TRA', 'TRB', 'TRG', 'TRD'),
+      chains = chains,
       organism = organism,
       minimumCloneSize = 2,
       calculateChainPairs = TRUE
