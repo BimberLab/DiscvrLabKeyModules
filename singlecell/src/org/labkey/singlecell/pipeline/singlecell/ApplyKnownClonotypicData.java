@@ -22,14 +22,12 @@ public class ApplyKnownClonotypicData extends AbstractRDiscvrStep
             super("ApplyKnownClonotypicData", "Append Known Clonotype/Antigen Data", "RDiscvr", "This will query the clone_responses table and append a column tagging each cell for matching antigens (based on clonotype)", List.of(
                     SeuratToolParameter.create("antigenInclusionList", "Antigen(s) to Include", "Enter antigens, per line. Only stims using these antigens will be used", "sequenceanalysis-trimmingtextarea", new JSONObject()
                     {{
-                        put("allowBlank", false);
                         put("height", 150);
                         put("delimiter", ",");
                         put("stripCharsRe", "/['\"]/g");
                     }}, null, null, true, true).delimiter(","),
                     SeuratToolParameter.create("antigenExclusionList", "Antigen(s) to Exclude", "Enter antigens, per line. Stims using these antigens will be excluded", "sequenceanalysis-trimmingtextarea", new JSONObject()
                     {{
-                        put("allowBlank", false);
                         put("height", 150);
                         put("delimiter", ",");
                         put("stripCharsRe", "/['\"]/g");
