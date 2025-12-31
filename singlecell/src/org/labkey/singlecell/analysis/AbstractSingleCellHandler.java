@@ -1030,7 +1030,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                             }
                         }
 
-                        if (saturationIdx >= 0)
+                        if (saturationIdx >= 0 && !"NA".equals(line[saturationIdx]) && !StringUtils.isEmpty(line[saturationIdx]))
                         {
                             double saturation = Double.parseDouble(line[saturationIdx]);
                             totalSaturation += saturation;

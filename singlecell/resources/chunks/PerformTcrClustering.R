@@ -2,14 +2,16 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
+    print(paste0('Calculating distances for: ', datasetId))
     seuratObj <- tcrClustR::CalculateTcrDistances(
       inputData = seuratObj,
-      chains = c('TRA', 'TRB', 'TRG', 'TRD'),
+      chains = chains,
       organism = organism,
       minimumCloneSize = 2,
       calculateChainPairs = TRUE
     )
 
+    print('Performing TCR Clustering')
     seuratObj <- tcrClustR::RunTcrClustering(
       seuratObj_TCR = seuratObj,
       dianaHeight = 20,
@@ -22,9 +24,12 @@ for (datasetId in names(seuratObjects)) {
     } else {
       for (an in names(seuratObj@misc$TCR_Distances)) {
         ad <- seuratObj@misc$TCR_Distances[[an]]
-        print(paste0('Assay: ', an, ', total clones: ', nrow(ad)))
+        fn <- length(unique(seuratObj[[paste0(an, '_ClusterIdx')]]))
+        print(paste0('Assay: ', an, ', total clones: ', nrow(ad), '. Distinct families: ', fn))
       }
     }
+
+    VisualizeTcrDistances(seuratObj)
 
     saveData(seuratObj, datasetId)
 

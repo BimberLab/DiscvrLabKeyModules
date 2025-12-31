@@ -5069,6 +5069,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                 Set<File> toDelete = new HashSet<>();
                 List<Map<String, Object>> toUpdate = new ArrayList<>();
+                Set<Long> encounteredReaddata = new HashSet<>();
                 for (ReadData rd : rs.getReadData())
                 {
                     if (rd.getSra_accession() == null)
@@ -5077,7 +5078,14 @@ public class SequenceAnalysisController extends SpringActionController
                         return null;
                     }
 
+                    // A given ReadData can be referenced by multiple readsets
+                    if (encounteredReaddata.contains(rd.getRowid()))
+                    {
+                        continue;
+                    }
+
                     toUpdate.add(new CaseInsensitiveHashMap<>(Map.of("rowid", rd.getRowid(), "archived", true, "container", rd.getContainer())));
+                    encounteredReaddata.add(rd.getRowid());
 
                     // File 1:
                     ExpData d1 = ExperimentService.get().getExpData(rd.getFileId1());
@@ -5131,7 +5139,6 @@ public class SequenceAnalysisController extends SpringActionController
                 {
                     List<Map<String, Object>> keys = new ArrayList<>();
                     toUpdate.forEach(row -> {
-
                         keys.add(new CaseInsensitiveHashMap<>(Map.of("rowid", row.get("rowid"))));
                     });
 
@@ -5141,7 +5148,7 @@ public class SequenceAnalysisController extends SpringActionController
                     }
                     catch (Exception e)
                     {
-                        _log.error(e);
+                        _log.error("Error archiving readsets", e);
                         errors.reject(ERROR_MSG, "Error archiving readset: " + readsetId + ", " + e.getMessage());
                         return null;
                     }
