@@ -33,7 +33,12 @@ public class ApplyKnownClonotypicData extends AbstractRDiscvrStep
                         put("delimiter", ",");
                         put("stripCharsRe", "/['\"]/g");
                         put("replaceAllWhitespace", false);
-                    }}, null, null, true, true).delimiter(",")
+                    }}, null, null, true, true).delimiter(","),
+                    SeuratToolParameter.create("minActivationFrequency", "Minimum Activation Frequency", "If provided, only responses with an activation frequency (of the parent population), will be included", "ldk-numberfield", new JSONObject(){{
+                        put("minValue", 0);
+                        put("maxValue", 1.0);
+                        put("decimalPrecision", 4);
+                    }}, 0)
             ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
