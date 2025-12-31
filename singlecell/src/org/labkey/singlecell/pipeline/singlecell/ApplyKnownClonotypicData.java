@@ -25,12 +25,14 @@ public class ApplyKnownClonotypicData extends AbstractRDiscvrStep
                         put("height", 150);
                         put("delimiter", ",");
                         put("stripCharsRe", "/['\"]/g");
+                        put("replaceAllWhitespace", false);
                     }}, null, null, true, true).delimiter(","),
                     SeuratToolParameter.create("antigenExclusionList", "Antigen(s) to Exclude", "Enter antigens, per line. Stims using these antigens will be excluded", "sequenceanalysis-trimmingtextarea", new JSONObject()
                     {{
                         put("height", 150);
                         put("delimiter", ",");
                         put("stripCharsRe", "/['\"]/g");
+                        put("replaceAllWhitespace", false);
                     }}, null, null, true, true).delimiter(",")
             ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
