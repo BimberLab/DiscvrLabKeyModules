@@ -3,6 +3,7 @@ package org.labkey.singlecell.run;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.collections.LongHashMap;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
@@ -30,7 +31,6 @@ import org.labkey.singlecell.SingleCellSchema;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -116,7 +116,7 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
 
     private File getCachedLoupeFile(Readset rs, boolean throwIfNotFound) throws PipelineJobException
     {
-        Map<Long, Long> map = getPipelineCtx().getSequenceSupport().getCachedObject(CACHE_KEY, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(HashMap.class, Long.class, Long.class));
+        LongHashMap<Long> map = getPipelineCtx().getSequenceSupport().getCachedObject(CACHE_KEY, LongHashMap.class);
         Long dataId = map.get(rs.getReadsetId());
         if (dataId == null)
         {
@@ -199,7 +199,7 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
         }
 
         // Try to find 10x barcodes:
-        HashMap<Long, Long> readsetToLoupe = new HashMap<>();
+        LongHashMap<Long> readsetToLoupe = new LongHashMap<>();
         for (Readset rs : support.getCachedReadsets())
         {
             ExpData f = findLoupeFile(rs);

@@ -1000,37 +1000,6 @@ fi
 
 
 #
-#clustalw
-#
-
-echo ""
-echo ""
-echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-echo "Installing ClustalW"
-echo ""
-cd $LKSRC_DIR
-
-if [[ ! -e ${LKTOOLS_DIR}/clustalw2 || ! -z $FORCE_REINSTALL ]];
-then
-    rm -Rf clustalw-*
-    rm -Rf $LKTOOLS_DIR/clustalw2
-
-    wget $WGET_OPTS http://www.clustal.org/download/current/clustalw-2.1.tar.gz
-    gunzip clustalw-2.1.tar.gz
-    tar -xf clustalw-2.1.tar
-    gzip clustalw-2.1.tar
-    cd clustalw-2.1
-    ./configure
-    make
-
-    install ./src/clustalw2 $LKTOOLS_DIR/clustalw2
-
-else
-    echo "Already installed"
-fi
-
-
-#
 #muscle
 #
 

@@ -47,11 +47,20 @@ for (datasetId in names(seuratObjects)) {
   }
 
   if (scoreActivation) {
+    # Drop existing columns:
+    toDrop <- grep(names(seuratObj@meta.data), pattern = "sPLS", value = TRUE)
+    if (length(toDrop) > 0) {
+      print(paste0('Dropping pre-existing columns: ', paste0(toDrop, collapse = ', ')))
+      for (colName in toDrop) {
+        seuratObj[[toDrop]] <- NULL
+      }
+    }
+
     seuratObj <- RIRA::PredictTcellActivation(seuratObj)
   }
 
   if (recalculateUCells) {
-    seuratObj <- RIRA::CalculateUCellScores(seuratObj, storeRanks = FALSE, assayName = 'RNA', forceRecalculate = TRUE, ncores = nCores)
+    seuratObj <- RIRA::CalculateUCellScores(seuratObj, storeRanks = FALSE, assayName = 'RNA', forceRecalculate = TRUE, ncores = nCores, dropAllExistingUcells = TRUE)
   }
 
   saveData(seuratObj, datasetId)

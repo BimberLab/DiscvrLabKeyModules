@@ -318,14 +318,19 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
             throw new PipelineJobException(e);
         }
 
+        Integer maxThreads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
+        if (seuratThreads == null && maxThreads != null)
+        {
+            seuratThreads = maxThreads;
+        }
+        else if (seuratThreads != null && maxThreads != null && maxThreads < seuratThreads)
+        {
+            ctx.getLogger().debug("Lowering SEURAT_MAX_THREADS based on the job settings, to: " + maxThreads);
+            seuratThreads = maxThreads;
+        }
+
         if (seuratThreads != null)
         {
-            Integer maxThreads = SequencePipelineService.get().getMaxThreads(ctx.getLogger());
-            if (maxThreads != null && maxThreads < seuratThreads)
-            {
-                seuratThreads = maxThreads;
-            }
-
             wrapper.addToDockerEnvironment("SEURAT_MAX_THREADS", seuratThreads.toString());
         }
 

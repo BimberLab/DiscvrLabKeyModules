@@ -48,6 +48,7 @@ import org.labkey.api.singlecell.model.CDNA_Library;
 import org.labkey.api.singlecell.model.Sample;
 import org.labkey.api.singlecell.model.Sort;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.run.CellRangerFeatureBarcodeHandler;
@@ -518,12 +519,12 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public File getValidCiteSeqBarcodeFile(File sourceDir, long gexReadsetId)
     {
-        return new File(sourceDir, "validADTS." + gexReadsetId + ".csv");
+        return FileUtil.appendName(sourceDir, "validADTS." + gexReadsetId + ".csv");
     }
 
     public File getValidCiteSeqBarcodeMetadataFile(File sourceDir, long gexReadsetId)
     {
-        return new File(sourceDir, "validADTS." + gexReadsetId + ".metadata.txt");
+        return FileUtil.appendName(sourceDir, "validADTS." + gexReadsetId + ".metadata.txt");
     }
 
     private void writeCiteSeqBarcodes(PipelineJob job, Map<Long, Set<String>> gexToPanels, File outputDir) throws PipelineJobException
@@ -585,7 +586,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public File getValidHashingBarcodeFile(File sourceDir)
     {
-        return new File(sourceDir, "validHashingBarcodes.csv");
+        return FileUtil.appendName(sourceDir, "validHashingBarcodes.csv");
     }
 
     @Override
@@ -597,7 +598,7 @@ public class CellHashingServiceImpl extends CellHashingService
         }
 
         parameters.validate(true);
-        Map<Long, Long> readsetToHashing = getCachedHashingReadsetMap(ctx.getSequenceSupport());
+        Map<Long, Integer> readsetToHashing = getCachedHashingReadsetMap(ctx.getSequenceSupport());
         if (readsetToHashing.isEmpty())
         {
             ctx.getLogger().info("No cached " + parameters.type.name() + " readsets, skipping");
@@ -621,7 +622,7 @@ public class CellHashingServiceImpl extends CellHashingService
         ctx.getLogger().debug("total cached readset/" + parameters.type.name() + " readset pairs: " + readsetToHashing.size());
         ctx.getLogger().debug("unique indexes: " + lineCount);
 
-        Readset htoReadset = ctx.getSequenceSupport().getCachedReadset(readsetToHashing.get(parentReadset.getReadsetId()));
+        Readset htoReadset = ctx.getSequenceSupport().getCachedReadset((long)readsetToHashing.get(parentReadset.getReadsetId()));
         if (htoReadset == null)
         {
             throw new PipelineJobException("Unable to find HTO readset for readset: " + parentReadset.getRowId());
@@ -723,15 +724,15 @@ public class CellHashingServiceImpl extends CellHashingService
         return callsFile;
     }
 
-    private Map<Long, Long> getCachedCiteSeqReadsetMap(SequenceAnalysisJobSupport support) throws PipelineJobException
+    private Map<Long, Integer> getCachedCiteSeqReadsetMap(SequenceAnalysisJobSupport support) throws PipelineJobException
     {
-        return support.getCachedObject(READSET_TO_CITESEQ_MAP, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, Integer.class));
+        return support.getCachedObject(READSET_TO_CITESEQ_MAP, LongHashMap.class);
     }
 
     @Override
     public boolean usesCellHashing(SequenceAnalysisJobSupport support, File sourceDir) throws PipelineJobException
     {
-        Map<Long, Long> gexToHashingMap = getCachedHashingReadsetMap(support);
+        Map<Long, Integer> gexToHashingMap = getCachedHashingReadsetMap(support);
         if (gexToHashingMap == null || gexToHashingMap.isEmpty())
             return false;
 
@@ -747,7 +748,7 @@ public class CellHashingServiceImpl extends CellHashingService
     @Override
     public boolean usesCiteSeq(SequenceAnalysisJobSupport support, List<SequenceOutputFile> inputFiles) throws PipelineJobException
     {
-        Map<Long, Long> gexToCiteMap = getCachedCiteSeqReadsetMap(support);
+        Map<Long, Integer> gexToCiteMap = getCachedCiteSeqReadsetMap(support);
         if (gexToCiteMap == null || gexToCiteMap.isEmpty())
             return false;
 
@@ -784,7 +785,7 @@ public class CellHashingServiceImpl extends CellHashingService
             throw new PipelineJobException("Unable to find loupe file: " + loupe.getPath());
         }
 
-        File h5 = new File(loupe.getParentFile(), "raw_feature_bc_matrix.h5");
+        File h5 = FileUtil.appendName(loupe.getParentFile(), "raw_feature_bc_matrix.h5");
         if (!h5.exists())
         {
             throw new PipelineJobException("Unable to find h5 file: " + h5.getPath());
@@ -796,12 +797,12 @@ public class CellHashingServiceImpl extends CellHashingService
     @Override
     public File getCDNAInfoFile(File sourceDir)
     {
-        return new File(sourceDir, "cDNAInfo.txt");
+        return FileUtil.appendName(sourceDir, "cDNAInfo.txt");
     }
     
-    public Map<Long, Long> getCachedHashingReadsetMap(SequenceAnalysisJobSupport support) throws PipelineJobException
+    public Map<Long, Integer> getCachedHashingReadsetMap(SequenceAnalysisJobSupport support) throws PipelineJobException
     {
-        return support.getCachedObject(READSET_TO_HASHING_MAP, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(Map.class, Integer.class, Integer.class));
+        return support.getCachedObject(READSET_TO_HASHING_MAP, LongHashMap.class);
     }
 
     public File getCachedReadsetToCountMatrix(SequenceAnalysisJobSupport support, long readsetId, CellHashingService.BARCODE_TYPE type) throws PipelineJobException
@@ -1033,7 +1034,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public File getAllHashingBarcodesFile(File webserverDir)
     {
-        return new File(webserverDir, BARCODE_TYPE.hashing.getAllBarcodeFileName());
+        return FileUtil.appendName(webserverDir, BARCODE_TYPE.hashing.getAllBarcodeFileName());
     }
 
     private void writeAllHashingBarcodes(Collection<String> groupNames, User u, Container c, File webserverDir) throws PipelineJobException
@@ -1154,12 +1155,12 @@ public class CellHashingServiceImpl extends CellHashingService
 
     private File getExpectedCallsFile(File outputDir, String basename)
     {
-        return new File(outputDir, basename + CALL_EXTENSION);
+        return FileUtil.appendName(outputDir, basename + CALL_EXTENSION);
     }
 
     private File getMolInfoFileFromCounts(File citeSeqCountOutDir)
     {
-        return new File(citeSeqCountOutDir.getParentFile(), "molecule_info.h5");
+        return FileUtil.appendName(citeSeqCountOutDir.getParentFile(), "molecule_info.h5");
     }
 
     public File generateCellHashingCalls(File citeSeqCountOutDir, File outputDir, String basename, Logger log, File localPipelineDir, CellHashingService.CellHashingParameters parameters, PipelineContext ctx) throws PipelineJobException
@@ -1195,11 +1196,11 @@ public class CellHashingServiceImpl extends CellHashingService
         File cellBarcodeWhitelistFile = parameters.cellBarcodeWhitelistFile;
         inputFiles.add(cellBarcodeWhitelistFile);
 
-        File htmlFile = new File(outputDir, basename + ".html");
-        File localHtml = new File(localPipelineDir, htmlFile.getName());
+        File htmlFile = FileUtil.appendName(outputDir, basename + ".html");
+        File localHtml = FileUtil.appendName(localPipelineDir, htmlFile.getName());
 
-        File countFile = new File(outputDir, basename + ".rawCounts.rds");
-        File localCounts = new File(localPipelineDir, countFile.getName());
+        File countFile = FileUtil.appendName(outputDir, basename + ".rawCounts.rds");
+        File localCounts = FileUtil.appendName(localPipelineDir, countFile.getName());
 
         // Note: if this job fails and then is resumed, having that pre-existing copy of the HTML can pose a problem
         if (localHtml.exists())
@@ -1219,7 +1220,7 @@ public class CellHashingServiceImpl extends CellHashingService
             metricsFile.delete();
         }
 
-        File localRScript = new File(outputDir, "generateCallsWrapper.R");
+        File localRScript = FileUtil.appendName(outputDir, "generateCallsWrapper.R");
         try (PrintWriter writer = PrintWriters.getPrintWriter(localRScript))
         {
             String cellbarcodeWhitelist = cellBarcodeWhitelistFile != null ? "'" + cellBarcodeWhitelistFile.getPath() + "'" : "NULL";
@@ -1369,13 +1370,13 @@ public class CellHashingServiceImpl extends CellHashingService
     @Override
     public File getExistingFeatureBarcodeCountDir(Readset parentReadset, BARCODE_TYPE type, SequenceAnalysisJobSupport support) throws PipelineJobException
     {
-        Long childId = type == BARCODE_TYPE.hashing ? getCachedHashingReadsetMap(support).get(parentReadset.getReadsetId()) : getCachedCiteSeqReadsetMap(support).get(parentReadset.getReadsetId());
+        Integer childId = type == BARCODE_TYPE.hashing ? getCachedHashingReadsetMap(support).get(parentReadset.getReadsetId()) : getCachedCiteSeqReadsetMap(support).get(parentReadset.getReadsetId());
         if (childId == null)
         {
             throw new PipelineJobException("Unable to find cached readset of type " + type.name() + " for parent: " + parentReadset.getReadsetId());
         }
 
-        File ret = getCachedReadsetToCountMatrix(support, childId, type);
+        File ret = getCachedReadsetToCountMatrix(support, (long)childId, type);
         if (ret == null)
         {
             throw new PipelineJobException("Unable to find cached count matrix of type " + type.name() + " for parent: " + parentReadset.getReadsetId());
@@ -1394,7 +1395,7 @@ public class CellHashingServiceImpl extends CellHashingService
                 if (f.getName().endsWith(".hashing.html"))
                 {
                     ctx.getLogger().info("Copying hashing HTML locally for debugging: " + f.getName());
-                    File target = new File(ctx.getSourceDirectory(), f.getName());
+                    File target = FileUtil.appendName(ctx.getSourceDirectory(), f.getName());
                     if (target.exists())
                     {
                         target.delete();
@@ -1420,7 +1421,7 @@ public class CellHashingServiceImpl extends CellHashingService
     @Override
     public Set<String> getHtosForParentReadset(Long parentReadsetId, File webserverJobDir, SequenceAnalysisJobSupport support, boolean throwIfNotFound) throws PipelineJobException
     {
-        Long htoReadset = getCachedHashingReadsetMap(support).get(parentReadsetId);
+        Integer htoReadset = getCachedHashingReadsetMap(support).get(parentReadsetId);
         if (htoReadset == null)
         {
             if (throwIfNotFound)
@@ -1433,7 +1434,7 @@ public class CellHashingServiceImpl extends CellHashingService
             }
         }
 
-        return getHtosForReadset(htoReadset, webserverJobDir);
+        return getHtosForReadset((long)htoReadset, webserverJobDir);
     }
 
     public Set<String> getHtosForReadset(Long hashingReadsetId, File webserverJobDir) throws PipelineJobException
@@ -1461,7 +1462,7 @@ public class CellHashingServiceImpl extends CellHashingService
     public File subsetBarcodes(File allCellBarcodes, @Nullable String barcodePrefix) throws PipelineJobException
     {
         //Subset barcodes by dataset:
-        File output = new File(allCellBarcodes.getParentFile(), "cellBarcodeWhitelist." + (barcodePrefix == null ? "all" : barcodePrefix ) + ".txt");
+        File output = FileUtil.appendName(allCellBarcodes.getParentFile(), "cellBarcodeWhitelist." + (barcodePrefix == null ? "all" : barcodePrefix ) + ".txt");
         try (CSVReader reader = new CSVReader(Readers.getReader(allCellBarcodes), '\t'); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(output), '\t', CSVWriter.NO_QUOTE_CHARACTER))
         {
             String[] line;
@@ -1490,7 +1491,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public File getCellBarcodesFromSeurat(File seuratObj, boolean throwIfNotFound)
     {
-        File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds$", "cellBarcodes.csv"));
+        File barcodes = FileUtil.appendName(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds$", "cellBarcodes.csv"));
         if (throwIfNotFound && !barcodes.exists())
         {
             throw new IllegalArgumentException("Unable to find expected cell barcodes file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());
@@ -1506,7 +1507,7 @@ public class CellHashingServiceImpl extends CellHashingService
 
     public File getMetaTableFromSeurat(File seuratObj, boolean throwIfNotFound)
     {
-        File barcodes = new File(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds$", "seurat.meta.txt.gz"));
+        File barcodes = FileUtil.appendName(seuratObj.getParentFile(), seuratObj.getName().replaceAll("seurat.rds$", "seurat.meta.txt.gz"));
         if (throwIfNotFound && !barcodes.exists())
         {
             throw new IllegalArgumentException("Unable to find expected metadata file.  This might indicate the seurat object was created with an older version of the pipeline.  Expected: " + barcodes.getPath());
