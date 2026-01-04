@@ -292,14 +292,14 @@ public class SingleCellController extends SpringActionController
                     throw bve;
                 }
 
-                Map<String, Integer> readsetMap = new HashMap<>();
+                Map<String, Long> readsetMap = new HashMap<>();
                 readsetRows.forEach(r -> {
                     if (r.get("objectId") == null)
                     {
                         throw new ApiUsageException("Missing objectId for readset row");
                     }
 
-                    readsetMap.put((String)r.get("objectId"), (Integer)r.get("rowId"));
+                    readsetMap.put((String)r.get("objectId"), (Long)r.get("rowId"));
                 });
 
                 cDNARows.forEach(r -> {
