@@ -153,7 +153,7 @@ public class SingleCellController extends SpringActionController
                         }
                         catch (Exception e)
                         {
-                            _log.error(e);
+                            _log.error(e.getMessage(), e);
                             errors.reject(ERROR_MSG, e.getMessage());
                             break;
                         }
@@ -323,7 +323,7 @@ public class SingleCellController extends SpringActionController
             }
             catch (Exception e)
             {
-                _log.error(e);
+                _log.error(e.getMessage(), e);
 
                 errors.reject(ERROR_MSG, e.getMessage());
                 return null;
