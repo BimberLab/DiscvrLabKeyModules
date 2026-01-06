@@ -228,7 +228,7 @@ public class SingleCellController extends SpringActionController
 
                     if (r.get("rowId") != null && StringUtils.trimToNull(r.get("rowId").toString()) != null)
                     {
-                        sampleMap.put((String) r.get("objectId"), (Integer) r.get("rowId"));
+                        sampleMap.put((String) r.get("objectId"), Integer.parseInt(r.get("rowId").toString()));
                     }
                     else
                     {
@@ -249,7 +249,7 @@ public class SingleCellController extends SpringActionController
                         throw new ApiUsageException("Missing rowId for inserted sample row");
                     }
 
-                    sampleMap.put((String) r.get("objectId"), (Integer) r.get("rowId"));
+                    sampleMap.put((String) r.get("objectId"), Integer.parseInt(r.get("rowId").toString()));
                 });
 
                 Map<String, Integer> sortMap = new HashMap<>();
@@ -262,7 +262,7 @@ public class SingleCellController extends SpringActionController
 
                     if (r.get("rowId") != null && StringUtils.trimToNull(r.get("rowId").toString()) != null)
                     {
-                        sortMap.put((String) r.get("objectId"), (Integer) r.get("rowId"));
+                        sortMap.put((String) r.get("objectId"), Integer.parseInt(r.get("rowId").toString()));
                     }
                     else
                     {
@@ -283,7 +283,7 @@ public class SingleCellController extends SpringActionController
                         throw new ApiUsageException("Missing objectId for sort row");
                     }
 
-                    sortMap.put((String) r.get("objectId"), (Integer) r.get("rowId"));
+                    sortMap.put((String) r.get("objectId"), Integer.parseInt(r.get("rowId").toString()));
                 });
 
                 readsetRows = sequenceAnalysis.getTable("sequence_readsets", null).getUpdateService().insertRows(getUser(), getContainer(), readsetRows, bve, null, new HashMap<>());
