@@ -31,9 +31,9 @@ WITH AUTO_DROP = OFF
 CREATE STATISTICS STAT_sequence_readsets_rowid_container ON sequenceanalysis.sequence_readsets (RowId, Container)
 WITH AUTO_DROP = OFF
 
-CREATE STATISTICS STAT_asj_alignmentid_container_ref_nt_id ON sequenceanalysis.alignment_summary_junction(alignment_id, container, ref_nt_id)
+CREATE STATISTICS STAT_asj_alignmentid_container_ref_nt_id ON sequenceanalysis.alignment_summary_junction (alignment_id, container, ref_nt_id)
 WITH AUTO_DROP = OFF
               
-CREATE STATISTICS STAT_asj_alignmentid_ref_nt_id_status_alignment_id ON sequenceanalysis.alignment_summary_junction(ref_nt_id, status, alignment_id)
+CREATE STATISTICS STAT_asj_alignmentid_ref_nt_id_status_alignment_id ON sequenceanalysis.alignment_summary_junction (ref_nt_id, status, alignment_id)
 WITH AUTO_DROP = OFF
 
