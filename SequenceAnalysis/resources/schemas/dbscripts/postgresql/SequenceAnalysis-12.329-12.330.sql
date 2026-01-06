@@ -10,10 +10,3 @@ CREATE INDEX IDX_haplotype_sequences_name_haplotype_type ON sequenceanalysis.hap
 	name ASC,
 	type ASC
 );
-
-CREATE INDEX IDX_alignment_summary_analysis_id_rowid_container ON sequenceanalysis.alignment_summary
-(
-	analysis_id ASC,
-	rowid ASC,
-	container ASC
-)

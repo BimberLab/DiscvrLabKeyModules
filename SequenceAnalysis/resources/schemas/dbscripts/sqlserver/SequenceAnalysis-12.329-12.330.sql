@@ -11,7 +11,7 @@ CREATE NONCLUSTERED INDEX IDX_haplotype_sequences_name_haplotype_type ON sequenc
 	type ASC
 );
 
-CREATE NONCLUSTERED INDEX IDX_alignment_summary_analysis_id_rowid_container ON sequenceanalysis.alignment_summary
+CREATE NONCLUSTERED INDEX IDX_alignment_summary_analysis_id_rowid_container_total ON sequenceanalysis.alignment_summary
 (
 	analysis_id ASC,
 	rowid ASC,
