@@ -1191,7 +1191,7 @@ public class SequenceAnalysisController extends SpringActionController
             {
                 ExceptionUtil.logExceptionToMothership(getViewContext().getRequest(), e);
                 errors.reject(ERROR_MSG, e.getMessage());
-                _log.error(e);
+                _log.error(e.getMessage(), e);
                 return null;
             }
             return new ApiSimpleResponse(resultProperties);
@@ -4821,7 +4821,7 @@ public class SequenceAnalysisController extends SpringActionController
                 catch (IOException e)
                 {
                     errors.reject(ERROR_MSG, e.getMessage());
-                    _log.error(e);
+                    _log.error(e.getMessage(), e);
 
                     return null;
                 }
@@ -4837,7 +4837,7 @@ public class SequenceAnalysisController extends SpringActionController
             catch (PipelineValidationException e)
             {
                 errors.reject(ERROR_MSG, e.getMessage());
-                _log.error(e);
+                _log.error(e.getMessage(), e);
 
                 return null;
             }
