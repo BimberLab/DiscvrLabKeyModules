@@ -10,6 +10,11 @@ for (datasetId in names(seuratObjects)) {
     }
   }
 
+  if (! 'TRB_Segments' %in% names(seuratObj@meta.data)) {
+    print('Re-running AppendTcr to add segment columns')
+    seuratObj <- Rdiscvr::DownloadAndAppendTcrClonotypes(seuratObj, allowMissing = TRUE)
+  }
+
   seuratObj <- RIRA::PredictTcellActivation(seuratObj)
 
   saveData(seuratObj, datasetId)
