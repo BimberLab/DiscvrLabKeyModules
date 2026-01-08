@@ -2,4 +2,11 @@
     <clientDependencies>
         <dependency path="LDK.context"/>
     </clientDependencies>
+    <properties>
+        <propertyDescriptor name="demographicsDefaultView">
+            <description>This view is used as the default on the demographics table</description>
+            <canSetPerContainer>true</canSetPerContainer>
+            <label>Demographics Default View</label>
+        </propertyDescriptor>
+    </properties>
 </module>
