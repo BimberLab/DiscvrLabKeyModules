@@ -26,6 +26,25 @@ function getResolvedCoreVersion() {
   throw new Error('Could not determine resolved @jbrowse/core version (no lockfile entry and no node_modules).');
 }
 
+function semverLt(a, b) {
+  const pa = String(a).match(/(\d+)\.(\d+)\.(\d+)/);
+  const pb = String(b).match(/(\d+)\.(\d+)\.(\d+)/);
+  if (!pa || !pb) return false;
+  for (let i = 1; i <= 3; i++) {
+    const da = Number(pa[i]);
+    const db = Number(pb[i]);
+    if (da !== db) return da < db;
+  }
+  return false;
+}
+
+function floorVersion(spec, min) {
+  const m = String(spec).match(/^(\^|~|>=)?\s*(\d+\.\d+\.\d+)(.*)$/);
+  if (!m) return spec;
+  const [, op = '', v, rest = ''] = m;
+  return semverLt(v, min) ? `${op}${min}${rest}` : spec;
+}
+
 async function extractTgz(tgzPath, cwd) {
   try {
     const mod = await import('tar').catch(() => null);
@@ -61,7 +80,7 @@ async function main() {
   mkdirSync(OUTDIR, { recursive: true });
 
   const coreVersion = getResolvedCoreVersion();
-  const cliSpec = process.env.JBROWSE_CLI_VERSION || coreVersion;
+  const cliSpec = floorVersion(process.env.JBROWSE_CLI_VERSION || coreVersion, '3.6.0');
 
   console.log(`Packing @jbrowse/cli@${cliSpec} (core resolved: ${coreVersion})…`);
   const out = execSync(`npm pack @jbrowse/cli@${cliSpec}`, {
