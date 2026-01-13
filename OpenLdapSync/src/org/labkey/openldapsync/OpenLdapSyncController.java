@@ -125,7 +125,7 @@ public class OpenLdapSyncController extends SpringActionController
             }
             catch (LdapException e)
             {
-                _log.error(e);
+                _log.error(e.getMessage(), e);
                 errors.reject(ERROR_MSG, e.getMessage());
                 return null;
             }
@@ -528,7 +528,7 @@ public class OpenLdapSyncController extends SpringActionController
             }
             catch (Exception e)
             {
-                _log.error(e);
+                _log.error(e.getMessage(), e);
                 errors.reject(ERROR_MSG, e.getMessage() == null ? "unable to connect to LDAP server" : e.getMessage());
                 return null;
             }

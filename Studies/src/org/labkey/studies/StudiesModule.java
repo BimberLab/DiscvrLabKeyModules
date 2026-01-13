@@ -2,6 +2,7 @@ package org.labkey.studies;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.laboratory.LaboratoryService;
 import org.labkey.api.ldk.ExtendedSimpleModule;
@@ -11,9 +12,9 @@ import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.studies.StudiesService;
-import org.labkey.api.util.PageFlowUtil;
-import org.labkey.studies.query.StudiesUserSchema;
 import org.labkey.api.studies.security.StudiesDataAdminRole;
+import org.labkey.api.writer.ContainerUser;
+import org.labkey.studies.query.StudiesUserSchema;
 import org.labkey.studies.study.StudiesFilterProvider;
 import org.labkey.studies.study.StudyEnrollmentEventProvider;
 
@@ -66,6 +67,16 @@ public class StudiesModule extends ExtendedSimpleModule
     public Set<String> getSchemaNames()
     {
         return Collections.singleton(StudiesSchema.NAME);
+    }
+
+    @Override
+    public JSONObject getPageContextJson(ContainerUser context)
+    {
+        JSONObject json = super.getPageContextJson(context);
+
+        json.put("hasAssignmentDataset", StudiesServiceImpl.get().hasAssignmentDataset(context.getContainer()));
+
+        return json;
     }
 
     @Override

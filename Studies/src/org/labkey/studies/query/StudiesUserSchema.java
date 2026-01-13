@@ -179,8 +179,16 @@ public class StudiesUserSchema extends SimpleUserSchema
         col2.setLabel("Cohort Name");
         col2.setHidden(true);
         col2.setDescription("This column lists the cohort label, and the name if label is blank");
-
         ret.addColumn(col2);
+
+        SQLFragment coalesce = new SQLFragment("coalesce(" + ExprColumn.STR_TABLE_ALIAS + ".label, " + ExprColumn.STR_TABLE_ALIAS + ".cohortName)");
+        SQLFragment select = new SQLFragment("(SELECT studyName FROM " + StudiesSchema.NAME).append(".").append(TABLE_STUDIES).append(" s WHERE s.rowId = ").append(ExprColumn.STR_TABLE_ALIAS).append(".studyId)");
+        SQLFragment sql3 = ret.getSqlDialect().concatenate(select, new SQLFragment("': '"), coalesce);
+        ExprColumn col3 = new ExprColumn(ret, "studyAndCohort", sql3, JdbcType.VARCHAR, ret.getColumn("cohortName"), ret.getColumn("label"), ret.getColumn("rowId"));
+        col3.setLabel("Study/Cohort");
+        col3.setHidden(true);
+        col3.setDescription("This column lists the study ID and cohort label");
+        ret.addColumn(col3);
 
         return ret;
     }
