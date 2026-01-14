@@ -21,6 +21,8 @@ import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.studies.StudiesService;
 import org.labkey.api.studies.study.EventProvider;
+import org.labkey.api.study.Study;
+import org.labkey.api.study.StudyService;
 import org.labkey.api.util.ConfigurationException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
@@ -172,5 +174,18 @@ public class StudiesServiceImpl extends StudiesService
     public TableCustomizer getStudiesTableCustomizer()
     {
         return new StudiesTableCustomizer();
+    }
+
+    public static String ASSIGNMENT_DATASET = "assignment";
+
+    public boolean hasAssignmentDataset(Container c)
+    {
+        Study s = StudyService.get().getStudy(c.isWorkbookOrTab() ? c.getParent() : c);
+        if (s == null)
+        {
+            return false;
+        }
+
+        return s.getDatasetByName(ASSIGNMENT_DATASET) != null;
     }
 }

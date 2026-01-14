@@ -11,6 +11,11 @@ for (datasetId in names(seuratObjects)) {
   printName(datasetId)
   seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
+  if (! 'TRB_Segments' %in% names(seuratObj@meta.data)) {
+    print('Re-running AppendTcr to add segment columns')
+    seuratObj <- Rdiscvr::DownloadAndAppendTcrClonotypes(seuratObj, allowMissing = TRUE)
+  }
+
   Rdiscvr::IdentifyAndStoreActiveClonotypes(seuratObj, chain = 'TRA', storeStimLevelData = FALSE)
   Rdiscvr::IdentifyAndStoreActiveClonotypes(seuratObj, chain = 'TRB')
 

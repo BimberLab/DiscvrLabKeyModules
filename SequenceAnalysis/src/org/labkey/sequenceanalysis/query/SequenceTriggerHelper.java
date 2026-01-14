@@ -136,7 +136,7 @@ public class SequenceTriggerHelper
             }
             catch (IOException e)
             {
-                _log.error(e);
+                _log.error(e.getMessage(), e);
                 return null;
             }
         }

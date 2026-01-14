@@ -13,13 +13,14 @@
 
                 const parentDiv = $('#' + webpart.wrapperDivId)
                 parentDiv.append('<div id="' + webpart.wrapperDivId + '-studyCohorts"></div>')
+                parentDiv.append('<div id="' + webpart.wrapperDivId + '-demographics"></div>')
                 parentDiv.append('<div id="' + webpart.wrapperDivId + '-anchorEvents"></div>')
                 parentDiv.append('<div id="' + webpart.wrapperDivId + '-expectedTimepoints"></div>')
 
                 LDK.Utils.getBasicQWP({
                     frame: 'portal',
                     title: 'Cohorts',
-                    name: 'query',
+                    name: 'query-studies',
                     schemaName: 'studies',
                     queryName: 'studyCohorts',
                     filterArray: [LABKEY.Filter.create('studyId',studyId, LABKEY.Filter.Types.EQUAL)],
@@ -27,10 +28,42 @@
                     renderTo: webpart.wrapperDivId + '-studyCohorts'
                 }).render();
 
+                if (LABKEY.getModuleContext('study')?.subject) {
+                    const hasAssignmentDataset = !!LABKEY.getModuleContext('studies')?.hasAssignmentDataset
+                    if (hasAssignmentDataset) {
+                        LABKEY.Query.selectRows({
+                            schemaName: 'studies',
+                            queryName: 'studies',
+                            columns: 'rowId,studyName',
+                            filterArray: [LABKEY.Filter.create('rowId', studyId)],
+                            failure: LDK.Utils.getErrorCallback(),
+                            success: function(results) {
+                                const studyName = results.rows?.[0].studyName;
+                                LDK.Assert.assertNotEmpty('StudyName was empty in manageStudy.view', studyName);
+
+                                const projectFieldName = 'allProjectsPivot/' + studyName + '::lastStartDate';
+                                const demographicsDefaultView = LABKEY.getModuleProperty('studies', 'demographicsDefaultView')
+                                LDK.Utils.getBasicQWP({
+                                    frame: 'portal',
+                                    title: LABKEY.moduleContext.study?.subject.nounPlural,
+                                    name: 'query-demographics',
+                                    schemaName: 'study',
+                                    queryName: 'demographics',
+                                    viewName: demographicsDefaultView,
+                                    filterArray: [LABKEY.Filter.create(projectFieldName, null, LABKEY.Filter.Types.NONBLANK)],
+                                    maxRows: 20,
+                                    renderTo: webpart.wrapperDivId + '-demographics'
+                                }).render();
+                            },
+                            scope: this
+                        });
+                    }
+                }
+
                 LDK.Utils.getBasicQWP({
                     frame: 'portal',
                     title: 'Anchor Events',
-                    name: 'query',
+                    name: 'query-anchorEvents',
                     schemaName: 'studies',
                     queryName: 'anchorEvents',
                     filterArray: [LABKEY.Filter.create('studyId',studyId, LABKEY.Filter.Types.EQUAL)],
@@ -41,7 +74,7 @@
                 LDK.Utils.getBasicQWP({
                     frame: 'portal',
                     title: 'Expected Timepoints',
-                    name: 'query',
+                    name: 'query-expectedTimepoints',
                     schemaName: 'studies',
                     queryName: 'expectedTimepoints',
                     filterArray: [LABKEY.Filter.create('studyId',studyId, LABKEY.Filter.Types.EQUAL)],
@@ -54,6 +87,4 @@
 
 </script>
 
-
-PLACEHOLDER: Make a page that accepts a studyId and renders useful UI to manage timepoints, run QC, and show data
 <br><br>

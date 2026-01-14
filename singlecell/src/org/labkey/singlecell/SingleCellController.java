@@ -153,7 +153,7 @@ public class SingleCellController extends SpringActionController
                         }
                         catch (Exception e)
                         {
-                            _log.error(e);
+                            _log.error(e.getMessage(), e);
                             errors.reject(ERROR_MSG, e.getMessage());
                             break;
                         }
@@ -228,7 +228,7 @@ public class SingleCellController extends SpringActionController
 
                     if (r.get("rowId") != null && StringUtils.trimToNull(r.get("rowId").toString()) != null)
                     {
-                        sampleMap.put((String) r.get("objectId"), (Integer) r.get("rowId"));
+                        sampleMap.put((String) r.get("objectId"), Integer.parseInt(r.get("rowId").toString()));
                     }
                     else
                     {
@@ -249,7 +249,7 @@ public class SingleCellController extends SpringActionController
                         throw new ApiUsageException("Missing rowId for inserted sample row");
                     }
 
-                    sampleMap.put((String) r.get("objectId"), (Integer) r.get("rowId"));
+                    sampleMap.put((String) r.get("objectId"), Integer.parseInt(r.get("rowId").toString()));
                 });
 
                 Map<String, Integer> sortMap = new HashMap<>();
@@ -262,7 +262,7 @@ public class SingleCellController extends SpringActionController
 
                     if (r.get("rowId") != null && StringUtils.trimToNull(r.get("rowId").toString()) != null)
                     {
-                        sortMap.put((String) r.get("objectId"), (Integer) r.get("rowId"));
+                        sortMap.put((String) r.get("objectId"), Integer.parseInt(r.get("rowId").toString()));
                     }
                     else
                     {
@@ -283,7 +283,7 @@ public class SingleCellController extends SpringActionController
                         throw new ApiUsageException("Missing objectId for sort row");
                     }
 
-                    sortMap.put((String) r.get("objectId"), (Integer) r.get("rowId"));
+                    sortMap.put((String) r.get("objectId"), Integer.parseInt(r.get("rowId").toString()));
                 });
 
                 readsetRows = sequenceAnalysis.getTable("sequence_readsets", null).getUpdateService().insertRows(getUser(), getContainer(), readsetRows, bve, null, new HashMap<>());
@@ -292,14 +292,14 @@ public class SingleCellController extends SpringActionController
                     throw bve;
                 }
 
-                Map<String, Integer> readsetMap = new HashMap<>();
+                Map<String, Long> readsetMap = new HashMap<>();
                 readsetRows.forEach(r -> {
                     if (r.get("objectId") == null)
                     {
                         throw new ApiUsageException("Missing objectId for readset row");
                     }
 
-                    readsetMap.put((String)r.get("objectId"), (Integer)r.get("rowId"));
+                    readsetMap.put((String)r.get("objectId"), (Long)r.get("rowId"));
                 });
 
                 cDNARows.forEach(r -> {
@@ -323,7 +323,7 @@ public class SingleCellController extends SpringActionController
             }
             catch (Exception e)
             {
-                _log.error(e);
+                _log.error(e.getMessage(), e);
 
                 errors.reject(ERROR_MSG, e.getMessage());
                 return null;
