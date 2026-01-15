@@ -1,5 +1,6 @@
 package org.labkey.api.sequenceanalysis.run;
 
+import org.apache.commons.collections4.list.UnmodifiableList;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -34,6 +35,7 @@ public class DockerWrapper extends AbstractCommandWrapper
     private boolean _useLocalContainerStorage;
     private String _alternateUserHome = null;
     private final Map<String, String> _dockerEnvironment = new HashMap<>();
+    private int _maxRetries = 3;
 
     public DockerWrapper(String containerName, Logger log, PipelineContext ctx)
     {
@@ -199,7 +201,7 @@ public class DockerWrapper extends AbstractCommandWrapper
 
         localBashScript.setExecutable(true);
         dockerBashScript.setExecutable(true);
-        execute(Arrays.asList("/bin/bash", localBashScript.getPath()));
+        executeWithRetry(Arrays.asList("/bin/bash", localBashScript.getPath()));
 
         if (_useLocalContainerStorage)
         {
@@ -210,6 +212,54 @@ public class DockerWrapper extends AbstractCommandWrapper
             catch (IOException e)
             {
                 throw new PipelineJobException(e);
+            }
+        }
+    }
+
+    public int getMaxRetries()
+    {
+        return _maxRetries;
+    }
+
+    // NOTE: when running on a shared/cluster environment with multiple containers initializing concurrently, conflicts can result in these error codes.
+    // As a convenience, build in auto-retry behavior if one of these occurs
+    private final List<Integer> ALLOWABLE_FAIL_CODES = new UnmodifiableList<>(Arrays.asList(125, 127));
+
+    private void executeWithRetry(final List<String> args) throws PipelineJobException
+    {
+        int retries = 0;
+        while (retries <= getMaxRetries())
+        {
+            try
+            {
+                execute(args);
+                break;
+            }
+            catch (PipelineJobException e)
+            {
+                if (ALLOWABLE_FAIL_CODES.contains(getLastReturnCode()))
+                {
+                    retries++;
+                    if (retries > getMaxRetries())
+                    {
+                        getLogger().info("Maximum retries exceeded");
+                        throw e;
+                    }
+
+                    getLogger().info("Exit code " + getLastReturnCode() + ", retrying after 1 sec (" + retries + " of " + getMaxRetries()+ ")");
+                    try
+                    {
+                        Thread.sleep(1000);
+                    }
+                    catch (InterruptedException ex)
+                    {
+                        throw new PipelineJobException(ex);
+                    }
+                }
+                else
+                {
+                    throw e;
+                }
             }
         }
     }
