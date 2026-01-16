@@ -1,6 +1,5 @@
 package org.labkey.studies.query;
 
-import com.google.gwt.user.client.ui.TabBar;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.collections.CaseInsensitiveTreeSet;
@@ -9,6 +8,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.JdbcType;
+import org.labkey.api.data.MutableColumnInfo;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SchemaTableInfo;
 import org.labkey.api.data.SimpleFilter;
@@ -22,6 +22,7 @@ import org.labkey.api.query.QueryDefinition;
 import org.labkey.api.query.QueryException;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.SimpleUserSchema;
+import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.InsertPermission;
@@ -29,13 +30,16 @@ import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.studies.StudiesService;
 import org.labkey.api.studies.security.StudiesDataAdminPermission;
+import org.labkey.api.study.StudyService;
 import org.labkey.api.util.logging.LogHelper;
 import org.labkey.studies.StudiesSchema;
+import org.labkey.studies.StudiesServiceImpl;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static org.labkey.studies.StudiesSchema.TABLE_ANCHOR_EVENTS;
@@ -50,6 +54,7 @@ public class StudiesUserSchema extends SimpleUserSchema
 {
     private static final Logger _log = LogHelper.getLogger(StudiesUserSchema.class, "Messages related to Studies Service");
     private static final String TABLE_EVENT_TYPES = "studyEventTypes";
+    public static final String TABLE_ASSIGNMENT_BY_STUDY = "assignmentByStudy";
 
     public StudiesUserSchema(User user, Container container, DbSchema dbschema)
     {
@@ -62,6 +67,11 @@ public class StudiesUserSchema extends SimpleUserSchema
         Set<String> available = new CaseInsensitiveTreeSet(super.getTableNames());
         available.add(TABLE_EVENT_TYPES);
         available.addAll(getPropertySetNames().keySet());
+
+        if (StudiesServiceImpl.get().hasAssignmentDataset(getContainer()))
+        {
+            available.add(TABLE_ASSIGNMENT_BY_STUDY);
+        }
 
         return Collections.unmodifiableSet(available);
     }
@@ -160,6 +170,10 @@ public class StudiesUserSchema extends SimpleUserSchema
         {
             return createEventTypesTable(getContainer());
         }
+        else if (TABLE_ASSIGNMENT_BY_STUDY.equalsIgnoreCase(name))
+        {
+            return createAssignmentByStudyTable(getContainer());
+        }
 
         //try to find it in propertySets
         Map<String, Map<String, Object>> nameMap = getPropertySetNames();
@@ -241,6 +255,76 @@ public class StudiesUserSchema extends SimpleUserSchema
         return ret.init();
     }
 
+    private TableInfo createAssignmentByStudyTable(Container c)
+    {
+        if (!StudiesServiceImpl.get().hasAssignmentDataset(c))
+        {
+            return null;
+        }
+
+        final String subjectSelectName = Objects.requireNonNull(StudyService.get()).getSubjectColumnName(getTargetContainer());
+        QueryDefinition qd = createQueryDef(TABLE_ASSIGNMENT_BY_STUDY);
+        qd.setSql(getAssignmentPivotSql(subjectSelectName));
+
+        List<QueryException> errors = new ArrayList<>();
+        TableInfo ti = qd.getTable(errors, true);
+        if (!errors.isEmpty()){
+            _log.error("Problem creating: " + TABLE_ASSIGNMENT_BY_STUDY);
+            for (QueryException e : errors)
+            {
+                _log.error(e.getMessage(), e);
+            }
+        }
+
+        if (ti != null)
+        {
+            MutableColumnInfo col = (MutableColumnInfo) ti.getColumn(subjectSelectName);
+            col.setKeyField(true);
+            col.setHidden(true);
+
+            ((MutableColumnInfo)ti.getColumn("lastStartDate")).setLabel("Most Recent Assignment Date");
+            if (ti instanceof AbstractTableInfo ati)
+            {
+                ati.setTitle("Assignment By Study");
+            }
+        }
+
+        return ti;
+    }
+
+    private String getAssignmentPivotSql(final String subjectSelectName)
+    {
+        return "SELECT\n" +
+                "p." + subjectSelectName + ",\n" +
+                "p.study,\n" +
+                "max(p.date) as lastStartDate\n" +
+                "FROM \"" + getTargetContainer().getPath() + "\".study.assignment p\n" +
+                "GROUP BY p." + subjectSelectName + ", p.study\n" +
+                "PIVOT lastStartDate by study IN (select distinct studyName from studies.studies)";
+    }
+
+    private QueryDefinition createQueryDef(String queryName)
+    {
+        if (!getContainer().isWorkbook())
+        {
+            return QueryService.get().createQueryDef(getUser(), getContainer(), this, queryName);
+        }
+
+        // The rationale is that if we are querying from a workbook, preferentially translate to the parent US
+        // However, there are situations like workbook-scoped lists, where that query might not exist on the parent
+        UserSchema parentUserSchema = QueryService.get().getUserSchema(getUser(), getContainer().getParent(), getSchemaPath());
+        assert parentUserSchema != null;
+
+        if (parentUserSchema.getTableNames().contains(queryName))
+        {
+            return QueryService.get().createQueryDef(parentUserSchema.getUser(), parentUserSchema.getContainer(), parentUserSchema, queryName);
+        }
+        else
+        {
+            return QueryService.get().createQueryDef(getUser(), getContainer(), this, queryName);
+        }
+    }
+
     private TableInfo createEventTypesTable(Container container)
     {
         StringBuilder sql = new StringBuilder("SELECT * FROM (");
@@ -283,4 +367,6 @@ public class StudiesUserSchema extends SimpleUserSchema
 
         return ti;
     }
+
+
 }
