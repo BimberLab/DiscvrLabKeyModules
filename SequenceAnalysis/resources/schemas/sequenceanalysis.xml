@@ -523,9 +523,8 @@
                     <onClick>SequenceAnalysis.window.RunExportWindow.downloadFilesForAnalysis(dataRegionName);</onClick>
                 </item>
                 <item text="Alignment Reports">
-<!--                    TODO: use analysisId-->
                     <item text="Matching Haplotypes">
-                        <onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'haplotypeMatches'})</onClick>
+                        <onClick>SequenceAnalysis.Buttons.viewMatchingHaplotypes(dataRegionName)</onClick>
                     </item>
                     <item text="View Coverage">
                         <onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'sequence_coverage'})</onClick>
