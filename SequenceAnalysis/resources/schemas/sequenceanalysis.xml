@@ -523,17 +523,8 @@
                     <onClick>SequenceAnalysis.window.RunExportWindow.downloadFilesForAnalysis(dataRegionName);</onClick>
                 </item>
                 <item text="Alignment Reports">
-                    <item text="Alignment Summary">
-                        <onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'alignment_summary_grouped'})</onClick>
-                    </item>
-                    <item text="Alignment Summary, By Lineage">
-                        <onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'alignment_summary_by_lineage'})</onClick>
-                    </item>
-                    <item text="Alignment Summary, Pivoted By Lineage">
-                        <onClick>SequenceAnalysis.Buttons.viewAlignmentsPivoted(dataRegionName)</onClick>
-                    </item>
                     <item text="Matching Haplotypes">
-                        <onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'haplotypeMatches'})</onClick>
+                        <onClick>SequenceAnalysis.Buttons.viewMatchingHaplotypes(dataRegionName)</onClick>
                     </item>
                     <item text="View Coverage">
                         <onClick>SequenceAnalysis.Buttons.viewQuery(dataRegionName, {queryName: 'sequence_coverage'})</onClick>

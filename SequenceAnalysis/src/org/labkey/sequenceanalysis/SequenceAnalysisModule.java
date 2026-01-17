@@ -57,7 +57,6 @@ import org.labkey.sequenceanalysis.analysis.PicardAlignmentMetricsHandler;
 import org.labkey.sequenceanalysis.analysis.PrintReadBackedHaplotypesHandler;
 import org.labkey.sequenceanalysis.analysis.RecalculateSequenceMetricsHandler;
 import org.labkey.sequenceanalysis.analysis.RnaSeqcHandler;
-import org.labkey.sequenceanalysis.analysis.SbtGeneCountHandler;
 import org.labkey.sequenceanalysis.analysis.UnmappedSequenceBasedGenotypeHandler;
 import org.labkey.sequenceanalysis.analysis.UpdateReadsetFilesHandler;
 import org.labkey.sequenceanalysis.button.AddSraRunButton;
@@ -189,7 +188,6 @@ import org.labkey.sequenceanalysis.util.ScatterGatherUtils;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
@@ -389,7 +387,6 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequenceAnalysisService.get().registerFileHandler(new RnaSeqcHandler());
         SequenceAnalysisService.get().registerFileHandler(new CombineStarGeneCountsHandler());
         SequenceAnalysisService.get().registerFileHandler(new CombineSubreadGeneCountsHandler());
-        SequenceAnalysisService.get().registerFileHandler(new SbtGeneCountHandler());
         SequenceAnalysisService.get().registerFileHandler(new ProcessVariantsHandler());
         SequenceAnalysisService.get().registerFileHandler(new UnmappedReadExportHandler());
         SequenceAnalysisService.get().registerFileHandler(new MergeVcfsAndGenotypesHandler());
