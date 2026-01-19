@@ -51,6 +51,7 @@ import org.labkey.api.util.ShutdownListener;
 import org.labkey.api.util.logging.LogHelper;
 import org.labkey.jbrowse.model.JBrowseSession;
 import org.labkey.jbrowse.model.JsonFile;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.io.File;
 import java.io.IOException;
@@ -661,7 +662,7 @@ public class JBrowseLuceneSearch
     {
         try
         {
-            HttpServletResponse response = new Response();
+            HttpServletResponse response = new MockHttpServletResponse();
             JBrowseLuceneSearch.clearCache(_jsonFile.getObjectId());
             doSearchJSON(_user, ALL_DOCS, 100, 0, GENOMIC_POSITION, false, response);
         }
