@@ -1,0 +1,5 @@
+-- This is a reversal of SequenceAnalysis-12.329-12.330.sql:
+DROP INDEX IDX_asj_status_container_alignment_id_ref_nt_id ON sequenceanalysis.alignment_summary_junction;
+DROP INDEX IDX_haplotypes_name_date ON sequenceanalysis.haplotypes;
+DROP INDEX IDX_haplotype_sequences_name_haplotype_type ON sequenceanalysis.haplotype_sequences;
+DROP INDEX IDX_alignment_summary_analysis_id_rowid_container_total ON sequenceanalysis.alignment_summary;
