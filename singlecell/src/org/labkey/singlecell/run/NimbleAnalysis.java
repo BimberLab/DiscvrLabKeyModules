@@ -56,7 +56,7 @@ public class NimbleAnalysis extends AbstractPipelineStep implements AnalysisStep
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
         NimbleHelper helper = new NimbleHelper(getPipelineCtx(), getProvider(), getStepIdx());
-        helper.doNimbleAlign(inputBam, output, rs, FileUtil.getBaseName(inputBam));
+        helper.doNimbleAlign(inputBam, output, rs, FileUtil.getBaseName(inputBam), false);
 
         return output;
     }
