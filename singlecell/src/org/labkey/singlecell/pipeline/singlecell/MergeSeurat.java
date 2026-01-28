@@ -36,7 +36,8 @@ public class MergeSeurat extends AbstractCellMembraneStep
                         put("delimiter", ",");
                         put("stripCharsRe", "/(^['\"]+)|(['\"]+$)/g");
                     }}, "RNA.orig").delimiter(","),
-                    SeuratToolParameter.create("maxAllowableInputFileSizeMb", "Max Allowable Batch Size (MB)", "The largest allowable amount of data (in MB), measured as the size of the RDS files, to be allowed in one unit of data to merge in memory.", "ldk-integerfield", null, 200, "maxAllowableInputFileSizeMb", true, false)
+                    SeuratToolParameter.create("maxAllowableInputFileSizeMb", "Max Allowable Batch Size (MB)", "The largest allowable amount of data (in MB), measured as the size of the RDS files, to be allowed in one unit of data to merge in memory.", "ldk-integerfield", null, 200, "maxAllowableInputFileSizeMb", true, false),
+                    SeuratToolParameter.create("expectedDefaultAssay", "Default Assay", "The merged objects will be expected to have this assay", "textfield", null, "RNA", null, true, false)
             ), null, null);
         }
 

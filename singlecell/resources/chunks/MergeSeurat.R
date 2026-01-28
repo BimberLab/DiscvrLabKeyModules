@@ -43,7 +43,7 @@ mergeBatchInMemory <- function(datasetIdToFilePath, saveFile) {
         stop('There were no passing seurat objects!')
     }
 
-    saveRDS(CellMembrane::MergeSeuratObjs(toMerge, projectName = projectName, doGC = doDiet, errorOnBarcodeSuffix = errorOnBarcodeSuffix), file = saveFile)
+    saveRDS(CellMembrane::MergeSeuratObjs(toMerge, projectName = projectName, doGC = doDiet, errorOnBarcodeSuffix = errorOnBarcodeSuffix), file = saveFile, expectedDefaultAssay = expectedDefaultAssay)
     filesToDelete <<- c(filesToDelete, saveFile)
 
     logger::log_info(paste0('mem used: ', R.utils::hsize(as.numeric(pryr::mem_used()))))
