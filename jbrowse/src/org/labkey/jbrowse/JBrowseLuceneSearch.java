@@ -1,7 +1,6 @@
 package org.labkey.jbrowse;
 
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.catalina.connector.Response;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.analysis.Analyzer;
@@ -68,10 +67,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
-import java.util.function.Predicate;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -486,7 +484,7 @@ public class JBrowseLuceneSearch
         public boolean shouldCache(Query query) throws IOException {
             if (query instanceof BooleanQuery bq) {
                 for (BooleanClause clause : bq) {
-                    if (clause.getQuery() instanceof MatchAllDocsQuery) {
+                    if (clause.query() instanceof MatchAllDocsQuery) {
                         return true;
                     }
                 }
