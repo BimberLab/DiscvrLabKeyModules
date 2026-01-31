@@ -179,9 +179,9 @@ public class JsonFile
 
     public File getBaseDir()
     {
-        File jbrowseDir = new File(JBrowseManager.get().getBaseDir(getContainerObj(), needsProcessing()), "resources");
+        File jbrowseDir = FileUtil.appendName(JBrowseManager.get().getBaseDir(getContainerObj(), needsProcessing()), "resources");
 
-        return needsProcessing() ? new File(jbrowseDir, getObjectId()) : null;
+        return needsProcessing() ? FileUtil.appendName(jbrowseDir, getObjectId()) : null;
     }
 
     public String getLabel()
@@ -823,28 +823,29 @@ public class JsonFile
             throw new PipelineJobException("No ExpData for JsonFile: " + getObjectId());
         }
 
+        final File processedTrackFile = getLocationOfProcessedTrack(true);
+        final File processedTrackDir = processedTrackFile.getParentFile();
         File targetFile = expData.getFile();
         if (needsGzip() && !isGzipped())
         {
             //need to gzip and tabix index:
-            final File finalLocation = getLocationOfProcessedTrack(true);
-            if (finalLocation.exists() && !SequencePipelineService.get().hasMinLineCount(finalLocation, 1))
+            if (processedTrackFile.exists() && !SequencePipelineService.get().hasMinLineCount(processedTrackFile, 1))
             {
                 log.info("File exists but is zero-length, deleting and re-processing:");
                 forceReprocess = true;
             }
 
-            File idx = new File(finalLocation.getPath() + ".tbi");
-            if (finalLocation.exists() && forceReprocess && !targetFile.equals(finalLocation))
+            File idx = new File(processedTrackFile.getPath() + ".tbi");
+            if (processedTrackFile.exists() && forceReprocess && !targetFile.equals(processedTrackFile))
             {
-                finalLocation.delete();
+                processedTrackFile.delete();
                 if (idx.exists())
                 {
                     idx.delete();
                 }
             }
 
-            if (!finalLocation.exists())
+            if (!processedTrackFile.exists())
             {
                 if (throwIfNotPrepared)
                 {
@@ -858,10 +859,10 @@ public class JsonFile
 
                 try
                 {
-                    if (!targetFile.getParentFile().equals(finalLocation.getParentFile()))
+                    if (!targetFile.getParentFile().equals(processedTrackFile.getParentFile()))
                     {
                         log.debug("Creating local copy of: " + targetFile.getPath());
-                        File local = new File(finalLocation.getParentFile(), targetFile.getName());
+                        File local = FileUtil.appendName(processedTrackFile.getParentFile(), targetFile.getName());
                         if (local.exists())
                         {
                             local.delete();
@@ -872,7 +873,7 @@ public class JsonFile
                     }
 
                     File bgZipped = SequenceAnalysisService.get().bgzipFile(targetFile, log);
-                    FileUtils.moveFile(bgZipped, finalLocation);
+                    FileUtils.moveFile(bgZipped, processedTrackFile);
                 }
                 catch (IOException e)
                 {
@@ -880,7 +881,7 @@ public class JsonFile
                 }
             }
 
-            targetFile = finalLocation;
+            targetFile = processedTrackFile;
         }
 
         // Ensure index check runs even if file was already gzipped:
@@ -892,7 +893,7 @@ public class JsonFile
 
         if (doIndex())
         {
-            File trixDir = new File(targetFile.getParentFile(), "trix");
+            File trixDir = FileUtil.appendName(processedTrackDir, "trix");
             if (forceReprocess && trixDir.exists())
             {
                 try
@@ -923,7 +924,7 @@ public class JsonFile
 
                 File exe = JBrowseManager.get().getJbrowseCli();
                 SimpleScriptWrapper wrapper = new SimpleScriptWrapper(log);
-                wrapper.setWorkingDir(targetFile.getParentFile());
+                wrapper.setWorkingDir(processedTrackDir);
                 wrapper.setThrowNonZeroExits(true);
 
                 wrapper.execute(Arrays.asList(exe.getPath(), "text-index", "--force", "--quiet", "--attributes", StringUtils.join(attributes, ","), "--prefixSize", "5", "--file", targetFile.getPath()));
@@ -1056,7 +1057,7 @@ public class JsonFile
         }
 
         // NOTE: is this the best file to test?
-        luceneDir = new File(luceneDir, "write.lock");
+        luceneDir = FileUtil.appendName(luceneDir, "write.lock");
         return luceneDir.exists();
     }
 
@@ -1162,7 +1163,7 @@ public class JsonFile
             trackDir.mkdirs();
         }
 
-        return new File(trackDir, FileUtil.makeLegalName(getSourceFileName()).replaceAll(" ", "_") + (needsGzip() && !isGzipped() ? ".gz" : ""));
+        return FileUtil.appendName(trackDir, FileUtil.makeLegalName(getSourceFileName()).replaceAll(" ", "_") + (needsGzip() && !isGzipped() ? ".gz" : ""));
     }
 
     protected String getSourceFileName()
@@ -1184,8 +1185,8 @@ public class JsonFile
             return null;
         }
 
-        File ret = new File(basedir.getParentFile(), "trix");
-        ret = new File(ret, basedir.getName() + extension);
+        File ret = FileUtil.appendName(basedir.getParentFile(), "trix");
+        ret = FileUtil.appendName(ret, basedir.getName() + extension);
 
         if (throwIfNotFound && !ret.exists())
         {
@@ -1434,7 +1435,7 @@ public class JsonFile
             return null;
         }
 
-        File ret = new File(basedir.getParentFile(), "lucene");
+        File ret = FileUtil.appendName(basedir.getParentFile(), "lucene");
         if (throwIfNotFound && !ret.exists())
         {
             throw new IllegalStateException("Expected search index not found: " + ret.getPath());
