@@ -49,27 +49,34 @@ for (datasetId in names(seuratObjects)) {
 	}
 
 	if (!is.null(saturation.ADT.min) && !is.null(seuratObj)) {
-		if (!'Saturation.ADT' %in% names(seuratObj@meta.data)) {
-			stop('Missing field: Saturation.ADT')
-		}
+      if (! 'ADT' %in% names(seuratObj@assays)) {
+        print('No ADT assay, skipping ADT saturation filters')
+      } else {
+        if (!'Saturation.ADT' %in% names(seuratObj@meta.data)) {
+            stop('Missing field: Saturation.ADT')
+        }
 
-		expr <- Seurat::FetchData(object = seuratObj, vars = 'Saturation.ADT')
-		cells <- which(x = expr >= saturation.ADT.min)
-		if (length(cells) > 0){
-			seuratObj <- seuratObj[, cells]
-			print(paste0('After saturation.ADT.min filter: ', length(colnames(x = seuratObj))))
-			if (ncol(seuratObj) == 0) {
-				seuratObj <- NULL
-				next
-			}
-		} else {
-			print(paste0('No cells passing saturation.ADT.min filter'))
-			seuratObj <- NULL
-			next
-		}
+        expr <- Seurat::FetchData(object = seuratObj, vars = 'Saturation.ADT')
+        cells <- which(x = expr >= saturation.ADT.min)
+        if (length(cells) > 0){
+            seuratObj <- seuratObj[, cells]
+            print(paste0('After saturation.ADT.min filter: ', length(colnames(x = seuratObj))))
+            if (ncol(seuratObj) == 0) {
+                seuratObj <- NULL
+                next
+            }
+        } else {
+            print(paste0('No cells passing saturation.ADT.min filter'))
+            seuratObj <- NULL
+            next
+        }
+      }
 	}
 
 	if (!is.null(saturation.ADT.max) && !is.null(seuratObj)) {
+      if (! 'ADT' %in% names(seuratObj@assays)) {
+        print('No ADT assay, skipping ADT saturation filters')
+      } else {
 		if (!'Saturation.ADT' %in% names(seuratObj@meta.data)) {
 			stop('Missing field: Saturation.ADT')
 		}
@@ -88,6 +95,7 @@ for (datasetId in names(seuratObjects)) {
 			seuratObj <- NULL
 			next
 		}
+      }
 	}
 
 	if (dropHashingFail && !is.null(seuratObj)) {
