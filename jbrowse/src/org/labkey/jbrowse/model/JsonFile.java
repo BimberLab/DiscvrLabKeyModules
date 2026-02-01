@@ -179,8 +179,13 @@ public class JsonFile
 
     public File getBaseDir()
     {
-        File jbrowseDir = FileUtil.appendName(JBrowseManager.get().getBaseDir(getContainerObj(), needsProcessing()), "resources");
+        File baseDir  = JBrowseManager.get().getBaseDir(getContainerObj(), needsProcessing());
+        if (baseDir == null)
+        {
+            return null;
+        }
 
+        File jbrowseDir = FileUtil.appendName(baseDir, "resources");
         return needsProcessing() ? FileUtil.appendName(jbrowseDir, getObjectId()) : null;
     }
 
