@@ -828,8 +828,14 @@ public class JsonFile
             throw new PipelineJobException("No ExpData for JsonFile: " + getObjectId());
         }
 
-        final File processedTrackFile = getLocationOfProcessedTrack(true);
-        final File processedTrackDir = processedTrackFile.getParentFile();
+        File processedTrackFile = getLocationOfProcessedTrack(true);
+        final File processedTrackDir = processedTrackFile == null ? null : processedTrackFile.getParentFile();
+        if (processedTrackFile == null)
+        {
+            processedTrackFile = expData.getFile();
+            log.debug("Track does not require processing or indexing, using original location: " + processedTrackFile.getPath());
+        }
+
         File targetFile = expData.getFile();
         if (needsGzip() && !isGzipped())
         {
@@ -898,6 +904,11 @@ public class JsonFile
 
         if (doIndex())
         {
+            if (processedTrackDir == null)
+            {
+                throw new PipelineJobException("processedTrackDir should not be null");
+            }
+
             File trixDir = FileUtil.appendName(processedTrackDir, "trix");
             if (forceReprocess && trixDir.exists())
             {
