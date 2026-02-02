@@ -1163,6 +1163,11 @@ public class JsonFile
         }
 
         File trackDir = getBaseDir();
+        if (trackDir == null)
+        {
+            return null;
+        }
+
         if (createDir && !trackDir.exists())
         {
             trackDir.mkdirs();
