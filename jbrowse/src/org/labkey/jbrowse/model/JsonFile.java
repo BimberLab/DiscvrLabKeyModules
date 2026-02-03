@@ -790,12 +790,12 @@ public class JsonFile
 
     public boolean needsProcessing()
     {
-        return (needsGzip() && !isGzipped()) || doIndex() || shouldHaveFreeTextSearch();
+        return (needsGzip() && !isGzipped()) || shouldBeReSorted() || doIndex() || shouldHaveFreeTextSearch();
     }
 
     public boolean shouldBeCopiedToProcessDir()
     {
-        return (needsGzip() && !isGzipped());
+        return (needsGzip() && !isGzipped()) || shouldBeReSorted();
     }
 
     public boolean isGzipped()
@@ -837,7 +837,7 @@ public class JsonFile
         }
 
         File targetFile = expData.getFile();
-        if (needsGzip() && !isGzipped())
+        if ((needsGzip() && !isGzipped()) || shouldBeReSorted())
         {
             //need to gzip and tabix index:
             if (processedTrackFile.exists() && !SequencePipelineService.get().hasMinLineCount(processedTrackFile, 1))
@@ -1163,6 +1163,17 @@ public class JsonFile
                 }
             }
         }
+    }
+
+    private boolean shouldBeReSorted()
+    {
+        String sourceFilename = getSourceFileName();
+        if (sourceFilename == null)
+        {
+            return false;
+        }
+
+        return TRACK_TYPES.gff.getFileType().isType(sourceFilename) || TRACK_TYPES.gtf.getFileType().isType(sourceFilename) || TRACK_TYPES.bed.getFileType().isType(sourceFilename);
     }
 
     public File getLocationOfProcessedTrack(boolean createDir)
