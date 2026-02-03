@@ -627,6 +627,11 @@ public class JsonFile
                 {{
                     put("location", new JSONObject()
                     {{
+                        if (!new File(targetFile.getFile() + ".bai").exists())
+                        {
+                            log.error("Track lacks an index: {}, expected: {}", getObjectId(), targetFile.getFile().getPath() + ".bai");
+                        }
+
                         put("uri", url + ".bai");
                     }});
                     put("indexType", "BAI");
@@ -646,6 +651,11 @@ public class JsonFile
                 }});
                 put("craiLocation", new JSONObject()
                 {{
+                    if (!new File(targetFile.getFile() + ".bai").exists())
+                    {
+                        log.error("Track lacks an index: {}, expected: {}", getObjectId(), targetFile.getFile().getPath() + ".crai");
+                    }
+
                     put("uri", url + ".crai");
                 }});
                 put("sequenceAdapter", JBrowseSession.getBgZippedIndexedFastaAdapter(rg));
@@ -769,6 +779,11 @@ public class JsonFile
         {
             log.info("Unable to create WebDav URL for JBrowse resource with path: " + targetFile.getFile());
             return null;
+        }
+
+        if (!new File(targetFile.getFile() + ".tbi").exists())
+        {
+            log.error("Track lacks an index: {}, expected: {}", getObjectId(), targetFile.getFile().getPath() + ".tbi");
         }
 
         ret.put("adapter", new JSONObject(){{
@@ -1103,6 +1118,11 @@ public class JsonFile
         }
         else
         {
+            if (TRACK_TYPES.bam.getFileType().isType(finalLocation) || TRACK_TYPES.cram.getFileType().isType(finalLocation))
+            {
+                SequenceAnalysisService.get().ensureBamOrCramIdx(finalLocation, log, false);
+            }
+
             if (SystemUtils.IS_OS_WINDOWS)
             {
                 try
