@@ -780,9 +780,9 @@ public class JsonFile
             return null;
         }
 
-        if (!new File(targetFile.getFile() + ".tbi").exists())
+        if (!new File(gzipped.getPath() + ".tbi").exists())
         {
-            log.error("Track lacks an index: {}, expected: {}", getObjectId(), targetFile.getFile().getPath() + ".tbi");
+            log.error("Track lacks an index: {}, expected: {}", getObjectId(), gzipped.getPath() + ".tbi");
         }
 
         ret.put("adapter", new JSONObject(){{
