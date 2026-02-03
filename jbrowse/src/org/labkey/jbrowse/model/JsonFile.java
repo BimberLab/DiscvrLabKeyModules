@@ -587,8 +587,7 @@ public class JsonFile
 
     public String getJsonTrackId()
     {
-        final File finalLocation = getLocationOfProcessedTrack(false);
-        return finalLocation == null ? null : finalLocation.getName();
+        return getSourceFileName();
     }
 
     private JSONObject getBamOrCramTrack(Logger log, ExpData targetFile, ReferenceGenome rg)
