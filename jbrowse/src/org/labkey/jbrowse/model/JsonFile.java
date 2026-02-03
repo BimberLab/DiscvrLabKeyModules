@@ -917,6 +917,20 @@ public class JsonFile
             createIndex(targetFile, log, idx, throwIfNotPrepared);
         }
 
+        if (TRACK_TYPES.bam.getFileType().isType(targetFile) || TRACK_TYPES.cram.getFileType().isType(targetFile))
+        {
+            File fileIdx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(targetFile);
+            if (!fileIdx.exists())
+            {
+                if (throwIfNotPrepared)
+                {
+                    throw new IllegalStateException("This track should have been previously indexed: " + targetFile.getName());
+                }
+
+                SequenceAnalysisService.get().ensureBamOrCramIdx(targetFile, log, false);
+            }
+        }
+
         if (doIndex())
         {
             if (processedTrackDir == null)
