@@ -42,6 +42,7 @@ import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.sequenceanalysis.run.PicardWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.FileType;
@@ -926,7 +927,10 @@ public class JsonFile
                     throw new IllegalStateException("This track should have been previously indexed: " + targetFile.getName());
                 }
 
-                SequenceAnalysisService.get().ensureBamOrCramIdx(targetFile, log, false);
+                if (PicardWrapper.getPicardJar(false) != null)
+                {
+                    SequenceAnalysisService.get().ensureBamOrCramIdx(targetFile, log, false);
+                }
             }
         }
 
@@ -1131,11 +1135,6 @@ public class JsonFile
         }
         else
         {
-            if (TRACK_TYPES.bam.getFileType().isType(finalLocation) || TRACK_TYPES.cram.getFileType().isType(finalLocation))
-            {
-                SequenceAnalysisService.get().ensureBamOrCramIdx(finalLocation, log, false);
-            }
-
             if (SystemUtils.IS_OS_WINDOWS)
             {
                 try
