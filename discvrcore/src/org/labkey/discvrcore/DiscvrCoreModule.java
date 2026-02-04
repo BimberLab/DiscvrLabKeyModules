@@ -22,6 +22,7 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.module.DefaultModule;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.DeveloperMenuNavTrees;
@@ -74,7 +75,10 @@ public class DiscvrCoreModule extends DefaultModule
     {
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Management, "site utility actions", DetailsURL.fromString("discvrcore/showUtilityActions.view", ContainerManager.getRoot()).getActionURL());
         PopupDeveloperView.registerMenuProvider((c, user, trees) -> {
-            trees.add(DeveloperMenuNavTrees.Section.tools, new NavTree("Show Utility Actions", DetailsURL.fromString("discvrcore/showUtilityActions.view", c).getActionURL()));
+            if (c.hasPermission(user, AdminPermission.class))
+            {
+                trees.add(DeveloperMenuNavTrees.Section.tools, new NavTree("Show Utility Actions", DetailsURL.fromString("discvrcore/showUtilityActions.view", c).getActionURL()));
+            }
         });
     }
 
