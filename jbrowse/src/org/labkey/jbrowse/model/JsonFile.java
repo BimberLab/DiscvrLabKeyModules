@@ -939,7 +939,7 @@ public class JsonFile
                     if (targetFile.length() < 5e6)
                     {
                         log.debug("Creating BAM index: " + targetFile.getPath());
-                        try (SamReader samReader = SamReaderFactory.make().open(targetFile.toPath()))
+                        try (SamReader samReader = SamReaderFactory.makeDefault().enable(SamReaderFactory.Option.INCLUDE_SOURCE_IN_RECORDS).open(targetFile.toPath()))
                         {
                             BAMIndexer.createIndex(samReader, fileIdx);
                         }
