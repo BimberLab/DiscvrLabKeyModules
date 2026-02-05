@@ -1,5 +1,8 @@
 package org.labkey.jbrowse.model;
 
+import htsjdk.samtools.BAMIndexer;
+import htsjdk.samtools.SamReader;
+import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.util.FileExtensions;
 import htsjdk.tribble.bed.BEDCodec;
 import htsjdk.tribble.gff.Gff3Codec;
@@ -930,6 +933,25 @@ public class JsonFile
                 if (PicardWrapper.getPicardJar(false) != null)
                 {
                     SequenceAnalysisService.get().ensureBamOrCramIdx(targetFile, log, false);
+                }
+                else if (TRACK_TYPES.bam.getFileType().isType(targetFile))
+                {
+                    if (targetFile.length() < 5e6)
+                    {
+                        log.debug("Creating BAM index: " + targetFile.getPath());
+                        try (SamReader samReader = SamReaderFactory.make().open(targetFile.toPath()))
+                        {
+                            BAMIndexer.createIndex(samReader, fileIdx);
+                        }
+                        catch (IOException e)
+                        {
+                            throw new PipelineJobException(e);
+                        }
+                    }
+                    else
+                    {
+                        log.debug("BAM lacks an index but is too large to auto-create: " + targetFile.length());
+                    }
                 }
             }
         }

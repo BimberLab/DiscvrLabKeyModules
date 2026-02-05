@@ -221,6 +221,11 @@ public class DockerWrapper extends AbstractCommandWrapper
         return _maxRetries;
     }
 
+    public void setMaxRetries(int maxRetries)
+    {
+        _maxRetries = maxRetries;
+    }
+
     // NOTE: when running on a shared/cluster environment with multiple containers initializing concurrently, conflicts can result in these error codes.
     // As a convenience, build in auto-retry behavior if one of these occurs
     private final List<Integer> ALLOWABLE_FAIL_CODES = new UnmodifiableList<>(Arrays.asList(125, 127));
