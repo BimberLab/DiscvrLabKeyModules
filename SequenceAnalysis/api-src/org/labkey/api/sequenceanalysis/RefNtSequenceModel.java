@@ -536,6 +536,23 @@ public class RefNtSequenceModel implements Serializable
         _seqLength = seqLength;
     }
 
+    @Nullable
+    public File getOffsetsFile()
+    {
+        if (getSequenceFile() == null)
+        {
+            return null;
+        }
+
+        ExpData d = ExperimentService.get().getExpData(_sequenceFile);
+        if (d == null || d.getFile() == null)
+        {
+            return null;
+        }
+
+        return FileUtil.appendName(d.getFile().getParentFile(), getRowid() + "_offsets.txt");
+    }
+
     private File getHashedDir(boolean create)
     {
         File baseDir = getBaseSequenceDir();
