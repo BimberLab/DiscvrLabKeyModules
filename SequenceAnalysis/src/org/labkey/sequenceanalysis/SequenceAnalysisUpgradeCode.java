@@ -242,6 +242,7 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
             List<RefNtSequenceModel> nts = ts.getArrayList(RefNtSequenceModel.class);
             _log.info(nts.size() + " total sequences to migrate");
             int processed = 0;
+            int totalMigrated = 0;
             for (RefNtSequenceModel nt : nts)
             {
                 processed++;
@@ -267,11 +268,11 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
 
                 if (!RefNtSequenceModel.BASE_DIRNAME.equals(legacyFile.getParentFile().getName()))
                 {
-                    _log.error("Sequence appears to have already been migrated, this might indicate a retry after a failed move: {}", legacyFile.getPath());
+                    // NOTE: this includes sequences imported to custom locations, such as refSequenceImport pipeline jobs
                     continue;
                 }
 
-                File newLocation = nt.getExpectedSequenceFile();
+                File newLocation = nt.getExpectedSequenceFile(null);
                 if (!newLocation.getParentFile().exists())
                 {
                     newLocation.getParentFile().mkdirs();
@@ -283,11 +284,14 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
                     continue;
                 }
 
+                totalMigrated++;
                 FileUtils.copyFile(legacyFile, newLocation);
                 legacyExpData.setDataFileURI(newLocation.toURI());
                 legacyExpData.save(moduleContext.getUpgradeUser());
                 legacyFile.delete();
             }
+
+            _log.info("Total sequences migrated: {}", totalMigrated);
         }
         catch (Exception e)
         {

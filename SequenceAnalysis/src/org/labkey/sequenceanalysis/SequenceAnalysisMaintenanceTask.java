@@ -322,7 +322,12 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 
                 if (d.getFile().getAbsolutePath().toLowerCase().startsWith(sequenceDir.getAbsolutePath().toLowerCase()))
                 {
+                    // File existence will be verified below:
                     expectedSequences.add(d.getFile());
+                }
+                else if (!d.getFile().exists())
+                {
+                    log.error("Missing sequence file {}", d.getFile().getPath());
                 }
             });
 

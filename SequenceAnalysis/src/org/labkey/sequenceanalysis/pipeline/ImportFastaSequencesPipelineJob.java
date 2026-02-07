@@ -12,7 +12,6 @@ import org.labkey.api.pipeline.TaskPipeline;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.InsertPermission;
-import org.labkey.api.assay.AssayFileWriter;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
@@ -56,23 +55,22 @@ public class ImportFastaSequencesPipelineJob extends PipelineJob
         _libraryParams = libraryParams;
 
         _outDir = createLocalDirectory(pipeRoot);
-        setLogFile(new File(_outDir, FileUtil.makeFileNameWithTimestamp("fastaImport", "log")));
+        setLogFile(FileUtil.appendName(_outDir, FileUtil.makeFileNameWithTimestamp("fastaImport", "log")));
     }
 
     public static File createLocalDirectory(PipeRoot pipeRoot) throws IOException
     {
-        File webserverOutDir = new File(pipeRoot.getRootPath(), _folderPrefix);
+        File webserverOutDir = FileUtil.appendName(pipeRoot.getRootPath(), _folderPrefix);
         if (!webserverOutDir.exists())
         {
-            webserverOutDir.mkdir();
+            FileUtil.mkdir(webserverOutDir);
         }
 
-        AssayFileWriter writer = new AssayFileWriter();
         String folderName = "SequenceImport_" + FileUtil.getTimestamp();
         webserverOutDir = FileUtil.findUniqueFileName(folderName, webserverOutDir);
         if (!webserverOutDir.exists())
         {
-            webserverOutDir.mkdirs();
+            FileUtil.mkdirs(webserverOutDir);
         }
 
         return webserverOutDir;
@@ -85,7 +83,7 @@ public class ImportFastaSequencesPipelineJob extends PipelineJob
     }
 
     @Override
-    public TaskPipeline getTaskPipeline()
+    public TaskPipeline<?> getTaskPipeline()
     {
         return PipelineJobService.get().getTaskPipeline(new TaskId(ImportFastaSequencesPipelineJob.class));
     }
