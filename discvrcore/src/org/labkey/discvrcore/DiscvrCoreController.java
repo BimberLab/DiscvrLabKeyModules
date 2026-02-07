@@ -302,4 +302,36 @@ public class DiscvrCoreController extends SpringActionController
             return DetailsURL.fromString("admin/manageFileRoot.view", getContainer()).getActionURL();
         }
     }
+
+    @UtilityAction(label = "Add Custom Core.Container Indexes", description = "Provides a mechanism to truncate the query and dataset audit tables for a container")
+    @RequiresPermission(AdminPermission.class)
+    public static class AddCustomIndexesAction extends ConfirmAction<Object>
+    {
+        @Override
+        public ModelAndView getConfirmView(Object o, BindException errors) throws Exception
+        {
+            setTitle("Add Custom Core.Container Indexes");
+
+            return HtmlView.of("This action will add custom indexes to core.contains. Only do this if you are absolutely certain about the consequences. Do you want to continue?");
+        }
+
+        @Override
+        public boolean handlePost(Object o, BindException errors) throws Exception
+        {
+            return DiscvrCoreManager.get().addCoreContainersIndexes();
+        }
+
+        @Override
+        public void validateCommand(Object o, Errors errors)
+        {
+
+        }
+
+        @NotNull
+        @Override
+        public URLHelper getSuccessURL(Object o)
+        {
+            return PageFlowUtil.urlProvider(PipelineUrls.class).urlBegin(getContainer());
+        }
+    }
 }

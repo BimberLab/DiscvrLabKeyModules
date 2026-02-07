@@ -15,7 +15,6 @@ import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.SequenceOutputFile;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractParameterizedOutputHandler;
-import org.labkey.api.sequenceanalysis.pipeline.BcftoolsRunner;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineOutputTracker;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
@@ -25,9 +24,9 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.DockerWrapper;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
-import org.labkey.sequenceanalysis.run.util.BgzipRunner;
 import org.labkey.sequenceanalysis.util.SequenceUtil;
 
 import java.io.File;
@@ -172,7 +171,7 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
             SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(rg.getSequenceDictionary().toPath());
             for (SAMSequenceRecord r : dict.getSequences())
             {
-                File contigVcf = new File(ctx.getOutputDir(), basename + "." + r.getSequenceName() + ".vcf.gz");
+                File contigVcf = FileUtil.appendName(ctx.getOutputDir(), basename + "." + r.getSequenceName() + ".vcf.gz");
                 File contigVcfIdx = new File(contigVcf.getPath() + ".tbi");
                 File doneFile = new File(contigVcf.getPath() + ".done");
                 ctx.getFileManager().addIntermediateFile(contigVcf);
@@ -241,8 +240,9 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
             DockerWrapper wrapper = new DockerWrapper("ghcr.io/dnanexus-rnd/glnexus:" + binVersion, ctx.getLogger(), ctx);
             wrapper.setTmpDir(new File(SequencePipelineService.get().getJavaTempDir()));
             wrapper.setWorkingDir(ctx.getWorkingDirectory());
+            wrapper.setMaxRetries(0);
 
-            File bed = new File(ctx.getWorkingDirectory(), "contig.bed");
+            File bed = FileUtil.appendName(ctx.getWorkingDirectory(), "contig.bed");
             tracker.addIntermediateFile(bed);
             try (PrintWriter bedWriter = PrintWriters.getPrintWriter(bed))
             {
@@ -277,12 +277,10 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 dockerArgs.add(f.getPath());
             });
 
-            File bcftools = BcftoolsRunner.getBcfToolsPath();
-            File bgzip = BgzipRunner.getExe();
-            dockerArgs.add(" | " + bcftools.getPath() + " view | " + bgzip.getPath() + " -c > " + outputVcf.getPath());
+            dockerArgs.add(" | bcftools view | bgzip -f -c > " + outputVcf.getPath());
 
             // Command will fail if this exists:
-            File dbDir = new File (ctx.getWorkingDirectory(), "GLnexus.DB");
+            File dbDir = FileUtil.appendName(ctx.getWorkingDirectory(), "GLnexus.DB");
             tracker.addIntermediateFile(dbDir);
             if (dbDir.exists())
             {
@@ -295,6 +293,10 @@ public class GLNexusHandler extends AbstractParameterizedOutputHandler<SequenceO
                 {
                     throw new PipelineJobException(e);
                 }
+            }
+            else
+            {
+                getLogger().debug("GLnexus.DB does not exist: " + dbDir.getPath());
             }
 
             wrapper.executeWithDocker(dockerArgs, ctx.getWorkingDirectory(), tracker, inputGvcfs);

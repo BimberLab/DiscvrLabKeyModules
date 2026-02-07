@@ -15,6 +15,14 @@ Ext4.define('SequenceAnalysis.field.TrimmingTextArea', {
             }
         });
 
+        if (this.stripCharsRe && Ext4.isString(this.stripCharsRe)) {
+            this.stripCharsRe = this.stripCharsRe.replaceAll('^/', '')
+            this.stripCharsRe = this.stripCharsRe.split(/(?=\/)\//)
+            if (this.stripCharsRe.length && this.stripCharsRe[0] === '') {
+                this.stripCharsRe.shift()
+            }
+            this.stripCharsRe = new RegExp(this.stripCharsRe[0], this.stripCharsRe.length > 1 ? this.stripCharsRe[1] : null)
+        }
 
         this.callParent();
     },
@@ -53,6 +61,11 @@ Ext4.define('SequenceAnalysis.field.TrimmingTextArea', {
         if (val){
             val = Ext4.String.trim(val);
             val = val.replace(/(\r\n|\n|\r)/gm,this.delimiter);
+
+            if (val && this.stripCharsRe) {
+                val = val.replace(this.stripCharsRe, '');
+            }
+
             if (this.replaceAllWhitespace) {
                 val = val.replace(/ /g, '');
             }

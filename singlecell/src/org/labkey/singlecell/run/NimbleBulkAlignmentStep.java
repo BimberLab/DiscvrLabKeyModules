@@ -144,7 +144,7 @@ public class NimbleBulkAlignmentStep extends AbstractAlignmentPipelineStep<Nimbl
 
         // Now run nimble itself:
         NimbleHelper helper = new NimbleHelper(getPipelineCtx(), getProvider(), getStepIdx());
-        helper.doNimbleAlign(outputBam, output, rs, basename);
+        helper.doNimbleAlign(outputBam, output, rs, basename, true);
         output.setBAM(outputBam);
 
         return output;
