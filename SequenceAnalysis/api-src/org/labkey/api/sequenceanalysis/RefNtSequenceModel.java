@@ -18,7 +18,6 @@ package org.labkey.api.sequenceanalysis;
 import htsjdk.samtools.util.StringUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -32,8 +31,11 @@ import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.files.FileContentService;
+import org.labkey.api.security.Crypt;
 import org.labkey.api.security.User;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.MemTracker;
+import org.labkey.api.util.logging.LogHelper;
 import org.labkey.api.writer.PrintWriters;
 
 import java.io.File;
@@ -55,7 +57,9 @@ import java.util.zip.GZIPOutputStream;
  */
 public class RefNtSequenceModel implements Serializable
 {
-    private static final Logger _log = LogManager.getLogger(RefNtSequenceModel.class);
+    private static final Logger _log = LogHelper.getLogger(RefNtSequenceModel.class, "Messages related to Reference NT Sequences");
+
+    public static String BASE_DIRNAME = ".sequences";
 
     private int _rowid;
     private String _name;
@@ -414,7 +418,7 @@ public class RefNtSequenceModel implements Serializable
 
     public void createFileForSequence(User u, String sequence, @Nullable File outDir) throws IOException
     {
-        File output = getExpectedSequenceFile(outDir);
+        File output = getExpectedSequenceFile();
         if (output.exists())
         {
             output.delete();
@@ -439,9 +443,9 @@ public class RefNtSequenceModel implements Serializable
         Table.update(u, ti, this, _rowid);
     }
 
-    private File getExpectedSequenceFile(@Nullable File outDir) throws IllegalArgumentException
+    public File getExpectedSequenceFile() throws IllegalArgumentException
     {
-        return new File(getSequenceDir(true, outDir), _rowid + ".txt.gz");
+        return FileUtil.appendName(getHashedDir(true), _rowid + ".txt.gz");
     }
 
     private Container getLabKeyContainer()
@@ -455,20 +459,9 @@ public class RefNtSequenceModel implements Serializable
         return c;
     }
 
-    private File getSequenceDir(boolean create, @Nullable File outDir) throws IllegalArgumentException
+    private File getBaseSequenceDir() throws IllegalArgumentException
     {
         Container c = getLabKeyContainer();
-        File ret = outDir == null ? getReferenceSequenceDir(c) : outDir;
-        if (create && !ret.exists())
-        {
-            ret.mkdirs();
-        }
-
-        return ret;
-    }
-
-    private File getReferenceSequenceDir(Container c) throws IllegalArgumentException
-    {
         FileContentService fileService = FileContentService.get();
         File root = fileService == null ? null : fileService.getFileRoot(c, FileContentService.ContentType.files);
         if (root == null)
@@ -476,12 +469,7 @@ public class RefNtSequenceModel implements Serializable
             throw new IllegalArgumentException("File root not defined for container: " + c.getPath());
         }
 
-        return new File(root, ".sequences");
-    }
-
-    public void writeSequence(Writer writer, int lineLength) throws IOException
-    {
-        writeSequence(writer, lineLength, null, null);
+        return FileUtil.appendName(root, BASE_DIRNAME);
     }
 
     public void writeSequence(Writer writer, int lineLength, Integer start, Integer end) throws IOException
@@ -548,20 +536,23 @@ public class RefNtSequenceModel implements Serializable
         _seqLength = seqLength;
     }
 
-    @Nullable
-    public File getOffsetsFile()
+    private File getHashedDir(boolean create)
     {
-        if (getSequenceFile() == null)
+        File baseDir = getBaseSequenceDir();
+        String digest = Crypt.MD5.digest(String.valueOf(getRowid()));
+
+        baseDir = FileUtil.appendName(baseDir, digest.substring(0,4));
+        baseDir = FileUtil.appendName(baseDir, digest.substring(4,8));
+        baseDir = FileUtil.appendName(baseDir, digest.substring(8,12));
+        baseDir = FileUtil.appendName(baseDir, digest.substring(12,20));
+        baseDir = FileUtil.appendName(baseDir, digest.substring(20,28));
+        baseDir = FileUtil.appendName(baseDir, digest.substring(28,32));
+
+        if (create)
         {
-            return null;
+            baseDir.mkdirs();
         }
 
-        ExpData d = ExperimentService.get().getExpData(_sequenceFile);
-        if (d == null || d.getFile() == null)
-        {
-            return null;
-        }
-
-        return new File(d.getFile().getParentFile(), getRowid() + "_offsets.txt");
+        return baseDir;
     }
 }

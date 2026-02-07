@@ -46,6 +46,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -301,10 +302,10 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         {
             //first sequences
             log.debug("Inspecting sequences");
-            File sequenceDir = new File(root.getRootPath(), ".sequences");
+            File sequenceDir = FileUtil.appendName(root.getRootPath(), ".sequences");
             TableInfo tableRefNtSequences = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
             TableSelector ntTs = new TableSelector(tableRefNtSequences, new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
-            final Set<String> expectedSequences = new HashSet<>(10000, 1000);
+            final Set<File> expectedSequences = new HashSet<>(10000, 1000);
             ntTs.forEach(RefNtSequenceModel.class, m -> {
                 if (m.getSequenceFile() == null || m.getSequenceFile() == 0)
                 {
@@ -319,26 +320,23 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                     return;
                 }
 
-                if (!d.getFile().exists())
-                {
-                    log.error("expected sequence file does not exist for sequence: " + m.getRowid() + " " + m.getName() + ", expected: " + d.getFile().getPath());
-                    return;
-                }
-
                 if (d.getFile().getAbsolutePath().toLowerCase().startsWith(sequenceDir.getAbsolutePath().toLowerCase()))
                 {
-                    expectedSequences.add(d.getFile().getName());
+                    expectedSequences.add(d.getFile());
                 }
             });
 
             if (sequenceDir.exists())
             {
-                for (File child : sequenceDir.listFiles())
+                inspectSequenceDir(sequenceDir, expectedSequences, log);
+            }
+
+            if (!expectedSequences.isEmpty())
+            {
+                for (File missing : expectedSequences)
                 {
-                    if (!expectedSequences.contains(child.getName()))
-                    {
-                        deleteFile(child, log);
-                    }
+                    log.error("expected sequence file does not exist: " + missing.getPath());
+                    return;
                 }
             }
 
@@ -446,12 +444,12 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                                     continue;
                                 }
 
-                                deleteFile(new File(child, fileName), log);
+                                deleteFile(FileUtil.appendName(child, fileName), log);
                             }
                         }
 
                         //check/verify tracks
-                        File trackDir = new File(child, "tracks");
+                        File trackDir = FileUtil.appendName(child, "tracks");
                         if (trackDir.exists())
                         {
                             Set<String> expectedTracks = new HashSet<>();
@@ -486,7 +484,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                         }
 
                         //check/verify chainFiles
-                        File chainDir = new File(child, "chainFiles");
+                        File chainDir = FileUtil.appendName(child, "chainFiles");
                         if (chainDir.exists())
                         {
                             Set<String> expectedChains = new HashSet<>();
@@ -555,7 +553,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                 }
             }
 
-            File sequenceOutputsDir = new File(root.getRootPath(), "sequenceOutputs");
+            File sequenceOutputsDir = FileUtil.appendName(root.getRootPath(), "sequenceOutputs");
             if (sequenceOutputsDir.exists())
             {
                 for (File child : sequenceOutputsDir.listFiles())
@@ -573,6 +571,24 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         for (Container child : c.getChildren())
         {
             processContainer(child, log);
+        }
+    }
+
+    private void inspectSequenceDir(File sequenceDir, Set<File> expectedSequences, Logger log) throws IOException
+    {
+        for (File child : Objects.requireNonNull(sequenceDir.listFiles()))
+        {
+            if (child.isDirectory())
+            {
+                inspectSequenceDir(child, expectedSequences, log);
+            }
+            else
+            {
+                if (!expectedSequences.remove(child))
+                {
+                    deleteFile(child, log);
+                }
+            }
         }
     }
 
