@@ -247,6 +247,12 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
             TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
             TableSelector ts = new TableSelector(ti);
             List<RefNtSequenceModel> nts = ts.getArrayList(RefNtSequenceModel.class);
+            if (nts.size() > 100000)
+            {
+                log.info("There are too many sequences to migrate on startup. Please run MigrateSequenceFilesAction");
+                return;
+            }
+
             log.info(nts.size() + " total sequences to migrate");
             int processed = 0;
             int totalMigrated = 0;
