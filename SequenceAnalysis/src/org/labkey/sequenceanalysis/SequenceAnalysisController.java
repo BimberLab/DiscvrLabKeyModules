@@ -157,6 +157,7 @@ import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceConcatPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceMigrationPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
@@ -5270,7 +5271,8 @@ public class SequenceAnalysisController extends SpringActionController
         @Override
         public boolean handlePost(Object o, BindException errors) throws Exception
         {
-            SequenceAnalysisUpgradeCode.doSequenceMigration(getUser(), _log);
+            PipeRoot pr = PipelineService.get().findPipelineRoot(getContainer());
+            PipelineService.get().queueJob(new SequenceMigrationPipelineJob(getContainer(), getUser(), getViewContext().getActionURL(), pr));
 
             return true;
         }

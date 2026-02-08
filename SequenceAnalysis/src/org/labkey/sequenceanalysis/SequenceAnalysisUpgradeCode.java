@@ -237,17 +237,17 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
     @DeferredUpgrade
     public void migrateSequenceDirs(final ModuleContext moduleContext)
     {
-        doSequenceMigration(moduleContext.getUpgradeUser(), _log);
+        doSequenceMigration(moduleContext.getUpgradeUser(), _log, 100000);
     }
 
-    public static void doSequenceMigration(User u, Logger log)
+    public static void doSequenceMigration(User u, Logger log, int maxSequences)
     {
         try
         {
             TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
             TableSelector ts = new TableSelector(ti);
             List<RefNtSequenceModel> nts = ts.getArrayList(RefNtSequenceModel.class);
-            if (nts.size() > 100000)
+            if (maxSequences > 0 && nts.size() > maxSequences)
             {
                 log.info("There are too many sequences to migrate on startup. Please run MigrateSequenceFilesAction");
                 return;

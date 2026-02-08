@@ -129,6 +129,9 @@
                 <bean class="org.labkey.sequenceanalysis.pipeline.CacheGenomePipelineJob.CacheGenomesTask$Factory">
                     <property name="location" value="webserver" />
                 </bean>
+                <bean class="org.labkey.sequenceanalysis.pipeline.SequenceMigrationPipelineJob.Task$Factory">
+                    <property name="location" value="webserver-high-priority" />
+                </bean>
             </list>
         </property>
         <property name="pipelines">
@@ -231,6 +234,14 @@
                     <property name="taskProgressionSpec">
                         <list>
                             <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.OrphanFilePipelineJob.Task</value>
+                        </list>
+                    </property>
+                </bean>
+                <bean class="org.labkey.api.pipeline.TaskPipelineSettings">
+                    <constructor-arg type="java.lang.Class" value="org.labkey.sequenceanalysis.pipeline.SequenceMigrationPipelineJob"/>
+                    <property name="taskProgressionSpec">
+                        <list>
+                            <value type="java.lang.Class">org.labkey.sequenceanalysis.pipeline.SequenceMigrationPipelineJob.Task</value>
                         </list>
                     </property>
                 </bean>
