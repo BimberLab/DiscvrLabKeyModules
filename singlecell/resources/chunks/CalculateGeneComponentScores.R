@@ -10,7 +10,7 @@ for (datasetId in names(seuratObjects)) {
 
     for (sc in savedComponent) {
         logger::log_info(paste0('Processing ', datasetId, ' for ', sc))
-        seuratObj <- RIRA::ScoreUsingSavedComponent(seuratObj, componentOrName = sc, fieldName = sc)
+        seuratObj <- RIRA::ScoreUsingSavedComponent(seuratObj, componentOrName = sc, fieldName = sc, layer = ifelse(useScaledData, yes = 'scale.data', no = 'data'))
     }
 
     saveData(seuratObj, datasetId)

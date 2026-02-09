@@ -15,6 +15,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
@@ -75,17 +76,15 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
 
         SnpEffWrapper wrapper = new SnpEffWrapper(log);
         File snpEffIndexDir = wrapper.getExpectedIndexDir(snpEffBaseDir, genome.getGenomeId(), geneFileId);
-        if (snpEffIndexDir.exists())
-        {
-            log.debug("previously created index found, re-using: " + snpEffIndexDir.getPath());
-            return snpEffBaseDir;
-        }
-
-        File binFile = new File(snpEffIndexDir, "snpEffectPredictor.bin");
+        File binFile = FileUtil.appendName(snpEffIndexDir, "snpEffectPredictor.bin");
         if (!binFile.exists())
         {
             log.debug("existing index not found, expected: " + binFile.getPath());
             wrapper.buildIndex(snpEffBaseDir, genome, geneFile, geneFileId);
+        }
+        else
+        {
+            log.debug("previously created index found, re-using: " + snpEffIndexDir.getPath());
         }
 
         return snpEffBaseDir;
@@ -100,7 +99,7 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
         Integer geneFileId = getProvider().getParameterByName(GENE_PARAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
         File snpEffBaseDir = checkOrCreateIndex(getPipelineCtx().getSequenceSupport(), getPipelineCtx().getLogger(), genome, geneFileId);
 
-        File outputVcf = new File(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".snpEff.vcf.gz");
+        File outputVcf = FileUtil.appendName(outputDirectory, SequenceTaskHelper.getUnzippedBaseName(inputVCF) + ".snpEff.vcf.gz");
         if (outputVcf.exists())
         {
             getPipelineCtx().getLogger().debug("deleting pre-existing output file: " + outputVcf.getPath());
@@ -110,7 +109,7 @@ public class SNPEffStep extends AbstractCommandPipelineStep<SnpEffWrapper> imple
         File intFile = null;
         if (intervals != null)
         {
-            intFile = new File(outputVcf.getParentFile(), "snpEffintervals.bed");
+            intFile = FileUtil.appendName(outputVcf.getParentFile(), "snpEffintervals.bed");
             try (PrintWriter writer = PrintWriters.getPrintWriter(intFile))
             {
                 getPipelineCtx().getLogger().debug("Adding SnpEff intervals: " + intervals.size());

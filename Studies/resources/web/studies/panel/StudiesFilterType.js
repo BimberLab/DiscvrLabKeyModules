@@ -74,8 +74,9 @@ Ext4.define('Laboratory.panel.StudiesFilterType', {
             return filterArray;
         }
 
-        var studyName = filters.studies[0];
-        filterArray.nonRemovable.push(LABKEY.Filter.create(studyFieldName, studyName, LABKEY.Filter.Types.CONTAINS));
+        const studyName = filters.studies[0];
+        const projectFieldName = 'allProjectsPivot/' + studyName + '::lastStartDate';
+        filterArray.nonRemovable.push(LABKEY.Filter.create(projectFieldName, null, LABKEY.Filter.Types.NONBLANK));
 
         return filterArray;
     },

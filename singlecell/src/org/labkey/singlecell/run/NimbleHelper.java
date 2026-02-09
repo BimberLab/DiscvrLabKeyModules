@@ -162,7 +162,7 @@ public class NimbleHelper
 
     private File getLocalIndexDir(int genomeId, boolean createIfMissing)
     {
-        File dir = new File(getPipelineCtx().getSourceDirectory(), "genome." + genomeId);
+        File dir = FileUtil.appendName(getPipelineCtx().getSourceDirectory(), "genome." + genomeId);
         if (createIfMissing && !dir.exists())
         {
             dir.mkdir();
@@ -187,10 +187,10 @@ public class NimbleHelper
         if (!forceWorkDir && AlignerIndexUtil.hasCachedIndex(getPipelineCtx(), "nimble", rg))
         {
             File indexDir = AlignerIndexUtil.getIndexDir(rg, "nimble");
-            return new File(indexDir, "genome." + genomeId + ".csv");
+            return FileUtil.appendName(indexDir, "genome." + genomeId + ".csv");
         }
 
-        return checkForLegacyGenome(new File(getLocalIndexDir(genomeId, true), "genome." + genomeId + ".csv"));
+        return FileUtil.appendName(getLocalIndexDir(genomeId, true), "genome." + genomeId + ".csv");
     }
 
     private File getGenomeFasta(int genomeId) throws PipelineJobException
@@ -209,43 +209,13 @@ public class NimbleHelper
         if (!forceWorkDir && AlignerIndexUtil.hasCachedIndex(getPipelineCtx(), "nimble", rg))
         {
             File indexDir = AlignerIndexUtil.getIndexDir(rg, "nimble");
-            return new File(indexDir, "genome." + genomeId + ".fasta");
+            return FileUtil.appendName(indexDir, "genome." + genomeId + ".fasta");
         }
 
-        return checkForLegacyGenome(new File(getLocalIndexDir(genomeId, true), "genome." + genomeId + ".fasta"));
+        return FileUtil.appendName(getLocalIndexDir(genomeId, true), "genome." + genomeId + ".fasta");
     }
 
-    // TODO: This should ultimately be removed:
-    private File checkForLegacyGenome(File fileNewLocation) throws PipelineJobException
-    {
-        if (fileNewLocation.exists())
-        {
-            return fileNewLocation;
-        }
-
-        File oldLocation = new File(fileNewLocation.getParentFile().getParentFile(), fileNewLocation.getName());
-        if (oldLocation.exists())
-        {
-            getPipelineCtx().getLogger().debug("Genome file found in old location, moving: " + oldLocation.getPath());
-            if (!fileNewLocation.getParentFile().exists())
-            {
-                fileNewLocation.getParentFile().mkdir();
-            }
-
-            try
-            {
-                FileUtils.moveFile(oldLocation, fileNewLocation);
-            }
-            catch (IOException e)
-            {
-                throw new PipelineJobException(e);
-            }
-        }
-
-        return fileNewLocation;
-    }
-
-    public void doNimbleAlign(File bam, PipelineStepOutput output, Readset rs, String basename) throws UnsupportedOperationException, PipelineJobException
+    public void doNimbleAlign(File bam, PipelineStepOutput output, Readset rs, String basename, boolean doTsoTrimming) throws UnsupportedOperationException, PipelineJobException
     {
         getPipelineCtx().getJob().setStatus(PipelineJob.TaskStatus.running, "Running Nimble Align");
         List<NimbleGenome> genomes = getGenomes();
@@ -274,7 +244,7 @@ public class NimbleHelper
             jsons.add(refJson);
         }
 
-        Map<NimbleGenome, File> resultMap = doAlignment(genomes, jsons, bam, output);
+        Map<NimbleGenome, File> resultMap = doAlignment(genomes, jsons, bam, output, doTsoTrimming);
         for (NimbleGenome genome : genomes)
         {
             File results = resultMap.get(genome);
@@ -307,7 +277,7 @@ public class NimbleHelper
 
     private File prepareReference(File genomeCsv, File genomeFasta, NimbleGenome genome, PipelineStepOutput output) throws PipelineJobException
     {
-        File nimbleJson = new File(getPipelineCtx().getWorkingDirectory(), genome.genomeId + ".json");
+        File nimbleJson = FileUtil.appendName(getPipelineCtx().getWorkingDirectory(), genome.genomeId + ".json");
         runUsingDocker(Arrays.asList("python3", "-m", "nimble", "generate", "--opt-file", genomeFasta.getPath(), "--file", genomeCsv.getPath(), "--output_path", nimbleJson.getPath()), output, "generate-" + genome.genomeId);
         if (!nimbleJson.exists())
         {
@@ -401,7 +371,7 @@ public class NimbleHelper
         }
     }
 
-    private Map<NimbleGenome, File> doAlignment(List<NimbleGenome> genomes, List<File> refJsons, File bam, PipelineStepOutput output) throws PipelineJobException
+    private Map<NimbleGenome, File> doAlignment(List<NimbleGenome> genomes, List<File> refJsons, File bam, PipelineStepOutput output, boolean skipTsoTrimming) throws PipelineJobException
     {
         Map<NimbleGenome, File> resultMap = new HashMap<>();
 
@@ -425,7 +395,12 @@ public class NimbleHelper
             alignArgs.add(strandedness);
         }
 
-        File alignmentTsvBase = new File(getPipelineCtx().getWorkingDirectory(), "alignResults." + (genomes.size() == 1 ? genomes.get(0).genomeId + "." : "") + "txt.gz");
+        if (skipTsoTrimming)
+        {
+            alignArgs.add("--skip_tso_trimming");
+        }
+
+        File alignmentTsvBase = FileUtil.appendName(getPipelineCtx().getWorkingDirectory(), "alignResults." + (genomes.size() == 1 ? genomes.get(0).genomeId + "." : "") + "txt.gz");
 
         alignArgs.add("--reference");
         alignArgs.add(refJsons.stream().map(File::getPath).collect(Collectors.joining(",")));
@@ -437,7 +412,7 @@ public class NimbleHelper
         alignArgs.add(bam.getPath());
 
         // Create temp folder:
-        File tmpDir = new File(getPipelineCtx().getWorkingDirectory(), "tmpDir");
+        File tmpDir = FileUtil.appendName(getPipelineCtx().getWorkingDirectory(), "tmpDir");
         if (tmpDir.exists())
         {
             try
@@ -473,7 +448,7 @@ public class NimbleHelper
 
         for (NimbleGenome genome : genomes)
         {
-            File alignResultsGz = new File(getPipelineCtx().getWorkingDirectory(), "alignResults." + genome.genomeId + ".txt.gz");
+            File alignResultsGz = FileUtil.appendName(getPipelineCtx().getWorkingDirectory(), "alignResults." + genome.genomeId + ".txt.gz");
             if (dockerRan && !alignResultsGz.exists())
             {
                 File doneFile = getNimbleDoneFile(getPipelineCtx().getWorkingDirectory(), "align.all");
@@ -508,7 +483,7 @@ public class NimbleHelper
         barcodeArgs.add("-I");
         barcodeArgs.add(bam.getPath());
 
-        File bcOutput = new File(bam.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(bam.getName()) + ".cb.txt.gz");
+        File bcOutput = FileUtil.appendName(bam.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(bam.getName()) + ".cb.txt.gz");
         barcodeArgs.add("--output");
         barcodeArgs.add(bcOutput.getPath());
 
@@ -531,7 +506,7 @@ public class NimbleHelper
         String resumeString = "nimble.report." + genomeId;
         File doneFile = getNimbleDoneFile(ctx.getWorkingDirectory(), resumeString);
 
-        File reportResultsGz = new File(ctx.getWorkingDirectory(), "reportResults." + genomeId + ".txt.gz");
+        File reportResultsGz = FileUtil.appendName(ctx.getWorkingDirectory(), "reportResults." + genomeId + ".txt.gz");
         if (reportResultsGz.exists() && !doneFile.exists())
         {
             ctx.getLogger().debug("Deleting existing result file: " + reportResultsGz.getPath());
@@ -591,7 +566,7 @@ public class NimbleHelper
 
     private static File getNimbleDoneFile(File parentDir, String resumeString)
     {
-        return new File(parentDir, "nimble." + resumeString + ".done");
+        return FileUtil.appendName(parentDir, "nimble." + resumeString + ".done");
     }
 
     public static File runFastqToBam(PipelineStepOutput output, PipelineContext ctx, Readset rs, List<File> inputFastqs1, List<File> inputFastqs2, File loupeFile) throws PipelineJobException
@@ -600,7 +575,7 @@ public class NimbleHelper
         int bamIdx = 0;
         while (bamIdx < inputFastqs1.size())
         {
-            File outputBam = new File(ctx.getWorkingDirectory(), FileUtil.makeLegalName(rs.getName()) + ".unmapped." + bamIdx + ".bam");
+            File outputBam = FileUtil.appendName(ctx.getWorkingDirectory(), FileUtil.makeLegalName(rs.getName()) + ".unmapped." + bamIdx + ".bam");
 
             List<String> args = new ArrayList<>();
             args.add("python3");
@@ -641,7 +616,7 @@ public class NimbleHelper
         File outputBam;
         if (outputBams.size() > 1)
         {
-            outputBam = new File(ctx.getWorkingDirectory(), FileUtil.makeLegalName(rs.getName()) + ".unmapped.bam");
+            outputBam = FileUtil.appendName(ctx.getWorkingDirectory(), FileUtil.makeLegalName(rs.getName()) + ".unmapped.bam");
             outputBams.forEach(output::addIntermediateFile);
 
             SamtoolsRunner st = new SamtoolsRunner(ctx.getLogger());
@@ -777,7 +752,7 @@ public class NimbleHelper
 
         runUsingDocker(nimbleArgs, output, null);
 
-        File outFile = new File(getPipelineCtx().getWorkingDirectory(), "nimbleVersion.txt");
+        File outFile = FileUtil.appendName(getPipelineCtx().getWorkingDirectory(), "nimbleVersion.txt");
         if (!outFile.exists())
         {
             throw new PipelineJobException("Unable to find file: " + outFile.getPath());

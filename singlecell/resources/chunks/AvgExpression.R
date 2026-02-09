@@ -34,6 +34,9 @@ GenerateAveragedData <- function(seuratObj, groupFields, addMetadata) {
     }
 
     a <- CellMembrane::PseudobulkSeurat(seuratObj, groupFields = groupFields, assayToAggregate = assayName, additionalFieldsToAggregate = additionalFieldsToAggregate, nCountRnaStratification = nCountRnaStratification)
+    if (is.null(a)) {
+      return(NULL)
+    }
 
     if (addMetadata) {
         a <- Rdiscvr::QueryAndApplyMetadataUsingCDNA(a)
@@ -47,6 +50,9 @@ for (datasetId in names(seuratObjects)) {
     seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
     seuratObj <- GenerateAveragedData(seuratObj, groupFields = groupFields, addMetadata = addMetadata)
+    if (is.null(seuratObj)) {
+      next
+    }
     saveData(seuratObj, datasetId)
 
     # Cleanup

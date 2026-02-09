@@ -89,19 +89,22 @@ public class NimbleAlignmentStep extends AbstractCellRangerDependentStep
         File loupeFile = getCachedLoupeFile(rs, throwIfNotFound);
 
         File localBam;
+        boolean skipTsoTrimming;
         if (loupeFile == null)
         {
             localBam = performCellRangerAlignment(output, rs, inputFastqs1, inputFastqs2, outputDirectory, referenceGenome, basename, readGroupId, platformUnit);
+            skipTsoTrimming = false;
         }
         else
         {
             localBam = createNimbleBam(output, rs, inputFastqs1, inputFastqs2);
+            skipTsoTrimming = true;
         }
 
 
         // Now run nimble itself:
         NimbleHelper helper = new NimbleHelper(getPipelineCtx(), getProvider(), getStepIdx());
-        helper.doNimbleAlign(localBam, output, rs, basename);
+        helper.doNimbleAlign(localBam, output, rs, basename, skipTsoTrimming);
         output.setBAM(localBam);
 
         return output;

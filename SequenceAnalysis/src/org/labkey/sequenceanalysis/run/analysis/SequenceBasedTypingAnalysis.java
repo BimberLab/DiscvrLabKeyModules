@@ -177,7 +177,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                 continue;
             }
 
-            File lineageMapFile = new File(sourceDirectory, genome.getGenomeId() + "_lineageMap.txt");
+            File lineageMapFile = FileUtil.appendName(sourceDirectory, genome.getGenomeId() + "_lineageMap.txt");
             try (final CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(lineageMapFile), '\t', CSVWriter.NO_QUOTE_CHARACTER))
             {
                 log.info("writing lineage map file");
@@ -227,7 +227,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                 throw new PipelineJobException("Genome not found: " + model.getLibraryId());
             }
 
-            File lineageMapFile = new File(getPipelineCtx().getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
+            File lineageMapFile = FileUtil.appendName(getPipelineCtx().getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
             if (lineageMapFile.exists())
             {
                 getPipelineCtx().getLogger().debug("deleting lineage map file: " + lineageMapFile.getName());
@@ -264,8 +264,8 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
             BamIterator bi = new BamIterator(inputBam, referenceGenome.getWorkingFastaFile(), getPipelineCtx().getLogger());
 
             List<AlignmentAggregator> aggregators = new ArrayList<>();
-            File workDir = new File(getPipelineCtx().getSourceDirectory(), FileUtil.getBaseName(inputBam));
-            File sbtOutputLog = new File(workDir, FileUtil.getBaseName(inputBam) + ".sbt.txt.gz");
+            File workDir = FileUtil.appendName(getPipelineCtx().getSourceDirectory(), FileUtil.getBaseName(inputBam));
+            File sbtOutputLog = FileUtil.appendName(workDir, FileUtil.getBaseName(inputBam) + ".sbt.txt.gz");
 
             SequenceBasedTypingAlignmentAggregator agg = new SequenceBasedTypingAlignmentAggregator(getPipelineCtx().getLogger(), referenceGenome.getWorkingFastaFile(), avgBaseQualityAggregator, toolParams);
             if (getProvider().getParameterByName("writeLog").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false))
@@ -277,7 +277,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
                 agg.setOutputLog(sbtOutputLog);
             }
 
-            File lineageMapFile = new File(getPipelineCtx().getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
+            File lineageMapFile = FileUtil.appendName(getPipelineCtx().getSourceDirectory(), referenceGenome.getGenomeId() + "_lineageMap.txt");
             if (lineageMapFile.exists())
             {
                 getPipelineCtx().getLogger().debug("using lineage map: " + lineageMapFile.getName());
@@ -371,7 +371,7 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
 
     protected File getSBTSummaryFile(File outputDir, File bam)
     {
-        return new File(outputDir, FileUtil.getBaseName(bam) + ".sbt_hits.txt.gz");
+        return FileUtil.appendName(outputDir, FileUtil.getBaseName(bam) + ".sbt_hits.txt.gz");
     }
 
     public static class AlignmentGroupCompare
@@ -383,7 +383,9 @@ public class SequenceBasedTypingAnalysis extends AbstractPipelineStep implements
         {
             this.analysisId = analysisId;
 
-            new TableSelector(QueryService.get().getUserSchema(u, c, "sequenceanalysis").getTable("alignment_summary_grouped"), PageFlowUtil.set("analysis_id", "alleles", "lineages", "totalLineages", "total_reads", "total_forward", "total_reverse", "valid_pairs", "rowids"), new SimpleFilter(FieldKey.fromString("analysis_id"), analysisId), null).forEachResults(rs -> {
+            TableSelector ts = new TableSelector(QueryService.get().getUserSchema(u, c, "sequenceanalysis").getTable("alignment_summary_grouped"), PageFlowUtil.set("analysis_id", "alleles", "lineages", "totalLineages", "total_reads", "total_forward", "total_reverse", "valid_pairs", "rowids"), new SimpleFilter(FieldKey.fromString("analysis_id"), analysisId), null);
+            ts.setNamedParameters(Map.of("AnalysisId", this.analysisId));
+            ts.forEachResults(rs -> {
                 if (rs.getString(FieldKey.fromString("alleles")) == null)
                 {
                     return;

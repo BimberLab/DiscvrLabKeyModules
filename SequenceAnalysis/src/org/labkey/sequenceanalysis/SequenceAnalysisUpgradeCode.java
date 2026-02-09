@@ -229,4 +229,69 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
             });
         }
     }
+
+    /** called at 12.331-12.332*/
+    @SuppressWarnings({"UnusedDeclaration"})
+    @DeferredUpgrade
+    public void migrateSequenceDirs(final ModuleContext moduleContext)
+    {
+        try
+        {
+            TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
+            TableSelector ts = new TableSelector(ti);
+            List<RefNtSequenceModel> nts = ts.getArrayList(RefNtSequenceModel.class);
+            _log.info(nts.size() + " total sequences to migrate");
+            int processed = 0;
+            for (RefNtSequenceModel nt : nts)
+            {
+                processed++;
+
+                if (processed % 1000 == 0)
+                {
+                    _log.info("{} of {} sequence files migrated", processed, nts.size());
+                }
+
+                ExpData legacyExpData = ExperimentService.get().getExpData(nt.getSequenceFile());
+                if (legacyExpData == null)
+                {
+                    _log.error("Missing ExpData for NT sequence: {}", nt.getSequenceFile());
+                    continue;
+                }
+
+                File legacyFile = legacyExpData.getFile();
+                if (!legacyFile.exists())
+                {
+                    _log.error("Missing file for NT sequence: {}", legacyFile.getPath());
+                    continue;
+                }
+
+                if (!RefNtSequenceModel.BASE_DIRNAME.equals(legacyFile.getParentFile().getName()))
+                {
+                    _log.error("Sequence appears to have already been migrated, this might indicate a retry after a failed move: {}", legacyFile.getPath());
+                    continue;
+                }
+
+                File newLocation = nt.getExpectedSequenceFile();
+                if (!newLocation.getParentFile().exists())
+                {
+                    newLocation.getParentFile().mkdirs();
+                }
+
+                if (newLocation.exists())
+                {
+                    _log.error("Target location for migrated sequence file exists, this might indicate a retry after a filed move: {}", newLocation.getPath());
+                    continue;
+                }
+
+                FileUtils.copyFile(legacyFile, newLocation);
+                legacyExpData.setDataFileURI(newLocation.toURI());
+                legacyExpData.save(moduleContext.getUpgradeUser());
+                legacyFile.delete();
+            }
+        }
+        catch (Exception e)
+        {
+            _log.error("Error upgrading sequenceanalysis module", e);
+        }
+    }
 }

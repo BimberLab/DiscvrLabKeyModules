@@ -94,7 +94,7 @@ public class SnpEffWrapper extends AbstractCommandWrapper
     public File getExpectedIndexDir(File snpEffBaseDir, Integer genomeId, Integer geneFileId)
     {
         String basename = getGenomeBasename(genomeId, geneFileId);
-        return new File(snpEffBaseDir, basename);
+        return FileUtil.appendName(snpEffBaseDir, basename);
     }
 
     public void buildIndex(File snpEffBaseDir, ReferenceGenome genome, File genes, Integer geneFileId) throws PipelineJobException
@@ -102,7 +102,8 @@ public class SnpEffWrapper extends AbstractCommandWrapper
         getLogger().info("Building SnpEff index for: "+ genome.getGenomeId() + " / " + geneFileId);
 
         File genomeDir = getExpectedIndexDir(snpEffBaseDir, genome.getGenomeId(), geneFileId);
-        if (genomeDir.exists() && genomeDir.list().length > 0)
+        File doneFile = FileUtil.appendName(snpEffBaseDir, "build.done");
+        if (doneFile.exists())
         {
             getLogger().info("directory already exists, will not re-build");
             return;
@@ -144,8 +145,8 @@ public class SnpEffWrapper extends AbstractCommandWrapper
 
         try
         {
-            Files.createSymbolicLink(new File(genomeDir, "sequences.fa").toPath(), genome.getSourceFastaFile().toPath());
-            Files.createSymbolicLink(new File(genomeDir, "genes." + ext).toPath(), genes.toPath());
+            Files.createSymbolicLink(FileUtil.appendName(genomeDir, "sequences.fa").toPath(), genome.getSourceFastaFile().toPath());
+            Files.createSymbolicLink(FileUtil.appendName(genomeDir, "genes." + ext).toPath(), genes.toPath());
         }
         catch (IOException e)
         {
@@ -183,11 +184,11 @@ public class SnpEffWrapper extends AbstractCommandWrapper
 
     private File getSnpEffJar()
     {
-        return new File(getJarDir(), "snpEff.jar");
+        return FileUtil.appendName(getJarDir(), "snpEff.jar");
     }
 
     private File getSnpEffConfigFile()
     {
-        return new File(getJarDir(), "snpEff.config");
+        return FileUtil.appendName(getJarDir(), "snpEff.config");
     }
 }

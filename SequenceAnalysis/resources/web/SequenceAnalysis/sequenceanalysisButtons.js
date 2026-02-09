@@ -163,7 +163,7 @@ SequenceAnalysis.Buttons = new function(){
             );
         },
 
-        viewAlignmentsPivoted: function(dataRegionName){
+        viewMatchingHaplotypes: function(dataRegionName){
             var dataRegion = LABKEY.DataRegions[dataRegionName];
             var checked = dataRegion.getChecked();
             if (!checked.length){
@@ -171,11 +171,16 @@ SequenceAnalysis.Buttons = new function(){
                 return;
             }
 
+            if (checked.length !== 1) {
+                alert('Only one row at a time can be selected');
+                return;
+            }
+
             window.location = LABKEY.ActionURL.buildURL(
                     'sequenceanalysis',
-                    'lineagePivot',
+                    'haplotypeMatches',
                     dataRegion.containerPath,
-                    {analysisIds: checked.join(';')}
+                    {'query.param.AnalysisId': checked[0]}
             );
         },
 
