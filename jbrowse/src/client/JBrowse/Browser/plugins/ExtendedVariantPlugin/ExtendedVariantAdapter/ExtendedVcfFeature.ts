@@ -14,19 +14,20 @@ export default class ExtendedVcfFeature extends VcfFeature {
             return(variant);
         }
 
-        if (!variant.INFO["ANN"]) {
+        const ann = variant.INFO["ANN"] as string[] | undefined
+        if (!ann) {
             return(variant);
         }
 
         let IMPACTs = new Set<String>()
-        for (let i = 0; i < variant.INFO["ANN"].length; i++){
-            if (/HIGH/g.exec(variant.INFO["ANN"][i])){
+        for (let i = 0; i < ann.length; i++){
+            if (/HIGH/g.exec(ann[i])){
                 IMPACTs.add("HIGH")
             }
-            else if (/MODERATE/g.exec(variant.INFO["ANN"][i])){
+            else if (/MODERATE/g.exec(ann[i])){
                 IMPACTs.add("MODERATE")
             }
-            else if (/LOW/g.exec(variant.INFO["ANN"][i])){
+            else if (/LOW/g.exec(ann[i])){
                 IMPACTs.add("LOW")
             }
         }

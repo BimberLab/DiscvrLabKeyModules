@@ -1,6 +1,4 @@
 import { ConfigurationSchema } from '@jbrowse/core/configuration';
-import { svgFeatureRendererConfigSchema} from '@jbrowse/plugin-svg'
-
 import { generateSchemeJexl } from "../ColorWidget/colorUtil";
 
 export default ConfigurationSchema(
@@ -25,8 +23,8 @@ export default ConfigurationSchema(
             type: 'boolean',
             defaultValue: false
         }
-    },
-    {
+    }
+    /*{
         explicitlyTyped: true,
         baseConfiguration: svgFeatureRendererConfigSchema,
         preProcessSnapshot: s => {
@@ -38,5 +36,5 @@ export default ConfigurationSchema(
 
             return {...snap}
         }
-    }
+    }*/
 )

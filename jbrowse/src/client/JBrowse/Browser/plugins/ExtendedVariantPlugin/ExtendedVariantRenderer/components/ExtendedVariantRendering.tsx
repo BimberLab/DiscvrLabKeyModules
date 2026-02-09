@@ -1,4 +1,3 @@
-import { SvgFeatureRendererReactComponent } from '@jbrowse/plugin-svg';
 import { observer } from 'mobx-react';
 import React from 'react';
 import { deserializeFilters } from '../../InfoFilterWidget/filterUtil';
@@ -33,11 +32,12 @@ export function ExtendedVariantRendering(props) {
     }
 
     return (
-        <SvgFeatureRendererReactComponent
+        <div />
+        /*<SvgFeatureRendererReactComponent
             featureDisplayHandler={isFeatureDisplayed}
             extraGlyphs={[getDiamondValidator()]}
             {...props}
-        />
+        />*/
     )
 }
 

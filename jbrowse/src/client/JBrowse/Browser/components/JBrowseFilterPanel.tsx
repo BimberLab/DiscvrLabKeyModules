@@ -47,7 +47,7 @@ const JBrowseFilterPanel = observer(props => {
     const filterDisplayItems = []
     for (const track of tracks) {
         // @ts-ignore
-        const activeSamples = getConf(track, ['displays', '0', 'renderer', 'activeSamples'])
+        const activeSamples = getConf(track, ['displays', '0', 'activeSamples'])
         const trackId = getConf(track, ['trackId'])
         if (activeSamples) {
             const sampleText = activeSamples.split(',').length > 5 ? '<too many to show>' : activeSamples
@@ -56,7 +56,7 @@ const JBrowseFilterPanel = observer(props => {
             filterDisplayItems.push(<Button color="primary" key={"sampleFilterButton"} style={{marginRight: 10, textTransform: 'initial'}} variant={'contained'} onClick={() => handleButtonClick('SampleFilterWidget', track, label)}>{label + ': ' + 'Showing sites with a variant in any of:'}<br />{sampleText}</Button>)
         }
 
-        const infoFilters = getConf(track, ['displays', '0', 'renderer', 'infoFilters'])
+        const infoFilters = getConf(track, ['displays', '0', 'infoFilters'])
         if (infoFilters?.length) {
             const filterText = infoFilters.map(filter => generateUserFriendlyLabel(filter)).join(', ')
             const label = getConf(track, ['name']) || getConf(track, ['trackId'])

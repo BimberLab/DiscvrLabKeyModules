@@ -110,8 +110,8 @@ const VariantTableWidget = observer(props => {
     const rawFeatures = await lastValueFrom(featObservable)
 
     const filteredFeatures = filterFeatures(rawFeatures,
-        getConf(track, ['displays', '0', 'renderer', 'activeSamples']),
-        getConf(track, ['displays', '0', 'renderer', 'infoFilters'])
+        getConf(track, ['displays', '0', 'activeSamples']),
+        getConf(track, ['displays', '0', 'infoFilters'])
     )
 
     // Maintain a cached list of all non-WT samples at this position:
@@ -322,7 +322,7 @@ const VariantTableWidget = observer(props => {
   }
 
   // @ts-ignore
-  const supportsLuceneIndex = getConf(track, ['displays', '0', 'renderer', 'supportsLuceneIndex'])
+  const supportsLuceneIndex = getConf(track, ['displays', '0', 'supportsLuceneIndex'])
   const showDetailsWidget = (rowIdx: number) => {
     const feature = features[rowIdx]
     const trackId = getConf(track, ['trackId'])
@@ -453,11 +453,11 @@ const VariantTableWidget = observer(props => {
 
       <div style={{marginBottom: "10px"}}>
         <Grid container spacing={1} justifyContent="flex-start" alignItems="center" >
-          <Grid key='search' item xs="auto">
+          <Grid key='search'>
             <StandaloneSearchComponent session={session} onSelect={handleSearch} forVariantTable={true} assemblyName={assemblyName} selectedRegion={isValidLocString ? locString : ""} fieldMinWidth={225}/>
           </Grid>
 
-          <Grid key='filterMenu' item xs="auto">
+          <Grid key='filterMenu'>
             <MenuButton disabled={!isValidLocString} id={'filterMenu'} color="primary" variant="contained" text="Filter" anchor={anchorFilterMenu}
               handleClick={(e) => handleMenuClick(e, setAnchorFilterMenu)}
               handleClose={(e) => handleMenuClose(setAnchorFilterMenu)} >
@@ -466,11 +466,11 @@ const VariantTableWidget = observer(props => {
             </MenuButton>
           </Grid>
 
-          <Grid key='genomeViewButton' item xs="auto">
+          <Grid key='genomeViewButton'>
             <Button disabled={!isValidLocString} style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("browserRedirect")}>View in Genome Browser</Button>
           </Grid>
 
-          {supportsLuceneIndex ? <Grid key='luceneViewButton' item xs="auto">
+          {supportsLuceneIndex ? <Grid key='luceneViewButton'>
             <Button hidden={!supportsLuceneIndex} style={{ marginTop:"8px"}} color="primary" variant="contained" onClick={() => handleMenu("luceneRedirect")}>Switch to Full-text Search</Button>
           </Grid> : null}
         </Grid>

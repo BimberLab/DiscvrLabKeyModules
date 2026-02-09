@@ -1,13 +1,14 @@
 import { ConfigurationReference, getConf } from '@jbrowse/core/configuration';
-import { AnyConfigurationModel, } from '@jbrowse/core/configuration/configurationSchema';
+import { AnyConfigurationModel } from '@jbrowse/core/configuration';
 import { getContainingTrack, getContainingView, getSession } from '@jbrowse/core/util';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import configSchemaF from './configSchema';
-import { getEnv, IAnyStateTreeNode, types } from 'mobx-state-tree';
+import { getEnv, IAnyStateTreeNode, types } from '@jbrowse/mobx-state-tree';
 import PaletteIcon from '@mui/icons-material/Palette';
 import { LinearGenomeViewModel } from '@jbrowse/plugin-linear-genome-view';
 import { navigateToSearch, navigateToTable } from '../../../../utils';
+import { GlyphType } from '@jbrowse/core/pluggableElementTypes'
 
 function getContainingTrackWithConfig(node: IAnyStateTreeNode): IAnyStateTreeNode & { configuration: AnyConfigurationModel } {
    return getContainingTrack(node) as any;

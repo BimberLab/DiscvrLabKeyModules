@@ -84,6 +84,7 @@ public class JBrowseTest extends BaseWebDriverTest
     {
         setUpTest();
 
+        testFullTextSearch();
         testInferredDetails();
         testNoSession();
         testMessageDisplay();

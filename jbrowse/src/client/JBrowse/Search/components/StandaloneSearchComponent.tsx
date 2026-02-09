@@ -1,7 +1,57 @@
 import React from 'react';
 import { RefNameAutocomplete } from '@jbrowse/plugin-linear-genome-view';
-import { fetchResults } from '@jbrowse/plugin-linear-genome-view/esm/LinearGenomeView/components/util';
 import { ParsedLocString, parseLocString } from '@jbrowse/core/util';
+
+
+// import { fetchResults } from '@jbrowse/plugin-linear-genome-view/esm/LinearGenomeView/components/util';
+// TODO temp code nixed from searchUtils upstream because fetchResults isn't exported in the package.json
+import BaseResult from '@jbrowse/core/TextSearch/BaseResults'
+import { dedupe } from '@jbrowse/core/util'
+import type { SearchScope } from '@jbrowse/core/TextSearch/TextSearchManager'
+import type { Assembly } from '@jbrowse/core/assemblyManager/assembly'
+import type { TextSearchManager } from '@jbrowse/core/util'
+import type { SearchType } from '@jbrowse/core/data_adapters/BaseAdapter'
+
+async function fetchResults({
+  queryString,
+  searchType,
+  searchScope,
+  rankSearchResults,
+  textSearchManager,
+  assembly,
+}: {
+  queryString: string
+  searchScope: SearchScope
+  rankSearchResults: (results: BaseResult[]) => BaseResult[]
+  searchType?: SearchType
+  textSearchManager?: TextSearchManager
+  assembly?: Assembly
+}) {
+  if (!textSearchManager) {
+    console.warn('No text search manager')
+  }
+
+  const textSearchResults = await textSearchManager?.search(
+    {
+      queryString,
+      searchType,
+    },
+    searchScope,
+    rankSearchResults,
+  )
+
+  const refNameResults = assembly?.allRefNames
+    ?.filter(ref => ref.toLowerCase().startsWith(queryString.toLowerCase()))
+    .slice(0, 10)
+    .map(r => new BaseResult({ label: r }))
+
+  return dedupe(
+    [...(refNameResults || []), ...(textSearchResults || [])],
+    elt => elt.getId(),
+  )
+}
+// end TODO
+
 
 export default function StandaloneSearchComponent(props: { session: any, selectedRegion: string, assemblyName: string, onSelect: (queryString: string, parsedLocString: ParsedLocString, errors?: string[]) => void, forVariantTable?: boolean, fieldMinWidth?: number}) {
     const { session, selectedRegion, assemblyName, onSelect, forVariantTable, fieldMinWidth = 175 } = props
