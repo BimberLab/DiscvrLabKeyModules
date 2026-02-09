@@ -16,6 +16,7 @@ import SampleFilterWidget from './SampleFilterWidget';
 import GlyphType from '@jbrowse/core/pluggableElementTypes/GlyphType';
 import { readConfObject } from '@jbrowse/core/configuration';
 import { emphasize } from '@jbrowse/core/util/color';
+import jexl from '@jbrowse/jexl';
 import { deserializeFilters } from './InfoFilterWidget/filterUtil';
 import { passesInfoFilters, passesSampleFilters } from '../../../utils';
 
@@ -25,6 +26,31 @@ function isUTR(feature: any) {
     return /(\bUTR|_UTR|untranslated[_\s]region)\b/.test(
         feature?.get?.('type') || '',
     )
+}
+
+function evaluateInfoFilters(feature: any, serializedFilters: any) {
+    try {
+        const filters = typeof serializedFilters === 'string'
+            ? JSON.parse(serializedFilters)
+            : serializedFilters
+        const expandedFilters = deserializeFilters(filters)
+        return passesInfoFilters(feature, expandedFilters)
+    } catch (e) {
+        console.error(e)
+        return true
+    }
+}
+
+function evaluateSampleFilters(feature: any, serializedSampleFilters: any) {
+    try {
+        const sampleFilters = typeof serializedSampleFilters === 'string'
+            ? JSON.parse(serializedSampleFilters)
+            : serializedSampleFilters
+        return passesSampleFilters(feature, sampleFilters)
+    } catch (e) {
+        console.error(e)
+        return true
+    }
 }
 
 export default class ExtendedVariantPlugin extends Plugin {
@@ -199,30 +225,10 @@ export default class ExtendedVariantPlugin extends Plugin {
             return val ? Number(val).toLocaleString() : val
         })
 
-        pluginManager.jexl.addFunction('passesInfoFilters', (feature, serializedFilters) => {
-            try {
-                const filters = typeof serializedFilters === 'string'
-                    ? JSON.parse(serializedFilters)
-                    : serializedFilters
-                const expandedFilters = deserializeFilters(filters)
-                return passesInfoFilters(feature, expandedFilters)
-            } catch (e) {
-                console.error(e)
-                return true
-            }
-        })
-
-        pluginManager.jexl.addFunction('passesSampleFilters', (feature, serializedSampleFilters) => {
-            try {
-                const sampleFilters = typeof serializedSampleFilters === 'string'
-                    ? JSON.parse(serializedSampleFilters)
-                    : serializedSampleFilters
-                return passesSampleFilters(feature, sampleFilters)
-            } catch (e) {
-                console.error(e)
-                return true
-            }
-        })
+        jexl.addFunction('passesInfoFilters', evaluateInfoFilters)
+        jexl.addFunction('passesSampleFilters', evaluateSampleFilters)
+        pluginManager.jexl.addFunction('passesInfoFilters', evaluateInfoFilters)
+        pluginManager.jexl.addFunction('passesSampleFilters', evaluateSampleFilters)
     }
 
     configure(pluginManager: PluginManager) {

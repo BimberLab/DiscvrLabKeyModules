@@ -135,6 +135,7 @@ export default jbrowse => {
                   rendererConfig: config,
                   filters: new SerializableFilterChain({
                      filters: this.activeFilters(),
+                     jexl: jbrowse.jexl,
                   }),
                }
             },

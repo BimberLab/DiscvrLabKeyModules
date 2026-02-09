@@ -333,7 +333,7 @@ export default jbrowse => {
         const { model } = props
         const detailsConfig = JSON.parse(JSON.stringify(model.detailsConfig || {}))
         const feature = model.featureData
-        const featureInfoFields = feature.parser.metadata.INFO
+        const featureInfoFields = feature.vcfMetadataInfo || feature.parser?.metadata?.INFO || {}
         const [infoFields, setInfoFields] = useState<Map<string, FieldModel>>(null)
 
         const feat = JSON.parse(JSON.stringify(feature))

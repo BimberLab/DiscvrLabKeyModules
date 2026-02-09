@@ -8,6 +8,16 @@ export default class ExtendedVcfFeature extends VcfFeature {
         super(args)
     }
 
+    toJSON() {
+        const ret: any = super.toJSON()
+
+        // Preserve VCF INFO header metadata through JSON/snapshot flows used by
+        // JBrowse widgets. parser is not guaranteed to survive serialization.
+        ret.vcfMetadataInfo = (this as any).parser?.metadata?.INFO || {}
+
+        return ret
+    }
+
     static extractImpact(variant: Variant) {
         // Only append if not present:
         if (variant.INFO["IMPACT"]) {
