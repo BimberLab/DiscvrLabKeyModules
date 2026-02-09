@@ -118,7 +118,7 @@ const VariantTableWidget = observer(props => {
     filteredFeatures.forEach(variant => {
       if (!variant.get('INFO')['variableSamples']) {
         variant.get('INFO')['variableSamples'] = []
-        const genotypes = variant.get('GENOTYPES')()
+        const genotypes = variant.get('genotypes')
         Object.keys(genotypes).forEach(function(sampleId) {
           const gt = genotypes[sampleId] ? genotypes[sampleId] : null
           if (isVariant(gt)) {

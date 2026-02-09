@@ -8,7 +8,11 @@ import { getEnv, IAnyStateTreeNode, types } from '@jbrowse/mobx-state-tree';
 import PaletteIcon from '@mui/icons-material/Palette';
 import { LinearGenomeViewModel } from '@jbrowse/plugin-linear-genome-view';
 import { navigateToSearch, navigateToTable } from '../../../../utils';
-import { GlyphType } from '@jbrowse/core/pluggableElementTypes'
+import SerializableFilterChain from '@jbrowse/core/pluggableElementTypes/renderers/util/serializableFilterChain';
+
+function escapeForSingleQuotedJexl(value: string) {
+   return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+}
 
 function getContainingTrackWithConfig(node: IAnyStateTreeNode): IAnyStateTreeNode & { configuration: AnyConfigurationModel } {
    return getContainingTrack(node) as any;
@@ -128,8 +132,40 @@ export default jbrowse => {
                return {
                   ...superRenderProps(),
                   config: config,
-                  rendererConfig: config
+                  rendererConfig: config,
+                  filters: new SerializableFilterChain({
+                     filters: this.activeFilters(),
+                  }),
                }
+            },
+
+            activeFilters() {
+               const staticJexlFilters = (getConf(self, 'jexlFilters') || []).map((f: string) =>
+                  f?.startsWith('jexl:') ? f : `jexl:${f}`,
+               )
+
+               const infoFilters = getConf(self, 'infoFilters') || []
+               const activeSamples = getConf(self, 'activeSamples') || ''
+               const sampleFilters = activeSamples
+                  ? activeSamples
+                       .split(',')
+                       .map((s: string) => s.trim())
+                       .filter((s: string) => !!s)
+                  : []
+
+               const dynamicFilters: string[] = []
+
+               if (infoFilters.length) {
+                  const serialized = escapeForSingleQuotedJexl(JSON.stringify(infoFilters))
+                  dynamicFilters.push(`jexl:passesInfoFilters(feature,'${serialized}')`)
+               }
+
+               if (sampleFilters.length) {
+                  const serialized = escapeForSingleQuotedJexl(JSON.stringify(sampleFilters))
+                  dynamicFilters.push(`jexl:passesSampleFilters(feature,'${serialized}')`)
+               }
+
+               return [...staticJexlFilters, ...dynamicFilters]
             },
 
             get rendererTypeName() {

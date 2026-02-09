@@ -44,7 +44,7 @@ export function passesInfoFilters(feature, filters) {
     return true
 }
 
-export function passesSampleFilters(variant : VcfFeature, sampleIDs){
+export function passesSampleFilters(variant: VcfFeature, sampleIDs){
     if (!sampleIDs || sampleIDs.length === 0) {
         return true
     }
@@ -60,8 +60,7 @@ export function passesSampleFilters(variant : VcfFeature, sampleIDs){
         return false
     }
 
-
-    const genotypes = variant.get('GENOTYPES')()
+    const genotypes = variant.get('genotypes')
     if (!genotypes || isEmptyObject(genotypes)) {
         return false
     }
