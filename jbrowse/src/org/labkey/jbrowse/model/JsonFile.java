@@ -552,6 +552,11 @@ public class JsonFile
                 put("maxFeatureScreenDensity", 100);
                 put("mouseover", "jexl:'Position: ' + formatWithCommas(get(feature,'POS'))");
 
+                if (shouldHaveFreeTextSearch())
+                {
+                    put("supportsLuceneIndex", true);
+                }
+
                 JSONObject json = getExtraTrackConfig();
                 if (json != null && json.has("additionalFeatureMsg"))
                 {

@@ -105,8 +105,10 @@ export default jbrowse => {
         for (let display of displays){
             const tempProp = []
             for (let propertyName of display.properties){
-                // This value is not in the header, and is probably injected programmatically, so skip:
-                if (!featureInfoFields[propertyName]) {
+                // This value is not in the header, and is probably injected programmatically, so skip.
+                // Only apply this guard when featureInfoFields is actually populated (non-empty);
+                // when metadata is unavailable we still want to render configured sections.
+                if (Object.keys(featureInfoFields).length > 0 && !featureInfoFields[propertyName]) {
                     continue
                 }
 
@@ -377,7 +379,7 @@ export default jbrowse => {
             delete feat["INFO"]["ANN"]
         }
 
-        const sections = detailsConfig.sections || inferSections(feat, infoFields)
+        const sections = detailsConfig.sections?.length > 0 ? detailsConfig.sections : inferSections(feat, infoFields)
         const displays = makeDisplays(feat, sections, featureInfoFields, infoFields)
 
         // If a given INFO field is used in a specific section, dont include in the catch-all INFO section:

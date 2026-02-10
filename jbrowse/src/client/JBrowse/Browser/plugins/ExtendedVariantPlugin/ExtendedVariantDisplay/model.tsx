@@ -1,4 +1,4 @@
-import { ConfigurationReference, getConf } from '@jbrowse/core/configuration';
+import { ConfigurationReference, getConf, readConfObject } from '@jbrowse/core/configuration';
 import { AnyConfigurationModel } from '@jbrowse/core/configuration';
 import { getContainingTrack, getContainingView, getSession } from '@jbrowse/core/util';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -58,7 +58,7 @@ export default jbrowse => {
 
             // @ts-ignore
             const trackId = getConf(track, ['trackId'])
-            const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])
+            const detailsConfig = readConfObject(self.configuration, 'detailsConfig')
 
             const widgetId = 'Variant-' + trackId;
             const featureWidget = session.addWidget(
@@ -78,7 +78,10 @@ export default jbrowse => {
       }))
 
       .views(self => {
-         const { renderProps: superRenderProps } = self
+         const {
+            renderProps: superRenderProps,
+            renderingProps: superRenderingProps,
+         } = self
          const filterMenu = {
             label: 'Filter By Attributes',
             icon: FilterListIcon,
@@ -137,6 +140,28 @@ export default jbrowse => {
                      filters: this.activeFilters(),
                      jexl: jbrowse.jexl,
                   }),
+               }
+            },
+
+            renderingProps() {
+               const superProps = superRenderingProps()
+               return {
+                  ...superProps,
+                  async onFeatureClick(_, featureId) {
+                     const session = getSession(self)
+                     try {
+                        const f = featureId || self.featureIdUnderMouse
+                        if (!f) {
+                           self.clearFeatureSelection()
+                        }
+                        else {
+                           await self.selectFeatureById(f)
+                        }
+                     } catch (e) {
+                        console.error(e)
+                        session.notifyError(`${e}`, e)
+                     }
+                  },
                }
             },
 

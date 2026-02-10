@@ -6,7 +6,6 @@ import ExtendedVariantDisplay from './ExtendedVariantDisplay';
 import DisplayType from '@jbrowse/core/pluggableElementTypes/DisplayType';
 import { createBaseTrackModel } from '@jbrowse/core/pluggableElementTypes/models';
 
-import CanvasFeatureRenderer from "@jbrowse/plugin-canvas";
 import AdapterType from '@jbrowse/core/pluggableElementTypes/AdapterType';
 import { configSchema as EVAdapterConfigSchema, EVAdapterClass } from './ExtendedVariantAdapter';
 
