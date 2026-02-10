@@ -46,9 +46,9 @@ mergeBatchInMemory <- function(datasetIdToFilePath, saveFile) {
     saveRDS(CellMembrane::MergeSeuratObjs(toMerge, projectName = projectName, doGC = doDiet, errorOnBarcodeSuffix = errorOnBarcodeSuffix, expectedDefaultAssay = expectedDefaultAssay), file = saveFile)
     filesToDelete <<- c(filesToDelete, saveFile)
 
-    logger::log_info(paste0('mem used: ', R.utils::hsize(as.numeric(pryr::mem_used()))))
+    logger::log_info(paste0('mem used: ', R.utils::hsize(as.numeric(lobstr::mem_used()))))
     gc()
-    logger::log_info(paste0('after gc: ', R.utils::hsize(as.numeric(pryr::mem_used()))))
+    logger::log_info(paste0('after gc: ', R.utils::hsize(as.numeric(lobstr::mem_used()))))
 
     return(saveFile)
 }
