@@ -136,7 +136,7 @@ public class SequenceMigrationPipelineJob extends PipelineJob
         @Override
         public @NotNull RecordedActionSet run() throws PipelineJobException
         {
-            SequenceAnalysisUpgradeCode.doSequenceMigration(getPipelineJob().getUser(), getPipelineJob().getLogger(), -1);
+            SequenceAnalysisUpgradeCode.doSequenceMigration(getPipelineJob().getUser(), getPipelineJob().getLogger(), -1, getPipelineJob());
 
             return new RecordedActionSet();
         }

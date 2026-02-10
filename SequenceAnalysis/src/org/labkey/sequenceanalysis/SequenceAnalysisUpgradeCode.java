@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.nbio.core.exceptions.CompoundNotFoundException;
 import org.biojava.nbio.core.sequence.DNASequence;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -19,6 +20,8 @@ import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.pipeline.CancelledException;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
@@ -237,10 +240,10 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
     @DeferredUpgrade
     public void migrateSequenceDirs(final ModuleContext moduleContext)
     {
-        doSequenceMigration(moduleContext.getUpgradeUser(), _log, 100000);
+        doSequenceMigration(moduleContext.getUpgradeUser(), _log, 100000, null);
     }
 
-    public static void doSequenceMigration(User u, Logger log, int maxSequences)
+    public static void doSequenceMigration(User u, Logger log, int maxSequences, @Nullable PipelineJob job)
     {
         try
         {
@@ -262,6 +265,16 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
                 if (processed % 1000 == 0)
                 {
                     log.info("{} of {} sequence files migrated", processed, nts.size());
+                    if (job != null)
+                    {
+                        job.updateStatusForTask();
+                        if (job.isCancelled())
+                        {
+                            throw new CancelledException();
+                        }
+
+                        job.setStatus(PipelineJob.TaskStatus.running, "Processed " + processed + " of " + nts.size());
+                    }
                 }
 
                 ExpData legacyExpData = ExperimentService.get().getExpData(nt.getSequenceFile());
