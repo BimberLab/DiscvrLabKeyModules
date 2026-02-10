@@ -1,5 +1,6 @@
 import Plugin from '@jbrowse/core/Plugin';
 import PluginManager from '@jbrowse/core/PluginManager';
+import { LinearBasicDisplayComponent } from '@jbrowse/plugin-linear-genome-view';
 import ExtendedVariantWidget from './ExtendedVariantWidget';
 import ExtendedVariantDisplay from './ExtendedVariantDisplay';
 import DisplayType from '@jbrowse/core/pluggableElementTypes/DisplayType';
@@ -62,7 +63,6 @@ export default class ExtendedVariantPlugin extends Plugin {
         const WidgetType = jbrequire('@jbrowse/core/pluggableElementTypes/WidgetType')
         const TrackType = jbrequire('@jbrowse/core/pluggableElementTypes/TrackType')
         const LGVPlugin = pluginManager.getPlugin('LinearGenomeViewPlugin',) as import('@jbrowse/plugin-linear-genome-view').default
-        const { BaseLinearDisplayComponent } = LGVPlugin.exports
 
         pluginManager.addAdapterType(() =>
             new AdapterType({
@@ -93,7 +93,9 @@ export default class ExtendedVariantPlugin extends Plugin {
                 stateModel,
                 trackType: 'ExtendedVariantTrack',
                 viewType: 'LinearGenomeView',
-                ReactComponent: BaseLinearDisplayComponent,
+                // Use LinearBasicDisplayComponent so canvas floating labels are rendered.
+                // BaseLinearDisplayComponent alone does not mount FloatingLabels.
+                ReactComponent: LinearBasicDisplayComponent,
             })
         })
 
