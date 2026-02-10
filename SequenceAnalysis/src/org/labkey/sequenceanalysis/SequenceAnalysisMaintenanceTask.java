@@ -37,6 +37,7 @@ import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -585,6 +586,15 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         {
             if (child.isDirectory())
             {
+                try (DirectoryStream<Path> stream = Files.newDirectoryStream(child.toPath()))
+                {
+                    if (!stream.iterator().hasNext())
+                    {
+                        FileUtils.deleteDirectory(child);
+                        return;
+                    }
+                }
+
                 inspectSequenceDir(child, expectedSequences, log);
             }
             else
