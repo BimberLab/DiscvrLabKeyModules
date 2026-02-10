@@ -144,18 +144,14 @@ public class JBrowseTestHelper
         Locator.XPathLocator l = getTrackLocator(test, trackId, true);
         test.waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
 
-        String svgPath = "//*[name()='text' and contains(text(), '" + variantText + "')]";
-        if (appendPolygon)
-        {
-            svgPath += "/parent::*/*[name()='polygon']";
-        }
-        else
-        {
-            svgPath += "/parent::*";
-        }
+        String normalizedVariantText = variantText.replaceFirst("^(?i)(SNV|deletion|insertion|indel|MNV|DEL|INS)\\s+", "");
+        String textPredicate = normalizedVariantText.equals(variantText)
+                ? "contains(normalize-space(.), '" + variantText + "')"
+                : "(contains(normalize-space(.), '" + variantText + "') or contains(normalize-space(.), '" + normalizedVariantText + "'))";
 
-        String canvasPath = "//div[@data-feature-id and contains(normalize-space(.), '" + variantText + "')]";
-        l = l.append(Locator.xpath("(" + svgPath + "|" + canvasPath + ")")).notHidden();
+        String canvasPath = "//div[contains(@data-feature-id,'vcf-') and " + textPredicate + "]"
+                + "[not(ancestor-or-self::*[contains(@style,'display: none')])]";
+        l = l.append(Locator.xpath(canvasPath)).notHidden();
 
         test.waitForElement(l);
 
