@@ -173,11 +173,11 @@ public class JBrowseTestHelper
     {
         final Long winWidth = test.executeScript("return window.outerWidth", Long.class);
         final Long winHeight = test.executeScript("return window.outerHeight", Long.class);
-        final Locator l = Locator.tagWithAttribute("svg", "data-testid", "svgfeatures").append(Locator.tag("polygon"));
+        final Locator l = Locator.tagWithAttributeContaining("div", "data-feature-id", "vcf-");
         try
         {
-            // NOTE: JBrowse renders features using multiple blocks per track, and these tracks can redundantly render identical features on top of one another.
-            // Counting unique locations is indirect, but should result in unique features
+            // NOTE: with canvas rendering, SVG polygons are no longer present. We count visible feature wrappers
+            // and de-duplicate by feature id to avoid overcounting duplicates across render blocks.
             return doVariantCount(test, l, winWidth, winHeight);
         }
         catch (StaleElementReferenceException e)
@@ -191,9 +191,16 @@ public class JBrowseTestHelper
 
     private static long doVariantCount(BaseWebDriverTest test, Locator l, long winWidth, long winHeight)
     {
-        return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).map(WebElement::getRect).distinct().filter(
-                // This is designed to limit to just elements within the viewport:
-                rec -> rec.x > 0 & rec.x <= winWidth & rec.y > 0 & rec.y <= winHeight
-        ).count();
+        return Locator.findElements(test.getDriver(), l).stream()
+                .filter(WebElement::isDisplayed)
+                .filter(el -> {
+                    var rec = el.getRect();
+                    // This is designed to limit to just elements within the viewport:
+                    return rec.x > 0 && rec.x <= winWidth && rec.y > 0 && rec.y <= winHeight;
+                })
+                .map(el -> el.getAttribute("data-feature-id"))
+                .filter(id -> id != null && id.contains("vcf-"))
+                .distinct()
+                .count();
     }
 }

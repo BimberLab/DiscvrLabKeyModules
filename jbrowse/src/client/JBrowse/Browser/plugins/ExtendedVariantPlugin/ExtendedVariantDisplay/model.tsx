@@ -9,6 +9,7 @@ import PaletteIcon from '@mui/icons-material/Palette';
 import { LinearGenomeViewModel } from '@jbrowse/plugin-linear-genome-view';
 import { navigateToSearch, navigateToTable } from '../../../../utils';
 import SerializableFilterChain from '@jbrowse/core/pluggableElementTypes/renderers/util/serializableFilterChain';
+import { generateSchemeJexl } from '../ColorWidget/colorUtil';
 
 function escapeForSingleQuotedJexl(value: string) {
    return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
@@ -200,10 +201,13 @@ export default jbrowse => {
 
             get rendererConfig() {
                const configBlob = getConf(self, ['renderer']) || {}
+               const palette = getConf(self, 'palette') || 'IMPACT'
+               const color1 = configBlob.color1 ?? generateSchemeJexl(palette)
 
                return self.rendererType.configSchema.create(
                        {
                           ...configBlob,
+                          color1,
                           showLabels: this.showLabels,
                           displayMode: this.displayMode,
                           maxHeight: this.maxHeight
