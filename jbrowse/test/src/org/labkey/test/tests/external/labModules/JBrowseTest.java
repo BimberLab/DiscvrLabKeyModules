@@ -397,7 +397,7 @@ public class JBrowseTest extends BaseWebDriverTest
     private void testInferredDetails()
     {
         beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgapF");
-        waitForJBrowseToLoad();
+        //waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
         WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).findFirst().get();
