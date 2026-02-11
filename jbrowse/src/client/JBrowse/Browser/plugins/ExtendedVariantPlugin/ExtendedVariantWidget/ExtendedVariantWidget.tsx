@@ -339,9 +339,8 @@ export default jbrowse => {
         const [infoFields, setInfoFields] = useState<Map<string, FieldModel>>(null)
 
         const feat = JSON.parse(JSON.stringify(feature))
-        feat["vcfMetadataInfo"] = Object.fromEntries(
-            Object.entries(featureInfoFields).map(([k, v]: [string, any]) => [k, v?.Description || v]),
-        )
+
+        delete feat["vcfMetadataInfo"]
         const { samples } = feat
         feat["samples"] = null
 

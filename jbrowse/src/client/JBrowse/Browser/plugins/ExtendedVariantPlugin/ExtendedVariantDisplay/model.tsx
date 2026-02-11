@@ -273,7 +273,7 @@ export default jbrowse => {
                   }
                }]
 
-               const supportsLuceneIndex = getConf(self, ['renderer', 'supportsLuceneIndex'])
+               const supportsLuceneIndex = getConf(self, ['supportsLuceneIndex'])
                if (supportsLuceneIndex) {
                   buttons.push({
                      label: 'Variant Search',

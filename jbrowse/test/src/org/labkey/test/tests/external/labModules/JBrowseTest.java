@@ -92,7 +92,7 @@ public class JBrowseTest extends BaseWebDriverTest
         testTitleMapping();
         testPredictedFunction();
         testAlleleFrequencies();
-        //testGenotypeFrequencies();
+        testGenotypeFrequencies();
 
         testColorWidget();
         testDefaultColorApplied();
@@ -552,9 +552,6 @@ public class JBrowseTest extends BaseWebDriverTest
         assertElementPresent(Locator.tagWithText("td", "3041"));
         assertElementPresent(Locator.tagWithText("span", "Genotype Frequency (2329)"));
         assertElementPresent(Locator.tagWithText("a", "Click here to view sample-level genotypes"));
-        while (isTextPresent("Loading")){
-            sleep(10);
-        }
         waitForElement(Locator.tagWithAttributeContaining("div","id","reactgooglegraph"));
     }
 
@@ -1251,8 +1248,6 @@ public class JBrowseTest extends BaseWebDriverTest
         doAndWaitForPageToLoad(() -> {
             searchBox.sendKeys(Keys.ENTER);
         });
-
-        waitForJBrowseToLoad();
 
         waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
