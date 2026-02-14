@@ -285,9 +285,14 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
                 }
 
                 File legacyFile = legacyExpData.getFile();
-                if (!RefNtSequenceModel.BASE_DIRNAME.equals(legacyFile.getParentFile().getName()))
+                if (RefNtSequenceModel.BASE_DIRNAME.equals(legacyFile.getParentFile().getName()))
                 {
-                    // NOTE: this includes sequences imported to custom locations, such as refSequenceImport pipeline jobs
+                    continue;
+                }
+
+                if (!legacyFile.getPath().contains(RefNtSequenceModel.BASE_DIRNAME))
+                {
+                    // Includes sequences imported as pipeline jobs
                     continue;
                 }
 

@@ -555,26 +555,13 @@ public class RefNtSequenceModel implements Serializable
 
     private File getSequenceFileBaseDir(@Nullable File outDir, boolean create)
     {
-        if (outDir != null)
+        outDir = outDir == null ? getBaseSequenceDir() : outDir;
+
+        if (create && !outDir.exists())
         {
-            return outDir;
+            outDir.mkdirs();
         }
 
-        File baseDir = getBaseSequenceDir();
-        String digest = Crypt.MD5.digest(String.valueOf(getRowid()));
-
-        baseDir = FileUtil.appendName(baseDir, digest.substring(0,4));
-        baseDir = FileUtil.appendName(baseDir, digest.substring(4,8));
-        baseDir = FileUtil.appendName(baseDir, digest.substring(8,12));
-        baseDir = FileUtil.appendName(baseDir, digest.substring(12,20));
-        baseDir = FileUtil.appendName(baseDir, digest.substring(20,28));
-        baseDir = FileUtil.appendName(baseDir, digest.substring(28,32));
-
-        if (create)
-        {
-            baseDir.mkdirs();
-        }
-
-        return baseDir;
+        return outDir;
     }
 }
