@@ -341,8 +341,14 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             {
                 for (File missing : expectedSequences)
                 {
-                    log.error("expected sequence file does not exist: " + missing.getPath());
-                    return;
+                    if (missing.exists())
+                    {
+                        log.error("File exists, but wasnt removed from expectedSequences for folder {}, file:  {}", sequenceDir.getPath(), missing.getPath());
+                    }
+                    else
+                    {
+                        log.error("expected sequence file does not exist: {}", missing.getPath());
+                    }
                 }
             }
 
