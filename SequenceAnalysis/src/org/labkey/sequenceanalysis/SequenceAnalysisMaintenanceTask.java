@@ -597,7 +597,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                     if (!stream.iterator().hasNext())
                     {
                         FileUtils.deleteDirectory(child);
-                        return;
+                        continue;
                     }
                 }
 
