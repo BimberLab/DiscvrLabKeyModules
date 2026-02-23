@@ -160,13 +160,13 @@ public class JBrowseTestHelper
 
     public static void waitForJBrowseToLoad(BaseWebDriverTest test)
     {
-        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading...")); //the initial message before getSession
-        test.waitForElement(Locator.tagWithAttribute("svg", "data-testid", "MenuIcon")); //this is the top-left icon
-        test.waitForElement(Locator.tagWithAttribute("button", "title", "close this track").notHidden());
+        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading..."), WebDriverWrapper.WAIT_FOR_PAGE); //the initial message before getSession
+        test.waitForElement(Locator.tagWithAttribute("svg", "data-testid", "MenuIcon"), WebDriverWrapper.WAIT_FOR_PAGE); //this is the top-left icon
+        test.waitForElement(Locator.tagWithAttribute("button", "title", "close this track").notHidden(), WebDriverWrapper.WAIT_FOR_PAGE);
         test.waitForElement(Locator.tagWithClassContaining("button", "MuiButtonBase-root").notHidden(), WebDriverWrapper.WAIT_FOR_PAGE); //this is the icon from the track label
 
-        test.waitForElementToDisappear(Locator.tagWithText("div", "Loading")); //track data
-        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading").withClass("MuiTypography-root")); // the track data
+        test.waitForElementToDisappear(Locator.tagWithText("div", "Loading"), WebDriverWrapper.WAIT_FOR_PAGE); //track data
+        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading").withClass("MuiTypography-root"), WebDriverWrapper.WAIT_FOR_PAGE); // the track data
     }
 
     public static long getTotalVariantFeatures(BaseWebDriverTest test)

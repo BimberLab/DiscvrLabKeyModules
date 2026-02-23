@@ -397,7 +397,7 @@ public class JBrowseTest extends BaseWebDriverTest
     private void testInferredDetails()
     {
         beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgapF");
-        //waitForJBrowseToLoad();
+        waitForJBrowseToLoad();
 
         Actions actions = new Actions(getDriver());
         WebElement toClick = getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> C")).stream().filter(WebElement::isDisplayed).findFirst().get();
@@ -1248,6 +1248,8 @@ public class JBrowseTest extends BaseWebDriverTest
         doAndWaitForPageToLoad(() -> {
             searchBox.sendKeys(Keys.ENTER);
         });
+
+        waitForJBrowseToLoad();
 
         waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
