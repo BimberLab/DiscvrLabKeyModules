@@ -161,7 +161,7 @@ public class JBrowseTestHelper
     public static void waitForJBrowseToLoad(BaseWebDriverTest test)
     {
         test.waitForElementToDisappear(Locator.tagWithText("p", "Loading..."), WebDriverWrapper.WAIT_FOR_PAGE); //the initial message before getSession
-        test.waitForElement(Locator.tagWithAttribute("svg", "data-testid", "MenuIcon"), WebDriverWrapper.WAIT_FOR_PAGE); //this is the top-left icon
+        test.waitForElement(Locator.tagWithAttribute("button", "data-testid", "view_menu_icon"), WebDriverWrapper.WAIT_FOR_PAGE); //this is the top-left icon
         test.waitForElement(Locator.tagWithAttribute("button", "title", "close this track").notHidden(), WebDriverWrapper.WAIT_FOR_PAGE);
         test.waitForElement(Locator.tagWithClassContaining("button", "MuiButtonBase-root").notHidden(), WebDriverWrapper.WAIT_FOR_PAGE); //this is the icon from the track label
 
