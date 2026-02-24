@@ -2,7 +2,6 @@ import React from 'react';
 import { RefNameAutocomplete, fetchResults } from '@jbrowse/plugin-linear-genome-view';
 import { ParsedLocString, parseLocString } from '@jbrowse/core/util';
 
-import BaseResult from '@jbrowse/core/TextSearch/BaseResults'
 import { dedupe } from '@jbrowse/core/util'
 import type { SearchScope } from '@jbrowse/core/TextSearch/TextSearchManager'
 import type { Assembly } from '@jbrowse/core/assemblyManager/assembly'
