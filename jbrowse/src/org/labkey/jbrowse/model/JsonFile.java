@@ -551,17 +551,11 @@ public class JsonFile
                 put("displayId", getJsonTrackId() + "-ExtendedVariantDisplay");
                 put("maxFeatureScreenDensity", 100);
                 put("mouseover", "jexl:'Position: ' + formatWithCommas(get(feature,'POS'))");
-                put("renderer", new JSONObject(){{
-                    put("type", "ExtendedVariantRenderer");
-                    if (shouldHaveFreeTextSearch())
-                    {
-                        put("supportsLuceneIndex", true);
-                    }
-                    //put("showLabels", false);
-                    //put("labels", new JSONObject(){{
-                    //    put("description", "jexl:get(feature,'POS')");
-                    //}});
-                }});
+
+                if (shouldHaveFreeTextSearch())
+                {
+                    put("supportsLuceneIndex", true);
+                }
 
                 JSONObject json = getExtraTrackConfig();
                 if (json != null && json.has("additionalFeatureMsg"))

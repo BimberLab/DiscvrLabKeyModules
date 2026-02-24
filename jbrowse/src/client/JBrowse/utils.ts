@@ -1,5 +1,5 @@
 import { isEmptyObject } from 'jquery';
-import jexl from 'jexl';
+import jexl from '@jbrowse/jexl';
 import { createViewState, loadPlugins } from '@jbrowse/react-linear-genome-view2';
 import { ActionURL, Ajax } from '@labkey/api';
 import {
@@ -33,7 +33,7 @@ export function passesInfoFilters(feature, filters) {
                 filterObj.jexlExpression = filterObj.jexlExpression.replace('variant', 'data')
             }
 
-            if (!jexl.evalSync(filterObj.jexlExpression, feature)){
+            if (!jexl.eval(filterObj.jexlExpression, feature)){
                 return false
             }
         } catch (e){
@@ -44,7 +44,7 @@ export function passesInfoFilters(feature, filters) {
     return true
 }
 
-export function passesSampleFilters(variant : VcfFeature, sampleIDs){
+export function passesSampleFilters(variant: VcfFeature, sampleIDs){
     if (!sampleIDs || sampleIDs.length === 0) {
         return true
     }
@@ -60,7 +60,7 @@ export function passesSampleFilters(variant : VcfFeature, sampleIDs){
         return false
     }
 
-    const genotypes = variant.get('GENOTYPES')()
+    const genotypes = variant.get('genotypes')
     if (!genotypes || isEmptyObject(genotypes)) {
         return false
     }
@@ -174,7 +174,7 @@ function applyUrlParams(json, queryParam) {
                 let found = false
                 for (const track of json.tracks) {
                     if (track.trackId?.toLowerCase() === trackId?.toLowerCase() || track.name?.toLowerCase() === trackId?.toLowerCase() || track.trackId?.toLowerCase().includes(trackId?.toLowerCase())) {
-                        track.displays[0].renderer.activeSamples = sampleList.join(',')
+                        track.displays[0].activeSamples = sampleList.join(',')
                         found = true
                         break
                     }
@@ -198,7 +198,7 @@ function applyUrlParams(json, queryParam) {
             let found = false
             for (const track of json.tracks) {
                 if (track.trackId?.toLowerCase() === trackId?.toLowerCase() || track.name?.toLowerCase() === trackId?.toLowerCase() || track.trackId?.toLowerCase().includes(trackId?.toLowerCase())) {
-                    track.displays[0].renderer.infoFilters = [...infoFilterList]
+                    track.displays[0].infoFilters = [...infoFilterList]
                     found = true
                     break
                 }
@@ -276,11 +276,11 @@ function serializeSampleFilters(track) {
         return undefined
     }
 
-    if (!track.configuration.displays[0].renderer.activeSamples.value) {
+    if (!track.configuration.displays[0].activeSamples.value) {
         return undefined
     }
 
-    return track.configuration.trackId + ":" + track.configuration.displays[0].renderer.activeSamples.value
+    return track.configuration.trackId + ":" + track.configuration.displays[0].activeSamples.value
 }
 
 function serializeInfoFilters(track) {
@@ -288,11 +288,11 @@ function serializeInfoFilters(track) {
         return undefined
     }
 
-    if (!track.configuration.displays[0].renderer.infoFilters.valueJSON || isEmptyObject(track.configuration.displays[0].renderer.infoFilters.valueJSON)  || !track.configuration.displays[0].renderer.infoFilters.valueJSON.length) {
+    if (!track.configuration.displays[0].infoFilters.valueJSON || isEmptyObject(track.configuration.displays[0].infoFilters.valueJSON)  || !track.configuration.displays[0].infoFilters.valueJSON.length) {
         return undefined
     }
 
-    return track.configuration.trackId + ":" + encodeURIComponent(track.configuration.displays[0].renderer.infoFilters.valueJSON)
+    return track.configuration.trackId + ":" + encodeURIComponent(track.configuration.displays[0].infoFilters.valueJSON)
 }
 
 function handleFailure(error, sessionId?, trackId?, isTable?, reloadOnFailure = true) {

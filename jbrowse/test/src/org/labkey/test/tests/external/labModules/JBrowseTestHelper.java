@@ -143,10 +143,15 @@ public class JBrowseTestHelper
     {
         Locator.XPathLocator l = getTrackLocator(test, trackId, true);
         test.waitForElementToDisappear(Locator.tagWithText("p", "Loading"));
-        l = l.append(Locator.xpath("//*[name()='text' and contains(text(), '" + variantText + "')]")).notHidden().parent();
-        if (appendPolygon){
-            l = l.append("/*[name()='polygon']");
-        }
+
+        String normalizedVariantText = variantText.replaceFirst("^(?i)(SNV|deletion|insertion|indel|MNV|DEL|INS)\\s+", "");
+        String textPredicate = normalizedVariantText.equals(variantText)
+                ? "contains(normalize-space(.), '" + variantText + "')"
+                : "(contains(normalize-space(.), '" + variantText + "') or contains(normalize-space(.), '" + normalizedVariantText + "'))";
+
+        String canvasPath = "//div[contains(@data-feature-id,'vcf-') and " + textPredicate + "]"
+                + "[not(ancestor-or-self::*[contains(@style,'display: none')])]";
+        l = l.append(Locator.xpath(canvasPath)).notHidden();
 
         test.waitForElement(l);
 
@@ -155,24 +160,24 @@ public class JBrowseTestHelper
 
     public static void waitForJBrowseToLoad(BaseWebDriverTest test)
     {
-        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading...")); //the initial message before getSession
-        test.waitForElement(Locator.tagWithAttribute("svg", "data-testid", "MenuIcon")); //this is the top-left icon
-        test.waitForElement(Locator.tagWithAttribute("button", "title", "close this track").notHidden());
+        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading..."), WebDriverWrapper.WAIT_FOR_PAGE); //the initial message before getSession
+        test.waitForElement(Locator.tagWithAttribute("button", "data-testid", "view_menu_icon"), WebDriverWrapper.WAIT_FOR_PAGE); //this is the top-left icon
+        test.waitForElement(Locator.tagWithAttribute("button", "title", "close this track").notHidden(), WebDriverWrapper.WAIT_FOR_PAGE);
         test.waitForElement(Locator.tagWithClassContaining("button", "MuiButtonBase-root").notHidden(), WebDriverWrapper.WAIT_FOR_PAGE); //this is the icon from the track label
 
-        test.waitForElementToDisappear(Locator.tagWithText("div", "Loading")); //track data
-        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading").withClass("MuiTypography-root")); // the track data
+        test.waitForElementToDisappear(Locator.tagWithText("div", "Loading"), WebDriverWrapper.WAIT_FOR_PAGE); //track data
+        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading").withClass("MuiTypography-root"), WebDriverWrapper.WAIT_FOR_PAGE); // the track data
     }
 
     public static long getTotalVariantFeatures(BaseWebDriverTest test)
     {
         final Long winWidth = test.executeScript("return window.outerWidth", Long.class);
         final Long winHeight = test.executeScript("return window.outerHeight", Long.class);
-        final Locator l = Locator.tagWithAttribute("svg", "data-testid", "svgfeatures").append(Locator.tag("polygon"));
+        final Locator l = Locator.tagWithAttributeContaining("div", "data-feature-id", "vcf-");
         try
         {
-            // NOTE: JBrowse renders features using multiple blocks per track, and these tracks can redundantly render identical features on top of one another.
-            // Counting unique locations is indirect, but should result in unique features
+            // NOTE: with canvas rendering, SVG polygons are no longer present. We count visible feature wrappers
+            // and de-duplicate by feature id to avoid overcounting duplicates across render blocks.
             return doVariantCount(test, l, winWidth, winHeight);
         }
         catch (StaleElementReferenceException e)
@@ -186,9 +191,16 @@ public class JBrowseTestHelper
 
     private static long doVariantCount(BaseWebDriverTest test, Locator l, long winWidth, long winHeight)
     {
-        return Locator.findElements(test.getDriver(), l).stream().filter(WebElement::isDisplayed).map(WebElement::getRect).distinct().filter(
-                // This is designed to limit to just elements within the viewport:
-                rec -> rec.x > 0 & rec.x <= winWidth & rec.y > 0 & rec.y <= winHeight
-        ).count();
+        return Locator.findElements(test.getDriver(), l).stream()
+                .filter(WebElement::isDisplayed)
+                .filter(el -> {
+                    var rec = el.getRect();
+                    // This is designed to limit to just elements within the viewport:
+                    return rec.x > 0 && rec.x <= winWidth && rec.y > 0 && rec.y <= winHeight;
+                })
+                .map(el -> el.getAttribute("data-feature-id"))
+                .filter(id -> id != null && id.contains("vcf-"))
+                .distinct()
+                .count();
     }
 }

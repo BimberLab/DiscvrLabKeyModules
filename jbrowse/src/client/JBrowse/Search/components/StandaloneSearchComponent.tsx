@@ -1,7 +1,12 @@
 import React from 'react';
-import { RefNameAutocomplete } from '@jbrowse/plugin-linear-genome-view';
-import { fetchResults } from '@jbrowse/plugin-linear-genome-view/esm/LinearGenomeView/components/util';
+import { RefNameAutocomplete, fetchResults } from '@jbrowse/plugin-linear-genome-view';
 import { ParsedLocString, parseLocString } from '@jbrowse/core/util';
+
+import { dedupe } from '@jbrowse/core/util'
+import type { SearchScope } from '@jbrowse/core/TextSearch/TextSearchManager'
+import type { Assembly } from '@jbrowse/core/assemblyManager/assembly'
+import type { TextSearchManager } from '@jbrowse/core/util'
+import type { SearchType } from '@jbrowse/core/data_adapters/BaseAdapter'
 
 export default function StandaloneSearchComponent(props: { session: any, selectedRegion: string, assemblyName: string, onSelect: (queryString: string, parsedLocString: ParsedLocString, errors?: string[]) => void, forVariantTable?: boolean, fieldMinWidth?: number}) {
     const { session, selectedRegion, assemblyName, onSelect, forVariantTable, fieldMinWidth = 175 } = props

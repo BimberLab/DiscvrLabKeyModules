@@ -60,9 +60,6 @@
           "maxFeatureScreenDensity": 100,
           "height": 400,
           "mouseover": "jexl:'Position: ' + formatWithCommas(get(feature,'POS'))",
-          "renderer": {
-            "type": "ExtendedVariantRenderer"
-          },
           "detailsConfig": {
             "sections": [
               {
