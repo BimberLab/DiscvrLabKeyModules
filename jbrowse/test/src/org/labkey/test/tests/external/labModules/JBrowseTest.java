@@ -1249,8 +1249,6 @@ public class JBrowseTest extends BaseWebDriverTest
             searchBox.sendKeys(Keys.ENTER);
         });
 
-        waitForJBrowseToLoad();
-
         waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));
 
