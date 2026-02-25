@@ -43,7 +43,9 @@ import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.URLHelper;
+import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HtmlView;
+import org.labkey.api.view.RedirectException;
 import org.labkey.cluster.pipeline.AbstractClusterExecutionEngine;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
@@ -492,7 +494,7 @@ public class ClusterController extends SpringActionController
         }
 
         @Override
-        public URLHelper getRedirectURL(ViewJavaLogForm viewJavaLogForm) throws Exception
+        public ActionURL getRedirectURL(ViewJavaLogForm viewJavaLogForm) throws Exception
         {
             PipelineStatusFile sf = PipelineService.get().getStatusFile(viewJavaLogForm.getJobId());
             File parentDir = new File(sf.getFilePath()).getParentFile();
@@ -540,7 +542,7 @@ public class ClusterController extends SpringActionController
 
             relPath = org.labkey.api.util.Path.parse(FilenameUtils.separatorsToUnix(relPath)).encode();
 
-            return new URLHelper(root.getWebdavURL() + relPath);
+            throw new RedirectException(new URLHelper(root.getWebdavURL() + relPath));
         }
     }
 

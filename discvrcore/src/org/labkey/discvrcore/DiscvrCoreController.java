@@ -285,7 +285,7 @@ public class DiscvrCoreController extends SpringActionController
     public class SetTableIncrementValueAction extends SimpleRedirectAction<Object>
     {
         @Override
-        public URLHelper getRedirectURL(Object o) throws Exception
+        public ActionURL getRedirectURL(Object o)
         {
             return DetailsURL.fromString("laboratory/setTableIncrementValue.view", getContainer()).getActionURL();
         }
@@ -297,7 +297,7 @@ public class DiscvrCoreController extends SpringActionController
     public class ManageFileRootAction extends SimpleRedirectAction<Object>
     {
         @Override
-        public URLHelper getRedirectURL(Object o) throws Exception
+        public ActionURL getRedirectURL(Object o)
         {
             return DetailsURL.fromString("admin/manageFileRoot.view", getContainer()).getActionURL();
         }
@@ -308,7 +308,7 @@ public class DiscvrCoreController extends SpringActionController
     public static class AddCustomIndexesAction extends ConfirmAction<Object>
     {
         @Override
-        public ModelAndView getConfirmView(Object o, BindException errors) throws Exception
+        public ModelAndView getConfirmView(Object o, BindException errors)
         {
             setTitle("Add Custom Core.Container Indexes");
 
@@ -316,7 +316,7 @@ public class DiscvrCoreController extends SpringActionController
         }
 
         @Override
-        public boolean handlePost(Object o, BindException errors) throws Exception
+        public boolean handlePost(Object o, BindException errors)
         {
             return DiscvrCoreManager.get().addCoreContainersIndexes();
         }
