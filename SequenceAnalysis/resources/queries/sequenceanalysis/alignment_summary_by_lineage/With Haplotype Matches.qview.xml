@@ -19,8 +19,8 @@
            </properties>
        </column>
        <column name="totalLineages" />
-       <column name="total" />
        <column name="total_reads" />
+       <column name="total_reads_in_analysis" />
        <column name="percent"/>
        <column name="total_reads_from_locus" />
        <column name="percent_from_locus"/>
