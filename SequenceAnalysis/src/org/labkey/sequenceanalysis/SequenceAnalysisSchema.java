@@ -53,6 +53,7 @@ public class SequenceAnalysisSchema
     public static final String TABLE_ANALYSIS_SETS = "analysisSets";
     public static final String TABLE_ANALYSIS_SET_MEMBERS = "analysisSetMembers";
     public static final String TABLE_READ_DATA = "readData";
+    public static final String TABLE_ALIGNMENT_SUMMARY_COMBINED = "alignment_summary_combined";
 
     public static SequenceAnalysisSchema getInstance()
     {
