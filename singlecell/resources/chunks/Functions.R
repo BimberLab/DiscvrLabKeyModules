@@ -191,3 +191,13 @@ if (Sys.getenv('SEURAT_MAX_THREADS') != '') {
 
     future::plan(strategy = fs, workers = mt)
 }
+
+.ShouldReapplyTcr <- function(seuratObj) {
+  return (
+    !'HasCDR3Data' %in% names(seuratObj@meta.data) ||
+    'TRB_Segments' %in% names(seuratObj@meta.data) ||
+      !'TRB_WithProductive' %in% names(seuratObj@meta.data) ||
+      # This purpose of this is to catch a previous bug where every cell was tagged as (NP)
+      (sum(seuratObj@meta.data$TRB_WithProductive, pattern = '(NP)' == sum(!is.na(seuratObj@meta.data$TRB_WithProductive))))
+  )
+}
