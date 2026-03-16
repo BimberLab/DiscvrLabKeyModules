@@ -121,6 +121,22 @@
                                 }
                         )
                     }, {
+                        name: 'GEX Readsets Possibly Needing Archival',
+                        url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
+                                    schemaName: 'sequenceanalysis',
+                                    queryName: 'sequence_readsets',
+                                    'query.viewName': 'SRA Info',
+                                    'query.totalForwardReads~isnonblank': null,
+                                    'query.isArchived~eq': 0,
+                                    'query.readdataWithoutSra~eq': 0,
+                                    'query.outputFileTypes~contains': '10x Loupe',
+                                    'query.application~contains': 'single',
+                                    'query.status~isblank': null,
+                                    'query.librarytype~contains': 'GEX',
+                                    'query.sort': 'name'
+                                }
+                        )
+                    }, {
                         name: 'Analyses Using Old Readsets',
                         url: LABKEY.ActionURL.buildURL('query', 'executeQuery.view', null, {
                             schemaName: 'sequenceanalysis',
