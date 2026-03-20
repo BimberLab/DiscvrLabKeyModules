@@ -165,8 +165,8 @@ public class JBrowseTestHelper
         test.waitForElement(Locator.tagWithAttribute("button", "title", "close this track").notHidden(), WebDriverWrapper.WAIT_FOR_PAGE);
         test.waitForElement(Locator.tagWithClassContaining("button", "MuiButtonBase-root").notHidden(), WebDriverWrapper.WAIT_FOR_PAGE); //this is the icon from the track label
 
-        test.waitForElementToDisappear(Locator.tagWithText("div", "Loading"), WebDriverWrapper.WAIT_FOR_PAGE); //track data
-        test.waitForElementToDisappear(Locator.tagWithText("p", "Loading").withClass("MuiTypography-root"), WebDriverWrapper.WAIT_FOR_PAGE); // the track data
+        Locator.XPathLocator trackContainer = Locator.tagWithAttributeContaining("div", "data-testid", "trackRenderingContainer-");
+        test.waitForElement(trackContainer.descendant(Locator.tagWithAttributeContaining("canvas", "data-testid", "_done")), WebDriverWrapper.WAIT_FOR_PAGE); //track data
     }
 
     public static long getTotalVariantFeatures(BaseWebDriverTest test)
