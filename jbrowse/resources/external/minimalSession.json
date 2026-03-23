@@ -51,10 +51,7 @@
       },
       "displays": [{
         "type": "ExtendedVariantDisplay",
-        "displayId": "clinvar_ncbi_hg38-ExtendedVariantDisplay",
-        "renderer": {
-          "type": "ExtendedVariantRenderer"
-        }
+        "displayId": "clinvar_ncbi_hg38-ExtendedVariantDisplay"
       }],
       "metadata": {
         "extendedVariantDisplayConfig" : [

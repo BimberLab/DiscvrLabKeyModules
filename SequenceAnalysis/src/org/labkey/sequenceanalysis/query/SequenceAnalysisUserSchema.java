@@ -1,8 +1,10 @@
 package org.labkey.sequenceanalysis.query;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.collections.CaseInsensitiveTreeSet;
 import org.labkey.api.data.AbstractTableInfo;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
@@ -15,6 +17,7 @@ import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.SchemaTableInfo;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.ldk.LDKService;
@@ -25,6 +28,7 @@ import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryAction;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QueryService;
@@ -34,13 +38,17 @@ import org.labkey.api.sequenceanalysis.pipeline.SequenceOutputHandler;
 import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.LinkBuilder;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.logging.LogHelper;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.writer.HtmlWriter;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * User: bimber
@@ -49,23 +57,46 @@ import java.util.LinkedHashSet;
  */
 public class SequenceAnalysisUserSchema extends SimpleUserSchema
 {
-    private SequenceAnalysisUserSchema(User user, Container container, DbSchema schema)
+    private static final Logger _log = LogHelper.getLogger(SequenceAnalysisUserSchema.class, "Messages related to SequenceAnalysisUserSchema");
+
+    private SequenceAnalysisUserSchema(User user, Container container, DbSchema schema, Set<String> available)
     {
-        super(SequenceAnalysisSchema.SCHEMA_NAME, null, user, container, schema);
+        super(SequenceAnalysisSchema.SCHEMA_NAME, null, user, container, schema, null, available, null);
     }
 
     public static void register(final Module m)
     {
         final DbSchema dbSchema = SequenceAnalysisSchema.getInstance().getSchema();
+        final Set<String> available = new CaseInsensitiveTreeSet();
+        for (String tableName : dbSchema.getTableNames())
+        {
+            SchemaTableInfo table = dbSchema.getTable(tableName);
+            if (null != table)
+                available.add(table.getName());
+            else
+                _log.error("Schema '" + dbSchema.getName() + "' provided tableName '" + tableName + "', but not actual table.");
+        }
+        available.add(SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_COMBINED);
 
         DefaultSchema.registerProvider(SequenceAnalysisSchema.SCHEMA_NAME, new DefaultSchema.SchemaProvider(m)
         {
             @Override
             public QuerySchema createSchema(final DefaultSchema schema, Module module)
             {
-                return new SequenceAnalysisUserSchema(schema.getUser(), schema.getContainer(), dbSchema);
+                return new SequenceAnalysisUserSchema(schema.getUser(), schema.getContainer(), dbSchema, available);
             }
         });
+    }
+
+    @Override
+    public TableInfo createTable(String name, ContainerFilter cf)
+    {
+        if (SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_COMBINED.equalsIgnoreCase(name))
+        {
+            return createAlignmentSummaryCombined(cf);
+        }
+
+        return super.createTable(name, cf);
     }
 
     @Override
@@ -131,7 +162,29 @@ public class SequenceAnalysisUserSchema extends SimpleUserSchema
             return createAnalysesTable(sourceTable, cf);
         }
         else
+        {
             return super.createWrappedTable(name, sourceTable, cf);
+        }
+    }
+
+    @Override
+    public Set<String> getTableNames()
+    {
+        Set<String> ret = new HashSet<>(super.getTableNames());
+        ret.add(SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY_COMBINED);
+
+        return Collections.unmodifiableSet(ret);
+    }
+
+    @Override
+    public synchronized Set<String> getVisibleTableNames()
+    {
+        return getTableNames();
+    }
+
+    private TableInfo createAlignmentSummaryCombined(ContainerFilter cf)
+    {
+        return new SimpleTable<>(this, new AlignmentSummaryGroupedTableInfo(this), cf).init();
     }
 
     private TableInfo createAnalysesTable(TableInfo sourceTable, ContainerFilter cf)

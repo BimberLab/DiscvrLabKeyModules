@@ -1,6 +1,6 @@
 import Plugin from '@jbrowse/core/Plugin'
 import InfoIcon from '@mui/icons-material/Info'
-import { getSnapshot } from "mobx-state-tree";
+import { getSnapshot } from "@jbrowse/mobx-state-tree"
 import { getSession } from '@jbrowse/core/util'
 
 export default class LogSession extends Plugin {

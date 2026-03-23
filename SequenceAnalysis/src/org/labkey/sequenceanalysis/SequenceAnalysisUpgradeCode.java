@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.biojava.nbio.core.exceptions.CompoundNotFoundException;
 import org.biojava.nbio.core.sequence.DNASequence;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -19,8 +20,12 @@ import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.pipeline.CancelledException;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.security.User;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 
 import java.io.File;
@@ -235,63 +240,101 @@ public class SequenceAnalysisUpgradeCode implements UpgradeCode
     @DeferredUpgrade
     public void migrateSequenceDirs(final ModuleContext moduleContext)
     {
+        doSequenceMigration(moduleContext.getUpgradeUser(), _log, 100000, null);
+    }
+
+    public static void doSequenceMigration(User u, Logger log, int maxSequences, @Nullable PipelineJob job)
+    {
         try
         {
             TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES);
             TableSelector ts = new TableSelector(ti);
             List<RefNtSequenceModel> nts = ts.getArrayList(RefNtSequenceModel.class);
-            _log.info(nts.size() + " total sequences to migrate");
+            if (maxSequences > 0 && nts.size() > maxSequences)
+            {
+                log.info("There are too many sequences to migrate on startup. Please run MigrateSequenceFilesAction");
+                return;
+            }
+
+            log.info(nts.size() + " total sequences to migrate");
             int processed = 0;
+            int totalMigrated = 0;
             for (RefNtSequenceModel nt : nts)
             {
                 processed++;
-
                 if (processed % 1000 == 0)
                 {
-                    _log.info("{} of {} sequence files migrated", processed, nts.size());
+                    log.info("{} of {} sequence files migrated", processed, nts.size());
+                    if (job != null)
+                    {
+                        job.updateStatusForTask();
+                        if (job.isCancelled())
+                        {
+                            throw new CancelledException();
+                        }
+
+                        job.setStatus(PipelineJob.TaskStatus.running, "Processed " + processed + " of " + nts.size());
+                    }
                 }
 
                 ExpData legacyExpData = ExperimentService.get().getExpData(nt.getSequenceFile());
                 if (legacyExpData == null)
                 {
-                    _log.error("Missing ExpData for NT sequence: {}", nt.getSequenceFile());
+                    log.error("Missing ExpData for NT sequence: {}", nt.getSequenceFile());
                     continue;
                 }
 
                 File legacyFile = legacyExpData.getFile();
+                if (RefNtSequenceModel.BASE_DIRNAME.equals(legacyFile.getParentFile().getName()))
+                {
+                    continue;
+                }
+
+                if (!legacyFile.getPath().contains(RefNtSequenceModel.BASE_DIRNAME))
+                {
+                    // Includes sequences imported as pipeline jobs
+                    continue;
+                }
+
+                File newLocation = nt.getExpectedSequenceFile(null);
+                if (legacyFile.equals(newLocation))
+                {
+                    continue;
+                }
+
                 if (!legacyFile.exists())
                 {
-                    _log.error("Missing file for NT sequence: {}", legacyFile.getPath());
+                    log.error("Missing file for NT sequence: {}", legacyFile.getPath());
                     continue;
                 }
 
-                if (!RefNtSequenceModel.BASE_DIRNAME.equals(legacyFile.getParentFile().getName()))
-                {
-                    _log.error("Sequence appears to have already been migrated, this might indicate a retry after a failed move: {}", legacyFile.getPath());
-                    continue;
-                }
-
-                File newLocation = nt.getExpectedSequenceFile();
                 if (!newLocation.getParentFile().exists())
                 {
-                    newLocation.getParentFile().mkdirs();
+                    FileUtil.mkdirs(newLocation.getParentFile());
                 }
 
                 if (newLocation.exists())
                 {
-                    _log.error("Target location for migrated sequence file exists, this might indicate a retry after a filed move: {}", newLocation.getPath());
-                    continue;
+                    if (newLocation.length() == legacyFile.length())
+                    {
+                        continue;
+                    }
+
+                    log.error("Target location for migrated sequence file exists, but file size is smaller. this might indicate a retry after a filed move. deleting the target and retrying: {}", newLocation.getPath());
+                    FileUtils.delete(newLocation);
                 }
 
-                FileUtils.copyFile(legacyFile, newLocation);
+                FileUtils.moveFile(legacyFile, newLocation);
                 legacyExpData.setDataFileURI(newLocation.toURI());
-                legacyExpData.save(moduleContext.getUpgradeUser());
-                legacyFile.delete();
+                legacyExpData.save(u);
+                totalMigrated++;
             }
+
+            log.info("Total sequences migrated: {}", totalMigrated);
         }
         catch (Exception e)
         {
-            _log.error("Error upgrading sequenceanalysis module", e);
+            log.error("Error migrating sequence files", e);
         }
     }
 }

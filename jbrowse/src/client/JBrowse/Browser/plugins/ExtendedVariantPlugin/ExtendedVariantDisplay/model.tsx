@@ -1,13 +1,19 @@
-import { ConfigurationReference, getConf } from '@jbrowse/core/configuration';
-import { AnyConfigurationModel, } from '@jbrowse/core/configuration/configurationSchema';
+import { ConfigurationReference, getConf, readConfObject } from '@jbrowse/core/configuration';
+import { AnyConfigurationModel } from '@jbrowse/core/configuration';
 import { getContainingTrack, getContainingView, getSession } from '@jbrowse/core/util';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import configSchemaF from './configSchema';
-import { getEnv, IAnyStateTreeNode, types } from 'mobx-state-tree';
+import { getEnv, IAnyStateTreeNode, types } from '@jbrowse/mobx-state-tree';
 import PaletteIcon from '@mui/icons-material/Palette';
 import { LinearGenomeViewModel } from '@jbrowse/plugin-linear-genome-view';
 import { navigateToSearch, navigateToTable } from '../../../../utils';
+import SerializableFilterChain from '@jbrowse/core/pluggableElementTypes/renderers/util/serializableFilterChain';
+import { generateSchemeJexl } from '../ColorWidget/colorUtil';
+
+function escapeForSingleQuotedJexl(value: string) {
+   return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
+}
 
 function getContainingTrackWithConfig(node: IAnyStateTreeNode): IAnyStateTreeNode & { configuration: AnyConfigurationModel } {
    return getContainingTrack(node) as any;
@@ -53,7 +59,7 @@ export default jbrowse => {
 
             // @ts-ignore
             const trackId = getConf(track, ['trackId'])
-            const detailsConfig = getConf(track, ['displays', '0', 'detailsConfig'])
+            const detailsConfig = readConfObject(self.configuration, 'detailsConfig')
 
             const widgetId = 'Variant-' + trackId;
             const featureWidget = session.addWidget(
@@ -73,7 +79,10 @@ export default jbrowse => {
       }))
 
       .views(self => {
-         const { renderProps: superRenderProps } = self
+         const {
+            renderProps: superRenderProps,
+            renderingProps: superRenderingProps,
+         } = self
          const filterMenu = {
             label: 'Filter By Attributes',
             icon: FilterListIcon,
@@ -127,8 +136,63 @@ export default jbrowse => {
                return {
                   ...superRenderProps(),
                   config: config,
-                  rendererConfig: config
+                  rendererConfig: config,
+                  filters: new SerializableFilterChain({
+                     filters: this.activeFilters(),
+                     jexl: jbrowse.jexl,
+                  }),
                }
+            },
+
+            renderingProps() {
+               const superProps = superRenderingProps()
+               return {
+                  ...superProps,
+                  async onFeatureClick(_, featureId) {
+                     const session = getSession(self)
+                     try {
+                        const f = featureId || self.featureIdUnderMouse
+                        if (!f) {
+                           self.clearFeatureSelection()
+                        }
+                        else {
+                           await self.selectFeatureById(f)
+                        }
+                     } catch (e) {
+                        console.error(e)
+                        session.notifyError(`${e}`, e)
+                     }
+                  },
+               }
+            },
+
+            activeFilters() {
+               const staticJexlFilters = (getConf(self, 'jexlFilters') || []).map((f: string) =>
+                  f?.startsWith('jexl:') ? f : `jexl:${f}`,
+               )
+
+               const infoFilters = getConf(self, 'infoFilters') || []
+               const activeSamples = getConf(self, 'activeSamples') || ''
+               const sampleFilters = activeSamples
+                  ? activeSamples
+                       .split(',')
+                       .map((s: string) => s.trim())
+                       .filter((s: string) => !!s)
+                  : []
+
+               const dynamicFilters: string[] = []
+
+               if (infoFilters.length) {
+                  const serialized = escapeForSingleQuotedJexl(JSON.stringify(infoFilters))
+                  dynamicFilters.push(`jexl:passesInfoFilters(feature,'${serialized}')`)
+               }
+
+               if (sampleFilters.length) {
+                  const serialized = escapeForSingleQuotedJexl(JSON.stringify(sampleFilters))
+                  dynamicFilters.push(`jexl:passesSampleFilters(feature,'${serialized}')`)
+               }
+
+               return [...staticJexlFilters, ...dynamicFilters]
             },
 
             get rendererTypeName() {
@@ -137,10 +201,13 @@ export default jbrowse => {
 
             get rendererConfig() {
                const configBlob = getConf(self, ['renderer']) || {}
+               const palette = getConf(self, 'palette') || 'IMPACT'
+               const color1 = configBlob.color1 ?? generateSchemeJexl(palette)
 
                return self.rendererType.configSchema.create(
                        {
                           ...configBlob,
+                          color1,
                           showLabels: this.showLabels,
                           displayMode: this.displayMode,
                           maxHeight: this.maxHeight
@@ -206,7 +273,7 @@ export default jbrowse => {
                   }
                }]
 
-               const supportsLuceneIndex = getConf(self, ['renderer', 'supportsLuceneIndex'])
+               const supportsLuceneIndex = getConf(self, ['supportsLuceneIndex'])
                if (supportsLuceneIndex) {
                   buttons.push({
                      label: 'Variant Search',
