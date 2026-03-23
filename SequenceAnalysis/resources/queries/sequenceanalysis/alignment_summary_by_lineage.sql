@@ -1,51 +1,45 @@
-PARAMETERS(AnalysisId INTEGER)
-
-select
-  (CAST(AnalysisId as varchar) || '<>' || a.lineages) as key,
-  a.analysis_id,
-  a.lineages,
-  max(a.totalLineages) as totalLineages,
-  a.loci,
-
-  sum(a.total) as total,
-  max(a.total_reads) as total_reads,
-  round(100 * (cast(sum(a.total) as float) / cast(max(a.total_reads) as float)), 2) as percent,
-  group_concat(distinct a.haplotypesWithAllele) as haplotypesWithAllele,
-
-  CAST((select sum(s.total) as total FROM sequenceanalysis.alignment_summary s WHERE s.analysis_id = AnalysisId AND s.rowid IN (
-      SELECT distinct asj.alignment_id from sequenceanalysis.alignment_summary_junction asj WHERE asj.analysis_id = AnalysisId AND asj.ref_nt_id.locus = a.loci and asj.status = true
-    )
-  ) as integer) as total_reads_from_locus,
-
-  round(100 * (cast(sum(a.total) as float) / cast((select sum(s.total) as total FROM sequenceanalysis.alignment_summary s WHERE s.analysis_id = AnalysisId AND s.rowid IN (
-      SELECT distinct asj.alignment_id from sequenceanalysis.alignment_summary_junction asj WHERE asj.analysis_id = AnalysisId AND asj.ref_nt_id.locus = a.loci and asj.status = true
-    )
-  ) as float)), 2) as percent_from_locus,
-  group_concat(distinct a.rowid, ',') as rowids
+SELECT
+    t.*,
+    CASE WHEN t.total_reads_from_locus = 0 THEN 0 ELSE round(100 * (cast(t.total_reads as float) / cast(t.total_reads_from_locus as float)), 2) END as percent_from_locus,
 
 FROM (
+    SELECT
+      (CAST(a.analysis_id as varchar) || '<>' || a.lineages) as key,
+      a.analysis_id,
+      max(a.lineages) as lineages,
+      coalesce(max(a.totalLineages), 0) as totalLineages,
+      a.loci,
 
-  select
-    a.analysis_id,
-    a.rowid,
+      sum(a.total) as total_reads,
+      max(a.total_reads_in_analysis) as total_reads_in_analysis,
+      CASE WHEN max(a.total_reads_in_analysis) = 0 THEN 0 ELSE round(100 * (cast(sum(a.total) as float) / cast(max(a.total_reads_in_analysis) as float)), 2) END as percent,
 
-    group_concat(distinct coalesce(j.ref_nt_id.lineage, j.ref_nt_id.name), chr(10)) as lineages,
-    count(distinct j.ref_nt_id.lineage) as totalLineages,
-    group_concat(distinct coalesce(j.ref_nt_id.locus, j.ref_nt_id.name), chr(10)) as loci,
+      group_concat(a.rowid, ',') as rowids,
+      group_concat(distinct a.haplotypesWithAllele) as haplotypesWithAllele,
 
-    total,
-    cast((select sum(total) as total FROM sequenceanalysis.alignment_summary s WHERE s.analysis_id = AnalysisId) as integer) as total_reads,
-    group_concat(distinct hs.haplotype, chr(10)) as haplotypesWithAllele
+      max(a.total_reads_from_locus) as total_reads_from_locus,
+      max(a.lastModified) as lastModified,
+      count(distinct a.rowid) as nAlignments
 
-  from sequenceanalysis.alignment_summary a
-  join sequenceanalysis.alignment_summary_junction j ON (j.analysis_id = AnalysisId AND j.alignment_id = a.rowid and j.status = true)
-  left join sequenceanalysis.haplotype_sequences hs ON ((
-    (hs.name = j.ref_nt_id.lineage AND hs.type = 'Lineage') OR
-    (hs.name = j.ref_nt_id.name AND hs.type = 'Allele')
-  ) AND hs.haplotype.datedisabled IS NULL)
-  WHERE a.analysis_id = AnalysisId
-  group by a.analysis_id, a.rowid, a.total
+    FROM (
 
-) a
+      select
+        ac.analysis_id,
+        ac.rowid,
 
-GROUP BY a.analysis_id, a.lineages, a.loci
+        group_concat(distinct coalesce(ac.lineage, ac.ntName), chr(10)) as lineages,
+        count(distinct ac.lineage) as totalLineages,
+        group_concat(distinct coalesce(ac.locus, ac.ntName), chr(10)) as loci,
+
+        group_concat(distinct haplotypesWithAllele, chr(10)) as haplotypesWithAllele,
+
+        max(ac.total) as total,
+        max(ac.total_reads_in_analysis) as total_reads_in_analysis,
+        max(ac.total_reads_from_locus) as total_reads_from_locus,
+        max(ac.modified) as lastModified
+      from sequenceanalysis.alignment_summary_combined ac
+      group by ac.analysis_id, ac.rowid, ac.total
+    ) a
+
+    GROUP BY a.analysis_id, a.lineages, a.loci
+) t

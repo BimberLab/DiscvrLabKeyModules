@@ -418,7 +418,7 @@ public class RefNtSequenceModel implements Serializable
 
     public void createFileForSequence(User u, String sequence, @Nullable File outDir) throws IOException
     {
-        File output = getExpectedSequenceFile();
+        File output = getExpectedSequenceFile(outDir);
         if (output.exists())
         {
             output.delete();
@@ -443,9 +443,9 @@ public class RefNtSequenceModel implements Serializable
         Table.update(u, ti, this, _rowid);
     }
 
-    public File getExpectedSequenceFile() throws IllegalArgumentException
+    public File getExpectedSequenceFile(@Nullable File outDir) throws IllegalArgumentException
     {
-        return FileUtil.appendName(getHashedDir(true), _rowid + ".txt.gz");
+        return FileUtil.appendName(getSequenceFileBaseDir(outDir, true), _rowid + ".txt.gz");
     }
 
     private Container getLabKeyContainer()
@@ -553,23 +553,15 @@ public class RefNtSequenceModel implements Serializable
         return FileUtil.appendName(d.getFile().getParentFile(), getRowid() + "_offsets.txt");
     }
 
-    private File getHashedDir(boolean create)
+    private File getSequenceFileBaseDir(@Nullable File outDir, boolean create)
     {
-        File baseDir = getBaseSequenceDir();
-        String digest = Crypt.MD5.digest(String.valueOf(getRowid()));
+        outDir = outDir == null ? getBaseSequenceDir() : outDir;
 
-        baseDir = FileUtil.appendName(baseDir, digest.substring(0,4));
-        baseDir = FileUtil.appendName(baseDir, digest.substring(4,8));
-        baseDir = FileUtil.appendName(baseDir, digest.substring(8,12));
-        baseDir = FileUtil.appendName(baseDir, digest.substring(12,20));
-        baseDir = FileUtil.appendName(baseDir, digest.substring(20,28));
-        baseDir = FileUtil.appendName(baseDir, digest.substring(28,32));
-
-        if (create)
+        if (create && !outDir.exists())
         {
-            baseDir.mkdirs();
+            outDir.mkdirs();
         }
 
-        return baseDir;
+        return outDir;
     }
 }

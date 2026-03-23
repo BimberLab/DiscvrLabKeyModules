@@ -1,5 +1,6 @@
 import { ConfigurationSchema } from '@jbrowse/core/configuration'
-import {types} from "mobx-state-tree";
+import {types} from "@jbrowse/mobx-state-tree";
+
 
 export const variantDetailsConfig = ConfigurationSchema('VariantDetailsConfig', {
     sections: types.array(ConfigurationSchema('VariantDetailsSection', {
@@ -35,8 +36,30 @@ export default pluginManager => {
 
           contextVariable: ['feature'],
       },
-      renderer: pluginManager.pluggableConfigSchemaType('renderer'),
-      detailsConfig: variantDetailsConfig
+      renderer: types.optional(
+        pluginManager.pluggableConfigSchemaType('renderer'),
+        { type: 'CanvasFeatureRenderer' },
+      ),
+      detailsConfig: variantDetailsConfig,
+      infoFilters: {
+          type: 'stringArray',
+          description: 'the active filter set by the user',
+          defaultValue: []
+      },
+      activeSamples: {
+          type: 'string',
+          defaultValue: '',
+          description: 'comma-delineated string of sample IDs to filter'
+      },
+      supportsLuceneIndex: {
+          type: 'boolean',
+          defaultValue: false
+      },
+      palette: {
+          type: 'string',
+          description: 'The names of the palette to use for coloring features',
+          defaultValue: 'IMPACT',
+      }
     },
     { baseConfiguration: baseLinearDisplayConfigSchema, explicitlyTyped: true },
   )

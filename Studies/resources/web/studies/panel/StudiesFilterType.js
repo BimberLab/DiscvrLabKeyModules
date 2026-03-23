@@ -32,10 +32,14 @@ Ext4.define('Laboratory.panel.StudiesFilterType', {
                 displayField: 'studyName',
                 valueField: 'studyName',
                 multiSelect: false,
+                forceSelection: true,
+                triggerAction: 'all',
+                queryMode: 'local',
                 store: {
                     type: 'labkey-store',
                     schemaName: 'studies',
                     queryName: 'studies',
+                    columns: 'studyName',
                     autoLoad: true
                 },
                 value: Ext4.isArray(ctx.studies) ? ctx.studies.join(';') : ctx.studies

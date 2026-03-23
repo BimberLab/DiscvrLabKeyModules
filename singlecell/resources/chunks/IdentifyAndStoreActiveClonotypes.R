@@ -11,7 +11,7 @@ for (datasetId in names(seuratObjects)) {
   printName(datasetId)
   seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
-  if (! 'TRB_WithProductive' %in% names(seuratObj@meta.data)) {
+  if (.ShouldReapplyTcr(seuratObj)) {
     print('Re-running AppendTcr to add segment columns')
     seuratObj <- Rdiscvr::DownloadAndAppendTcrClonotypes(seuratObj, allowMissing = TRUE)
   }

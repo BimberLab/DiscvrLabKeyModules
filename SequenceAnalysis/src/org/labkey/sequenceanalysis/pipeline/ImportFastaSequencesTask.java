@@ -72,7 +72,7 @@ public class ImportFastaSequencesTask extends PipelineJob.Task<ImportFastaSequen
         }
 
         @Override
-        public PipelineJob.Task createTask(PipelineJob job)
+        public PipelineJob.Task<?> createTask(PipelineJob job)
         {
             return new ImportFastaSequencesTask(this, job);
         }

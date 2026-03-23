@@ -47,7 +47,7 @@ export default jbrowse => {
 
         // @ts-ignore
         const displays = readConfObject(track, 'displays')
-        const initialFilters = displays[0].renderer.infoFilters || []
+        const initialFilters = displays[0].infoFilters || []
 
         const [infoFilters, setInfoFilters] = React.useState(initialFilters)
         const [hasSubmitted, setHasSubmitted] = React.useState(false)
@@ -85,13 +85,13 @@ export default jbrowse => {
                 return
             }
 
-            track.displays[0].renderer.infoFilters.set([...infoFilters])
+            track.displays[0].infoFilters.set([...infoFilters])
             const m = getSession(model) as SessionWithWidgets
             m.hideWidget(model)
         }
 
         const clearFilters = (event) => {
-            track.displays[0].renderer.infoFilters.set([])
+            track.displays[0].infoFilters.set([])
             const m = getSession(model) as SessionWithWidgets
             m.hideWidget(model)
         }
