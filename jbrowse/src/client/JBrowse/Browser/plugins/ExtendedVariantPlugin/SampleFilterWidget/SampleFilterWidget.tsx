@@ -45,20 +45,20 @@ export default jbrowse => {
 
         // @ts-ignore
         const displays = readConfObject(track, ['displays']) || []
-        const [sampleFilter, setSampleFilter] = useState(replaceCommaWithNewline(displays[0].renderer.activeSamples) || '')
+        const [sampleFilter, setSampleFilter] = useState(replaceCommaWithNewline(displays[0].activeSamples) || '')
 
         const handleSampleFilterChange = (event) => {
             setSampleFilter(event.target.value)
         }
 
         const handleSampleFilterSubmit = (event) => {
-            track.displays[0].renderer.activeSamples.set(parseSampleCSV(sampleFilter))
+            track.displays[0].activeSamples.set(parseSampleCSV(sampleFilter))
             const m = getSession(model) as SessionWithWidgets
             m.hideWidget(model)
         }
 
         const clearFilters = (event) => {
-            track.displays[0].renderer.activeSamples.set('')
+            track.displays[0].activeSamples.set('')
             const m = getSession(model) as SessionWithWidgets
             m.hideWidget(model)
         }

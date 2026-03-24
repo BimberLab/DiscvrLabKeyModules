@@ -11,6 +11,7 @@ import org.biojava.nbio.core.sequence.compound.AminoAcidCompound;
 import org.biojava.nbio.core.sequence.compound.NucleotideCompound;
 import org.biojava.nbio.core.sequence.template.Sequence;
 import org.biojava.nbio.core.sequence.transcription.TranscriptionEngine;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.collections.IntHashMap;
@@ -29,9 +30,11 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserManager;
+import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.sequenceanalysis.RefNtSequenceModel;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
+import org.labkey.api.view.UnauthorizedException;
 import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.SequenceAnalysisServiceImpl;
@@ -42,6 +45,7 @@ import org.labkey.vfs.FileLike;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -323,5 +327,62 @@ public class SequenceTriggerHelper
 
             Table.insert(_user, rd, rd1);
         }
+    }
+
+    public @Nullable String canDeleteNtRecord(int rowId)
+    {
+        RefNtSequenceModel model = RefNtSequenceModel.getForRowId(rowId);
+        if (model == null)
+        {
+            return "Unknown ref nt record: " + rowId;
+        }
+
+        Container c = ContainerManager.getForId(model.getContainer());
+        if (c == null)
+        {
+            return "Unable to find container for: " + model.getContainer();
+        }
+
+        if (new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS), new SimpleFilter(FieldKey.fromString("ref_nt_id"), rowId), null).exists())
+        {
+            return "Sequence " + rowId + " is still used by genomes, cannot delete";
+        }
+
+        if (!c.hasPermission(_user, DeletePermission.class))
+        {
+            return "The user does not have sufficient permissions to delete record: " + rowId;
+        }
+
+        return null;
+    }
+
+    public void safeDeleteNtRecord(int rowId)
+    {
+        RefNtSequenceModel model = RefNtSequenceModel.getForRowId(rowId);
+        if (model == null || model.getSequenceFile() == null)
+        {
+            return;
+        }
+
+        ExpData d = ExperimentService.get().getExpData(model.getSequenceFile());
+        if (d == null || d.getFile() == null)
+        {
+            return;
+        }
+
+        // This assumes canDeleteNtRecord() was called earlier
+        try
+        {
+            if (d.getFile().exists())
+            {
+                Files.delete(d.getFile().toPath());
+            }
+        }
+        catch (IOException e)
+        {
+            _log.error(e.getMessage(), e);
+        }
+
+        d.delete(_user, false);
     }
 }

@@ -11,7 +11,7 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
-    if (!'HasCDR3Data' %in% names(seuratObj@meta.data)){
+    if (.ShouldReapplyTcr(seuratObj)){
         seuratObj <- seuratObj <- Rdiscvr::DownloadAndAppendTcrClonotypes(seuratObj, allowMissing = FALSE)
     }
 

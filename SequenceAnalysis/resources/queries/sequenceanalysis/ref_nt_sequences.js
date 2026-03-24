@@ -61,4 +61,21 @@ function beforeDelete(row, errors){
     if (!this.extraContext.deleteFromServer) {
         errors._form = 'You cannot directly delete reference sequences.  To delete these records, use the delete button above the sequences grid.';
     }
+    else {
+        const errorMessage = triggerHelper.canDeleteNtRecord(row.rowid);
+        if (errorMessage) {
+            errors._form = 'The sequence ' + row.rowid + ' cannot be deleted: ' + errorMessage;
+        }
+    }
+}
+
+function afterDelete(row, errors){
+    if (this.extraContext.deleteFromServer) {
+        // Ensure no genomes use this, and then delete the sequence file:
+        triggerHelper.safeDeleteNtRecord(row.rowid)
+    }
+    else {
+        // This should be blocked in beforeDelete
+        errors._form = 'You cannot directly delete reference sequences.  To delete these records, use the delete button above the sequences grid.';
+    }
 }

@@ -117,6 +117,7 @@ public class JBrowseModule extends ExtendedSimpleModule
         // These are all part of the JBrowse demo data:
         ContentSecurityPolicyFilter.registerAllowedSources(this.getClass().getName(), Directive.Connection, "https://jbrowse.org", "https://s3.amazonaws.com", "https://ftp.ncbi.nlm.nih.gov");
         ContentSecurityPolicyFilter.registerAllowedSources(this.getClass().getName(), Directive.Style, "https://www.gstatic.com");
+        ContentSecurityPolicyFilter.registerAllowedSources(this.getClass().getName(), Directive.Font, "https://www.gstatic.com", "https://fonts.googleapis.com");
 
         ContextListener.addShutdownListener(new JBrowseLuceneSearch.ShutdownHandler());
     }

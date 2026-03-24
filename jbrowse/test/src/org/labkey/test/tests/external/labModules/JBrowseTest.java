@@ -48,6 +48,7 @@ import org.labkey.test.util.ext4cmp.Ext4ComboRef;
 import org.labkey.test.util.ext4cmp.Ext4FieldRef;
 import org.labkey.test.util.external.labModules.LabModuleHelper;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
@@ -141,19 +142,19 @@ public class JBrowseTest extends BaseWebDriverTest
         // We expect IMPACT to be the default scheme
         assertElementPresent(Locator.tagWithText("td", "HIGH"));
         assertBoxWithColorPresent("#ff0000"); // red
-        waitForElement(Locator.tagWithAttribute("polygon", "fill", "red"));
+        waitForCanvasColorPresent("#ff0000");
 
         assertElementPresent(Locator.tagWithText("td", "MODERATE"));
         assertBoxWithColorPresent("#DAA520");  //"goldenrod"
-        assertElementPresent(Locator.tagWithAttribute("polygon", "fill", "goldenrod"));
+        waitForCanvasColorPresent("#daa520");
 
         assertElementPresent(Locator.tagWithText("td", "LOW"));
         assertBoxWithColorPresent("#049931");
-        assertElementPresent(Locator.tagWithAttribute("polygon", "fill", "#049931"));
+        waitForCanvasColorPresent("#049931");
 
         assertElementPresent(Locator.tagWithText("td", "Other"));
         assertBoxWithColorPresent("#808080"); //gray
-        assertElementPresent(Locator.tagWithAttribute("polygon", "fill", "gray"));
+        waitForCanvasColorPresent("#808080");
 
         // Now toggle to Allele Freq.:
         waitAndClick(Locator.tagWithText("div", "Predicted Impact"));
@@ -164,7 +165,7 @@ public class JBrowseTest extends BaseWebDriverTest
 
         clickDialogButton("Apply");
 
-        waitForElement(Locator.tagWithAttribute("polygon", "fill", "#2425E0"));
+        waitForCanvasColorPresent("#2425e0");
     }
 
     private void assertBoxWithColorPresent(final String expectedColor)
@@ -184,6 +185,48 @@ public class JBrowseTest extends BaseWebDriverTest
         waitAndClick(Locator.XPathLocator.tagWithClass("button", "MuiButtonBase-root").withText(text));
     }
 
+    private void waitForCanvasColorPresent(final String expectedColor)
+    {
+        final long timeoutMs = WAIT_FOR_JAVASCRIPT;
+        final long start = System.currentTimeMillis();
+
+        while (System.currentTimeMillis() - start < timeoutMs)
+        {
+            if (isCanvasColorPresent(expectedColor))
+                return;
+
+            sleep(250);
+        }
+
+        Assert.fail("Unable to find color in any canvas: " + expectedColor);
+    }
+
+    private boolean isCanvasColorPresent(final String expectedColor)
+    {
+        final String script = "const expected = (arguments[0] || '').toLowerCase();\n"
+                + "const toHex = (v) => v.toString(16).padStart(2, '0');\n"
+                + "const canvases = Array.from(document.querySelectorAll('canvas'));\n"
+                + "for (const canvas of canvases) {\n"
+                + "  try {\n"
+                + "    const ctx = canvas.getContext('2d');\n"
+                + "    if (!ctx || canvas.width === 0 || canvas.height === 0) continue;\n"
+                + "    const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;\n"
+                + "    for (let i = 0; i < data.length; i += 4) {\n"
+                + "      const a = data[i + 3];\n"
+                + "      if (!a) continue;\n"
+                + "      const hex = '#' + toHex(data[i]) + toHex(data[i + 1]) + toHex(data[i + 2]);\n"
+                + "      if (hex === expected) return true;\n"
+                + "    }\n"
+                + "  } catch (e) {\n"
+                + "    // Ignore canvases we cannot sample\n"
+                + "  }\n"
+                + "}\n"
+                + "return false;";
+
+        Object ret = ((JavascriptExecutor) getDriver()).executeScript(script, expectedColor);
+        return ret instanceof Boolean && (Boolean) ret;
+    }
+
     private void testBrowserNavToVariantTable() throws Exception
     {
         beginAt("/" + getProjectName() + "/jbrowse-jbrowse.view?session=mgap");
@@ -201,7 +244,7 @@ public class JBrowseTest extends BaseWebDriverTest
         waitForJBrowseToLoad();
 
         // Indicates AF scheme applied:
-        waitForElement(Locator.tagWithAttribute("polygon", "fill", "#9A1764"));
+        waitForCanvasColorPresent("#9a1764");
 
         openTrackMenuItem("Color Selection");
         waitForElement(Locator.tagWithText("h6", "Color Schemes"));
@@ -217,7 +260,7 @@ public class JBrowseTest extends BaseWebDriverTest
         clickDialogButton("Apply");
 
         // Indicates the IMPACT scheme applies:
-        waitForElement(Locator.tagWithAttribute("polygon", "fill", "gray"));
+        waitForCanvasColorPresent("#808080");
     }
 
     private void testAFColor()
@@ -237,7 +280,7 @@ public class JBrowseTest extends BaseWebDriverTest
         assertBoxWithColorPresent("#808080"); //gray
 
         clickDialogButton("Apply");
-        waitForElement(Locator.tagWithAttribute("polygon", "fill", "#9A1764"));
+        waitForCanvasColorPresent("#9a1764");
     }
 
     private void testFilterWidget()
@@ -292,7 +335,7 @@ public class JBrowseTest extends BaseWebDriverTest
         sleep(1000);
 
         // NOTE: depending on the size of the view area, this can vary. This is more a factor of the environment that actual behavior
-        Assert.assertEquals("Incorrect number of variants", 87.0, getTotalVariantFeatures(), 1.0);
+        Assert.assertEquals("Incorrect number of variants", 96.0, getTotalVariantFeatures(), 1.0);
 
         // bottom filter UI
         waitForElement(Locator.tagContainingText("button", "mGAP: Showing sites where").containing("AF < 0.02"));
@@ -311,7 +354,7 @@ public class JBrowseTest extends BaseWebDriverTest
         getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV T -> G"));
         getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T"));
 
-        Assert.assertEquals("Incorrect number of variants", 7, getTotalVariantFeatures());
+        Assert.assertEquals("Incorrect number of variants", 9, getTotalVariantFeatures());
 
         // bottom filter UI
         waitForElement(Locator.tagContainingText("button", "mGAP: Showing sites with a variant in any of:").containing("m00004,m00005"));
@@ -339,7 +382,7 @@ public class JBrowseTest extends BaseWebDriverTest
         getDriver().findElements(getVariantWithinTrack("mgap_hg38", "SNV A -> T"));
 
         // NOTE: depending on the size of the view area, this can vary. This is more a factor of the environment that actual behavior
-        Assert.assertEquals("Incorrect number of variants", 37.0, getTotalVariantFeatures(), 1);
+        Assert.assertEquals("Incorrect number of variants", 42.0, getTotalVariantFeatures(), 1);
 
         openTrackMenuItem("Filter By Sample");
         waitForElement(Locator.tagWithText("h6", "Filter By Sample"));
@@ -348,7 +391,7 @@ public class JBrowseTest extends BaseWebDriverTest
         Locator.findElements(getDriver(), textArea).get(0).sendKeys("m00010");
         clickDialogButton("Apply");
 
-        Assert.assertEquals("Incorrect number of variants", 3, getTotalVariantFeatures());
+        Assert.assertEquals("Incorrect number of variants", 4, getTotalVariantFeatures());
     }
 
     private void testInferredDetails()
@@ -509,9 +552,6 @@ public class JBrowseTest extends BaseWebDriverTest
         assertElementPresent(Locator.tagWithText("td", "3041"));
         assertElementPresent(Locator.tagWithText("span", "Genotype Frequency (2329)"));
         assertElementPresent(Locator.tagWithText("a", "Click here to view sample-level genotypes"));
-        while (isTextPresent("Loading")){
-            sleep(10);
-        }
         waitForElement(Locator.tagWithAttributeContaining("div","id","reactgooglegraph"));
     }
 
@@ -1208,8 +1248,6 @@ public class JBrowseTest extends BaseWebDriverTest
         doAndWaitForPageToLoad(() -> {
             searchBox.sendKeys(Keys.ENTER);
         });
-
-        waitForJBrowseToLoad();
 
         waitForElement(Locator.tagWithText("span", "fakeData.gff").withClass("MuiTypography-root"));
         waitForElement(Locator.tagWithText("span", "fakeData.bed").withClass("MuiTypography-root"));

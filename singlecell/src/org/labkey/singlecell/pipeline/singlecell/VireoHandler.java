@@ -39,6 +39,7 @@ import java.util.List;
 public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOutputHandler.SequenceOutputProcessor>
 {
     private static final String REF_VCF =  "refVCF";
+    private static final String SKIP_VCF_FOR_VIREO =  "omitRefVcfForVireo";
 
     public VireoHandler()
     {
@@ -59,6 +60,10 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
                     put("performGenomeFilter", false);
                     put("doNotIncludeInTemplates", true);
                 }}, null),
+                ToolParameterDescriptor.createExpDataParam(SKIP_VCF_FOR_VIREO, "Use Reference VCF for CellSnp-List Only", "If checked, the reference VCF will only be used for cellsnp-lite, not vireo", "checkbox", new JSONObject()
+                {{
+
+                }}, false),
                 ToolParameterDescriptor.create("storeCellSnpVcf", "Store CellSnp-Lite VCF", "If checked, the cellsnp donor calls VCF will be stored as an output file", "checkbox", null, false)
         ));
     }
@@ -280,8 +285,10 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
             }
 
             int vcfFile = ctx.getParams().optInt(REF_VCF, -1);
+            boolean skipVcfFileForVireo = ctx.getParams().optBoolean(SKIP_VCF_FOR_VIREO, false);
+
             File refVcfSubset = null;
-            if (vcfFile > -1)
+            if (vcfFile > -1 && !skipVcfFileForVireo)
             {
                 File vcf = ctx.getSequenceSupport().getCachedData(vcfFile);
                 if (vcf == null || !vcf.exists())

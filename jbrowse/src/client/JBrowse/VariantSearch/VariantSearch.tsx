@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { observer } from 'mobx-react';
-import { getEnv } from 'mobx-state-tree';
+import { getEnv } from '@jbrowse/mobx-state-tree';
 import { createTheme } from '@mui/material/styles';
 import { parseLocString } from '@jbrowse/core/util';
 import { readConfObject } from '@jbrowse/core/configuration';

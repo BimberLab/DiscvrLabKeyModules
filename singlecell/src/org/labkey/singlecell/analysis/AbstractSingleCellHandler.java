@@ -283,7 +283,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 if (SEURAT_PROTOTYPE.equals(so.getCategory()))
                 {
                     //NOTE: upstream we enforce one dataset per job, so we can safely assume this is the only dataset here:
-                    File metricFile = new File(ctx.getJob().getLogFile().getParentFile(), "seurat.metrics.txt");
+                    File metricFile = FileUtil.appendName(ctx.getJob().getLogFile().getParentFile(), "seurat.metrics.txt");
                     if (metricFile.exists())
                     {
                         processMetrics(so, ctx.getJob(), metricFile);
@@ -384,7 +384,6 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
             List<SingleCellStep.SeuratObjectWrapper> currentFiles;
             Set<File> originalInputs = inputFiles.stream().map(SequenceOutputFile::getFile).collect(Collectors.toSet());
-            Map<String, File> inputFileMap = new HashMap<>();
             if (_doProcessRawCounts)
             {
                 currentFiles = processRawCounts(ctx, inputFiles, basename);
@@ -417,7 +416,6 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                     distinctIds.add(datasetId);
 
                     currentFiles.add(new SingleCellStep.SeuratObjectWrapper(datasetId, datasetId, so.getFile(), so));
-                    inputFileMap.put(so.getName(), so.getFile());
                 }
             }
 
@@ -542,7 +540,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             }
             finalMarkdown.chunks.add(new AbstractSingleCellPipelineStep.SessionInfoChunk());
 
-            File finalMarkdownFile = new File(ctx.getOutputDir(), "final.rmd");
+            File finalMarkdownFile = FileUtil.appendName(ctx.getOutputDir(), "final.rmd");
             try (PrintWriter writer = PrintWriters.getPrintWriter(finalMarkdownFile))
             {
                 finalMarkdown.print(writer);
@@ -553,7 +551,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             }
 
             ctx.getJob().setStatus(PipelineJob.TaskStatus.running, "Creating Final HTML Report");
-            File finalHtml = new File(ctx.getOutputDir(), "finalHtml.html");
+            File finalHtml = FileUtil.appendName(ctx.getOutputDir(), "finalHtml.html");
             List<String> lines = new ArrayList<>();
             lines.add("rmarkdown::render(output_file = '" + finalHtml.getName() + "', input = '" + finalMarkdownFile.getName() + "', intermediates_dir  = '" + ctx.getWorkingDirectory() + "')");
             AbstractSingleCellPipelineStep.executeR(ctx, AbstractCellMembraneStep.CONTAINER_NAME, "pandoc", lines, null, null, null);
@@ -623,23 +621,10 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
                 //This indicates the job processed an input file, but did not create a new object (like running FindMarkers)
                 boolean skipOutput = false;
-                if (inputFileMap.containsKey(output.getFile().getName()))
+                if (originalInputs.contains(output.getFile()))
                 {
-                    try
-                    {
-                        ctx.getLogger().debug("Comparing file context of output to determine if it matches input: " + output.getFile().getName());
-                        ctx.getLogger().debug("Original file: " + inputFileMap.get(output.getFile().getName()));
-                        ctx.getLogger().debug("Pipeline output file: " + output.getFile());
-                        if (FileUtils.contentEquals(inputFileMap.get(output.getFile().getName()), output.getFile()))
-                        {
-                            ctx.getLogger().info("Sequence output is the same as an input, will not re-create output for seurat object: " + output.getFile().getPath());
-                            skipOutput = true;
-                        }
-                    }
-                    catch (IOException e)
-                    {
-                        throw new PipelineJobException(e);
-                    }
+                    ctx.getLogger().info("Sequence output is the same as an input, will not re-create output for seurat object: " + output.getFile().getPath());
+                    skipOutput = true;
                 }
 
                 if (!skipOutput)
@@ -692,7 +677,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             List<SingleCellStep.SeuratObjectWrapper> inputMatrices = new ArrayList<>();
             inputFiles.forEach(x -> {
                 String datasetName = ctx.getSequenceSupport().getCachedReadset(x.getReadset()).getName();
-                File countsDir = new File(x.getFile().getParentFile(), "raw_feature_bc_matrix");
+                File countsDir = FileUtil.appendName(x.getFile().getParentFile(), "raw_feature_bc_matrix");
                 if (!countsDir.exists())
                 {
                     throw new IllegalArgumentException("Unable to find file: " + countsDir.getPath());
@@ -703,7 +688,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
 
                 try
                 {
-                    File localCopy = new File(ctx.getOutputDir(), x.getRowid() + "_RawData");
+                    File localCopy = FileUtil.appendName(ctx.getOutputDir(), x.getRowid() + "_RawData");
                     if (localCopy.exists())
                     {
                         ctx.getLogger().debug("Deleting directory: " + localCopy.getPath());
@@ -901,7 +886,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
             r._stepOutputs.put(1, List.of(new SingleCellStep.SeuratObjectWrapper("datasetId", "datasetName", new File("seurat.rds"), so1)));
 
             File tmp = new File(System.getProperty("java.io.tmpdir"));
-            File f = FileUtil.getAbsoluteCaseSensitiveFile(new File(tmp, AbstractSingleCellHandler.Resumer.JSON_NAME));
+            File f = FileUtil.getAbsoluteCaseSensitiveFile(FileUtil.appendName(tmp, AbstractSingleCellHandler.Resumer.JSON_NAME));
 
             SequenceOutputFile so = new SequenceOutputFile();
             so.setName("so1");

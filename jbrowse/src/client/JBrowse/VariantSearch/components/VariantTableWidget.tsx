@@ -155,7 +155,7 @@ const VariantTableWidget = observer(props => {
         const [anchorEl, setAnchorEl] = React.useState<HTMLElement | null>(null)
         const open = Boolean(anchorEl);
 
-        const [hoverTimeout, setHoverTimeout] = React.useState<NodeJS.Timeout | null>(null);
+        const [hoverTimeout, setHoverTimeout] = React.useState<number | null>(null);
 
         const handlePopoverOpen = (event: React.MouseEvent<HTMLElement>) => {
             clearHoverTimeout()
