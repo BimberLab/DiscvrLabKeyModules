@@ -6,6 +6,14 @@
                 <tableTitle>Alignment Summary</tableTitle>
                 <pkColumnName>rowids</pkColumnName>
                 <columns>
+                    <column columnName="analysis_id">
+                        <columnTitle>Analysis Id</columnTitle>
+                        <fk>
+                            <fkDbSchema>sequenceanalysis</fkDbSchema>
+                            <fkTable>sequence_analyses</fkTable>
+                            <fkColumnName>rowid</fkColumnName>
+                        </fk>
+                    </column>
                     <column columnName="rowids">
                         <columnTitle>RowIds</columnTitle>
                         <isHidden>true</isHidden>

@@ -37,6 +37,7 @@ import org.labkey.sequenceanalysis.run.util.FastaIndexer;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -322,7 +323,12 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 
                 if (d.getFile().getAbsolutePath().toLowerCase().startsWith(sequenceDir.getAbsolutePath().toLowerCase()))
                 {
+                    // File existence will be verified below:
                     expectedSequences.add(d.getFile());
+                }
+                else if (!d.getFile().exists())
+                {
+                    log.error("Missing sequence file {}", d.getFile().getPath());
                 }
             });
 
@@ -335,8 +341,14 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             {
                 for (File missing : expectedSequences)
                 {
-                    log.error("expected sequence file does not exist: " + missing.getPath());
-                    return;
+                    if (missing.exists())
+                    {
+                        log.error("File exists, but wasnt removed from expectedSequences for folder {}, file:  {}", sequenceDir.getPath(), missing.getPath());
+                    }
+                    else
+                    {
+                        log.error("expected sequence file does not exist: {}", missing.getPath());
+                    }
                 }
             }
 
@@ -580,6 +592,15 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         {
             if (child.isDirectory())
             {
+                try (DirectoryStream<Path> stream = Files.newDirectoryStream(child.toPath()))
+                {
+                    if (!stream.iterator().hasNext())
+                    {
+                        FileUtils.deleteDirectory(child);
+                        continue;
+                    }
+                }
+
                 inspectSequenceDir(child, expectedSequences, log);
             }
             else

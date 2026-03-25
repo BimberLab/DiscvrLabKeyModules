@@ -1,0 +1,23 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="alignment_summary_combined" tableDbType="TABLE">
+                <tableTitle>Alignment Summary, Combined</tableTitle>
+                <columns>
+                    <column columnName="total_forward">
+                        <columnTitle>Total First-Mate Reads</columnTitle>
+                        <description>The column shows the number of alignments that contain a first-mate or singleton read</description>
+                    </column>
+                    <column columnName="total_reverse">
+                        <columnTitle>Total Second-Mate Reads</columnTitle>
+                        <description>The column shows the number of alignments that contain a second-mate read</description>
+                    </column>
+                    <column columnName="valid_pairs">
+                        <columnTitle>Total Valid Pairs</columnTitle>
+                        <description>The column shows the number of alignments that contain valid paired reads (both forward and reverse)</description>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

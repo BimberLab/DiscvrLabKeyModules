@@ -23,7 +23,7 @@ export default jbrowse => {
 
         // @ts-ignore
         const displays = readConfObject(track, ['displays']) || []
-        let paletteName = displays[0].renderer.palette
+        let paletteName = displays[0].palette
         paletteName = paletteName || 'IMPACT'
 
         const [palette, setPalette] = useState(paletteName)
@@ -34,7 +34,7 @@ export default jbrowse => {
 
         const onApply = (event) => {
             // NOTE: preProcessSnapshot in the renderer schema should set color1
-            track.displays[0].renderer.palette.set(palette)
+            track.displays[0].palette.set(palette)
             track.displays[0].renderer.color1.set(generateSchemeJexl(palette))
 
             const m = getSession(model) as SessionWithWidgets

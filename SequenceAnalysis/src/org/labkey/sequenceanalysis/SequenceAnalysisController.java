@@ -157,6 +157,7 @@ import org.labkey.sequenceanalysis.pipeline.ReferenceLibraryPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceConcatPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceJob;
+import org.labkey.sequenceanalysis.pipeline.SequenceMigrationPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceTaskHelper;
@@ -5249,6 +5250,41 @@ public class SequenceAnalysisController extends SpringActionController
         public void setDataFileUrl(String dataFileUrl)
         {
             _dataFileUrl = dataFileUrl;
+        }
+    }
+
+    @UtilityAction(label = "Migrate Sequence Files", description = "This will start a background process to migrate sequence files from the flat .sequences folder into a hashed multi-folder scheme")
+    @RequiresSiteAdmin
+    public static class MigrateSequenceFilesAction extends ConfirmAction<Object>
+    {
+        @Override
+        public ModelAndView getConfirmView(Object o, BindException errors) throws Exception
+        {
+            setTitle("Migrate Sequence Files");
+
+            return(HtmlView.of("This will start a background process to migrate sequence files from the flat .sequences folder into a hashed multi-folder scheme.  Do you want to continue?"));
+        }
+
+        @Override
+        public boolean handlePost(Object o, BindException errors) throws Exception
+        {
+            PipeRoot pr = PipelineService.get().findPipelineRoot(getContainer());
+            PipelineService.get().queueJob(new SequenceMigrationPipelineJob(getContainer(), getUser(), getViewContext().getActionURL(), pr));
+
+            return true;
+        }
+
+        @Override
+        public void validateCommand(Object o, Errors errors)
+        {
+
+        }
+
+        @NotNull
+        @Override
+        public URLHelper getSuccessURL(Object o)
+        {
+            return getContainer().getStartURL(getUser());
         }
     }
 }

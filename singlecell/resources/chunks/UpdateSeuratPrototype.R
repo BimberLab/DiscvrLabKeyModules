@@ -21,14 +21,14 @@ for (datasetId in names(seuratObjects)) {
     seuratObj <- Rdiscvr::QueryAndApplyCdnaMetadata(seuratObj)
   }
 
+  if (applyTCR) {
+    seuratObj <- Rdiscvr::DownloadAndAppendTcrClonotypes(seuratObj, allowMissing = allowMissingTcr)
+  }
+
   if (runRira) {
     seuratObj <- RIRA::Classify_ImmuneCells(seuratObj, maxBatchSize = maxBatchSize, retainProbabilityMatrix = retainProbabilityMatrix)
     seuratObj <- RIRA::Classify_TNK(seuratObj, maxBatchSize = maxBatchSize, retainProbabilityMatrix = retainProbabilityMatrix)
     seuratObj <- RIRA::Classify_Myeloid(seuratObj, maxBatchSize = maxBatchSize, retainProbabilityMatrix = retainProbabilityMatrix)
-  }
-
-  if (applyTCR) {
-    seuratObj <- Rdiscvr::DownloadAndAppendTcrClonotypes(seuratObj, allowMissing = allowMissingTcr)
   }
 
   if (runTNKClassification) {

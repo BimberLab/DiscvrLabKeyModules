@@ -38,7 +38,12 @@ public class ApplyKnownClonotypicData extends AbstractRDiscvrStep
                         put("minValue", 0);
                         put("maxValue", 1.0);
                         put("decimalPrecision", 4);
-                    }}, 0)
+                    }}, 0.0005),
+                    SeuratToolParameter.create("minFractionCloneActivated", "Min Fraction Clone Activated", "If provided, only responses where the fraction of cells harboring that clone were activated will be included", "ldk-numberfield", new JSONObject(){{
+                        put("minValue", 0);
+                        put("maxValue", 1.0);
+                        put("decimalPrecision", 4);
+                    }}, 0.05)
             ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 

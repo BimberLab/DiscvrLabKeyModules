@@ -83,6 +83,7 @@ import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceAlignmentTask;
 import org.labkey.sequenceanalysis.pipeline.SequenceJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceJobSupportImpl;
+import org.labkey.sequenceanalysis.pipeline.SequenceMigrationPipelineJob;
 import org.labkey.sequenceanalysis.pipeline.SequenceOutputHandlerPipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequencePipelineProvider;
 import org.labkey.sequenceanalysis.pipeline.SequenceReadsetHandlerPipelineProvider;
@@ -484,6 +485,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         PipelineService.get().registerPipelineProvider(new OrphanFilePipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new SequencePipelineProvider(this));
         PipelineService.get().registerPipelineProvider(new CacheGenomePipelineJob.Provider(this));
+        PipelineService.get().registerPipelineProvider(new SequenceMigrationPipelineJob.Provider(this));
 
         LDKService.get().registerQueryButton(new ReprocessLibraryButton(), SequenceAnalysisSchema.SCHEMA_NAME, SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
 
