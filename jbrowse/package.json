@@ -32,7 +32,7 @@
     "child_process": "^1.0.2",
     "fs": "^0.0.1-security",
     "jquery": "^3.7.1",
-    "jspdf": "^4.1.0",
+    "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
     "node-polyfill-webpack-plugin": "4.1.0",
     "path-browserify": "^1.0.1",
@@ -57,7 +57,7 @@
     "patch-package": "^8.0.1",
     "postinstall-postinstall": "^2.1.0",
     "rimraf": "^6.0.1",
-    "tar": "^7.5.7",
+    "tar": "^7.5.11",
     "typescript": "^5.1.6",
     "unzipper": "^0.12.3"
   }
