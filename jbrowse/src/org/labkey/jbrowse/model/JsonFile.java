@@ -558,10 +558,16 @@ public class JsonFile
                 }
 
                 JSONObject json = getExtraTrackConfig();
-                if (json != null && json.has("additionalFeatureMsg"))
-                {
-                    getJSONObject("renderer").put("message", json.getString("additionalFeatureMsg"));
-                }
+                // TODO: restore this, with testing
+//                if (json != null && json.has("additionalFeatureMsg"))
+//                {
+//                    if (!has("renderer"))
+//                    {
+//                        put("renderer", new JSONObject());
+//                    }
+//
+//                    getJSONObject("renderer").put("message", json.getString("additionalFeatureMsg"));
+//                }
 
                 if (json != null && json.has("trackHeight"))
                 {
