@@ -1,0 +1,28 @@
+{
+  "name": "mcp-lk",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "setup": "npm ci",
+    "build": "npm run build-dev",
+    "start": "cross-env NODE_ENV=development webpack serve --config ./config/watch.config.js",
+    "build-dev": "npm run clean && cross-env NODE_ENV=development webpack --config ./config/dev.config.js --progress --profile",
+    "build-prod": "npm run clean && cross-env NODE_ENV=production webpack --config ./config/prod.config.js --progress --profile",
+    "clean": "rimraf resources/web/gen && rimraf resources/views/gen"
+  },
+  "dependencies": {
+    "@assistant-ui/react": "^0.10.0",
+    "@assistant-ui/react-markdown": "^0.10.0",
+    "@labkey/api": "^1.39.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  },
+  "devDependencies": {
+    "@labkey/build": "^9.1.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "cross-env": "^7.0.3",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.1.6"
+  }
+}

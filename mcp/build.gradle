@@ -1,0 +1,3 @@
+dependencies {
+    // Spring AI and MCP SDK deps are transitive from platform API
+}
