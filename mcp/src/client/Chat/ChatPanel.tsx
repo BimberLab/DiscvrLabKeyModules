@@ -1,13 +1,16 @@
-import React, { type FC } from 'react';
+import React, { useState, useMemo, type FC } from 'react';
 import {
     AssistantRuntimeProvider,
     ThreadPrimitive,
     ComposerPrimitive,
     MessagePrimitive,
     ActionBarPrimitive,
+    unstable_useRemoteThreadListRuntime as useRemoteThreadListRuntime,
 } from '@assistant-ui/react';
 import { MarkdownText } from './MarkdownText';
 import { useLabKeyRuntime } from './useLabKeyRuntime';
+import { createLabKeyThreadListAdapter } from './labkeyThreadListAdapter';
+import { Sidebar } from './Sidebar';
 import './ChatPanel.css';
 
 const STARTER_PROMPTS = [
@@ -93,6 +96,14 @@ const SparkleIcon: FC<{ size?: number }> = ({ size = 28 }) => (
         <path d="M15.6 15.6l2.8 2.8" />
         <path d="M5.6 18.4l2.8-2.8" />
         <path d="M15.6 8.4l2.8-2.8" />
+    </Icon>
+);
+
+const MenuIcon: FC = () => (
+    <Icon>
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
     </Icon>
 );
 
@@ -241,13 +252,49 @@ const Thread: FC = () => (
     </ThreadPrimitive.Root>
 );
 
+// We create the adapter once (stable reference)
+const threadListAdapter = createLabKeyThreadListAdapter();
+
 export const ChatPanel: FC = () => {
-    const runtime = useLabKeyRuntime();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // Memoize options so the object reference stays stable across renders.
+    // useRemoteThreadListRuntime has a useEffect([runtime, options]) that calls
+    // __internal_load() — a new object each render would re-trigger it continuously.
+    const runtimeOptions = useMemo(
+        () => ({ runtimeHook: useLabKeyRuntime, adapter: threadListAdapter }),
+        []
+    );
+
+    const runtime = useRemoteThreadListRuntime(runtimeOptions);
 
     return (
         <AssistantRuntimeProvider runtime={runtime}>
-            <div className="mcp-chat">
-                <Thread />
+            <div className={`mcp-layout${sidebarOpen ? ' mcp-sidebar-open' : ''}`}>
+                <Sidebar />
+                {/* Overlay for mobile drawer */}
+                {sidebarOpen && (
+                    <div
+                        className="mcp-sidebar-overlay"
+                        onClick={() => setSidebarOpen(false)}
+                        aria-hidden="true"
+                    />
+                )}
+                <div className="mcp-main">
+                    <div className="mcp-chat">
+                        <div className="mcp-chat-header">
+                            <button
+                                type="button"
+                                className="mcp-hamburger"
+                                onClick={() => setSidebarOpen((o) => !o)}
+                                aria-label="Toggle sidebar"
+                            >
+                                <MenuIcon />
+                            </button>
+                        </div>
+                        <Thread />
+                    </div>
+                </div>
             </div>
         </AssistantRuntimeProvider>
     );

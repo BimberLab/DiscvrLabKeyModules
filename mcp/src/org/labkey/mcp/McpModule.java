@@ -32,13 +32,13 @@ public class McpModule extends DefaultModule
     @Override
     public @Nullable Double getSchemaVersion()
     {
-        return null;
+        return 26.001;
     }
 
     @Override
     public boolean hasScripts()
     {
-        return false;
+        return true;
     }
 
     @Override
@@ -88,6 +88,6 @@ public class McpModule extends DefaultModule
     @NotNull
     public Set<String> getSchemaNames()
     {
-        return Collections.emptySet();
+        return Set.of(McpSchema.NAME);
     }
 }

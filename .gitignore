@@ -1,6 +1,7 @@
-/.gradle
+.gradle
 /jbrowse/resources/web/jbrowseApp
-/jbrowse/node_modules
+node_modules
+.claude
 /intellijBuild
 /travisSettings.sh
 index/

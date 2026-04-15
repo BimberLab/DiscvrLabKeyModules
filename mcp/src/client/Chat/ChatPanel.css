@@ -1,4 +1,6 @@
-.mcp-chat {
+/* === Layout shell ===================================================== */
+
+.mcp-layout {
     --mcp-bg: #ffffff;
     --mcp-panel-bg: #fbfbfa;
     --mcp-border: #ececec;
@@ -18,23 +20,246 @@
     --mcp-shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04);
     --mcp-radius: 16px;
     --mcp-radius-sm: 10px;
+    --mcp-sidebar-width: 260px;
 
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     width: 100%;
     height: 100%;
     min-height: 500px;
-    background: var(--mcp-bg);
-    border: 1px solid var(--mcp-border);
-    border-radius: var(--mcp-radius);
-    box-shadow: var(--mcp-shadow-sm);
     font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI',
         'Helvetica Neue', Arial, sans-serif;
     color: var(--mcp-text);
     font-feature-settings: 'cv11', 'ss01';
     -webkit-font-smoothing: antialiased;
     overflow: hidden;
+    border: 1px solid var(--mcp-border);
+    border-radius: var(--mcp-radius);
+    box-shadow: var(--mcp-shadow-sm);
+    background: var(--mcp-bg);
     position: relative;
+}
+
+.mcp-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.mcp-chat {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    background: var(--mcp-bg);
+    overflow: hidden;
+    position: relative;
+}
+
+/* Mobile header with hamburger — hidden on desktop */
+.mcp-chat-header {
+    display: none;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--mcp-border);
+    background: var(--mcp-bg);
+    flex-shrink: 0;
+}
+.mcp-hamburger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: none;
+    background: transparent;
+    color: var(--mcp-text-muted);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background 0.12s ease;
+}
+.mcp-hamburger:hover {
+    background: var(--mcp-code-bg);
+    color: var(--mcp-text);
+}
+
+/* === Sidebar =========================================================== */
+
+.mcp-sidebar {
+    width: var(--mcp-sidebar-width);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--mcp-border);
+    background: var(--mcp-panel-bg);
+    overflow: hidden;
+}
+
+.mcp-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 12px 10px;
+    border-bottom: 1px solid var(--mcp-border);
+    flex-shrink: 0;
+}
+
+.mcp-sidebar-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--mcp-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.mcp-new-chat-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: var(--mcp-accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 5px 10px;
+    font-size: 12.5px;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.12s ease, transform 0.08s ease;
+}
+.mcp-new-chat-btn:hover {
+    background: var(--mcp-accent-hover);
+}
+.mcp-new-chat-btn:active {
+    transform: scale(0.97);
+}
+
+.mcp-sidebar-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 0;
+}
+.mcp-sidebar-list::-webkit-scrollbar { width: 6px; }
+.mcp-sidebar-list::-webkit-scrollbar-track { background: transparent; }
+.mcp-sidebar-list::-webkit-scrollbar-thumb {
+    background: #dcdcdc;
+    border-radius: 3px;
+}
+
+.mcp-sidebar-archived {
+    border-top: 1px solid var(--mcp-border);
+    flex-shrink: 0;
+}
+
+.mcp-archived-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    background: transparent;
+    border: none;
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--mcp-text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: color 0.12s ease;
+}
+.mcp-archived-toggle:hover {
+    color: var(--mcp-text);
+}
+
+/* Thread list items */
+
+.mcp-thread-list-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 8px;
+    position: relative;
+}
+
+.mcp-thread-list-trigger {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 8px;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.1s ease;
+}
+.mcp-thread-list-trigger:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+/* Selected state — set by assistant-ui via data-state attribute */
+.mcp-thread-list-item[data-active="true"] .mcp-thread-list-trigger,
+.mcp-thread-list-item[data-state="selected"] .mcp-thread-list-trigger {
+    background: var(--mcp-accent-soft);
+    color: var(--mcp-accent);
+}
+
+.mcp-thread-list-title {
+    display: block;
+    font-size: 13.5px;
+    color: var(--mcp-text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.4;
+}
+.mcp-thread-list-item[data-active="true"] .mcp-thread-list-title,
+.mcp-thread-list-item[data-state="selected"] .mcp-thread-list-title {
+    color: var(--mcp-accent);
+    font-weight: 500;
+}
+
+.mcp-thread-list-actions {
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    flex-shrink: 0;
+}
+.mcp-thread-list-item:hover .mcp-thread-list-actions,
+.mcp-thread-list-item:focus-within .mcp-thread-list-actions {
+    opacity: 1;
+}
+
+.mcp-thread-list-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: none;
+    background: transparent;
+    color: var(--mcp-text-muted);
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+.mcp-thread-list-action-btn:hover {
+    background: rgba(0, 0, 0, 0.07);
+    color: var(--mcp-text);
+}
+.mcp-thread-list-action-btn-danger:hover {
+    background: rgba(200, 50, 50, 0.1);
+    color: #c83232;
+}
+
+/* Mobile overlay */
+.mcp-sidebar-overlay {
+    display: none;
 }
 
 .mcp-thread-root {
@@ -585,11 +810,42 @@
 /* --- Responsive --------------------------------------------------- */
 
 @media (max-width: 720px) {
-    .mcp-chat {
+    .mcp-layout {
         border-radius: 0;
         border-left: none;
         border-right: none;
     }
+
+    /* Sidebar becomes a slide-in drawer */
+    .mcp-sidebar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 100;
+        transform: translateX(-100%);
+        transition: transform 0.22s ease;
+        box-shadow: none;
+    }
+    .mcp-layout.mcp-sidebar-open .mcp-sidebar {
+        transform: translateX(0);
+        box-shadow: var(--mcp-shadow-lg);
+    }
+
+    /* Overlay backdrop */
+    .mcp-sidebar-overlay {
+        display: block;
+        position: absolute;
+        inset: 0;
+        z-index: 99;
+        background: rgba(0, 0, 0, 0.25);
+    }
+
+    /* Show hamburger on mobile */
+    .mcp-chat-header {
+        display: flex;
+    }
+
     .mcp-thread-inner {
         padding: 20px 16px 16px;
         gap: 22px;

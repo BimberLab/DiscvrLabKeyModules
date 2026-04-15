@@ -14,6 +14,7 @@ import org.labkey.api.util.logging.LogHelper;
 import org.springframework.ai.anthropic.AnthropicChatModel;
 import org.springframework.ai.anthropic.AnthropicChatOptions;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.tool.ToolCallback;
@@ -188,6 +189,46 @@ public class McpServiceImpl implements McpService
         }
     }
 
+    /**
+     * Sends a message with full conversation history so the LLM has prior context.
+     * history should be the messages preceding the new prompt (user+assistant turns).
+     */
+    public MessageResponse sendMessage(ChatClient chat, List<Message> history, String newMessage)
+    {
+        try
+        {
+            Map<String, Object> toolContext = new HashMap<>();
+            try
+            {
+                McpContext ctx = McpContext.get();
+                toolContext.put("user", ctx.getUser());
+                if (ctx.getContainer() != null)
+                    toolContext.put("container", ctx.getContainer());
+            }
+            catch (IllegalStateException e)
+            {
+                LOG.debug("No McpContext available for tool context");
+            }
+
+            String response = chat.prompt()
+                    .messages(history)
+                    .user(newMessage)
+                    .toolContext(toolContext)
+                    .call()
+                    .content();
+
+            if (response != null && !response.isBlank())
+                return new MessageResponse("text/plain", response, null);
+
+            return new MessageResponse("text/plain", "No response generated.", null);
+        }
+        catch (Exception e)
+        {
+            LOG.error("Error sending message to LLM", e);
+            return new MessageResponse("text/plain", "Error: " + e.getMessage(), null);
+        }
+    }
+
     @Override
     public VectorStore getVectorStore()
     {
@@ -209,6 +250,21 @@ public class McpServiceImpl implements McpService
             }
         }
         return _chatModel;
+    }
+
+    /**
+     * Builds a minimal ChatClient for one-shot title generation — no tools, no system prompt.
+     */
+    ChatClient buildTitleClient()
+    {
+        ChatModel chatModel = getChatModel();
+        if (chatModel == null)
+            throw new IllegalStateException("No LLM API key configured");
+
+        return ChatClient.builder(chatModel)
+                .defaultSystem("Generate a 2-5 word title for this conversation based on the user's first message. " +
+                        "Respond with only the title — no quotes, no punctuation at the end.")
+                .build();
     }
 
     /// Resets the cached ChatModel. Call when settings change.
