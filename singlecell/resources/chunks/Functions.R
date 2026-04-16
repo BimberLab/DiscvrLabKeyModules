@@ -107,7 +107,7 @@ saveData <- function(seuratObj, datasetId) {
     # Write cell barcodes and metadata:
     metaDf <- seuratObj@meta.data
     metaDf$cellbarcode <- colnames(seuratObj)
-    conn <- gzfile(metaFile)
+    conn <- gzfile(metaFile, 'w')
     write.table(metaDf, file = conn, quote = T, row.names = F, sep = ',', col.names = T)
     close(conn)
     write.table(data.frame(CellBarcode = colnames(seuratObj)), file = barcodeFile, quote = F, row.names = F, sep = ',', col.names = F)
