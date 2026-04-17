@@ -10,6 +10,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.triggers.Trigger;
 import org.labkey.api.data.triggers.TriggerFactory;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.User;
 import org.labkey.api.util.PageFlowUtil;
@@ -30,19 +31,19 @@ public class StudiesTriggerFactory implements TriggerFactory
     public static class StudyTrigger implements Trigger
     {
         @Override
-        public void beforeInsert(TableInfo table, Container c, User user, @Nullable Map<String, Object> newRow, ValidationException errors, Map<String, Object> extraContext) throws ValidationException
+        public void beforeInsert(TableInfo table, Container c, User user, @Nullable QueryUpdateService.InsertOption insertOption, @Nullable Map<String, Object> newRow, ValidationException errors, Map<String, Object> extraContext) throws ValidationException
         {
-            beforeInsert(table, c, user, newRow, errors, extraContext, null);
+            beforeInsert(table, c, user, insertOption, newRow, errors, extraContext, null);
         }
 
         @Override
-        public void beforeInsert(TableInfo table, Container c, User user, @Nullable Map<String, Object> newRow, ValidationException errors, Map<String, Object> extraContext, @Nullable Map<String, Object> existingRecord) throws ValidationException
+        public void beforeInsert(TableInfo table, Container c, User user, @Nullable QueryUpdateService.InsertOption insertOption, @Nullable Map<String, Object> newRow, ValidationException errors, Map<String, Object> extraContext, @Nullable Map<String, Object> existingRecord) throws ValidationException
         {
             possiblyResolveStudy(table, newRow, existingRecord, c);
         }
 
         @Override
-        public void beforeUpdate(TableInfo table, Container c, User user, @Nullable Map<String, Object> newRow, @Nullable Map<String, Object> oldRow, ValidationException errors, Map<String, Object> extraContext) throws ValidationException
+        public void beforeUpdate(TableInfo table, Container c, User user, @Nullable QueryUpdateService.InsertOption insertOption, @Nullable Map<String, Object> newRow, @Nullable Map<String, Object> oldRow, ValidationException errors, Map<String, Object> extraContext) throws ValidationException
         {
             possiblyResolveStudy(table, newRow, oldRow, c);
         }
