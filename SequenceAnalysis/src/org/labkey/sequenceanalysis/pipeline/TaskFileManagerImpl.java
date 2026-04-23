@@ -387,7 +387,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
             return null;
         }
 
-        File f = FileUtil.appendName(_workLocation, line);
+        File f = FileUtil.appendPath(_workLocation, Path.parse(line));
         if (!f.exists())
         {
             File test = FileUtil.appendPath(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), Path.parse(line));
