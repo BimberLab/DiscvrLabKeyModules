@@ -32,6 +32,7 @@ import org.labkey.api.util.DebugInfoDumper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.api.util.Path;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
@@ -389,7 +390,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         File f = FileUtil.appendName(_workLocation, line);
         if (!f.exists())
         {
-            File test = FileUtil.appendName(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), line);
+            File test = FileUtil.appendPath(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), Path.parse(line));
             if (test.exists())
             {
                 f = test;
@@ -985,8 +986,8 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
             return;
         }
 
-        String path = _wd.getRelativePath(FileSystemLike.wrapFile(input));
-        File dest = FileUtil.appendName(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), path);
+        String path = _wd.getRelativePath()FileSystemLike.wrapFile(input));
+        File dest = FileUtil.appendPath(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), Path.parse(path));
         _job.getLogger().debug("to: " + dest.getPath());
 
         boolean doMove = true;
