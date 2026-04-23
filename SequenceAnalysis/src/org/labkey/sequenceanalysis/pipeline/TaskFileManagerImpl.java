@@ -986,7 +986,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
             return;
         }
 
-        String path = _wd.getRelativePath()FileSystemLike.wrapFile(input));
+        String path = _wd.getRelativePath(FileSystemLike.wrapFile(input));
         File dest = FileUtil.appendPath(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), Path.parse(path));
         _job.getLogger().debug("to: " + dest.getPath());
 
