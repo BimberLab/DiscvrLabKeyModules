@@ -127,6 +127,7 @@ import org.labkey.sequenceanalysis.run.analysis.SawfishAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SawfishJointCallingHandler;
 import org.labkey.sequenceanalysis.run.analysis.SequenceBasedTypingAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SnpCountAnalysis;
+import org.labkey.sequenceanalysis.run.analysis.SpecHlaAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.SubreadAnalysis;
 import org.labkey.sequenceanalysis.run.analysis.UnmappedReadExportHandler;
 import org.labkey.sequenceanalysis.run.analysis.ViralAnalysis;
@@ -343,6 +344,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new PindelAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new PbsvAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new GenrichStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new SpecHlaAnalysis.Provider());
         SequencePipelineService.get().registerPipelineStep(new SawfishAnalysis.Provider());
 
         SequencePipelineService.get().registerPipelineStep(new PARalyzerAnalysis.Provider());
