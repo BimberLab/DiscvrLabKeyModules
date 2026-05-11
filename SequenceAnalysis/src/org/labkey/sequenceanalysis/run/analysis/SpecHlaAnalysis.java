@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis.run.analysis;
 
 import htsjdk.samtools.SAMFileHeader;
+import org.apache.commons.io.FileUtils;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.sequenceanalysis.model.AnalysisModel;
 import org.labkey.api.sequenceanalysis.model.Readset;
@@ -20,6 +21,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Path;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -106,13 +108,25 @@ public class SpecHlaAnalysis extends AbstractCommandPipelineStep<SimpleScriptWra
 
         getWrapper().execute(toRun);
 
-        File outFile = FileUtil.appendPath(outputDir, Path.parse("specHLA/hla.result.txt"));
+        File spechlaDir = FileUtil.appendName(outputDir, "specHLA");
+        File outFile = FileUtil.appendName(spechlaDir, "hla.result.txt");
         if (!outFile.exists())
         {
             throw new PipelineJobException("SpecHLA result file does not exist: " + outFile.getPath());
         }
 
-        output.addSequenceOutput(outFile, FileUtil.getBaseName(inputBam) + ": HLA Typing", "specHLA Genotyping", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
+        output.addIntermediateFile(spechlaDir);
+        File copiedFile = FileUtil.appendName(outputDir, outFile.getName());
+        try
+        {
+            FileUtils.copyFile(outFile, copiedFile);
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
+
+        output.addSequenceOutput(copiedFile, FileUtil.getBaseName(inputBam) + ": HLA Typing", "specHLA Genotyping", rs.getReadsetId(), null, referenceGenome.getGenomeId(), null);
 
         return output;
     }
