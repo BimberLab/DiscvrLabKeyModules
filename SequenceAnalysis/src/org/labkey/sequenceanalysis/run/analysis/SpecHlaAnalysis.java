@@ -54,6 +54,12 @@ public class SpecHlaAnalysis extends AbstractCommandPipelineStep<SimpleScriptWra
     {
         AnalysisOutputImpl output = new AnalysisOutputImpl();
 
+        File gzippedFasta = referenceGenome.getWorkingFastaFileGzipped();
+        if (!gzippedFasta.exists())
+        {
+            throw new PipelineJobException("Missing file: " + gzippedFasta.getPath());
+        }
+
         File subsetBam = FileUtil.appendName(outputDir, FileUtil.getBaseName(inputBam) + ".subset.bam");
         SamtoolsRunner sr = new SamtoolsRunner(getWrapper().getLogger());
         sr.execute(Arrays.asList(
@@ -61,6 +67,7 @@ public class SpecHlaAnalysis extends AbstractCommandPipelineStep<SimpleScriptWra
                 "view",
                 "-h",
                 "-F", "12", //This selects pairs where either mate is mapped
+                "-T", gzippedFasta.getPath(),
                 "-o", subsetBam.getPath(),
                 inputBam.getPath()
         ));
