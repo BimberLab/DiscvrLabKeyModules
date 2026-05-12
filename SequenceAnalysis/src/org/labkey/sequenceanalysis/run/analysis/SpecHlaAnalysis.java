@@ -60,35 +60,69 @@ public class SpecHlaAnalysis extends AbstractCommandPipelineStep<SimpleScriptWra
             throw new PipelineJobException("Missing file: " + gzippedFasta.getPath());
         }
 
+        File doneFile = FileUtil.appendName(outputDir, FileUtil.getBaseName(inputBam) + ".subset.done");
+        output.addIntermediateFile(doneFile);
+        
         File subsetBam = FileUtil.appendName(outputDir, FileUtil.getBaseName(inputBam) + ".subset.bam");
         SamtoolsRunner sr = new SamtoolsRunner(getWrapper().getLogger());
-        sr.execute(Arrays.asList(
-                sr.getSamtoolsPath().getPath(),
-                "view",
-                "-h",
-                "-F", "12", //This selects pairs where either mate is mapped
-                "-T", gzippedFasta.getPath(),
-                "-o", subsetBam.getPath(),
-                inputBam.getPath()
-        ));
+        if (doneFile.exists())
+        {
+            getPipelineCtx().getLogger().debug("Done file exists, skipping samtools view");    
+        }
+        else
+        {
+            sr.execute(Arrays.asList(
+                    sr.getSamtoolsPath().getPath(),
+                    "view",
+                    "-h",
+                    "-F", "12", //This selects pairs where either mate is mapped
+                    "-T", gzippedFasta.getPath(),
+                    "-o", subsetBam.getPath(),
+                    inputBam.getPath()
+            ));
+        }
         output.addIntermediateFile(subsetBam);
 
-        File queryNameSortBam = new SamSorter(getPipelineCtx().getLogger()).execute(subsetBam, FileUtil.appendName(outputDir, FileUtil.getBaseName(inputBam) + ".querySort.bam"), SAMFileHeader.SortOrder.queryname);
+        File queryNameSortBam = FileUtil.appendName(outputDir, FileUtil.getBaseName(inputBam) + ".querySort.bam");
+        if (doneFile.exists())
+        {
+            getPipelineCtx().getLogger().debug("Done file exists, skipping samtools sort");
+        }
+        else
+        {
+            new SamSorter(getPipelineCtx().getLogger()).execute(subsetBam, queryNameSortBam, SAMFileHeader.SortOrder.queryname);
+        }
         output.addIntermediateFile(queryNameSortBam);
 
         File fq1 = FileUtil.appendName(outputDir, FileUtil.getBaseName(inputBam) + ".R1.fastq.gz");
         File fq2 = FileUtil.appendName(outputDir, FileUtil.getBaseName(inputBam) + ".R2.fastq.gz");
-        sr.execute(Arrays.asList(
-                sr.getSamtoolsPath().getPath(),
-                "fastq",
-                "-1",
-                fq1.getPath(),
-                "-2",
-                fq2.getPath(),
-                queryNameSortBam.getPath()
-        ));
+        if (doneFile.exists())
+        {
+            getPipelineCtx().getLogger().debug("Done file exists, skipping samtools fastq");
+        }
+        else
+        {
+            sr.execute(Arrays.asList(
+                    sr.getSamtoolsPath().getPath(),
+                    "fastq",
+                    "-1",
+                    fq1.getPath(),
+                    "-2",
+                    fq2.getPath(),
+                    queryNameSortBam.getPath()
+            ));
+        }
         output.addIntermediateFile(fq1);
         output.addIntermediateFile(fq2);
+
+        try
+        {
+            FileUtils.touch(doneFile);
+        }
+        catch (IOException e)
+        {
+            throw new PipelineJobException(e);
+        }
 
         File specHlaExe = AbstractCommandWrapper.resolveFileInPath("spechla", null, true);
 
