@@ -32,6 +32,7 @@ import org.labkey.api.util.DebugInfoDumper;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
+import org.labkey.api.util.Path;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisManager;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
@@ -57,6 +58,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -250,7 +252,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
 
     private File getDeferredDeleteLog(boolean create)
     {
-        File logFile = new File(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), "toDelete.txt");
+        File logFile = FileUtil.appendName(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), "toDelete.txt");
         if (create && !logFile.exists())
         {
             try
@@ -269,7 +271,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
 
     private File getMetricsLog(boolean create)
     {
-        File logFile = new File(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), "metricsToCreate.txt");
+        File logFile = FileUtil.appendName(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), "metricsToCreate.txt");
         if (create && !logFile.exists())
         {
             try (PrintWriter writer = PrintWriters.getPrintWriter(logFile))
@@ -385,10 +387,10 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
             return null;
         }
 
-        File f = new File(_workLocation, line);
+        File f = FileUtil.appendPath(_workLocation, Path.parse(line));
         if (!f.exists())
         {
-            File test = new File(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), line);
+            File test = FileUtil.appendPath(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), Path.parse(line));
             if (test.exists())
             {
                 f = test;
@@ -859,7 +861,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                 _job.getLogger().debug("Directory has " + moved.listFiles().length + " children");
                 for (File f : moved.listFiles())
                 {
-                    processCopiedFile(new File(original, f.getName()), f, actions, resumer);
+                    processCopiedFile(FileUtil.appendName(original, f.getName()), f, actions, resumer);
                 }
             }
         }
@@ -910,23 +912,21 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
                 _job.getLogger().debug("discarding copied inputs");
                 _wd.discardCopiedInputs();
 
-                if (!_wd.getDir().exists())
+                if (_wd.getDir().exists())
                 {
-                    throw new PipelineJobException("work dir does not exist: " + _wd.getDir());
-                }
-
-                //NOTE: preserving relative locations is a pain.  therefore we copy all outputs, including directories
-                //then sort out which files were specified as named outputs later
-                for (File input : _wd.getDir().toNioPathForRead().toFile().listFiles())
-                {
-                    if (input.getName().matches("^core.[0-9]+$") || input.getName().endsWith(".hprof"))
+                    //NOTE: preserving relative locations is a pain.  therefore we copy all outputs, including directories
+                    //then sort out which files were specified as named outputs later
+                    for (File input : Objects.requireNonNull(_wd.getDir().toNioPathForRead().toFile().listFiles()))
                     {
-                        _job.getLogger().debug("Deleting core/hprof file: " + input.getPath());
-                        input.delete();
-                        continue;
-                    }
+                        if (input.getName().matches("^core.[0-9]+$") || input.getName().endsWith(".hprof"))
+                        {
+                            _job.getLogger().debug("Deleting core/hprof file: " + input.getPath());
+                            input.delete();
+                            continue;
+                        }
 
-                    copyFile(input, actions, resumer);
+                        copyFile(input, actions, resumer);
+                    }
                 }
             }
             else
@@ -987,7 +987,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
         }
 
         String path = _wd.getRelativePath(FileSystemLike.wrapFile(input));
-        File dest = new File(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), path);
+        File dest = FileUtil.appendPath(getSupport().getAnalysisDirectory().toNioPathForRead().toFile(), Path.parse(path));
         _job.getLogger().debug("to: " + dest.getPath());
 
         boolean doMove = true;
@@ -1076,7 +1076,7 @@ public class TaskFileManagerImpl implements TaskFileManager, Serializable
             //NOTE: we use relative paths in all cases here
             _job.getLogger().info("Decompressing file: " + i.getPath());
 
-            unzipped = new File(_wd.getDir().toNioPathForRead().toFile(), i.getName().replaceAll(".gz$", ""));
+            unzipped = FileUtil.appendName(_wd.getDir().toNioPathForRead().toFile(), i.getName().replaceAll(".gz$", ""));
             unzipped = Compress.decompressGzip(i, unzipped);
             _job.getLogger().debug("\tunzipped: " + unzipped.getPath());
 

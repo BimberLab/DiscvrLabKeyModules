@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.ConvertHelper;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.WorkDirectory;
+import org.labkey.api.util.FileUtil;
 import org.labkey.vfs.FileSystemLike;
 
 import java.io.File;
@@ -85,18 +86,23 @@ public class AlignerIndexUtil
                     if (wd != null)
                     {
                         String val = ctx.getJob().getParameters().get(COPY_LOCALLY);
-                        boolean doCopy = forceCopyLocal || (val == null || ConvertHelper.convert(val, Boolean.class));
+                        boolean doCopy = forceCopyLocal || (val == null || Boolean.TRUE.equals(ConvertHelper.convert(val, Boolean.class)));
 
                         if (doCopy)
                         {
                             ctx.getLogger().info("copying index files to work location");
-                            File localSharedDir = new File(wd.getDir().toNioPathForRead().toFile(), "Shared");
-                            File destination = new File(localSharedDir, localName);
+                            File localSharedDir = FileUtil.appendName(wd.getDir().toNioPathForRead().toFile(), "Shared");
+                            File destination = FileUtil.appendName(localSharedDir, localName);
                             ctx.getLogger().debug(destination.getPath());
                             File[] files = webserverIndexDir.listFiles();
                             if (files == null)
                             {
                                 return false;
+                            }
+
+                            if (!destination.exists())
+                            {
+                                FileUtil.mkdirs(destination);
                             }
 
                             destination = wd.inputFile(FileSystemLike.wrapFile(webserverIndexDir), FileSystemLike.wrapFile(destination), true).toNioPathForRead().toFile();

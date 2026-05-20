@@ -1,6 +1,7 @@
 package org.labkey.singlecell.analysis;
 
 import au.com.bytecode.opencsv.CSVReader;
+import htsjdk.samtools.util.IOUtil;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -938,7 +939,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
         File metaTable = CellHashingServiceImpl.get().getMetaTableFromSeurat(seuratObj, false);
         if (metaTable != null)
         {
-            try (CSVReader reader = new CSVReader(Readers.getReader(metaTable), ','))
+            try (CSVReader reader = new CSVReader(Readers.getReader(IOUtil.openFileForReading(metaTable)), ','))
             {
                 String[] line;
 

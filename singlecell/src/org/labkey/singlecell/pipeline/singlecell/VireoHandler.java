@@ -77,7 +77,7 @@ public class VireoHandler  extends AbstractParameterizedOutputHandler<SequenceOu
     @Override
     public boolean canProcess(SequenceOutputFile o)
     {
-        return CellRangerGexCountStep.LOUPE_CATEGORY.equals(o.getCategory()) & o.getFile() != null & o.getFile().getName().endsWith("cloupe.cloupe");
+        return CellRangerGexCountStep.LOUPE_CATEGORY.equals(o.getCategory()) && o.getFile() != null && o.getFile().getName().endsWith("cloupe.cloupe");
     }
 
     @Override
