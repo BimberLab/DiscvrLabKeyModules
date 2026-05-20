@@ -654,7 +654,7 @@ public class JsonFile
                 }});
                 put("craiLocation", new JSONObject()
                 {{
-                    if (!new File(targetFile.getFile() + ".bai").exists())
+                    if (!new File(targetFile.getFile() + ".crai").exists())
                     {
                         log.error("Track lacks an index: {}, expected: {}", getObjectId(), targetFile.getFile().getPath() + ".crai");
                     }

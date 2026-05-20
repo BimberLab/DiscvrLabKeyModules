@@ -272,10 +272,10 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             return;
         }
 
-        File root = new File(sf.getFilePath());
+        File root = new File(sf.getFilePath()).getParentFile();
         if (!root.exists())
         {
-            log.error("Run fileroot does not exist: " + runId + " / " + root.getPath());
+            log.error("Run file root does not exist. runId: " + runId + " / jobId: " + sf.getRowId() + " / " + root.getPath());
             return;
         }
 
