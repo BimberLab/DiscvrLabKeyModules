@@ -210,7 +210,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static org.labkey.api.exp.api.ExperimentService.asInteger;
+import static org.labkey.api.util.IntegerUtils.asInteger;
 import static org.labkey.sequenceanalysis.SequenceIntegrationTests.PIPELINE_PROP_NAME;
 
 public class SequenceAnalysisController extends SpringActionController

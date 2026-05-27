@@ -42,7 +42,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
-import static org.labkey.api.exp.api.ExperimentService.asLong;
+import static org.labkey.api.util.IntegerUtils.asLong;
 
 /**
  * This is designed to parse the FASTQ files produced by a single run on an illumina instructment and produce one gzipped FASTQ

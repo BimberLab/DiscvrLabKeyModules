@@ -69,7 +69,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
-import static org.labkey.api.exp.api.ExperimentService.asLong;
+import static org.labkey.api.util.IntegerUtils.asLong;
 
 /**
  * User: bimber

@@ -1,6 +1,5 @@
 package org.labkey.studies;
 
-import org.apache.commons.collections.map.CaseInsensitiveMap;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 import org.junit.AfterClass;
@@ -19,13 +18,9 @@ import org.labkey.api.discvrcore.test.AbstractIntegrationTest;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.BatchValidationException;
-import org.labkey.api.query.DuplicateKeyException;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QueryUpdateService;
-import org.labkey.api.query.QueryUpdateServiceException;
-import org.labkey.api.query.SimpleUserSchema;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.resource.FileResource;
 import org.labkey.api.resource.Resource;
@@ -34,23 +29,17 @@ import org.labkey.api.studies.study.StudyDefinition;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.util.TestContext;
-import org.labkey.studies.query.StudiesUserSchema;
-
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-import static com.fasterxml.jackson.databind.type.LogicalType.Collection;
-import static org.labkey.api.exp.api.ExperimentService.asInteger;
+import static org.labkey.api.util.IntegerUtils.asInteger;
 
 @RunWith(Enclosed.class)
 public class StudiesManager
