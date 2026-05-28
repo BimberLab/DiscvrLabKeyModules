@@ -110,7 +110,7 @@ public class WhatsHapStep extends AbstractCommandPipelineStep<WhatsHapStep.Whats
 
     private List<File> getCachedBams() throws PipelineJobException
     {
-        List<Long> cachedFiles = getPipelineCtx().getSequenceSupport().getCachedObject(CACHE_KEY, PipelineJob.createObjectMapper().getTypeFactory().constructParametricType(List.class, Long.class));
+        List<Long> cachedFiles = getPipelineCtx().getSequenceSupport().getCachedObject(CACHE_KEY, PipelineJob.createObjectMapper().getTypeFactory().constructCollectionType(List.class, Long.class));
 
         return cachedFiles.stream().map(x -> getPipelineCtx().getSequenceSupport().getCachedData(x)).toList();
     }
