@@ -183,6 +183,7 @@ import org.labkey.sequenceanalysis.run.variant.VariantEvalStep;
 import org.labkey.sequenceanalysis.run.variant.VariantFiltrationStep;
 import org.labkey.sequenceanalysis.run.variant.VariantQCStep;
 import org.labkey.sequenceanalysis.run.variant.VariantsToTableStep;
+import org.labkey.sequenceanalysis.run.variant.WhatsHapStep;
 import org.labkey.sequenceanalysis.util.Barcoder;
 import org.labkey.sequenceanalysis.util.ChainFileValidator;
 import org.labkey.sequenceanalysis.util.ScatterGatherUtils;
@@ -374,6 +375,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new BcftoolsFixploidyStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new BcftoolsFillFromFastaStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SVAnnotateStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new WhatsHapStep.Provider());
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
