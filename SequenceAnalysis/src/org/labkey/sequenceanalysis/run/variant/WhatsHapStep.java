@@ -42,7 +42,7 @@ public class WhatsHapStep extends AbstractCommandPipelineStep<WhatsHapStep.Whats
         super(provider, ctx, new WhatsHapStep.WhatsHapWrapper(ctx.getLogger()));
     }
 
-    public static class Provider extends AbstractVariantProcessingStepProvider<WhatsHapStep> implements SupportsPedigree
+    public static class Provider extends AbstractVariantProcessingStepProvider<WhatsHapStep>
     {
         public Provider()
         {
