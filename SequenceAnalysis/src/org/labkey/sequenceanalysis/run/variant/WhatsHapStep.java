@@ -5,6 +5,7 @@ import htsjdk.variant.vcf.VCFFileReader;
 import htsjdk.variant.vcf.VCFHeader;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.collections.LongArrayList;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
@@ -81,7 +82,7 @@ public class WhatsHapStep extends AbstractCommandPipelineStep<WhatsHapStep.Whats
                 throw new IllegalStateException("No samples found in VCF file");
             }
 
-            ArrayList<Long> toCache = new ArrayList<>();
+            ArrayList<Long> toCache = new LongArrayList();
             Container targetContainer = getPipelineCtx().getJob().getContainer().isWorkbookOrTab() ? getPipelineCtx().getJob().getContainer().getParent() : getPipelineCtx().getJob().getContainer();
             TableInfo outputFiles = QueryService.get().getUserSchema(getPipelineCtx().getJob().getUser(), targetContainer, SequenceAnalysisSchema.SCHEMA_NAME).getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
             for (String sample : samples)
@@ -110,7 +111,7 @@ public class WhatsHapStep extends AbstractCommandPipelineStep<WhatsHapStep.Whats
 
     private List<File> getCachedBams() throws PipelineJobException
     {
-        List<Long> cachedFiles = getPipelineCtx().getSequenceSupport().getCachedObject(CACHE_KEY, PipelineJob.createObjectMapper().getTypeFactory().constructCollectionType(List.class, Long.class));
+        List<Long> cachedFiles = getPipelineCtx().getSequenceSupport().getCachedObject(CACHE_KEY, PipelineJob.createObjectMapper().getTypeFactory().constructType(LongArrayList.class));
 
         return cachedFiles.stream().map(x -> getPipelineCtx().getSequenceSupport().getCachedData(x)).toList();
     }
