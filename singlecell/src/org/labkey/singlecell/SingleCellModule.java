@@ -97,6 +97,7 @@ import org.labkey.singlecell.pipeline.singlecell.RunSDA;
 import org.labkey.singlecell.pipeline.singlecell.RunScGate;
 import org.labkey.singlecell.pipeline.singlecell.RunScGateBuiltin;
 import org.labkey.singlecell.pipeline.singlecell.RunSingleR;
+import org.labkey.singlecell.pipeline.singlecell.RunStarCAT;
 import org.labkey.singlecell.pipeline.singlecell.RunVision;
 import org.labkey.singlecell.pipeline.singlecell.ScoreCellCycle;
 import org.labkey.singlecell.pipeline.singlecell.SeuratPrototype;
@@ -248,6 +249,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new RunPCA.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunPHATE.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunSingleR.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RunStarCAT.Provider());
         SequencePipelineService.get().registerPipelineStep(new ClassifyTNKByExpression.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunConga.Provider());
         SequencePipelineService.get().registerPipelineStep(new FindClustersAndDimRedux.Provider());
