@@ -359,8 +359,8 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
 
             List<Long> serializedListLong = deserialized.getCachedObject("cachedListLong", mapper.getTypeFactory().constructType(LongArrayList.class));
             assertEquals("List<Long> not serialized properly", 2, serializedListLong.size());
-            assertNotNull("List<Long> values not serialized properly", serializedListLong.get(1));
-            assertNotNull("List<Long> values not serialized properly", serializedListLong.get(2));
+            assertEquals("List<Long> values not serialized properly", 1L, (long)serializedListLong.get(0));
+            assertEquals("List<Long> values not serialized properly", 2L, (long)serializedListLong.get(1));
         }
 
         @Test
