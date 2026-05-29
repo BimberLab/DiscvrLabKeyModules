@@ -128,6 +128,7 @@ public class WhatsHapStep extends AbstractCommandPipelineStep<WhatsHapStep.Whats
 
         List<String> args = new ArrayList<>();
         args.add(getWrapper().getExe().getPath());
+        args.add("phase");
         args.add("-o");
         args.add(vcfOut.getPath());
         args.add("--reference");
