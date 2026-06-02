@@ -33,6 +33,7 @@ import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.LabKeyProcessBuilder;
 import org.labkey.api.util.Path;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
@@ -139,7 +140,7 @@ public class FastqcRunner
 
             _logger.info("running fastqc:");
             _logger.info(StringUtils.join(params, " "));
-            ProcessBuilder pb = new ProcessBuilder(params);
+            LabKeyProcessBuilder pb = new LabKeyProcessBuilder(params);
             pb.redirectErrorStream(true);
             pb.directory(f.getParentFile());
 

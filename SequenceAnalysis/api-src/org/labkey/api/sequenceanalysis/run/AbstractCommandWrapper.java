@@ -17,12 +17,13 @@ package org.labkey.api.sequenceanalysis.run;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineJobService;
 import org.labkey.api.sequenceanalysis.pipeline.SequencePipelineService;
+import org.labkey.api.util.LabKeyProcessBuilder;
 import org.labkey.api.util.StringUtilsLabKey;
 
 import java.io.BufferedReader;
@@ -43,7 +44,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
 {
     private File _outputDir = null;
     private File _workingDir = null;
-    private Logger _log;
+    private final Logger _log;
     private boolean _logPath = false;
     private Level _logLevel = Level.DEBUG;
     private boolean _warnNonZeroExits = true;
@@ -105,9 +106,9 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         execute(params, redirect, null);
     }
 
-    public ProcessBuilder getProcessBuilder(List<String> params)
+    public LabKeyProcessBuilder getProcessBuilder(List<String> params)
     {
-        ProcessBuilder pb = new ProcessBuilder(params);
+        LabKeyProcessBuilder pb = new LabKeyProcessBuilder(params);
         setPath(pb);
 
         if (!_environment.isEmpty())
@@ -134,7 +135,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         getLogger().info("\t" + StringUtils.join(params, " "));
         _commandsExecuted.add(StringUtils.join(params, " "));
 
-        ProcessBuilder pb = getProcessBuilder(params);
+        LabKeyProcessBuilder pb = getProcessBuilder(params);
         pb.redirectErrorStream(false);
         if (redirect != null)
         {
@@ -197,7 +198,7 @@ abstract public class AbstractCommandWrapper implements CommandWrapper
         return _lastReturnCode;
     }
 
-    private void setPath(ProcessBuilder pb)
+    private void setPath(LabKeyProcessBuilder pb)
     {
         // Update PATH environment variable to make sure all files in the tools
         // directory and the directory of the executable or on the path.

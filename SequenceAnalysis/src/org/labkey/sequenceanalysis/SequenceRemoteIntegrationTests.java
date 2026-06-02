@@ -16,6 +16,7 @@ import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.WorkDirectory;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.LabKeyProcessBuilder;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.pipeline.AlignmentInitTask;
 import org.labkey.sequenceanalysis.pipeline.PrepareAlignerIndexesTask;
@@ -212,7 +213,7 @@ public class SequenceRemoteIntegrationTests extends SequenceIntegrationTests.Abs
             args.add(jobJson.toURI().toString());
         }
 
-        ProcessBuilder pb = new ProcessBuilder(args);
+        LabKeyProcessBuilder pb = new LabKeyProcessBuilder(args);
         pb.directory(workDir);
 
         _log.info("Executing job in '{}': {}", pb.directory().getAbsolutePath(), String.join(" ", pb.command()));

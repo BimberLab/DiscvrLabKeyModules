@@ -21,6 +21,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.JobRunner;
+import org.labkey.api.util.LabKeyProcessBuilder;
 import org.labkey.api.util.Pair;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.sequenceanalysis.model.AdapterModel;
@@ -272,7 +273,7 @@ public class TrimmomaticWrapper extends AbstractCommandWrapper
 
     public void doTrim(List<String> params) throws PipelineJobException
     {
-        ProcessBuilder pb = getProcessBuilder(params);
+        LabKeyProcessBuilder pb = getProcessBuilder(params);
         getLogger().info(StringUtils.join(params, " "));
         pb.redirectErrorStream(false);
         Process p = null;
