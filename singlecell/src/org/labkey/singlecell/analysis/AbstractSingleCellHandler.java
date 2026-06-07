@@ -948,6 +948,7 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 int totalDiscordant = 0;
                 int lowOrNegative = 0;
                 int totalDoublet = 0;
+                int totalUnknown = 0;
                 double totalSaturation = 0.0;
                 Set<String> subjectIds = new HashSet<>();
 
@@ -1073,6 +1074,10 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                                     cellsLackingCDR3++;
                                 }
                             }
+                            else if ("Unknown".equals(line[riraIdx]))
+                            {
+                                totalUnknown++;
+                            }
                         }
 
                         if (subjectIdIdx > 0)
@@ -1122,12 +1127,15 @@ abstract public class AbstractSingleCellHandler implements SequenceOutputHandler
                 }
                 else if (riraIdx == -1 || traIdx == -1)
                 {
-                    descriptions.add("TCR information not present");
+                    if (riraIdx != -1)
+                    {
+                        descriptions.add("TCR information not present");
+                    }
                 }
 
-                if (!subjectIds.isEmpty())
+                if (riraIdx != -1)
                 {
-                    descriptions.add("Distinct SubjectIds: " + subjectIds.size());
+                    descriptions.add("% RIRA/Unknown: " + pf.format((double)totalUnknown / (double)totalCells));
                 }
             }
             catch (IOException e)
