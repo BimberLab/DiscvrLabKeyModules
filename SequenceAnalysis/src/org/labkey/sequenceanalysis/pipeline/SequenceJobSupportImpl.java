@@ -6,6 +6,7 @@ import htsjdk.samtools.util.IOUtil;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.collections.IntHashMap;
+import org.labkey.api.collections.LongArrayList;
 import org.labkey.api.collections.LongHashMap;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
@@ -28,6 +29,7 @@ import java.io.Serializable;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -319,6 +321,7 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
             js1._cachedObjects.put("cachedInt", 1);
             js1._cachedObjects.put("cachedString", "foo");
             js1._cachedObjects.put("cachedLong", 2L);
+            js1._cachedObjects.put("cachedListLong", new LongArrayList(Arrays.asList(1L, 2L)));
 
             LongHashMap<Long> longMap = new LongHashMap<>();
             longMap.put(1L, 2L);
@@ -349,10 +352,15 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
             assertEquals("Object not serialized with correct key type", Integer.class, serializedMap.keySet().iterator().next().getClass());
             assertNotNull("Map keys not serialized properly", serializedMap.get(1));
 
-            LongHashMap<Long> serializedLongMap = (LongHashMap<Long>)deserialized.getCachedObject("cachedLongMap", LongHashMap.class);
+            LongHashMap<Long> serializedLongMap = deserialized.getCachedObject("cachedLongMap", LongHashMap.class);
             assertEquals("LongMap not serialized properly", 1, serializedLongMap.size());
             assertEquals("Object not serialized with correct key type", Long.class, serializedLongMap.keySet().iterator().next().getClass());
             assertNotNull("LongMap keys not serialized properly", serializedLongMap.get(1L));
+
+            List<Long> serializedListLong = deserialized.getCachedObject("cachedListLong", mapper.getTypeFactory().constructType(LongArrayList.class));
+            assertEquals("List<Long> not serialized properly", 2, serializedListLong.size());
+            assertEquals("List<Long> values not serialized properly", 1L, (long)serializedListLong.get(0));
+            assertEquals("List<Long> values not serialized properly", 2L, (long)serializedListLong.get(1));
         }
 
         @Test
