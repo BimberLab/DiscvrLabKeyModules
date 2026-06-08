@@ -63,7 +63,13 @@ public class UpdateSeuratPrototype extends AbstractRDiscvrStep
                     SeuratToolParameter.create("keepOriginal", "Keep Copy of Original File", "If checked, the original file will be copied with the file extension '.bk'", "checkbox", new JSONObject()
                     {{
                         put("checked", false);
-                    }}, false)
+                    }}, false),
+                    SeuratToolParameter.create("maxAllowedUnknown", "Max Allowed Unknown (RIRA)", "If provided, this step will throw an error is more than this fraction of cells fail the check for disallowed UCell combinations", "ldk-numberfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                        put("maxValue", 1);
+                        put("decimalPrecision", 2);
+                    }}, 0.1)
             ), null, null);
         }
 

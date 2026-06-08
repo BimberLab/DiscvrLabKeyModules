@@ -28,12 +28,12 @@ public class RunRiraClassification extends AbstractRiraStep
                     {{
                         put("checked", true);
                     }}, true),
-                    SeuratToolParameter.create("maxAllowedUnknown", "Max Allowed Unknown", "If provided, ", "ldk-numberfield", new JSONObject()
+                    SeuratToolParameter.create("maxAllowedUnknown", "Max Allowed Unknown", "If provided, this step will throw an error is more than this fraction of cells fail the check for disallowed UCell combinations", "ldk-numberfield", new JSONObject()
                     {{
                         put("minValue", 0);
                         put("maxValue", 1);
                         put("decimalPrecision", 2);
-                    }}, true)
+                    }}, 0.1)
             ), null, null);
         }
 
