@@ -62,7 +62,7 @@ import java.util.stream.Stream;
 public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 {
     private static final String SYSTEM_MAINTENANCE_DESCRIPTION = "System Maintenance";
-    private static final String JOB_TABLE = "Job";
+    private static final String JOB_TABLE = "statusfiles";
 
     public SequenceAnalysisMaintenanceTask()
     {
@@ -96,7 +96,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         }
 
         PipelineStatusFile sf = PipelineService.get().getStatusFile(rowId);
-        if (sf.getStatus() == PipelineJob.TaskStatus.cancelling.name())
+        if (PipelineJob.TaskStatus.cancelling.name().equalsIgnoreCase(sf.getStatus()))
         {
             throw new CancelledException();
         }
