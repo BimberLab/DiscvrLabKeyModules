@@ -17,6 +17,7 @@ for (datasetId in names(seuratObjects)) {
   }
 
   Rdiscvr::IdentifyAndStoreActiveClonotypes(seuratObj, chain = 'TRA', storeStimLevelData = FALSE, minEDS = minEDS)
+  Rdiscvr::IdentifyAndStoreActiveClonotypes(seuratObj, chain = 'TRD', storeStimLevelData = FALSE, minEDS = minEDS)
   Rdiscvr::IdentifyAndStoreActiveClonotypes(seuratObj, chain = 'TRB', minEDS = minEDS)
 
   saveData(seuratObj, datasetId)
