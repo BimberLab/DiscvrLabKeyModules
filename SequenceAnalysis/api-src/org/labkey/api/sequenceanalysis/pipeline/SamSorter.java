@@ -40,7 +40,7 @@ public class SamSorter extends SamtoolsRunner
         boolean replaceOriginal = output == null;
         if (output == null)
         {
-            output = new File(getOutputDir(input), FileUtil.getBaseName(input) + ".sorted" + "." + FileUtil.getExtension(input));
+            output = FileUtil.appendName(getOutputDir(input), FileUtil.getBaseName(input) + ".sorted" + "." + FileUtil.getExtension(input));
         }
 
         List<String> params = new ArrayList<>();

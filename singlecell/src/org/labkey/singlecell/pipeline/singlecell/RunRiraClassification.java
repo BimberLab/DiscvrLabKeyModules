@@ -27,7 +27,13 @@ public class RunRiraClassification extends AbstractRiraStep
                     SeuratToolParameter.create("retainProbabilityMatrix", "Retain Probability Matrix", "If true, the celltypist probability_matrix with per-class probabilities will be stored in meta.data", "checkbox", new JSONObject()
                     {{
                         put("checked", true);
-                    }}, true)
+                    }}, true),
+                    SeuratToolParameter.create("maxAllowedUnknown", "Max Allowed Unknown", "If provided, this step will throw an error is more than this fraction of cells fail the check for disallowed UCell combinations", "ldk-numberfield", new JSONObject()
+                    {{
+                        put("minValue", 0);
+                        put("maxValue", 1);
+                        put("decimalPrecision", 2);
+                    }}, 0.1)
             ), null, null);
         }
 
