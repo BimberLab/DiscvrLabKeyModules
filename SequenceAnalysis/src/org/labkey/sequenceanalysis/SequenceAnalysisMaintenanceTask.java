@@ -61,6 +61,9 @@ import java.util.stream.Stream;
  */
 public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 {
+    private static final String SYSTEM_MAINTENANCE_DESCRIPTION = "System Maintenance";
+    private static final String JOB_TABLE = "Job";
+
     public SequenceAnalysisMaintenanceTask()
     {
 
@@ -78,13 +81,14 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         return "DeleteSequenceAnalysisArtifacts";
     }
 
+    // NOTE: if there is a more direct way to locate the JobID this should be replaced
     private void checkJobCancelled(Logger log)
     {
         // Make the assumption there is only one active maintenance job at a time:
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("description"), "System Maintenance").
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("description"), SYSTEM_MAINTENANCE_DESCRIPTION).
                 addCondition(FieldKey.fromString("Folder"), ContainerManager.getRoot().getId()).
                 addInClause(FieldKey.fromString("Status"), Arrays.asList(PipelineJob.TaskStatus.cancelling.name(), PipelineJob.TaskStatus.running.name()));
-        Integer rowId = new TableSelector(DbSchema.get("pipeline", DbSchemaType.Module).getTable("Pob"), PageFlowUtil.set("RowId"), filter, null).getObject(Integer.class);
+        Integer rowId = new TableSelector(DbSchema.get("pipeline", DbSchemaType.Module).getTable(JOB_TABLE), PageFlowUtil.set("RowId"), filter, null).getObject(Integer.class);
         if (rowId == null)
         {
             log.error("Unable to find rowId for job");
