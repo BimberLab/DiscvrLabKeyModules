@@ -8,6 +8,8 @@ import org.labkey.api.collections.IntHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
 import org.labkey.api.data.TableInfo;
@@ -16,7 +18,9 @@ import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.ldk.LDKService;
+import org.labkey.api.pipeline.CancelledException;
 import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineStatusFile;
@@ -72,6 +76,26 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
     public String getName()
     {
         return "DeleteSequenceAnalysisArtifacts";
+    }
+
+    private void checkJobCancelled(Logger log)
+    {
+        // Make the assumption there is only one active maintenance job at a time:
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("description"), "System Maintenance").
+                addCondition(FieldKey.fromString("Folder"), ContainerManager.getRoot().getId()).
+                addInClause(FieldKey.fromString("Status"), Arrays.asList(PipelineJob.TaskStatus.cancelling.name(), PipelineJob.TaskStatus.running.name()));
+        Integer rowId = new TableSelector(DbSchema.get("pipeline", DbSchemaType.Module).getTable("Pob"), PageFlowUtil.set("RowId"), filter, null).getObject(Integer.class);
+        if (rowId == null)
+        {
+            log.error("Unable to find rowId for job");
+            return;
+        }
+
+        PipelineStatusFile sf = PipelineService.get().getStatusFile(rowId);
+        if (sf.getStatus() == PipelineJob.TaskStatus.cancelling.name())
+        {
+            throw new CancelledException();
+        }
     }
 
     @Override
@@ -158,6 +182,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             if (i % 1000 == 0)
             {
                 log.info("readdata " + i + " of " + readDatas.size() + ". Current container: " + ContainerManager.getForId(rd.getContainer()).getPath());
+                checkJobCancelled(log);
             }
 
             if (rd.getFileId1() != null)
@@ -221,6 +246,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             if (i % 1000 == 0)
             {
                 log.info("analysis " + i + " of " + analyses.size() + ". Current container: " + ContainerManager.getForId(m.getContainer()).getPath());
+                checkJobCancelled(log);
             }
 
             if (m.getAlignmentFile() != null)
@@ -296,7 +322,11 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
     private void processContainer(Container c, Logger log) throws IOException, PipelineJobException
     {
         if (!c.isWorkbook())
+        {
             log.info("processing container: " + c.getPath());
+        }
+
+        checkJobCancelled(log);
 
         PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
         if (root != null && !root.isCloudRoot())
