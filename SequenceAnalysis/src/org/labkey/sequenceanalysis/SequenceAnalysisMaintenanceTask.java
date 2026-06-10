@@ -44,7 +44,6 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -89,30 +88,14 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("description"), SYSTEM_MAINTENANCE_DESCRIPTION).
                 addCondition(FieldKey.fromString("container"), ContainerManager.getRoot().getId()).
                 addCondition(FieldKey.fromString("modified"), new Date(), CompareType.DATE_EQUAL);
-        int rowId = new TableSelector(DbSchema.get("pipeline", DbSchemaType.Module).getTable(JOB_TABLE), PageFlowUtil.set("RowId", "Status"), filter, null).resultsStream(false).filter(rs -> {
-            try
-            {
-                String val = rs.getString(FieldKey.fromString("status"));
-                return val != null && (val.toLowerCase().startsWith(PipelineJob.TaskStatus.cancelling.name()) || val.toLowerCase().startsWith(PipelineJob.TaskStatus.running.name()));
-            }
-            catch (SQLException e)
-            {
-                throw new RuntimeException(e);
-            }
-        }).map(rs -> {
-            try
-            {
-                return rs.getInt(FieldKey.fromString("RowId"));
-            }
-            catch (SQLException e)
-            {
-                throw new RuntimeException(e);
-            }
-        }).max(Integer::compareTo).orElse(-1);
+        int rowId = new TableSelector(DbSchema.get("pipeline", DbSchemaType.Module).getTable(JOB_TABLE), PageFlowUtil.set("RowId", "Status"), filter, null).getMapCollection().stream().filter(map -> {
+            String val = String.valueOf(map.get("status"));
+            return val != null && (val.toLowerCase().startsWith(PipelineJob.TaskStatus.cancelling.name()) || val.toLowerCase().startsWith(PipelineJob.TaskStatus.running.name()));
+        }).map(rs -> Integer.parseInt(String.valueOf(rs.get("rowid")))).max(Integer::compareTo).orElse(-1);
 
         if (rowId == -1)
         {
-            log.debug("Unable to find rowId for job", new Exception());
+            log.warn("Unable to find rowId for job", new Exception());
             return;
         }
 
