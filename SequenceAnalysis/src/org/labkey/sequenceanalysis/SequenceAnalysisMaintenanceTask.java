@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -81,17 +82,37 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         return "DeleteSequenceAnalysisArtifacts";
     }
 
-    // NOTE: if there is a more direct way to locate the JobID this should be replaced
+    // NOTE: if there is a more direct way to locate the JobID this hack should be replaced
     private void checkJobCancelled(Logger log)
     {
         // Make the assumption there is only one active maintenance job at a time:
         SimpleFilter filter = new SimpleFilter(FieldKey.fromString("description"), SYSTEM_MAINTENANCE_DESCRIPTION).
                 addCondition(FieldKey.fromString("container"), ContainerManager.getRoot().getId()).
-                addInClause(FieldKey.fromString("status"), Arrays.asList(PipelineJob.TaskStatus.cancelling.name(), PipelineJob.TaskStatus.running.name()));
-        Integer rowId = new TableSelector(DbSchema.get("pipeline", DbSchemaType.Module).getTable(JOB_TABLE), PageFlowUtil.set("RowId"), filter, null).getObject(Integer.class);
-        if (rowId == null)
+                addCondition(FieldKey.fromString("modified"), new Date(), CompareType.DATE_EQUAL);
+        int rowId = new TableSelector(DbSchema.get("pipeline", DbSchemaType.Module).getTable(JOB_TABLE), PageFlowUtil.set("RowId", "Status"), filter, null).resultsStream(false).filter(rs -> {
+            try
+            {
+                String val = rs.getString(FieldKey.fromString("status"));
+                return val != null && (val.toLowerCase().startsWith(PipelineJob.TaskStatus.cancelling.name()) || val.toLowerCase().startsWith(PipelineJob.TaskStatus.running.name()));
+            }
+            catch (SQLException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }).map(rs -> {
+            try
+            {
+                return rs.getInt(FieldKey.fromString("RowId"));
+            }
+            catch (SQLException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }).max(Integer::compareTo).orElse(-1);
+
+        if (rowId == -1)
         {
-            log.error("Unable to find rowId for job");
+            log.debug("Unable to find rowId for job", new Exception());
             return;
         }
 
