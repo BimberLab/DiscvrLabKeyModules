@@ -28,6 +28,10 @@ public class RunRiraClassification extends AbstractRiraStep
                     {{
                         put("checked", true);
                     }}, true),
+                    SeuratToolParameter.create("filterDisallowedClasses", "Filter Disallowed Classes", "If true, then cells will be filtered based on expression of common contaminants, such as RBC or platelet genes ", "checkbox", new JSONObject()
+                    {{
+                        put("checked", true);
+                    }}, true),
                     SeuratToolParameter.create("maxAllowedUnknown", "Max Allowed Unknown", "If provided, this step will throw an error is more than this fraction of cells fail the check for disallowed UCell combinations", "ldk-numberfield", new JSONObject()
                     {{
                         put("minValue", 0);
