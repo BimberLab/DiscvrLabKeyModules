@@ -95,7 +95,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 
         if (rowId == -1)
         {
-            log.warn("Unable to find rowId for job", new Exception());
+            log.warn("Unable to find rowId for job", new Exception("Unable to find rowId for job"));
             return;
         }
 
