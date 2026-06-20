@@ -628,6 +628,9 @@ public class SequenceTest extends BaseWebDriverTest
         waitAndClick(Locator.id(fieldsetMap.get("Head Crop").down("ldk-linkbutton[text='Remove']", Ext4CmpRef.class).getId()).append(Locator.tag("a")));
         waitForElementToDisappear(Locator.id(fieldsetMap.get("Head Crop").getId()));
 
+        waitAndClick(Locator.id(fieldsetMap.get("Kracken2").down("ldk-linkbutton[text='Remove']", Ext4CmpRef.class).getId()).append(Locator.tag("a")));
+        waitForElementToDisappear(Locator.id(fieldsetMap.get("Kracken2").getId()));
+
         Integer overlapLength = 6;
         Double errorRate = 0.2;
         Integer cropLength = 500;
