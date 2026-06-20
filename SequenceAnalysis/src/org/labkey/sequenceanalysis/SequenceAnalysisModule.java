@@ -152,7 +152,7 @@ import org.labkey.sequenceanalysis.run.preprocessing.DownsampleFastqWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.FastqcProcessingStep;
 import org.labkey.sequenceanalysis.run.preprocessing.FilterReadsStep;
 import org.labkey.sequenceanalysis.run.preprocessing.FlashPipelineStep;
-import org.labkey.sequenceanalysis.run.preprocessing.Kracken2Step;
+import org.labkey.sequenceanalysis.run.preprocessing.Kraken2Step;
 import org.labkey.sequenceanalysis.run.preprocessing.PrintReadsContainingStep;
 import org.labkey.sequenceanalysis.run.preprocessing.TagPcrSummaryStep;
 import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
@@ -292,7 +292,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new CutadaptWrapper.Provider());
         SequencePipelineService.get().registerPipelineStep(new FastqcProcessingStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new CutadaptCropWrapper.Provider());
-        SequencePipelineService.get().registerPipelineStep(new Kracken2Step.Provider());
+        SequencePipelineService.get().registerPipelineStep(new Kraken2Step.Provider());
 
         //ref library
         SequencePipelineService.get().registerPipelineStep(new DNAReferenceLibraryStep.Provider());

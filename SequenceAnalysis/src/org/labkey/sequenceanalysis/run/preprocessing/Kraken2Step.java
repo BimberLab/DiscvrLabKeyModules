@@ -24,21 +24,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class Kracken2Step extends AbstractCommandPipelineStep<Kracken2Step.Kracken2Wrapper> implements PreprocessingStep
+public class Kraken2Step extends AbstractCommandPipelineStep<Kraken2Step.Kraken2Wrapper> implements PreprocessingStep
 {
     private static final String DB_PARAM = "db";
     private static final String MODE_PARAM = "mode";
 
-    public Kracken2Step(PipelineStepProvider<?> provider, PipelineContext ctx)
+    public Kraken2Step(PipelineStepProvider<?> provider, PipelineContext ctx)
     {
-        super(provider, ctx, new Kracken2Wrapper(ctx.getLogger()));
+        super(provider, ctx, new Kraken2Wrapper(ctx.getLogger()));
     }
 
     public static class Provider extends AbstractPipelineStepProvider<PreprocessingStep>
     {
         public Provider()
         {
-            super("Kracken2", "Kracken2", "Kracken2", "This step aligns input reads against a reference using BWA-mem and will only return read pairs without a passing hit in either read.", Arrays.asList(
+            super("Kraken2", "Kraken2", "Kraken2", "This step aligns input reads against a reference using BWA-mem and will only return read pairs without a passing hit in either read.", Arrays.asList(
                 ToolParameterDescriptor.create(DB_PARAM, "Database", "This determines the DB for positive or negative selection", "ldk-simplecombo", new JSONObject(){{
                     put("storeValues", "bacteria-viral");
                     put("multiSelect", false);
@@ -65,9 +65,9 @@ public class Kracken2Step extends AbstractCommandPipelineStep<Kracken2Step.Krack
         }
 
         @Override
-        public Kracken2Step create(PipelineContext context)
+        public Kraken2Step create(PipelineContext context)
         {
-            return new Kracken2Step(this, context);
+            return new Kraken2Step(this, context);
         }
     }
 
@@ -102,16 +102,16 @@ public class Kracken2Step extends AbstractCommandPipelineStep<Kracken2Step.Krack
             throw new PipelineJobException("Missing DB name");
         }
 
-        File binDir = FileUtil.appendName(new File(PipelineJobService.get().getAppProperties().getToolsDirectory()), "kracken2_dbs");
+        File binDir = FileUtil.appendName(new File(PipelineJobService.get().getAppProperties().getToolsDirectory()), "kraken2_dbs");
         if (!binDir.exists())
         {
-            throw new PipelineJobException("Unable to find kracken2 DB dir, expected: " + binDir.getAbsolutePath());
+            throw new PipelineJobException("Unable to find kraken2 DB dir, expected: " + binDir.getAbsolutePath());
         }
 
         File dbDir = FileUtil.appendName(binDir, dbName);
         if (!dbDir.exists())
         {
-            throw new PipelineJobException("Unable to find kracken2 DB dir, expected: " + dbDir.getAbsolutePath());
+            throw new PipelineJobException("Unable to find kraken2 DB dir, expected: " + dbDir.getAbsolutePath());
         }
 
         args.add("--use-names");
@@ -131,7 +131,7 @@ public class Kracken2Step extends AbstractCommandPipelineStep<Kracken2Step.Krack
         args.add("--classified-out");
         args.add(classifiedOutputBase.getPath() + "#.fq.gz");
 
-        File reportFile = FileUtil.appendName(outputDir, SequencePipelineService.get().getUnzippedBaseName(inputFile.getName()) + ".kracken2.report.txt");
+        File reportFile = FileUtil.appendName(outputDir, SequencePipelineService.get().getUnzippedBaseName(inputFile.getName()) + ".kraken2.report.txt");
         args.add("--report");
         args.add(reportFile.getPath());
 
@@ -180,16 +180,16 @@ public class Kracken2Step extends AbstractCommandPipelineStep<Kracken2Step.Krack
         return output;
     }
 
-    public static class Kracken2Wrapper extends AbstractCommandWrapper
+    public static class Kraken2Wrapper extends AbstractCommandWrapper
     {
-        public Kracken2Wrapper(Logger log)
+        public Kraken2Wrapper(Logger log)
         {
             super(log);
         }
 
         public File getExe()
         {
-            return SimpleScriptWrapper.resolveFileInPath("kracken2", null, true);
+            return SimpleScriptWrapper.resolveFileInPath("kraken2", null, true);
         }
     }
 }
