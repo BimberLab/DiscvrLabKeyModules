@@ -611,7 +611,7 @@ public class SequenceTest extends BaseWebDriverTest
         waitForElementToDisappear(Ext4Helper.Locators.window("Add Steps"));
 
         Map<String, Ext4CmpRef> fieldsetMap = new HashMap<>();
-        String[] setNames = {"Adapter Trimming (Trimmomatic)", "Average Quality Filter", "Crop Reads", "Downsample Reads", "Filter Reads Matching Reference", "Head Crop", "Quality Trimming (Adaptive)", "Quality Trimming (Sliding Window)", "Read Length Filter"};
+        String[] setNames = {"Adapter Trimming (Trimmomatic)", "Average Quality Filter", "Crop Reads", "Downsample Reads", "Filter Reads Matching Reference", "Head Crop", "Quality Trimming (Adaptive)", "Quality Trimming (Sliding Window)", "Read Length Filter", "Kraken2"};
         isPresentInThisOrder(setNames);
 
         for (String name : setNames)
@@ -627,6 +627,9 @@ public class SequenceTest extends BaseWebDriverTest
 
         waitAndClick(Locator.id(fieldsetMap.get("Head Crop").down("ldk-linkbutton[text='Remove']", Ext4CmpRef.class).getId()).append(Locator.tag("a")));
         waitForElementToDisappear(Locator.id(fieldsetMap.get("Head Crop").getId()));
+
+        waitAndClick(Locator.id(fieldsetMap.get("Kraken2").down("ldk-linkbutton[text='Remove']", Ext4CmpRef.class).getId()).append(Locator.tag("a")));
+        waitForElementToDisappear(Locator.id(fieldsetMap.get("Kraken2").getId()));
 
         Integer overlapLength = 6;
         Double errorRate = 0.2;
