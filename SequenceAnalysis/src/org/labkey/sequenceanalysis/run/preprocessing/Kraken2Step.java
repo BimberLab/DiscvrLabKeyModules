@@ -54,6 +54,7 @@ public class Kraken2Step extends AbstractCommandPipelineStep<Kraken2Step.Kraken2
                     put("joinReturnValue", true);
                     put("delimiter", ";");
                 }}, null),
+                ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--memory-mapping"), "memoryMapping", "Memory Mapping", "If checked, the DB will not be read into memory, reducing RAM", "checkbox", null, false),
                 ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--minimum-hit-groups"), "minimumHitGroups", "Minimum Hit Groups", "Minimum number of hit groups (overlapping k-mers sharing the same minimizer) needed to make a call", "ldk-integerfield", new JSONObject(){{
                     put("minValue", 0);
                 }}, 2),
