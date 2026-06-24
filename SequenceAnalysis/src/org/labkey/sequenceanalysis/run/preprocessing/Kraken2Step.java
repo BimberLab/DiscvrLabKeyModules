@@ -16,6 +16,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
+import org.labkey.api.util.Compress;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 
@@ -121,15 +122,23 @@ public class Kraken2Step extends AbstractCommandPipelineStep<Kraken2Step.Kraken2
 
         args.addAll(getClientCommandArgs());
 
+        args.add("--output");
+        args.add("-");
+
         String mode = getProvider().getParameterByName(MODE_PARAM).extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class);
 
-        File unclassifiedOutputBase = FileUtil.appendName(outputDir, SequenceAnalysisService.get().getUnzippedBaseName(inputFile.getName()) + ".unclassified");
-        args.add("--unclassified-out");
-        args.add(unclassifiedOutputBase.getPath() + "#.fq.gz");
-
         File classifiedOutputBase = FileUtil.appendName(outputDir, SequenceAnalysisService.get().getUnzippedBaseName(inputFile.getName()) + ".classified");
-        args.add("--classified-out");
-        args.add(classifiedOutputBase.getPath() + "#.fq.gz");
+        File unclassifiedOutputBase = FileUtil.appendName(outputDir, SequenceAnalysisService.get().getUnzippedBaseName(inputFile.getName()) + ".unclassified");
+        if ("Classified".equals(mode))
+        {
+            args.add("--classified-out");
+            args.add(classifiedOutputBase.getPath() + "#.fq");
+        }
+        else
+        {
+            args.add("--unclassified-out");
+            args.add(unclassifiedOutputBase.getPath() + "#.fq");
+        }
 
         File reportFile = FileUtil.appendName(outputDir, SequencePipelineService.get().getUnzippedBaseName(inputFile.getName()) + ".kraken2.report.txt");
         args.add("--report");
@@ -143,38 +152,45 @@ public class Kraken2Step extends AbstractCommandPipelineStep<Kraken2Step.Kraken2
 
         getWrapper().execute(args);
 
-        File unclassified1 = new File(unclassifiedOutputBase.getPath() + "_1.fq.gz");
-        File unclassified2 = inputFile2 == null ? null : new File(unclassifiedOutputBase.getPath() + "_2.fq.gz");
-
-        File classified1 = new File(classifiedOutputBase.getPath() + "_1.fq.gz");
-        File classified2 = inputFile2 == null ? null : new File(classifiedOutputBase.getPath() + "_2.fq.gz");
         if ("Classified".equals(mode))
         {
+            File classified1 = new File(classifiedOutputBase.getPath() + "_1.fq");
+            File classified2 = inputFile2 == null ? null : new File(classifiedOutputBase.getPath() + "_2.fq");
             if (!classified1.exists())
             {
                 throw new PipelineJobException("Classified file does not exist: " +  classified1.getAbsolutePath());
             }
 
-            output.setProcessedFastq(Pair.of(classified1, classified2));
-            output.addIntermediateFile(unclassified1);
-            if (unclassified2 != null)
+            File compressed1 = Compress.compressGzip(classified1);
+            output.addIntermediateFile(classified1);
+
+            File compressed2 = classified2 == null ? null : Compress.compressGzip(classified2);
+            if (classified2 != null)
             {
-                output.addIntermediateFile(unclassified2);
+                output.addIntermediateFile(classified2);
             }
+
+            output.setProcessedFastq(Pair.of(compressed1, compressed2));
         }
         else
         {
+            File unclassified1 = new File(unclassifiedOutputBase.getPath() + "_1.fq");
+            File unclassified2 = inputFile2 == null ? null : new File(unclassifiedOutputBase.getPath() + "_2.fq");
             if (!unclassified1.exists())
             {
                 throw new PipelineJobException("Unclassified file does not exist: " +  unclassified1.getAbsolutePath());
             }
 
-            output.setProcessedFastq(Pair.of(unclassified1, unclassified2));
-            output.addIntermediateFile(classified1);
-            if (classified2 != null)
+            File compressed1 = Compress.compressGzip(unclassified1);
+            output.addIntermediateFile(unclassified1);
+
+            File compressed2 = unclassified2 == null ? null : Compress.compressGzip(unclassified2);
+            if (unclassified2 != null)
             {
-                output.addIntermediateFile(classified2);
+                output.addIntermediateFile(unclassified2);
             }
+
+            output.setProcessedFastq(Pair.of(compressed1, compressed2));
         }
 
         return output;
