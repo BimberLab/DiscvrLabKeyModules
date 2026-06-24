@@ -41,12 +41,12 @@ public class Kraken2Step extends AbstractCommandPipelineStep<Kraken2Step.Kraken2
         {
             super("Kraken2", "Kraken2", "Kraken2", "This step aligns input reads against a reference using BWA-mem and will only return read pairs without a passing hit in either read.", Arrays.asList(
                 ToolParameterDescriptor.create(DB_PARAM, "Database", "This determines the DB for positive or negative selection", "ldk-simplecombo", new JSONObject(){{
-                    put("storeValues", "bacteria-viral");
+                    put("storeValues", "kraken2_bv;kraken2_standard");
                     put("multiSelect", false);
                     put("allowBlank", false);
                     put("joinReturnValue", true);
                     put("delimiter", ";");
-                }}, "bacteria-viral"),
+                }}, "kraken2_bv"),
                 ToolParameterDescriptor.create(MODE_PARAM, "Reads To Retain", "This determines which set of reads is passed to the next step. If 'Retain Classified' is selected, then reads matching the DB are retained. if 'Retain Unclassified' is selected, then reads that do not match the DB are retained", "ldk-simplecombo", new JSONObject(){{
                     put("storeValues", "Classified;Unclassified");
                     put("multiSelect", false);
