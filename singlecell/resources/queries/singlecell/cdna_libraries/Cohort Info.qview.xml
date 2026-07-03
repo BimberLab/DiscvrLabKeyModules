@@ -16,6 +16,7 @@
         <column name="hashingReadsetId" />
         <column name="citeseqReadsetId" />
         <column name="comment" />
+        <column name="chemistry" />
         <column name="citeseqpanel" />
         <column name="status" />
         <column name="workbook" />
