@@ -56,9 +56,13 @@ jobs:
           LK_VERSION=$(cat /home/runner/work/_temp/_github_home/lkDist/release.txt | sed 's/-SNAPSHOT//g')
           cd /home/runner/work/_temp/_github_home/labkey_build/${LK_VERSION}/server/server/modules/DiscvrLabKeyModules
           COUNT=$(gh release list | grep 'latest' | wc -l)
-          if [ $COUNT != '0' ];then gh release delete 'latest' --cleanup-tag -y; fi
+          if [ $COUNT != '0' ];then
+            echo 'Deleting existing release'
+            gh release delete 'latest' --cleanup-tag -y; 
+          fi
           
-          git push -f origin "latest"
+          git push -f origin 'latest'
+          sleep 100 # gh release periodically fails due to a missing tag.
           
           gh release create 'latest' --verify-tag --generate-notes --prerelease --title "Development Build: ${{ env.DEFAULT_BRANCH }}"
           gh release upload 'latest' /home/runner/work/_temp/_github_home/lkDist/discvr/DISCVR-*
