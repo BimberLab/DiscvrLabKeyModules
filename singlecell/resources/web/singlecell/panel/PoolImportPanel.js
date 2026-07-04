@@ -149,8 +149,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
         allowRowSpan: true
     },{
         name: 'kitType',
-        labels: ['Kit Type', 'V1.1/V2/HT', 'V1.1/HT', 'HT/V1.1/V2', 'V2/HT'],
-        transform: 'kitType'
+        labels: ['Kit Type', 'V1.1/V2/HT', 'V1.1/HT', 'HT/V1.1/V2', 'V2/HT']
     }],
 
     IGNORED_COLUMNS: [],
@@ -1045,7 +1044,7 @@ Ext4.define('SingleCell.panel.PoolImportPanel', {
                 LDK.Assert.assertNotEmpty('Expected non-null workbook', row.workbook);
                 var cDNA = Ext4.apply({
                     sortGUID: sortMap[sortKey],
-                    chemistry: null,
+                    chemistry: row.kitType,
                     plateId: row.plateId,
                     well: row.well || 'Pool',
                     citeseqpanel: row.citeseqpanel,

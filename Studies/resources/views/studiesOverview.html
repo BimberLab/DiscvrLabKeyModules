@@ -26,37 +26,43 @@
             //     }
             // })
 
-            LABKEY.Query.selectRows({
-                schemaName: 'study',
-                queryName: 'datasets',
-                columns: 'Name,Label,CategoryId/Label',
-                scope: this,
-                failure: LDK.Utils.getErrorCallback(),
-                success: function (results) {
-                    let div = $('<div>')
+            // timepointType is an indirect test for whether a study exists:
+            if (LABKEY.moduleContext.study.timepointType) {
+                LABKEY.Query.selectRows({
+                    schemaName: 'study',
+                    queryName: 'datasets',
+                    columns: 'Name,Label,CategoryId/Label',
+                    scope: this,
+                    failure: LDK.Utils.getErrorCallback(),
+                    success: function (results) {
+                        let div = $('<div>')
 
-                    const dataByCategory = {}
-                    results.rows.sort((a, b) => a.Label.localeCompare(b.Label)).forEach(row => {
-                        const dsUrl = LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {
-                            schemaName: 'study',
-                            queryName: row.Name
-                        });
+                        const dataByCategory = {}
+                        results.rows.sort((a, b) => a.Label.localeCompare(b.Label)).forEach(row => {
+                            const dsUrl = LABKEY.ActionURL.buildURL('query', 'executeQuery', null, {
+                                schemaName: 'study',
+                                queryName: row.Name
+                            });
 
-                        dataByCategory[row['CategoryId/Label']] = dataByCategory[row['CategoryId/Label']] || []
-                        dataByCategory[row['CategoryId/Label']].push($(`<li><a href="${dsUrl}">${row.Label}</a></li>`))
-                    })
-
-                    Object.keys(dataByCategory).sort().forEach(category => {
-                        div.append('<h4 style="font-weight: bold;">' + category + '</h4>').append('<ul>')
-                        const ul = div.children('ul')[0]
-                        dataByCategory[category].forEach(item => {
-                            ul.append(item[0])
+                            dataByCategory[row['CategoryId/Label']] = dataByCategory[row['CategoryId/Label']] || []
+                            dataByCategory[row['CategoryId/Label']].push($(`<li><a href="${dsUrl}">${row.Label}</a></li>`))
                         })
-                    })
 
-                    $('#' + webpart.wrapperDivId).append(div)
-                }
-            })
+                        Object.keys(dataByCategory).sort().forEach(category => {
+                            div.append('<h4 style="font-weight: bold;">' + category + '</h4>').append('<ul>')
+                            const ul = div.children('ul')[0]
+                            dataByCategory[category].forEach(item => {
+                                ul.append(item[0])
+                            })
+                        })
+
+                        $('#' + webpart.wrapperDivId).append(div)
+                    }
+                })
+            } else {
+                let div = $('<div>There are no studies in the current folder</div>')
+                $('#' + webpart.wrapperDivId).append(div)
+            }
         })
     });
 }(jQuery, LABKEY));

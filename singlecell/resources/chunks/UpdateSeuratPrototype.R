@@ -26,7 +26,7 @@ for (datasetId in names(seuratObjects)) {
   }
 
   if (runRira) {
-    seuratObj <- RIRA::Classify_ImmuneCells(seuratObj, maxBatchSize = 500000, retainProbabilityMatrix = FALSE, maxAllowedUnknown = maxAllowedUnknown)
+    seuratObj <- RIRA::Classify_ImmuneCells(seuratObj, maxBatchSize = 500000, retainProbabilityMatrix = FALSE, maxAllowedUnknown = maxAllowedUnknown, filterDisallowedClasses = filterDisallowedClasses)
     seuratObj <- RIRA::Classify_TNK(seuratObj, maxBatchSize = 500000, retainProbabilityMatrix = FALSE)
     seuratObj <- RIRA::Classify_Myeloid(seuratObj, maxBatchSize = 500000, retainProbabilityMatrix = FALSE)
   }

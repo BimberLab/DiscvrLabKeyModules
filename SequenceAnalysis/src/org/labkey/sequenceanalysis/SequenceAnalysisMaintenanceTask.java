@@ -8,6 +8,8 @@ import org.labkey.api.collections.IntHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
 import org.labkey.api.data.TableInfo;
@@ -16,7 +18,9 @@ import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.ldk.LDKService;
+import org.labkey.api.pipeline.CancelledException;
 import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineStatusFile;
@@ -57,6 +61,9 @@ import java.util.stream.Stream;
  */
 public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 {
+    private static final String SYSTEM_MAINTENANCE_DESCRIPTION = "System Maintenance";
+    private static final String JOB_TABLE = "statusfiles";
+
     public SequenceAnalysisMaintenanceTask()
     {
 
@@ -72,6 +79,31 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
     public String getName()
     {
         return "DeleteSequenceAnalysisArtifacts";
+    }
+
+    // NOTE: if there is a more direct way to locate the JobID this hack should be replaced
+    private void checkJobCancelled(Logger log)
+    {
+        // Make the assumption there is only one active maintenance job at a time:
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("description"), SYSTEM_MAINTENANCE_DESCRIPTION).
+                addCondition(FieldKey.fromString("container"), ContainerManager.getRoot().getId()).
+                addCondition(FieldKey.fromString("modified"), new Date(), CompareType.DATE_EQUAL);
+        int rowId = new TableSelector(DbSchema.get("pipeline", DbSchemaType.Module).getTable(JOB_TABLE), PageFlowUtil.set("RowId", "Status"), filter, null).getMapCollection().stream().filter(map -> {
+            String val = String.valueOf(map.get("status"));
+            return val != null && (val.toLowerCase().startsWith(PipelineJob.TaskStatus.cancelling.name()) || val.toLowerCase().startsWith(PipelineJob.TaskStatus.running.name()));
+        }).map(rs -> Integer.parseInt(String.valueOf(rs.get("rowid")))).max(Integer::compareTo).orElse(-1);
+
+        if (rowId == -1)
+        {
+            log.warn("Unable to find rowId for job", new Exception("Unable to find rowId for job"));
+            return;
+        }
+
+        PipelineStatusFile sf = PipelineService.get().getStatusFile(rowId);
+        if (PipelineJob.TaskStatus.cancelling.name().equalsIgnoreCase(sf.getStatus()))
+        {
+            throw new CancelledException();
+        }
     }
 
     @Override
@@ -158,6 +190,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             if (i % 1000 == 0)
             {
                 log.info("readdata " + i + " of " + readDatas.size() + ". Current container: " + ContainerManager.getForId(rd.getContainer()).getPath());
+                checkJobCancelled(log);
             }
 
             if (rd.getFileId1() != null)
@@ -221,6 +254,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             if (i % 1000 == 0)
             {
                 log.info("analysis " + i + " of " + analyses.size() + ". Current container: " + ContainerManager.getForId(m.getContainer()).getPath());
+                checkJobCancelled(log);
             }
 
             if (m.getAlignmentFile() != null)
@@ -296,7 +330,11 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
     private void processContainer(Container c, Logger log) throws IOException, PipelineJobException
     {
         if (!c.isWorkbook())
+        {
             log.info("processing container: " + c.getPath());
+        }
+
+        checkJobCancelled(log);
 
         PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
         if (root != null && !root.isCloudRoot())
