@@ -90,6 +90,12 @@ public class PrintReadBackedHaplotypesHandler extends AbstractParameterizedOutpu
         return true;
     }
 
+    @Override
+    public boolean supportsSraArchivedData()
+    {
+        return true;
+    }
+
     public class Processor implements SequenceOutputProcessor
     {
         @Override
