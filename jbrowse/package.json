@@ -47,7 +47,7 @@
     "vm-browserify": "^1.1.2"
   },
   "devDependencies": {
-    "@labkey/build": "^9.1.0",
+    "@labkey/build": "^10.0.0",
     "@types/jexl": "^2.3.4",
     "@types/jquery": "^3.5.32",
     "@types/node": "^20.14.11",
