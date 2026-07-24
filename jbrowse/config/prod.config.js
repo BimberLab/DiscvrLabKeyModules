@@ -4,10 +4,10 @@
  * Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
  */
 
-const prodConfig = require('../node_modules/@labkey/build/webpack/prod.config')
+const prodConfig = require('../node_modules/@labkey/build/configs/prod.config')
 
 const entryPoints = require('../src/client/entryPoints');
-const constants = require('../node_modules/@labkey/build/webpack/constants');
+const constants = require('../node_modules/@labkey/build/configs/constants');
 const NodePolyfillPlugin = require("node-polyfill-webpack-plugin")
 
 const clientConfig = prodConfig
