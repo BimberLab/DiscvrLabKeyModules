@@ -23,8 +23,8 @@
     "@jbrowse/plugin-variants": "^4.1.13",
     "@jbrowse/product-core": "^4.1.13",
     "@jbrowse/react-linear-genome-view2": "^4.1.13",
-    "@labkey/api": "^1.51.0",
-    "@labkey/components": "^7.42.1",
+    "@labkey/api": "^1.52.2",
+    "@labkey/components": "^7.48.0",
     "@mui/x-data-grid": "^7.28.1",
     "assert": "^2.1.0",
     "browserify-zlib": "^0.2.0",
@@ -58,6 +58,7 @@
     "rimraf": "^6.0.1",
     "tar": "^7.5.19",
     "typescript": "^5.1.6",
-    "unzipper": "^0.12.3"
+    "unzipper": "^0.12.3",
+    "webpack-cli": "^7.2.1"
   }
 }
