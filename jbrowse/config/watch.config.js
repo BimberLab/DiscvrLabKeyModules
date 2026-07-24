@@ -4,10 +4,10 @@
  * Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
  */
 
-const watchConfig = require('../node_modules/@labkey/build/configs/watch.config')
+const watchConfig = require('../node_modules/@labkey/build/webpack/watch.config')
 
 const entryPoints = require('../src/client/entryPoints');
-const constants = require('../node_modules/@labkey/build/configs/constants');
+const constants = require('../node_modules/@labkey/build/webpack/constants');
 const NodePolyfillPlugin = require("node-polyfill-webpack-plugin")
 
 const clientConfig = watchConfig
