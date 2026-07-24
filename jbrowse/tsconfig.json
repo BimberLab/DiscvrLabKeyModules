@@ -1,6 +1,4 @@
 {
-  "extends": "./node_modules/@labkey/build/configs/tsconfig.json",
-  "include": ["src/client/**/*"],
-  "exclude": ["node_modules"]
+  "extends": "./node_modules/@labkey/build/configs/tsconfig.json"
 }
 
