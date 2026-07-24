@@ -145,8 +145,14 @@ public class SnpEffWrapper extends AbstractCommandWrapper
 
         try
         {
-            Files.createSymbolicLink(FileUtil.appendName(genomeDir, "sequences.fa").toPath(), genome.getSourceFastaFile().toPath());
-            Files.createSymbolicLink(FileUtil.appendName(genomeDir, "genes." + ext).toPath(), genes.toPath());
+            if (!FileUtil.appendName(genomeDir, "sequences.fa").exists())
+            {
+                Files.createSymbolicLink(FileUtil.appendName(genomeDir, "sequences.fa").toPath(), genome.getSourceFastaFile().toPath());
+            }
+            if (!FileUtil.appendName(genomeDir, "genes." + ext).exists())
+            {
+                Files.createSymbolicLink(FileUtil.appendName(genomeDir, "genes." + ext).toPath(), genes.toPath());
+            }
         }
         catch (IOException e)
         {

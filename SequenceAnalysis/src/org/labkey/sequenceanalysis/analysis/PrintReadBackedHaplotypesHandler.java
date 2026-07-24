@@ -90,6 +90,12 @@ public class PrintReadBackedHaplotypesHandler extends AbstractParameterizedOutpu
         return true;
     }
 
+    @Override
+    public boolean supportsSraArchivedData()
+    {
+        return true;
+    }
+
     public class Processor implements SequenceOutputProcessor
     {
         @Override
@@ -99,7 +105,7 @@ public class PrintReadBackedHaplotypesHandler extends AbstractParameterizedOutpu
             {
                 if (so.getReadset() != null)
                 {
-                    ctx.getSequenceSupport().cacheReadset(so.getReadset(), ctx.getJob().getUser());
+                    ctx.getSequenceSupport().cacheReadset(so.getReadset(), ctx.getJob().getUser(), true);
                 }
                 else
                 {
@@ -148,7 +154,7 @@ public class PrintReadBackedHaplotypesHandler extends AbstractParameterizedOutpu
                     args.addAll(extraArgs);
                 }
 
-                File output = new File(ctx.getWorkingDirectory(), FileUtil.getBaseName(input) + ".txt");
+                File output = FileUtil.appendName(ctx.getWorkingDirectory(), FileUtil.getBaseName(input) + ".txt");
                 Wrapper wrapper = new Wrapper(ctx.getLogger());
                 wrapper.execute(input, ctx.getSequenceSupport().getCachedGenome(so.getLibrary_id()).getWorkingFastaFile(), output, args);
 

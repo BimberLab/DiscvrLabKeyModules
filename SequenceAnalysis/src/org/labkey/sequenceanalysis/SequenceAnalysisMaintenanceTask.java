@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -81,25 +82,32 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         return "DeleteSequenceAnalysisArtifacts";
     }
 
+    private int _jobId = -1;
+
     // NOTE: if there is a more direct way to locate the JobID this hack should be replaced
     private void checkJobCancelled(Logger log)
     {
-        // Make the assumption there is only one active maintenance job at a time:
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromString("description"), SYSTEM_MAINTENANCE_DESCRIPTION).
-                addCondition(FieldKey.fromString("container"), ContainerManager.getRoot().getId()).
-                addCondition(FieldKey.fromString("modified"), new Date(), CompareType.DATE_EQUAL);
-        int rowId = new TableSelector(DbSchema.get("pipeline", DbSchemaType.Module).getTable(JOB_TABLE), PageFlowUtil.set("RowId", "Status"), filter, null).getMapCollection().stream().filter(map -> {
-            String val = String.valueOf(map.get("status"));
-            return val != null && (val.toLowerCase().startsWith(PipelineJob.TaskStatus.cancelling.name()) || val.toLowerCase().startsWith(PipelineJob.TaskStatus.running.name()));
-        }).map(rs -> Integer.parseInt(String.valueOf(rs.get("rowid")))).max(Integer::compareTo).orElse(-1);
-
-        if (rowId == -1)
+        if (_jobId == -1)
         {
-            log.warn("Unable to find rowId for job", new Exception("Unable to find rowId for job"));
-            return;
+            // Make the assumption there is only one active maintenance job at a time:
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("description"), SYSTEM_MAINTENANCE_DESCRIPTION).
+                    addCondition(FieldKey.fromString("container"), ContainerManager.getRoot().getId()).
+                    addCondition(FieldKey.fromString("modified"), LocalDate.now().minusDays(2), CompareType.DATE_GTE);
+            int rowId = new TableSelector(DbSchema.get("pipeline", DbSchemaType.Module).getTable(JOB_TABLE), PageFlowUtil.set("RowId", "Status"), filter, null).getMapCollection().stream().filter(map -> {
+                String val = String.valueOf(map.get("status"));
+                return val != null && (val.toLowerCase().startsWith(PipelineJob.TaskStatus.cancelling.name()) || val.toLowerCase().startsWith(PipelineJob.TaskStatus.running.name()));
+            }).map(rs -> Integer.parseInt(String.valueOf(rs.get("rowid")))).max(Integer::compareTo).orElse(-1);
+
+            if (rowId == -1)
+            {
+                log.warn("Unable to find rowId for job", new Exception("Unable to find rowId for job"));
+                return;
+            }
+
+            _jobId = rowId;
         }
 
-        PipelineStatusFile sf = PipelineService.get().getStatusFile(rowId);
+        PipelineStatusFile sf = PipelineService.get().getStatusFile(_jobId);
         if (PipelineJob.TaskStatus.cancelling.name().equalsIgnoreCase(sf.getStatus()))
         {
             throw new CancelledException();
