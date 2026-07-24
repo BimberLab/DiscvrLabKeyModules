@@ -43,11 +43,11 @@
     "regenerator-runtime": "^0.14.1",
     "stream-browserify": "^3.0.0",
     "util": "^0.12.5",
-    "uuid": "^14.0.0",
+    "uuid": "^14.0.1",
     "vm-browserify": "^1.1.2"
   },
   "devDependencies": {
-    "@labkey/build": "^9.1.0",
+    "@labkey/build": "^10.0.0",
     "@types/jexl": "^2.3.4",
     "@types/jquery": "^3.5.32",
     "@types/node": "^20.14.11",
@@ -56,7 +56,7 @@
     "patch-package": "^8.0.1",
     "postinstall-postinstall": "^2.1.0",
     "rimraf": "^6.0.1",
-    "tar": "^7.5.11",
+    "tar": "^7.5.21",
     "typescript": "^5.1.6",
     "unzipper": "^0.12.3"
   }
