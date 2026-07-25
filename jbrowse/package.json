@@ -26,6 +26,7 @@
     "@jbrowse/mobx-state-tree": "^5.13.0",
     "@jbrowse/plugin-variants": "~4.1.0",
     "@jbrowse/plugin-data-management": "~4.1.0",
+    "@jbrowse/plugin-linear-genome-view": "~4.1.0",
     "@jbrowse/react-linear-genome-view2": "~4.1.0",
     "@labkey/api": "^1.52.2",
     "@labkey/components": "^7.48.0",
