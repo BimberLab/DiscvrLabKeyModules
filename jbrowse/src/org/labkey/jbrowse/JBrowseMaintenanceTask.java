@@ -276,10 +276,19 @@ public class JBrowseMaintenanceTask implements MaintenanceTask
                     error = true;
                 }
 
-                if (j.shouldHaveFreeTextSearch() && !j.getExpectedLocationOfLuceneIndex(false).exists())
+                if (j.shouldHaveFreeTextSearch())
                 {
-                    log.error("Missing lucene search indexes: " + expectedFile.getPath());
-                    error = true;
+                    File luceneDir = j.getExpectedLocationOfLuceneIndex(false);
+                    if (luceneDir == null)
+                    {
+                        log.error("luceneDir is null for JsonFile: {}, in container {}", j.getObjectId(), j.getContainerObj().getPath());
+                        error = true;
+                    }
+                    else if (!luceneDir.exists())
+                    {
+                        log.error("Missing lucene search indexes: " + expectedFile.getPath());
+                        error = true;
+                    }
                 }
 
                 if (error)
