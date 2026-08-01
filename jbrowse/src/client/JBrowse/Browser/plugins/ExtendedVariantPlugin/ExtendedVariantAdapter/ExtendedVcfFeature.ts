@@ -1,5 +1,5 @@
 import { VcfFeature } from '@jbrowse/plugin-variants'
-import VcfParser, { Variant, InfoValue } from '@gmod/vcf';
+import VcfParser, { Variant } from '@gmod/vcf';
 
 export default class ExtendedVcfFeature extends VcfFeature {
     constructor(args: { variant: Variant; parser: VcfParser; id: string }) {
@@ -19,12 +19,14 @@ export default class ExtendedVcfFeature extends VcfFeature {
     }
 
     static extractImpact(variant: Variant) {
+        const INFO = variant.INFO as Record<string, unknown>
+
         // Only append if not present:
-        if (variant.INFO["IMPACT"]) {
+        if (INFO["IMPACT"]) {
             return(variant);
         }
 
-        const ann = variant.INFO["ANN"] as string[] | undefined
+        const ann = INFO["ANN"] as string[] | undefined
         if (!ann) {
             return(variant);
         }
@@ -42,15 +44,15 @@ export default class ExtendedVcfFeature extends VcfFeature {
             }
         }
 
-        variant.INFO["IMPACT"] = null
+        INFO["IMPACT"] = null
         if (IMPACTs.has('HIGH')) {
-            variant.INFO["IMPACT"] = ('HIGH' as unknown as InfoValue)
+            INFO["IMPACT"] = 'HIGH'
         }
         else if (IMPACTs.has('MODERATE')) {
-            variant.INFO["IMPACT"] = ('MODERATE' as unknown as InfoValue)
+            INFO["IMPACT"] = 'MODERATE'
         }
         else if (IMPACTs.has('LOW')) {
-            variant.INFO["IMPACT"] = ('LOW' as unknown as InfoValue)
+            INFO["IMPACT"] = 'LOW'
         }
 
         return(variant)

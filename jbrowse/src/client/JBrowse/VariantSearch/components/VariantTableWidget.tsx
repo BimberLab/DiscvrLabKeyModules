@@ -241,7 +241,7 @@ const VariantTableWidget = observer(props => {
 
     function CustomToolbar({ setFilterModalOpen, handleExport }) {
         return (
-            <GridToolbarContainer>
+            <GridToolbarContainer sx={{ justifyContent: 'flex-start' }}>
                 <GridToolbarColumnsButton />
                 <Button
                     startIcon={<SearchIcon />}
@@ -471,6 +471,7 @@ const VariantTableWidget = observer(props => {
             columns={[...columns, actionsCol]}
             rows={features}
             density="comfortable"
+            showToolbar
             slots={{
                 toolbar: ToolbarWithProps,
                 filterPanel: GridFilterPanel
@@ -516,12 +517,10 @@ const VariantTableWidget = observer(props => {
                 resetPaginationToFirstPage()
             }}
             localeText={{
-                MuiTablePagination: {
-                    labelDisplayedRows: ({ from, to, count }) =>
-                        `${numberFormatter.format(from)}–${numberFormatter.format(to)} of ${
-                            count !== -1 ? numberFormatter.format(count) : 'more than ' + numberFormatter.format(to)
-                        }`,
-                    },
+                paginationDisplayedRows: ({ from, to, count }) =>
+                    `${numberFormatter.format(from)}–${numberFormatter.format(to)} of ${
+                        count !== -1 ? numberFormatter.format(count) : 'more than ' + numberFormatter.format(to)
+                    }`,
                 }}
         />
     )

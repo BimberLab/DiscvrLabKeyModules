@@ -1,4 +1,3 @@
-import { isEmptyObject } from 'jquery';
 import jexl from '@jbrowse/jexl';
 import { createViewState, loadPlugins } from '@jbrowse/react-linear-genome-view2';
 import { ActionURL, Ajax } from '@labkey/api';
@@ -16,6 +15,10 @@ import { Operator, OperatorKey, OperatorRegistry, Value } from './VariantSearch/
 
 export function arrayMax(array) {
     return Array.isArray(array) ? Math.max(...array) : array
+}
+
+function isEmptyObject(obj) {
+    return Object.keys(obj).length === 0
 }
 
 jexl.addFunction('arrayMax', (array) => {

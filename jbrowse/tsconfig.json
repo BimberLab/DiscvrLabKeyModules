@@ -1,4 +1,6 @@
 {
-  "extends": "./node_modules/@labkey/build/configs/tsconfig.json"
+  "extends": "./node_modules/@labkey/build/configs/tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": true
+  }
 }
-
