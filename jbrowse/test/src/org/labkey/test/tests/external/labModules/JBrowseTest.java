@@ -1776,6 +1776,20 @@ public class JBrowseTest extends BaseWebDriverTest
             Assert.fail();
         }
 
+        // Clicking 'Variant Details' on the top row (1:2 A -> T) should open the ExtendedVariantWidget in a modal:
+        Locator.XPathLocator detailsRow = Locator.tagWithAttribute("div", "aria-rowindex", "2");
+        waitForElement(detailsRow);
+        waitAndClick(detailsRow.descendant(Locator.tagWithClass("a", "labkey-text-link").withText("Variant Details")));
+
+        waitForElement(Locator.tagWithText("h6", "Feature details"));
+        waitForElement(Locator.tagWithAttribute("div", "data-testid", "extended-variant-widget"));
+
+        waitForElement(Locator.tagWithText("div", "1:2"));
+        assertElementPresent(Locator.tagWithText("div", "Position"));
+
+        getDriver().findElement(Locator.tag("body")).sendKeys(Keys.ESCAPE);
+        waitForElementToDisappear(Locator.tagWithText("h6", "Feature details"));
+
         clearFilterDialog("IMPACT equals HIGH,MODERATE");
 
         testLuceneColumnSerialization(sessionId);

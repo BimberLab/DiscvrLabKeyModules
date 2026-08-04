@@ -21,7 +21,6 @@ import {
   GridColumnVisibilityModel, GridFilterPanel,
   GridPaginationModel,
   GridRenderCellParams,
-  GridToolbar,
   GridToolbarColumnsButton,
   GridToolbarFilterButton,
   GridToolbarDensitySelector,
@@ -384,6 +383,7 @@ const VariantTableWidget = observer(props => {
     <DataGrid
         columns={[...gridColumns, actionsCol]}
         rows={features.map((rawFeature, id) => rawFeatureToRow(rawFeature, id, gridColumns, trackId))}
+        showToolbar
         slots={{ toolbar: CustomToolbar, filterPanel: GridFilterPanel }}
         slotProps={{
           filterPanel: {
