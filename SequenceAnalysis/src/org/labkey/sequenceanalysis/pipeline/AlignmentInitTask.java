@@ -156,7 +156,7 @@ public class AlignmentInitTask extends WorkDirectoryTask<AlignmentInitTask.Facto
                     throw new PipelineJobException("Reference file does not exist: " + refFasta.getPath());
                 }
 
-                getPipelineJob().getSequenceSupport().cacheGenome(output.getReferenceGenome());
+                getPipelineJob().getSequenceSupport().cacheGenome(output.getReferenceGenome(), true);
 
                 getHelper().getFileManager().addStepOutputs(action, output);
                 getHelper().getFileManager().cleanup(Collections.singleton(action));
