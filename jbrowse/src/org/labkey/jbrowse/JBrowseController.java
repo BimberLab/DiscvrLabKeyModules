@@ -726,7 +726,7 @@ public class JBrowseController extends SpringActionController
             }
             else
             {
-                JBrowseSession db = JBrowseSession.getForId(form.getSession());
+                JBrowseSession db = JBrowseSession.getForId(form.getSession(), getUser());
                 if (db == null)
                 {
                     errors.reject(ERROR_MSG, "Unknown session: " + form.getSession());
@@ -813,7 +813,7 @@ public class JBrowseController extends SpringActionController
         {
             try
             {
-                JBrowseSession session = JBrowseFieldUtils.getSession(form.getSessionId());
+                JBrowseSession session = JBrowseFieldUtils.getSession(form.getSessionId(), getUser());
                 JsonFile jsonFile = JBrowseFieldUtils.getTrack(session, form.getTrackId(), getUser());
 
                 Map<String, JBrowseFieldDescriptor> fields = JBrowseFieldUtils.getIndexedFields(jsonFile, getUser(), getContainer());
@@ -904,6 +904,12 @@ public class JBrowseController extends SpringActionController
             try
             {
                 JBrowseLuceneSearch searcher = JBrowseLuceneSearch.create(form.getSessionId(), form.getTrackId(), getUser());
+                if (!searcher.getContainer().equals(getContainer()))
+                {
+                    errors.reject(ERROR_MSG, "Invalid session: " + form.getSessionId());
+                    return null;
+                }
+
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
                 String timestamp = LocalDateTime.now().format(formatter);
                 String filename = "mGAP_results_" + timestamp + ".csv";

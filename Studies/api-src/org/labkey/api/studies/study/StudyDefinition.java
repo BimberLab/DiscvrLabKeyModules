@@ -2,12 +2,12 @@ package org.labkey.api.studies.study;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.json.JSONObject;
+import org.labkey.api.security.User;
 
 import java.util.Date;
 import java.util.List;
@@ -660,9 +660,9 @@ public class StudyDefinition
         return ow.writeValueAsString(this);
     }
 
-    public static StudyDefinition getForId(int studyId)
+    public static StudyDefinition getForId(int studyId, User u)
     {
-        // TODO: implement this. This should query the DB and return a populated StudyDefinition
+        // TODO: implement this. This should query the DB and return a populated StudyDefinition. It should make sure the passed user has ReadPermission on that container
 
         return null;
     }

@@ -101,6 +101,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.security.IgnoresTermsOfUse;
 import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.RequiresSiteAdmin;
+import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.InsertPermission;
@@ -125,6 +126,7 @@ import org.labkey.api.util.ExceptionUtil;
 import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.HtmlString;
+import org.labkey.api.util.HtmlStringBuilder;
 import org.labkey.api.util.JsonUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
@@ -578,7 +580,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
         }
 
-        private void findAnalysesToDelete(Collection<Integer> keys, StringBuilder msg, Set<Integer> outputFileIds, Set<Integer> expRunsToDelete)
+        private void findAnalysesToDelete(Collection<Integer> keys, HtmlStringBuilder msg, Set<Integer> outputFileIds, Set<Integer> expRunsToDelete)
         {
             appendTotal(msg, SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY, "Alignment Records", keys, "analysis_id", "rowid");
             outputFileIds.addAll(appendTotal(msg, SequenceAnalysisSchema.TABLE_OUTPUTFILES, "Output Files", keys, "analysis_id", "rowid"));
@@ -606,16 +608,16 @@ public class SequenceAnalysisController extends SpringActionController
             Set<Integer> analysisIds = new IntHashSet();
             Set<Integer> outputFileIds = new IntHashSet();
 
-            StringBuilder msg = new StringBuilder("Are you sure you want to delete the following " + keys.size() + " ");
+            HtmlStringBuilder msg = HtmlStringBuilder.of("Are you sure you want to delete the following " + keys.size() + " ");
             if (SequenceAnalysisSchema.TABLE_ANALYSES.equals(_table.getName()))
             {
-                msg.append("analyses: " + StringUtils.join(keys, ", ") + "?  This will delete the analyses, plus all associated data.  This includes:<br>");
+                msg.append("analyses: " + StringUtils.join(keys, ", ") + "?  This will delete the analyses, plus all associated data.  This includes:").unsafeAppend("<br>");
                 analysisIds.addAll(keys);
                 findAnalysesToDelete(keys, msg, outputFileIds, expRunsToDelete);
             }
             else if (SequenceAnalysisSchema.TABLE_READSETS.equals(_table.getName()))
             {
-                msg.append("readsets: " + StringUtils.join(keys, ", ") + "?  This will delete the readsets, plus all associated data.  This includes:<br>");
+                msg.append("readsets: " + StringUtils.join(keys, ", ") + "?  This will delete the readsets, plus all associated data.  This includes:").unsafeAppend("<br>");
                 readsetIds.addAll(keys);
                 readDataIds.addAll(appendTotal(msg, SequenceAnalysisSchema.TABLE_READ_DATA, "Sequence File Records", keys, "readset", "rowid"));
                 analysisIds.addAll(appendTotal(msg, SequenceAnalysisSchema.TABLE_ANALYSES, "Analyses", keys, "readset", "rowid"));
@@ -630,7 +632,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
             else if (SequenceAnalysisSchema.TABLE_REF_NT_SEQUENCES.equals(_table.getName()))
             {
-                msg.append("NT reference sequences: " + StringUtils.join(keys, ", ") + "?  This will delete the reference sequences, plus all associated data.  This includes:<br>");
+                msg.append("NT reference sequences: " + StringUtils.join(keys, ", ") + "?  This will delete the reference sequences, plus all associated data.  This includes:").unsafeAppend("<br>");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES, "Reference AA Sequences", keys, "ref_nt_id", "rowid");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_NT_FEATURES, "NT Features", keys, "ref_nt_id", "rowid");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_COVERAGE, "Coverage Records", keys, "ref_nt_id", "rowid");
@@ -641,14 +643,14 @@ public class SequenceAnalysisController extends SpringActionController
             }
             else if (SequenceAnalysisSchema.TABLE_REF_AA_SEQUENCES.equals(_table.getName()))
             {
-                msg.append("AA reference sequences: " + StringUtils.join(keys, ", ") + "?  This will delete the reference sequences, plus all associated data.  This includes:<br>");
+                msg.append("AA reference sequences: " + StringUtils.join(keys, ", ") + "?  This will delete the reference sequences, plus all associated data.  This includes:").unsafeAppend("<br>");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_FEATURES, "AA features", keys, "ref_aa_id", "rowid");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_DRUG_RESISTANCE, "drug resistance mutations", keys, "ref_aa_id", "rowid");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_AA_SNP_BY_CODON, "AA SNP Records", keys, "ref_aa_id", "rowid");
             }
             else if (SequenceAnalysisSchema.TABLE_REF_LIBRARIES.equals(_table.getName()))
             {
-                msg.append("Reference genomes: " + StringUtils.join(keys, ", ") + "?  This will delete the reference genomes, plus all associated data.  This includes:<br>");
+                msg.append("Reference genomes: " + StringUtils.join(keys, ", ") + "?  This will delete the reference genomes, plus all associated data.  This includes:").unsafeAppend("<br>");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_REF_LIBRARY_MEMBERS, "genome sequences", keys, "library_id", "rowid");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_LIBRARY_TRACKS, "tracks", keys, "library_id", "rowid");
                 appendTotal(msg, SequenceAnalysisSchema.TABLE_CHAIN_FILES, "chain files from this genome", keys, "genomeId1", "rowid");
@@ -657,7 +659,7 @@ public class SequenceAnalysisController extends SpringActionController
             }
             else if (SequenceAnalysisSchema.TABLE_OUTPUTFILES.equals(_table.getName()))
             {
-                msg.append("output files: " + StringUtils.join(keys, ", ") + "?<br>");
+                msg.append("output files: " + StringUtils.join(keys, ", ") + "?").unsafeAppend("<br>");
                 outputFileIds.addAll(keys);
 
                 //we will delete these expDatas, so find any analysis records matching this file
@@ -667,7 +669,7 @@ public class SequenceAnalysisController extends SpringActionController
                 if (!additionalAnalysisIds.isEmpty())
                 {
                     msg.append("<br><br>");
-                    msg.append("The following " + additionalAnalysisIds.size() + " analyses will also be deleted, along with these associated records/files:<br>");
+                    msg.append("The following " + additionalAnalysisIds.size() + " analyses will also be deleted, along with these associated records/files:").unsafeAppend("<br>");
                     findAnalysesToDelete(additionalAnalysisIds, msg, outputFileIds, expRunsToDelete);
                 }
 
@@ -690,8 +692,8 @@ public class SequenceAnalysisController extends SpringActionController
 
             if (!expRunsToDelete.isEmpty())
             {
-                msg.append("<br><br>");
-                msg.append("The following pipeline jobs appear to be unused, and will be deleted.  Be aware, this will delete all files as well:<br><br>");
+                msg.unsafeAppend("<br><br>");
+                msg.append("The following pipeline jobs appear to be unused, and will be deleted.  Be aware, this will delete all files as well:").unsafeAppend("<br><br>");
                 for (Integer runId : expRunsToDelete)
                 {
                     if (runId == null)
@@ -703,7 +705,7 @@ public class SequenceAnalysisController extends SpringActionController
                     ExpRun run = ExperimentService.get().getExpRun(runId);
                     if (run != null)
                     {
-                        msg.append("Pipeline run: " + run.getName() + "<br>");
+                        msg.append("Pipeline run: " + run.getName()).unsafeAppend("<br>");
                         if (run.getJobId() != null)
                         {
                             PipelineStatusFile sf = PipelineService.get().getStatusFile(run.getJobId());
@@ -712,7 +714,7 @@ public class SequenceAnalysisController extends SpringActionController
                                 File target = new File(sf.getFilePath()).getParentFile();
                                 String relativePath = FileUtil.relativize(PipelineService.get().getPipelineRootSetting(run.getContainer()).getRootPath(), target, false);
                                 ActionURL url = PageFlowUtil.urlProvider(PipelineUrls.class).urlBrowse(sf.lookupContainer(), getViewContext().getActionURL(), relativePath);
-                                msg.append("Folder: <a href='" + url.toString() + "' target='_blank'>" + target.getPath() + "</a><br><input type='hidden' name='jobIds' value='" + sf.getRowId() + "'/>");
+                                msg.append("Folder: ").unsafeAppend("<a href='" + url.toString() + "' target='_blank'>" + h(target.getPath()) + "</a><br><input type='hidden' name='jobIds' value='" + h(sf.getRowId()) + "'/>");
                             }
                         }
                         msg.append("<br>");
@@ -724,7 +726,7 @@ public class SequenceAnalysisController extends SpringActionController
 
             setTitle("Delete Sequence Records");
 
-            return new HtmlView(msg.toString());
+            return new HtmlView(msg);
         }
 
         @Override
@@ -786,12 +788,12 @@ public class SequenceAnalysisController extends SpringActionController
             return new HashSet<>(ts.getArrayList(Integer.class));
         }
 
-        private Set<Integer> appendTotal(StringBuilder sb, String tableName, String noun, Collection<Integer> keys, String filterCol, String pkCol)
+        private Set<Integer> appendTotal(HtmlStringBuilder sb, String tableName, String noun, Collection<Integer> keys, String filterCol, String pkCol)
         {
             SimpleFilter filter = new SimpleFilter(FieldKey.fromString(filterCol), keys, CompareType.IN);
             TableSelector ts = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(tableName), PageFlowUtil.set(pkCol), filter, null);
             Set<Integer> total = new IntHashSet(ts.getArrayList(Integer.class));
-            sb.append("<br>" + total.size() + " " + noun);
+            sb.unsafeAppend("<br>").append(total.size() + " " + noun);
 
             return total;
         }
@@ -1043,9 +1045,18 @@ public class SequenceAnalysisController extends SpringActionController
                     {
                         ExpData data = ExperimentService.get().getExpData(id);
                         if (data != null)
+                        {
+                            if (!data.getContainer().hasPermission(getUser(), ReadPermission.class))
+                            {
+                                throw new UnauthorizedException("Insufficient permissions to read: " + id);
+                            }
+
                             datas.add(data);
+                        }
                         else
+                        {
                             errorsList.add("Unable to find file with ExpData Id: " + id);
+                        }
                     }
                 }
 
@@ -1053,7 +1064,6 @@ public class SequenceAnalysisController extends SpringActionController
                 {
                     //TODO: consider proper container??
                     PipeRoot root = PipelineService.get().findPipelineRoot(getContainer());
-
                     if (null == root)
                     {
                         throw new PipelineJobException("Unable to find pipeline root for container: " + getContainer().getPath());
@@ -1088,6 +1098,7 @@ public class SequenceAnalysisController extends SpringActionController
                                 errorsList.add("File has a duplicate basename: " + basename);
                                 map.put("error", "File has a duplicate basename: " + basename);
                             }
+                            distinctBasenames.add(basename);
 
                             if (!f.exists())
                             {
@@ -1130,6 +1141,7 @@ public class SequenceAnalysisController extends SpringActionController
                             errorsList.add("File has a duplicate basename: " + basename);
                             map.put("error", "File has a duplicate basename: " + basename);
                         }
+                        distinctBasenames.add(basename);
 
                         if (!d.getFile().exists())
                         {
@@ -1229,20 +1241,22 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
-            Logger log = LogManager.getLogger(SequenceAnalysisController.class);
-
             for (AnalysisModel m : models)
             {
                 File inputFile = m.getAlignmentData().getFile();
                 File refFile = m.getReferenceLibraryData(getUser()).getFile();
                 Container c = ContainerManager.getForId(m.getContainer());
+                if (!c.hasPermission(getUser(), ReadPermission.class))
+                {
+                    throw new UnauthorizedException("Insufficient permissions to read: " + m.getRowId());
+                }
 
-                log.info("Calculating avg quality scores");
-                AvgBaseQualityAggregator avg = new AvgBaseQualityAggregator(log, inputFile, refFile);
+                _log.info("Calculating avg quality scores");
+                AvgBaseQualityAggregator avg = new AvgBaseQualityAggregator(_log, inputFile, refFile);
 
                 if (form.getRefName() != null && form.getStart() > 0 && form.getStop() > 0)
                 {
-                    log.info("Using reference: " + form.getRefName() + " and the interval: " + form.getStart() + " / " + form.getStop());
+                    _log.info("Using reference: " + form.getRefName() + " and the interval: " + form.getStart() + " / " + form.getStop());
                     avg.calculateAvgQuals(form.getRefName(), form.getStart(), form.getStop());
                 }
                 else
@@ -1250,10 +1264,10 @@ public class SequenceAnalysisController extends SpringActionController
                     avg.calculateAvgQuals();
                 }
 
-                log.info("\tCalculation complete");
+                _log.info("\tCalculation complete");
 
-                log.info("Inspecting alignments in BAM");
-                BamIterator bi = new BamIterator(inputFile, refFile, log);
+                _log.info("Inspecting alignments in BAM");
+                BamIterator bi = new BamIterator(inputFile, refFile, _log);
 
                 //NOTE: this is a hack for testing purposes.  need a registry mechanism
                 List<AlignmentAggregator> aggregators = new ArrayList<>();
@@ -1271,15 +1285,15 @@ public class SequenceAnalysisController extends SpringActionController
 
                 if (aggregatorTypes.contains("coverage"))
                 {
-                    coverage = new NtCoverageAggregator(log, refFile, avg, params);
+                    coverage = new NtCoverageAggregator(_log, refFile, avg, params);
                     aggregators.add(coverage);
                 }
 
                 if (aggregatorTypes.contains("ntbypos"))
                 {
-                    NtSnpByPosAggregator ntSnp = new NtSnpByPosAggregator(log, refFile, avg, params);
+                    NtSnpByPosAggregator ntSnp = new NtSnpByPosAggregator(_log, refFile, avg, params);
                     if (coverage == null)
-                        coverage = new NtCoverageAggregator(log, refFile, avg, params);
+                        coverage = new NtCoverageAggregator(_log, refFile, avg, params);
 
                     ntSnp.setCoverageAggregator(coverage, aggregatorTypes.contains("coverage"));
                     aggregators.add(ntSnp);
@@ -1287,9 +1301,9 @@ public class SequenceAnalysisController extends SpringActionController
 
                 if (aggregatorTypes.contains("aabycodon"))
                 {
-                    AASnpByCodonAggregator aaCodon = new AASnpByCodonAggregator(log, refFile, avg, params);
+                    AASnpByCodonAggregator aaCodon = new AASnpByCodonAggregator(_log, refFile, avg, params);
                     if (coverage == null)
-                        coverage = new NtCoverageAggregator(log, refFile, avg, params);
+                        coverage = new NtCoverageAggregator(_log, refFile, avg, params);
 
                     aaCodon.setCoverageAggregator(coverage, aggregatorTypes.contains("coverage"));
                     aggregators.add(aaCodon);
@@ -1798,13 +1812,13 @@ public class SequenceAnalysisController extends SpringActionController
                         jobs.addAll(AlignmentAnalysisJob.createForAnalyses(getContainer(), getUser(), form.getJobName(), form.getDescription(), form.getJobParameters(), form.getAnalysisIds(), form.isSubmitJobToReadsetContainer()));
                         break;
                     case readsetImport:
-                        jobs.addAll(ReadsetImportJob.create(getContainer(), getUser(), form.getJobName(), form.getDescription(), form.getJobParameters(), form.getFiles(pr)));
+                        jobs.addAll(ReadsetImportJob.create(getContainer(), getUser(), form.getJobName(), form.getDescription(), form.getJobParameters(), form.getFiles(pr, getUser())));
                         break;
                     case illuminaImport:
-                        jobs.addAll(IlluminaImportJob.create(getContainer(), getUser(), form.getJobName(), form.getDescription(), form.getJobParameters(), form.getFiles(pr)));
+                        jobs.addAll(IlluminaImportJob.create(getContainer(), getUser(), form.getJobName(), form.getDescription(), form.getJobParameters(), form.getFiles(pr, getUser())));
                         break;
                     case alignmentImport:
-                        jobs.addAll(AlignmentImportJob.create(getContainer(), getUser(), form.getJobName(), form.getDescription(), form.getJobParameters(), form.getFiles(pr)));
+                        jobs.addAll(AlignmentImportJob.create(getContainer(), getUser(), form.getJobName(), form.getDescription(), form.getJobParameters(), form.getFiles(pr, getUser())));
                         break;
                     default:
                         throw new PipelineJobException("Unknown analysis type: " + form.getType());
@@ -1877,7 +1891,7 @@ public class SequenceAnalysisController extends SpringActionController
             return getJobParameters() != null && getJobParameters().optBoolean("submitJobToReadsetContainer", false);
         }
 
-        public List<FileLike> getFiles(PipeRoot pr) throws PipelineValidationException
+        public List<FileLike> getFiles(PipeRoot pr, User u) throws PipelineValidationException
         {
             if (getJobParameters() == null || getJobParameters().get("inputFiles") == null)
             {
@@ -1899,6 +1913,10 @@ public class SequenceAnalysisController extends SpringActionController
                     else if (!d.getFile().exists())
                     {
                         throw new PipelineValidationException("Missing file for data: " + o.get("dataId"));
+                    }
+                    else if (d.getContainer().hasPermission(u, ReadPermission.class))
+                    {
+                        throw new UnauthorizedException("You do not have permission to read data: " + o.get("dataId"));
                     }
 
                     ret.add(d.getFileLike());
@@ -3223,7 +3241,7 @@ public class SequenceAnalysisController extends SpringActionController
                 TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_OUTPUTFILES);
                 for (int outputFileId : form.getOutputFileIds())
                 {
-                    SequenceOutputFile so = SequenceOutputFile.getForId(outputFileId);
+                    SequenceOutputFile so = SequenceOutputFile.getForId(outputFileId, getUser());
                     outputFiles.put(so.getRowid().toString(), so.toJSON());
 
                     Map<String, Object> rowMap = new TableSelector(ti, PageFlowUtil.set("dataId", "library_id"), new SimpleFilter(FieldKey.fromString("rowid"), outputFileId), null).getMap();
@@ -3249,6 +3267,11 @@ public class SequenceAnalysisController extends SpringActionController
                         o.put("error", true);
                         arr.put(o);
                         continue;
+                    }
+
+                    if (!d.getContainer().hasPermission(getUser(), ReadPermission.class))
+                    {
+                        throw new UnauthorizedException("Insufficient permissions to read files");
                     }
 
                     JSONObject o = getDataJson(handler, outputFileId);
@@ -3296,7 +3319,7 @@ public class SequenceAnalysisController extends SpringActionController
         private JSONObject getDataJson(SequenceOutputHandler<?> handler, Integer outputFileId)
         {
             JSONObject o = new JSONObject();
-            SequenceOutputFile outputFile = SequenceOutputFile.getForId(outputFileId);
+            SequenceOutputFile outputFile = SequenceOutputFile.getForId(outputFileId, getUser());
             if (outputFile == null)
             {
                 _log.error("getDataJson was provided with an invalid outputFileId: " + outputFileId, new Exception());
@@ -3735,7 +3758,7 @@ public class SequenceAnalysisController extends SpringActionController
             {
                 for (int outputFileId : form.getOutputFileIds())
                 {
-                    SequenceOutputFile o = SequenceOutputFile.getForId(outputFileId);
+                    SequenceOutputFile o = SequenceOutputFile.getForId(outputFileId, getUser(), InsertPermission.class);
                     if (o == null || o.getFile() == null)
                     {
                         errors.reject(ERROR_MSG, "Unable to find file: " + outputFileId);
@@ -4901,7 +4924,7 @@ public class SequenceAnalysisController extends SpringActionController
             Map<Integer, JSONObject> fileMap = new IntHashMap<>();
             for (Integer rowId : form.getOutputFileIds())
             {
-                SequenceOutputFile f = SequenceOutputFile.getForId(rowId);
+                SequenceOutputFile f = SequenceOutputFile.getForId(rowId, getUser());
                 if (f != null)
                 {
                     fileMap.put(f.getRowid(), f.toJSON());

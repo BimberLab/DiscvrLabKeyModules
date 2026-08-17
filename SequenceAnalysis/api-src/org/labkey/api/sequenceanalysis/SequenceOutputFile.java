@@ -16,6 +16,7 @@
 package org.labkey.api.sequenceanalysis;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -24,6 +25,11 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.security.User;
+import org.labkey.api.security.permissions.Permission;
+import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.util.logging.LogHelper;
+import org.labkey.api.view.UnauthorizedException;
 
 import java.io.File;
 import java.io.Serializable;
@@ -34,6 +40,8 @@ import java.util.Date;
  */
 public class SequenceOutputFile implements Serializable
 {
+    private static final Logger _log = LogHelper.getLogger(SequenceOutputFile.class, "Messages related to SequenceOutputFile");
+
     private Integer _rowid;
     private String _name;
     private String _description;
@@ -209,6 +217,28 @@ public class SequenceOutputFile implements Serializable
     public void setModified(Date modified)
     {
         _modified = modified;
+    }
+
+    public static SequenceOutputFile getForId(Integer rowId, User u)
+    {
+        return getForId(rowId, u, ReadPermission.class);
+    }
+
+    public static SequenceOutputFile getForId(Integer rowId, User u, Class<? extends Permission> perm)
+    {
+        SequenceOutputFile so = getForId(rowId);
+        if (so.getContainerObj() == null)
+        {
+            _log.error("SequenceOutputFile lacks a valid container: " + rowId);
+            return null;
+        }
+
+        if (!so.getContainerObj().hasPermission(u, perm))
+        {
+            throw new UnauthorizedException("Insufficient permissions: " + rowId);
+        }
+
+        return so;
     }
 
     public static SequenceOutputFile getForId(Integer rowId)
