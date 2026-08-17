@@ -3,6 +3,7 @@ package org.labkey.sequenceanalysis.pipeline;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import htsjdk.samtools.util.IOUtil;
+import org.jetbrains.annotations.Nullable;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.collections.IntHashMap;
@@ -46,6 +47,7 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     private final Map<Long, AnalysisModel> _cachedAnalyses = new LongHashMap<>();
     private final Map<Integer, ReferenceGenome> _cachedGenomes = new IntHashMap<>();
     private final Map<String, Serializable> _cachedObjects = new HashMap<>();
+    private Integer _primaryGenomeForJob = null;
 
     private transient boolean _modifiedSinceSerialize = false;
 
@@ -195,6 +197,11 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     @Override
     public void cacheGenome(ReferenceGenome m)
     {
+        cacheGenome(m, false);
+    }
+
+    public void cacheGenome(ReferenceGenome m, boolean isPrimaryGenomeForJob)
+    {
         markModified();
 
         Integer key = m.getGenomeId();
@@ -209,6 +216,10 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
         }
 
         _cachedGenomes.put(key, m);
+        if (isPrimaryGenomeForJob)
+        {
+            _primaryGenomeForJob = key;
+        }
     }
 
     @Override
@@ -233,6 +244,11 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
     public Collection<ReferenceGenome> getCachedGenomes()
     {
         return Collections.unmodifiableCollection(_cachedGenomes.values());
+    }
+
+    public @Nullable Integer getPrimaryGenomeForJob()
+    {
+        return _primaryGenomeForJob;
     }
 
     @Override
@@ -314,6 +330,7 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
 
             js1._cachedReadsets.add(rs1);
             js1._cachedFilePaths.put(4L, new File("/"));
+            js1._primaryGenomeForJob = 1000;
 
             HashMap<Integer, Integer> map = new HashMap<>();
             map.put(1, 1);
@@ -339,6 +356,7 @@ public class SequenceJobSupportImpl implements SequenceAnalysisJobSupport, Seria
             assertEquals("Readset list not serialized properly", 1, deserialized._cachedReadsets.size());
             assertEquals("Readset not deserialized with correct rowid", 100, deserialized._cachedReadsets.get(0).getRowId());
             assertEquals("Readset not deserialized with correct readsetid", 100, deserialized._cachedReadsets.get(0).getReadsetId().intValue());
+            assertEquals("PrimaryGenomeId not deserialized correctly", 1000, (int)deserialized._primaryGenomeForJob);
 
             assertNotNull("File map not serialized properly", deserialized._cachedFilePaths.get(4L));
             assertNotNull("Cached map not serialized properly", deserialized.getCachedObject("cachedMap",Map.class));

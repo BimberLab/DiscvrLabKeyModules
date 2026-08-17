@@ -10,6 +10,7 @@ import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceLibraryStep;
 import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.pipeline.ReferenceGenomeImpl;
 
@@ -62,7 +63,7 @@ public class CustomReferenceLibraryStep extends AbstractPipelineStep implements 
 
     private File getExpectedFastaFile(File outputDirectory) throws PipelineJobException
     {
-        return new File(outputDirectory, "Custom.fasta");
+        return FileUtil.appendName(outputDirectory, "Custom.fasta");
     }
 
     @Override
@@ -79,7 +80,9 @@ public class CustomReferenceLibraryStep extends AbstractPipelineStep implements 
         try (PrintWriter writer = PrintWriters.getPrintWriter(refFasta))
         {
             if (!refFasta.exists())
-                refFasta.createNewFile();
+            {
+                FileUtil.createNewFile(refFasta);
+            }
             writer.write(">" + name + "\n");
             seq = seq.replaceAll("\\s+", "");
 
