@@ -668,7 +668,7 @@ public class SequenceAnalysisController extends SpringActionController
 
                 if (!additionalAnalysisIds.isEmpty())
                 {
-                    msg.append("<br><br>");
+                    msg.unsafeAppend("<br><br>");
                     msg.append("The following " + additionalAnalysisIds.size() + " analyses will also be deleted, along with these associated records/files:").unsafeAppend("<br>");
                     findAnalysesToDelete(additionalAnalysisIds, msg, outputFileIds, expRunsToDelete);
                 }
@@ -722,7 +722,7 @@ public class SequenceAnalysisController extends SpringActionController
                 }
             }
 
-            msg.append("<input type='hidden' name='doDelete' value='1'");
+            msg.unsafeAppend("<input type='hidden' name='doDelete' value='1'");
 
             setTitle("Delete Sequence Records");
 
