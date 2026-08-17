@@ -27,6 +27,7 @@ import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.LabKeyProcessBuilder;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
@@ -785,7 +786,7 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
 
         try
         {
-            Process p = Runtime.getRuntime().exec(command, null, workDir);
+            Process p = new LabKeyProcessBuilder(command).directory(workDir).start();
             try
             {
                 String output = IOUtils.toString(p.getInputStream(), StringUtilsLabKey.DEFAULT_CHARSET);

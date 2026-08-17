@@ -106,7 +106,7 @@ public class SingleCellController extends SpringActionController
         setActionResolver(_actionResolver);
     }
 
-    @RequiresPermission(InsertPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public static class DownloadLoupeDataAction extends ExportAction<OutputFilesForm>
     {
         @Override

@@ -347,7 +347,7 @@ public class JBrowseController extends SpringActionController
         public ModelAndView getView(BrowserForm form, BindException errors)
         {
             String guid = form.getEffectiveSessionId();
-            JBrowseSession db = isValidUUID(guid) ? new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getEffectiveSessionId()), null).getObject(JBrowseSession.class) : null;
+            JBrowseSession db = isValidUUID(guid) ? new TableSelector(QueryService.get().getUserSchema(getUser(), getContainer(), JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getEffectiveSessionId()), null).getObject(JBrowseSession.class) : null;
             _title = db == null ? "JBrowse" : db.getName();
             form.setPageTitle(_title);
 
