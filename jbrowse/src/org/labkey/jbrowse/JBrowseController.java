@@ -38,6 +38,7 @@ import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.ContainerType;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
@@ -904,7 +905,7 @@ public class JBrowseController extends SpringActionController
             try
             {
                 JBrowseLuceneSearch searcher = JBrowseLuceneSearch.create(form.getSessionId(), form.getTrackId(), getUser());
-                if (!searcher.getContainer().equals(getContainer()))
+                if (!searcher.getContainer().getContainerFor(ContainerType.DataType.tabParent).equals(getContainer().getContainerFor(ContainerType.DataType.tabParent)))
                 {
                     errors.reject(ERROR_MSG, "Invalid session: " + form.getSessionId());
                     return null;
