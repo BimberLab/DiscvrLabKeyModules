@@ -238,8 +238,7 @@ public class SequenceTest extends BaseWebDriverTest
 
         log("verifying readset count correct");
         goToProjectHome();
-        waitForText("Sequence Readsets");
-        waitForElement(LabModuleHelper.getNavPanelItem("Sequence Readsets:", _readsetCt.toString()));
+        waitForElement(LabModuleHelper.getNavPanelItem("Readsets:", _readsetCt.toString()));
     }
 
     /**
