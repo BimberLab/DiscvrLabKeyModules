@@ -63,7 +63,6 @@ public class StudiesManager
         DbScope scope   = schema.getScope();
 
         UserSchema us = QueryService.get().getUserSchema(u, c, StudiesSchema.NAME);
-
         TableInfo tblStudies       = us.getTable(StudiesSchema.TABLE_STUDIES);
         TableInfo tblCohorts       = us.getTable(StudiesSchema.TABLE_COHORTS);
         TableInfo tblAnchorEvents  = us.getTable(StudiesSchema.TABLE_ANCHOR_EVENTS);
@@ -71,7 +70,26 @@ public class StudiesManager
 
         try (DbScope.Transaction tx = scope.ensureTransaction())
         {
-            sd.setContainer(c.getEntityId().toString());
+            if (sd.getRowId() != null)
+            {
+                TableSelector ts = new TableSelector(tblStudies, PageFlowUtil.set("container"), new SimpleFilter(FieldKey.fromString("rowId"), sd.getRowId()), null);
+                if (!ts.exists())
+                {
+                    throw new IllegalArgumentException("Unable to find existing study with rowId: " + sd.getRowId());
+                }
+
+                String existingContainerId = ts.getObject(String.class);
+                Container existingContainer = ContainerManager.getForId(existingContainerId);
+                if (!c.equals(existingContainer))
+                {
+                    throw new IllegalArgumentException("The study is from the wrong container: " + sd.getRowId());
+                }
+            }
+            else
+            {
+                sd.setContainer(c.getEntityId().toString());
+            }
+
             sd = upsertStudy(sd, tblStudies, c, u);
 
             upsertChildRecords(
@@ -198,7 +216,9 @@ public class StudiesManager
         {
             List<Map<String,Object>> ret = qus.insertRows(u, c, inserts, bve, null, null);
             for (int i = 0; i < ret.size(); i++)
+            {
                 setRowId.set(insertBeans.get(i), asInteger(ret.get(i).get("rowId")));
+            }
         }
 
         if (!updates.isEmpty())

@@ -269,16 +269,16 @@ public class LdapSyncRunner implements Job
         try
         {
             log("Changing active state of user: " + u.getEmail() + " to " + active + (reason == null ? "" : ", reason: " + reason));
-            _usersInactivated++;
 
             if (!_previewOnly)
             {
                 UserManager.setUserActive(_settings.getLabKeyAdminUser(), u, active);
             }
+            _usersInactivated++;
         }
         catch (SecurityManager.UserManagementException e)
         {
-            _log.error("Unable to deactive user: " + u.getEmail());
+            _log.error("Unable to deactivate user: " + u.getEmail(), e);
         }
     }
 

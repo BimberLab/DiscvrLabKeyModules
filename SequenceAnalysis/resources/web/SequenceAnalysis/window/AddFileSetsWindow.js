@@ -50,7 +50,8 @@ Ext4.define('SequenceAnalysis.window.AddFileSetsWindow', {
                         type: 'labkey-store',
                         containerPath: Laboratory.Utils.getQueryContainerPath(),
                         schemaName: 'laboratory',
-                        sql: 'SELECT DISTINCT rowid, name FROM sequenceanalysis.analysisSets',
+                        queryName: 'distinctAnalysisSets',
+                        columns: 'rowid,name',
                         autoLoad: true
                     },
                     valueField: 'rowid',
