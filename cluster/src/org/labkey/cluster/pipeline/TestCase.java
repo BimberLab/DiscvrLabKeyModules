@@ -1,8 +1,8 @@
 package org.labkey.cluster.pipeline;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -24,6 +24,7 @@ import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.reader.Readers;
 import org.labkey.api.security.User;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.TestContext;
 import org.labkey.cluster.ClusterModule;
@@ -147,7 +148,7 @@ public class TestCase extends Assert
             engine.setDebug(true);
 
             PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
-            File workDir = new File(root.getRootPath(), "ClusterPipelineTest");
+            File workDir = FileUtil.appendName(root.getRootPath(), "ClusterPipelineTest");
             if (workDir.exists())
             {
                 if (workDir.isDirectory())
@@ -158,7 +159,7 @@ public class TestCase extends Assert
             workDir.mkdirs();
 
             //submit job
-            File log1 = new File(workDir, "pipeline1." + engine.getType() + ".log");
+            File log1 = FileUtil.appendName(workDir, "pipeline1." + engine.getType() + ".log");
             PipelineJob job1 = ClusterService.get().createClusterRemotePipelineJob(c, u, engine.getType() + "_" + engine.getConfig().getLocation() + "TestJob1", engine, new TestRunner(100000), log1);
             PipelineService.get().queueJob(job1);
             Thread.sleep(5000);

@@ -1,5 +1,6 @@
 package org.labkey.cluster.pipeline;
 
+import org.apache.commons.exec.CommandLine;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -786,9 +787,21 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
 
         try
         {
-            // TODO: switch to the following, after figuring out how to parse XML-supplied command
-            // Process p = new LabKeyProcessBuilder(command).directory(workDir).start();
-            Process p = Runtime.getRuntime().exec(command, null, workDir);
+            // Parse command string:
+            List<String> args = new ArrayList<>();
+            try
+            {
+                CommandLine parsedCommand = CommandLine.parse(command);
+                args.add(parsedCommand.getExecutable());
+                args.addAll(Arrays.asList(parsedCommand.getArguments()));
+            }
+            catch (Exception e)
+            {
+                _log.error("Error parsing cluster command: [{}]", command);
+                throw e;
+            }
+
+            Process p = new LabKeyProcessBuilder(args).directory(workDir).start();
             try
             {
                 String output = IOUtils.toString(p.getInputStream(), StringUtilsLabKey.DEFAULT_CHARSET);
