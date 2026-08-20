@@ -786,7 +786,9 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
 
         try
         {
-            Process p = new LabKeyProcessBuilder(command).directory(workDir).start();
+            // TODO: switch to the following, after figuring out how to parse XML-supplied command
+            // Process p = new LabKeyProcessBuilder(command).directory(workDir).start();
+            Process p = Runtime.getRuntime().exec(command, null, workDir);
             try
             {
                 String output = IOUtils.toString(p.getInputStream(), StringUtilsLabKey.DEFAULT_CHARSET);
