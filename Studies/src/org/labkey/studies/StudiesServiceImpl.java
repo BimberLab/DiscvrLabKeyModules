@@ -6,6 +6,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.triggers.TriggerFactory;
+import org.labkey.api.exp.property.DomainProperty;
 import org.labkey.api.module.Module;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
@@ -21,6 +22,7 @@ import org.labkey.api.resource.Resource;
 import org.labkey.api.security.User;
 import org.labkey.api.studies.StudiesService;
 import org.labkey.api.studies.study.EventProvider;
+import org.labkey.api.study.Dataset;
 import org.labkey.api.study.Study;
 import org.labkey.api.study.StudyService;
 import org.labkey.api.util.ConfigurationException;
@@ -39,6 +41,7 @@ import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class StudiesServiceImpl extends StudiesService
 {
@@ -186,6 +189,18 @@ public class StudiesServiceImpl extends StudiesService
             return false;
         }
 
-        return s.getDatasetByName(ASSIGNMENT_DATASET) != null;
+        Dataset ds = s.getDatasetByName(ASSIGNMENT_DATASET);
+        if (ds == null)
+        {
+            return false;
+        }
+
+        DomainProperty dp = Objects.requireNonNull(ds.getDomain()).getPropertyByName("study");
+        if (dp == null)
+        {
+            return false;
+        }
+
+        return true;
     }
 }
