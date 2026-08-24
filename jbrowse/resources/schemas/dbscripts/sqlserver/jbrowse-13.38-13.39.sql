@@ -1,1 +1,0 @@
-ALTER TABLE jbrowse.databases ADD jsonConfig NVARCHAR(max);

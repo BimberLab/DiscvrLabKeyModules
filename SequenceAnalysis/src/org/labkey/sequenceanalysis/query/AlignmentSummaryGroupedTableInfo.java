@@ -126,7 +126,6 @@ public class AlignmentSummaryGroupedTableInfo extends AbstractTableInfo
     protected SQLFragment getFromSQL()
     {
         final SqlDialect sd = getUserSchema().getDbSchema().getSqlDialect();
-        final String chr = sd.isPostgreSQL() ? "chr" : "char";
 
         return new SQLFragment("SELECT\n" +
                 "a.rowid as analysis_id,\n" +
@@ -146,7 +145,7 @@ public class AlignmentSummaryGroupedTableInfo extends AbstractTableInfo
                 "al.total_reverse,\n" +
                 "al.valid_pairs,\n" +
                 "(SELECT sum(s.total) as expr FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY + " s WHERE s.analysis_id = a.rowId) as total_reads_in_analysis,\n" +
-                "(SELECT ").append(sd.getGroupConcat(new SQLFragment("hs.haplotype"), true, true, new SQLFragment(chr + "(10)"))).
+                "(SELECT ").append(sd.getGroupConcat(new SQLFragment("hs.haplotype"), true, true, new SQLFragment("chr(10)"))).
                 append(" as expr FROM sequenceanalysis.haplotype_sequences hs JOIN sequenceanalysis.haplotypes ht ON (hs.haplotype = ht.name) WHERE ht.datedisabled IS NULL AND ((hs.type = 'Lineage' AND hs.name = nt.lineage) OR (hs.type = 'Allele' AND hs.name = nt.name))) as haplotypesWithAllele\n" + "\n" +
                         "FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " a\n" +
                         "JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ALIGNMENT_SUMMARY + " al ON (a.RowId = al.analysis_id)\n" +

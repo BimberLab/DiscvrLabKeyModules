@@ -1,1 +1,0 @@
-ALTER TABLE sequenceanalysis.quality_metrics DROP CONSTRAINT fk_quality_metrics_metricname;

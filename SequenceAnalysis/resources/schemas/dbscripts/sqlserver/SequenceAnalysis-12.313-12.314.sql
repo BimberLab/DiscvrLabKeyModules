@@ -1,1 +1,0 @@
-ALTER TABLE sequenceanalysis.reference_library_tracks ADD jobId integer;

@@ -1,1 +1,0 @@
-ALTER TABLE jbrowse.database_members ADD category varchar(200);

@@ -1,1 +1,0 @@
-ALTER TABLE jbrowse.jsonfiles ADD trackJson varchar(max);

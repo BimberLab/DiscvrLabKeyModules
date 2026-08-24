@@ -1,1 +1,0 @@
-ALTER TABLE sequenceanalysis.chain_files ADD source varchar(4000);

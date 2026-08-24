@@ -1,1 +1,0 @@
-UPDATE sequenceanalysis.aligners set name = 'bwasw' where name = 'bwa-sw';

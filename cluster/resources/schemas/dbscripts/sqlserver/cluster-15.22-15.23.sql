@@ -1,1 +1,0 @@
-ALTER TABLE cluster.clusterJobs ADD statusFileId int;

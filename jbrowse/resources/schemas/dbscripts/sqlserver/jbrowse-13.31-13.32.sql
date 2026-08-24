@@ -1,1 +1,0 @@
-ALTER TABLE jbrowse.jsonfiles ADD sequenceid int;

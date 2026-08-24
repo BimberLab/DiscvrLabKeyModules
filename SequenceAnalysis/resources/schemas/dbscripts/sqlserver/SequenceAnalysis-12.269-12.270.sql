@@ -1,1 +1,0 @@
-ALTER TABLE sequenceanalysis.ref_aa_sequences ADD isComplement bit;

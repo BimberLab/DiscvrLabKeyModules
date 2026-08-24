@@ -211,8 +211,7 @@ public class StudiesUserSchema extends SimpleUserSchema
     {
         CustomPermissionsTable<?> ret = createStudyDesignTable(name, cf, false);
 
-        final String chr = ret.getSqlDialect().isPostgreSQL() ? "chr" : "char";
-        SQLFragment sql1 = new SQLFragment("(SELECT ").append(ret.getSqlDialect().getGroupConcat(new SQLFragment("coalesce(c.label, c.cohortName)"), true, true, new SQLFragment(chr + "(10)"))).append(" as expr FROM " + StudiesSchema.NAME + "." + TABLE_COHORTS + " c WHERE c.studyId = " + ExprColumn.STR_TABLE_ALIAS + ".rowId)");
+        SQLFragment sql1 = new SQLFragment("(SELECT ").append(ret.getSqlDialect().getGroupConcat(new SQLFragment("coalesce(c.label, c.cohortName)"), true, true, new SQLFragment("chr(10)"))).append(" as expr FROM " + StudiesSchema.NAME + "." + TABLE_COHORTS + " c WHERE c.studyId = " + ExprColumn.STR_TABLE_ALIAS + ".rowId)");
         ExprColumn col1 = new ExprColumn(ret, "cohorts", sql1, JdbcType.VARCHAR, ret.getColumn("rowid"));
         col1.setLabel("Cohort(s)");
         col1.setDescription("This column lists the cohort labels for this study");
