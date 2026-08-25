@@ -155,7 +155,7 @@ public class WhatsHapStep extends AbstractCommandPipelineStep<WhatsHapStep.Whats
             throw new PipelineJobException(e);
         }
 
-        output.addSequenceOutput(vcfOut, "Phased VCF: " + inputVCF.getName(), "Phased VCF", null, null, genome.getGenomeId(), null);
+        output.setVcf(vcfOut);
 
         return output;
     }
