@@ -1,5 +1,6 @@
 package org.labkey.cluster.pipeline;
 
+import org.apache.commons.exec.CommandLine;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -27,6 +28,7 @@ import org.labkey.api.pipeline.RemoteExecutionEngine;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.LabKeyProcessBuilder;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
@@ -785,7 +787,21 @@ abstract public class AbstractClusterExecutionEngine<ConfigType extends Pipeline
 
         try
         {
-            Process p = Runtime.getRuntime().exec(command, null, workDir);
+            // Parse command string:
+            List<String> args = new ArrayList<>();
+            try
+            {
+                CommandLine parsedCommand = CommandLine.parse(command);
+                args.add(parsedCommand.getExecutable());
+                args.addAll(Arrays.asList(parsedCommand.getArguments()));
+            }
+            catch (Exception e)
+            {
+                _log.error("Error parsing cluster command: [{}]", command);
+                throw e;
+            }
+
+            Process p = new LabKeyProcessBuilder(args).directory(workDir).start();
             try
             {
                 String output = IOUtils.toString(p.getInputStream(), StringUtilsLabKey.DEFAULT_CHARSET);

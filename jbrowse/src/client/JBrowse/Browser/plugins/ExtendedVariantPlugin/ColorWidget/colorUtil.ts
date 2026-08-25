@@ -1,5 +1,5 @@
-import {rgb} from "color-convert"
 import { colorSchemes } from "./colorSchemes"
+import convert from 'color-convert';
 
 export function hexToRGB(hexStr){
 // takes a hex string and returns rgb decimals in a list
@@ -22,7 +22,7 @@ export function generateGradient(hex1, hex2, steps, maxVal){
       r: rgb1[0],
       g: rgb1[1],
       b: rgb1[2],
-      hex: rgb.hex(rgb1[0], rgb1[1], rgb1[2]),
+      hex: convert.rgb.hex(rgb1[0], rgb1[1], rgb1[2]),
    })
    for (let i = 1; i <= (steps); i++){
       let percent = (1/steps) * i
@@ -33,7 +33,7 @@ export function generateGradient(hex1, hex2, steps, maxVal){
       gradientStep["r"] = rgb1[0] - ((rgb1[0] - rgb2[0]) * percent)
       gradientStep["g"] = rgb1[1] - ((rgb1[1] - rgb2[1]) * percent)
       gradientStep["b"] = rgb1[2] - ((rgb1[2] - rgb2[2]) * percent)
-      gradientStep["hex"] = rgb.hex(gradientStep["r"], gradientStep["g"], gradientStep["b"])
+      gradientStep["hex"] = convert.rgb.hex(gradientStep["r"], gradientStep["g"], gradientStep["b"])
       gradient.push(gradientStep)
    }
    return gradient
@@ -50,14 +50,14 @@ export function generateNumJexl(scheme){
          // first entry
          jexl = jexl + ":(" + scheme.jexlComponent + ">=" + (step.percent * scheme.maxVal) + " && "
          step = gradientSteps[i+1]
-         jexl = jexl + scheme.jexlComponent + "<=" + (step.percent * scheme.maxVal) + ")?'#" + rgb.hex(step["r"], step["g"], step["b"]) + "'"
+         jexl = jexl + scheme.jexlComponent + "<=" + (step.percent * scheme.maxVal) + ")?'#" + convert.rgb.hex(step["r"], step["g"], step["b"]) + "'"
       } else if (step === gradientSteps[gradientSteps.length-1]){
          // last entry
-         jexl = jexl + ":" + scheme.jexlComponent + "==" + (step.percent * scheme.maxVal) + "?'#" + rgb.hex(step["r"], step["g"], step["b"]) + "'"
+         jexl = jexl + ":" + scheme.jexlComponent + "==" + (step.percent * scheme.maxVal) + "?'#" + convert.rgb.hex(step["r"], step["g"], step["b"]) + "'"
       } else {
          jexl = jexl + ":(" + scheme.jexlComponent + ">" + (step.percent * scheme.maxVal) + " && "
          step = gradientSteps[i+1]
-         jexl = jexl + scheme.jexlComponent + "<=" + (step.percent * scheme.maxVal) + ")?'#" + rgb.hex(step["r"], step["g"], step["b"]) + "'"
+         jexl = jexl + scheme.jexlComponent + "<=" + (step.percent * scheme.maxVal) + ")?'#" + convert.rgb.hex(step["r"], step["g"], step["b"]) + "'"
       }
    }
    jexl = jexl + ":'gray'"

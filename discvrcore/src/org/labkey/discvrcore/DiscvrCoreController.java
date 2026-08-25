@@ -38,6 +38,7 @@ import org.labkey.api.pipeline.PipelineUrls;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.RequiresPermission;
+import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.util.DOM;
 import org.labkey.api.util.GUID;
@@ -58,6 +59,8 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static org.labkey.api.util.DOM.Attribute.name;
+import static org.labkey.api.util.DOM.Attribute.type;
 import static org.labkey.api.util.DOM.Attribute.valign;
 import static org.labkey.api.util.DOM.at;
 import static org.labkey.api.util.DOM.cl;
@@ -170,10 +173,11 @@ public class DiscvrCoreController extends SpringActionController
                 return new SimpleErrorView(errors);
             }
 
-            String sb = "This will move this workbook to the selected folder, renaming this workbook to match the series in that container.  Note: there are many reasons this can be problematic, so please do this with great care<p>" +
-                    "<input name=\"targetContainer\" type=\"text\"></input>";
-
-            return new HtmlView(sb);
+            return new HtmlView(DOM.DIV(
+                    h("This will move this workbook to the selected folder, renaming this workbook to match the series in that container.  Note: there are many reasons this can be problematic, so please do this with great care"),
+                    DOM.P(),
+                    DOM.INPUT(at(name, "targetContainer", type, "text"))
+            ));
         }
 
         @Override
@@ -210,6 +214,12 @@ public class DiscvrCoreController extends SpringActionController
                 return false;
             }
 
+            if (!target.hasPermission(getUser(),AdminPermission.class))
+            {
+                errors.reject(ERROR_MSG, "Insufficient permissions in the target: " + form.getTargetContainer());
+                return false;
+            }
+
             if (ContainerManager.isSystemContainer(target))
             {
                 errors.reject(ERROR_MSG, "Cannot move to system containers: " + form.getTargetContainer());
@@ -222,33 +232,36 @@ public class DiscvrCoreController extends SpringActionController
                 return false;
             }
 
-            //NOTE: transaction causing problems for larger sites?
-            //try (DbScope.Transaction transaction = CoreSchema.getInstance().getSchema().getScope().ensureTransaction())
-            //{
-            //first rename workbook to make unique
-            String tempName = new GUID().toString();
-            int sortOrder = (int) DbSequenceManager.get(target, ContainerManager.WORKBOOK_DBSEQUENCE_NAME).next();
-            _log.info("renaming workbook to in preparation for move from: " + toMove.getPath() + "  to: " + tempName);
-            ContainerManager.rename(toMove, getUser(), tempName);
-            toMove = ContainerManager.getForId(toMove.getId());
+            //NOTE: This does not use a transaction because this has been problematic in larger sites:
+            try
+            {
+                //first rename workbook to make unique
+                String tempName = new GUID().toString();
+                int sortOrder = (int) DbSequenceManager.get(target, ContainerManager.WORKBOOK_DBSEQUENCE_NAME).next();
+                _log.info("renaming workbook to in preparation for move from: " + toMove.getPath() + "  to: " + tempName);
+                ContainerManager.rename(toMove, getUser(), tempName);
+                toMove = ContainerManager.getForId(toMove.getId());
 
-            //then move parent
-            _log.info("moving workbook from: " + toMove.getPath() + "  to: " + target.getPath());
-            ContainerManager.move(toMove, target, getUser());
-            toMove = ContainerManager.getForId(toMove.getId());
+                //then move parent
+                _log.info("moving workbook from: " + toMove.getPath() + "  to: " + target.getPath());
+                ContainerManager.move(toMove, target, getUser());
+                toMove = ContainerManager.getForId(toMove.getId());
 
-            //finally move to correct name
-            _log.info("renaming workbook from: " + toMove.getPath() + "  to: " + sortOrder);
-            ContainerManager.rename(toMove, getUser(), String.valueOf(sortOrder));
-            toMove.setSortOrder(sortOrder);
-            new SqlExecutor(CoreSchema.getInstance().getSchema()).execute("UPDATE core.containers SET SortOrder = ? WHERE EntityId = ?", toMove.getSortOrder(), toMove.getId());
-            toMove = ContainerManager.getForId(toMove.getId());
+                //finally move to correct name
+                _log.info("renaming workbook from: " + toMove.getPath() + "  to: " + sortOrder);
+                ContainerManager.rename(toMove, getUser(), String.valueOf(sortOrder));
+                toMove.setSortOrder(sortOrder);
+                new SqlExecutor(CoreSchema.getInstance().getSchema()).execute("UPDATE core.containers SET SortOrder = ? WHERE EntityId = ?", toMove.getSortOrder(), toMove.getId());
+                toMove = ContainerManager.getForId(toMove.getId());
 
-            //transaction.commit();
-            _log.info("workbook move finished");
-
-            _movedWb = toMove;
-            //}
+                //transaction.commit();
+                _log.info("workbook move finished");
+                _movedWb = toMove;
+            }
+            catch (Exception e)
+            {
+                _log.error("Unable to move workbook. This was left in an incomplete state!: " + form.getTargetContainer(), e);
+            }
 
             return true;
         }
@@ -303,8 +316,8 @@ public class DiscvrCoreController extends SpringActionController
         }
     }
 
-    @UtilityAction(label = "Add Custom Core.Container Indexes", description = "Provides a mechanism to truncate the query and dataset audit tables for a container")
-    @RequiresPermission(AdminPermission.class)
+    @UtilityAction(label = "Add Custom Core.Container Indexes", description = "This adds additional indexes to core.container")
+    @RequiresSiteAdmin
     public static class AddCustomIndexesAction extends ConfirmAction<Object>
     {
         @Override

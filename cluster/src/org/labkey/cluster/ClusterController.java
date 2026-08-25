@@ -330,6 +330,12 @@ public class ClusterController extends SpringActionController
                     return false;
                 }
 
+                if (!sf.lookupContainer().hasPermission(getUser(), AdminPermission.class))
+                {
+                    errors.reject(ERROR_MSG, "Insufficient permissions to update: " + id);
+                    return false;
+                }
+
                 sfs.add(sf);
             }
 
@@ -419,6 +425,12 @@ public class ClusterController extends SpringActionController
                 if (PipelineJob.TaskStatus.running.name().equalsIgnoreCase(sf.getStatus()))
                 {
                     errors.reject(ERROR_MSG, "This cannot be used on actively running jobs.  Status was: " + sf.getStatus());
+                    return false;
+                }
+
+                if (!sf.lookupContainer().hasPermission(getUser(), AdminPermission.class))
+                {
+                    errors.reject(ERROR_MSG, "Insufficient permissions to update: " + id);
                     return false;
                 }
 

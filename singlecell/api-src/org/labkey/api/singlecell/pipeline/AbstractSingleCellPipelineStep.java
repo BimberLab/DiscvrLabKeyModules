@@ -54,7 +54,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
     {
         SingleCellOutput output = new SingleCellOutput();
 
-        File tracker = new File(ctx.getOutputDir(), getSavedSeuratFileName(outputPrefix));
+        File tracker = FileUtil.appendName(ctx.getOutputDir(), getSavedSeuratFileName(outputPrefix));
         if (tracker.exists())
         {
             ctx.getLogger().debug("deleting pre-existing file: " + tracker.getName());
@@ -596,7 +596,7 @@ abstract public class AbstractSingleCellPipelineStep extends AbstractPipelineSte
                 if (html.exists())
                 {
                     ctx.getLogger().info("Copying HTML locally for debugging: " + html.getName());
-                    File target = new File(ctx.getSourceDirectory(), html.getName());
+                    File target = FileUtil.appendName(ctx.getSourceDirectory(), html.getName());
                     if (target.exists())
                     {
                         target.delete();

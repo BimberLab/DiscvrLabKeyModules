@@ -111,14 +111,14 @@ public class JBrowseLuceneSearch
         return _executor;
     }
 
-    private Container getContainer()
+    public Container getContainer()
     {
         return ContainerManager.getForId(_session.getContainer());
     }
 
     public static JBrowseLuceneSearch create(String sessionId, String trackId, User u)
     {
-        JBrowseSession session = getSession(sessionId);
+        JBrowseSession session = getSession(sessionId, u);
 
         return new JBrowseLuceneSearch(session, getTrack(session, trackId, u), u);
     }

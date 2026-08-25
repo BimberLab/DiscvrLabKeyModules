@@ -170,9 +170,9 @@ public class JBrowseFieldUtils
         _cache.clear();
     }
 
-    public static JBrowseSession getSession(String sessionId)
+    public static JBrowseSession getSession(String sessionId, User u)
     {
-        JBrowseSession session = JBrowseSession.getForId(sessionId);
+        JBrowseSession session = JBrowseSession.getForId(sessionId, u);
         if (session == null)
         {
             throw new IllegalArgumentException("Unable to find JBrowse session: " + sessionId);

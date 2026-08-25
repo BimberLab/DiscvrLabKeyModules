@@ -20,11 +20,13 @@ import org.labkey.api.files.FileContentService;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.sequenceanalysis.SequenceAnalysisService;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.view.UnauthorizedException;
 import org.labkey.jbrowse.JBrowseManager;
 import org.labkey.jbrowse.JBrowseSchema;
 
@@ -166,6 +168,29 @@ public class JBrowseSession
         //delete children
         TableInfo ti = JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASE_MEMBERS);
         Table.delete(ti, new SimpleFilter(FieldKey.fromString("database"), databaseId, CompareType.EQUAL));
+    }
+
+    public static JBrowseSession getForId(String objectId, User u)
+    {
+        JBrowseSession s = getForId(objectId);
+        if (s == null)
+        {
+            return null;
+        }
+
+        Container c = s.getContainerObj();
+        if (c == null)
+        {
+            _log.error("JBrowse session lacks a valid container: " + objectId);
+            return null;
+        }
+
+        if (!c.hasPermission(u, ReadPermission.class))
+        {
+            throw new UnauthorizedException("Insufficient permissions to read JBrowse session");
+        }
+
+        return s;
     }
 
     public static JBrowseSession getForId(String objectId)

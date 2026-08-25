@@ -106,7 +106,7 @@ public class SingleCellController extends SpringActionController
         setActionResolver(_actionResolver);
     }
 
-    @RequiresPermission(InsertPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public static class DownloadLoupeDataAction extends ExportAction<OutputFilesForm>
     {
         @Override
@@ -116,7 +116,7 @@ public class SingleCellController extends SpringActionController
 
             for (Integer rowId : form.getOutputFileIds())
             {
-                SequenceOutputFile so = SequenceOutputFile.getForId(rowId);
+                SequenceOutputFile so = SequenceOutputFile.getForId(rowId, getUser());
                 if (so != null)
                 {
                     File loupe = so.getFile();
@@ -597,7 +597,7 @@ public class SingleCellController extends SpringActionController
             UserSchema sa = QueryService.get().getUserSchema(getUser(), getContainer(), SingleCellSchema.SEQUENCE_SCHEMA_NAME);
             List<Map<String, Object>> toUpdate = new ArrayList<>();
             new TableSelector(sa.getTable("outputfiles"), PageFlowUtil.set("rowid"), new SimpleFilter(FieldKey.fromString("category"), "Seurat Object Prototype").addCondition(FieldKey.fromString("modified"), "2025-04-29", CompareType.DATE_LT), null).forEach(Integer.class, rowId -> {
-                SequenceOutputFile so = SequenceOutputFile.getForId(rowId);
+                SequenceOutputFile so = SequenceOutputFile.getForId(rowId, getUser());
                 if (so == null)
                 {
                     throw new IllegalStateException("Unable to create SequenceOutputFile for: " + rowId);

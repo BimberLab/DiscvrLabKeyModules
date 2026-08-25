@@ -403,8 +403,8 @@ Ext4.define('SingleCell.panel.cDNAImportPanel', {
                             citeseqReadsetId: row.citeseqReadsetId
                         };
 
-                        if (row.kitType) {
-                            baseRow.chemistry = row.kitType
+                        if (row.kitType || row.chemistry) {
+                            baseRow.chemistry = row.kitType || row.chemistry;
                         }
 
                         var gexReadsetId = readsetMap[row.plateId + '-GEX'];

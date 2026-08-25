@@ -116,6 +116,9 @@ public class JBrowseModule extends ExtendedSimpleModule
 
         // These are all part of the JBrowse demo data:
         ContentSecurityPolicyFilter.registerAllowedSources(this.getClass().getName(), Directive.Connection, "https://jbrowse.org", "https://s3.amazonaws.com", "https://ftp.ncbi.nlm.nih.gov");
+
+        // @gmod/bbi and @gmod/bgzf-filehandle instantiate their WASM by fetching an inlined data: URL
+        ContentSecurityPolicyFilter.registerAllowedSources(this.getClass().getName(), Directive.Connection, "data:");
         ContentSecurityPolicyFilter.registerAllowedSources(this.getClass().getName(), Directive.Style, "https://www.gstatic.com");
         ContentSecurityPolicyFilter.registerAllowedSources(this.getClass().getName(), Directive.Font, "https://www.gstatic.com", "https://fonts.googleapis.com");
 
