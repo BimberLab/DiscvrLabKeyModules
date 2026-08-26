@@ -29,6 +29,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * User: bimber
@@ -125,7 +127,28 @@ public class SequenceAlignmentJob extends SequenceJob
 
     public ReferenceGenome getTargetGenome()
     {
-        return getSequenceSupport().getCachedGenomes().isEmpty() ? null : getSequenceSupport().getCachedGenomes().iterator().next();
+        if (getSequenceSupport().getCachedGenomes().isEmpty())
+        {
+            return null;
+        }
+        else if (getSequenceSupport().getCachedGenomes().size() == 1)
+        {
+            return getSequenceSupport().getCachedGenomes().iterator().next();
+        }
+
+        // Cannot infer the correct genome. We assume it was set upstream:
+        if (getSequenceSupport().getPrimaryGenomeForJob() == null)
+        {
+            throw new IllegalStateException("The primary genome ID has not been set");
+        }
+
+        Set<ReferenceGenome> passing = getSequenceSupport().getCachedGenomes().stream().filter(x -> getSequenceSupport().getPrimaryGenomeForJob().equals(x.getGenomeId())).collect(Collectors.toSet());
+        if (passing.isEmpty())
+        {
+            throw new IllegalStateException("No cached genome with ID: " + getSequenceSupport().getPrimaryGenomeForJob());
+        }
+
+        return passing.iterator().next();
     }
 
     public static final String NAME = "sequenceAnalysisPipeline";

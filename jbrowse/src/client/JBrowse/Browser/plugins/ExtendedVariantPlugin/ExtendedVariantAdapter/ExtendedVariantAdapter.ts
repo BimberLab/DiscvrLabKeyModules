@@ -8,7 +8,7 @@ import { VcfFeature } from '@jbrowse/plugin-variants';
 
 export default class extends BaseFeatureDataAdapter {
     protected featureCache = new QuickLRU({ maxSize: 20 })
-    private subAdapterP?: Promise<any>
+    private subAdapterP: Promise<any> | undefined = undefined
 
     constructor(...args: any[]) {
       super(...args)
@@ -21,6 +21,13 @@ export default class extends BaseFeatureDataAdapter {
           // If we have it already (e.g., getFeatures, getFeaturesAsArray, BaseFeatureDataAdapter-derived properties), use it directly
           if (prop in target || typeof prop === 'symbol') {
             return Reflect.get(target, prop, receiver)
+          }
+
+          // Deals with an esoteric bug where returning these props causes the
+          // resulting proxy to be treated as a thenable, and awaiting it hangs
+          // This bug caused the "Variant Details" link to be broken
+          if (prop === 'then' || prop === 'catch' || prop === 'finally') {
+            return undefined
           }
 
           // Otherwise, forward to the VcfTabixAdapter sub-adapter

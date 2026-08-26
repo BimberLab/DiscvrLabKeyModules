@@ -1,6 +1,18 @@
 import org.labkey.gradle.util.BuildUtils;
 
 dependencies {
+    BuildUtils.addExternalDependency(
+            project,
+            new org.labkey.gradle.util.ExternalDependency(
+                    "org.apache.commons:commons-exec:1.4.0",
+                    'Apache Commons Exec',
+                    'Apache Commons Exec',
+                    'https://commons.apache.org/proper/commons-exec/',
+                    org.labkey.gradle.util.ExternalDependency.APACHE_2_LICENSE_NAME,
+                    org.labkey.gradle.util.ExternalDependency.APACHE_2_LICENSE_URL,
+                    'A library to parse command line arguments'
+            )
+    )
    BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "apiJarFile")
 
    BuildUtils.addLabKeyDependency(project: project, config: "modules", depProjectPath: ":server:modules:LabDevKitModules:LDK", depProjectConfig: "published", depExtension: "module")

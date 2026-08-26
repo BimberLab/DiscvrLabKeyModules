@@ -132,7 +132,7 @@ public class AlignmentImportInitTask extends WorkDirectoryTask<AlignmentImportIn
                         }
                     }
 
-                    getPipelineJob().getSequenceSupport().cacheGenome(SequenceAnalysisService.get().getReferenceGenome(o.getInt("library_id"), getJob().getUser()));
+                    getPipelineJob().getSequenceSupport().cacheGenome(SequenceAnalysisService.get().getReferenceGenome(o.getInt("library_id"), getJob().getUser()), true);
                     getPipelineJob().getSequenceSupport().cacheReadset(r);
                 }
             }

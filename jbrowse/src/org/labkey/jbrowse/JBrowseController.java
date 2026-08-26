@@ -38,6 +38,7 @@ import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.ContainerType;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
@@ -347,7 +348,7 @@ public class JBrowseController extends SpringActionController
         public ModelAndView getView(BrowserForm form, BindException errors)
         {
             String guid = form.getEffectiveSessionId();
-            JBrowseSession db = isValidUUID(guid) ? new TableSelector(JBrowseSchema.getInstance().getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getEffectiveSessionId()), null).getObject(JBrowseSession.class) : null;
+            JBrowseSession db = isValidUUID(guid) ? new TableSelector(QueryService.get().getUserSchema(getUser(), getContainer(), JBrowseSchema.NAME).getTable(JBrowseSchema.TABLE_DATABASES), new SimpleFilter(FieldKey.fromString("objectid"), form.getEffectiveSessionId()), null).getObject(JBrowseSession.class) : null;
             _title = db == null ? "JBrowse" : db.getName();
             form.setPageTitle(_title);
 
@@ -726,7 +727,7 @@ public class JBrowseController extends SpringActionController
             }
             else
             {
-                JBrowseSession db = JBrowseSession.getForId(form.getSession());
+                JBrowseSession db = JBrowseSession.getForId(form.getSession(), getUser());
                 if (db == null)
                 {
                     errors.reject(ERROR_MSG, "Unknown session: " + form.getSession());
@@ -813,7 +814,7 @@ public class JBrowseController extends SpringActionController
         {
             try
             {
-                JBrowseSession session = JBrowseFieldUtils.getSession(form.getSessionId());
+                JBrowseSession session = JBrowseFieldUtils.getSession(form.getSessionId(), getUser());
                 JsonFile jsonFile = JBrowseFieldUtils.getTrack(session, form.getTrackId(), getUser());
 
                 Map<String, JBrowseFieldDescriptor> fields = JBrowseFieldUtils.getIndexedFields(jsonFile, getUser(), getContainer());
@@ -904,6 +905,12 @@ public class JBrowseController extends SpringActionController
             try
             {
                 JBrowseLuceneSearch searcher = JBrowseLuceneSearch.create(form.getSessionId(), form.getTrackId(), getUser());
+                if (!searcher.getContainer().getContainerFor(ContainerType.DataType.tabParent).equals(getContainer().getContainerFor(ContainerType.DataType.tabParent)))
+                {
+                    errors.reject(ERROR_MSG, "Invalid session: " + form.getSessionId());
+                    return null;
+                }
+
                 DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss");
                 String timestamp = LocalDateTime.now().format(formatter);
                 String filename = "mGAP_results_" + timestamp + ".csv";

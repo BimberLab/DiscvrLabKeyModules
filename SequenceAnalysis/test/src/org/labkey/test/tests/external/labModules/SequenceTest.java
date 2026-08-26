@@ -230,10 +230,15 @@ public class SequenceTest extends BaseWebDriverTest
         waitForElement(Locator.tagContainingText("a", "SRA2"));
 
         dr.checkAllOnPage();
+        Assert.assertEquals("Incorrect checked row count", 3, dr.getCheckedCount());
         dr.clickHeaderButtonAndWait("Delete");
         clickButton("OK");
 
         _readsetCt -= 3;
+
+        log("verifying readset count correct");
+        goToProjectHome();
+        waitForElement(LabModuleHelper.getNavPanelItem("Readsets:", _readsetCt.toString()));
     }
 
     /**
@@ -417,7 +422,7 @@ public class SequenceTest extends BaseWebDriverTest
     }
 
     /**
-     * This method has several puposes.  It will verify that the records from illuminaImportTest() were
+     * This method has several purposes.  It will verify that the records from illuminaImportTest() were
      * created properly.  It also exercises various features associated with the readset grid, including
      * the FASTQC report and downloading of results
      *

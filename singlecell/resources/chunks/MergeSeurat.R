@@ -12,6 +12,14 @@ mergeBatchInMemory <- function(datasetIdToFilePath, saveFile) {
         stop('No names provided on datasetIdToFilePath')
     }
 
+    doneFile <- paste0(saveFile, '.done')
+    if (file.exists(doneFile)) {
+      print(paste0('Resuming from existing file: ', saveFile))
+      filesToDelete <<- c(filesToDelete, saveFile)
+      filesToDelete <<- c(filesToDelete, doneFile)
+      return(saveFile)
+    }
+
     toMerge <- list()
     for (datasetId in names(datasetIdToFilePath)) {
         print(paste0('Loading: ', datasetId))
@@ -44,7 +52,9 @@ mergeBatchInMemory <- function(datasetIdToFilePath, saveFile) {
     }
 
     saveRDS(CellMembrane::MergeSeuratObjs(toMerge, projectName = projectName, doGC = doDiet, errorOnBarcodeSuffix = errorOnBarcodeSuffix, expectedDefaultAssay = expectedDefaultAssay), file = saveFile)
+    file.create(doneFile)
     filesToDelete <<- c(filesToDelete, saveFile)
+    filesToDelete <<- c(filesToDelete, doneFile)
 
     logger::log_info(paste0('mem used: ', R.utils::hsize(as.numeric(lobstr::mem_used()))))
     gc()

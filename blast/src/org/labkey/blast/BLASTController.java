@@ -262,7 +262,6 @@ public class BLASTController extends SpringActionController
                 if (files.isEmpty())
                 {
                     //save query to string
-                    AssayFileWriter writer = new AssayFileWriter();
                     try
                     {
                         FileLike targetDirectory = AssayFileWriter.ensureUploadDirectory(getContainer());
@@ -280,24 +279,20 @@ public class BLASTController extends SpringActionController
                     }
                 }
 
-                if (!inputFiles.isEmpty())
+                for (FileLike input : inputFiles)
                 {
-                    for (FileLike input : inputFiles)
-                    {
-                        String jobId = BLASTManager.get().runBLASTN(getContainer(), getUser(), form.getDatabase(), input.toNioPathForRead().toFile(), form.getTask(), form.getTitle(), form.getSaveResults(), params, true);
-                        resp.put("jobId", jobId);
-                    }
+                    String jobId = BLASTManager.get().runBLASTN(getContainer(), getUser(), form.getDatabase(), input.toNioPathForRead().toFile(), form.getTask(), form.getTitle(), form.getSaveResults(), params, true);
+                    resp.put("jobId", jobId);
                 }
 
                 resp.put("success", true);
             }
             catch (Exception e)
             {
-                ExceptionUtil.logExceptionToMothership(getViewContext().getRequest(), e);
                 getViewContext().getResponse().setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 logger.error(e.getMessage(), e);
                 resp.put("success", false);
-                resp.put("exception", e.getMessage());
+                resp.put("exception", "Error running BLASTN");
             }
 
             return resp.toString();

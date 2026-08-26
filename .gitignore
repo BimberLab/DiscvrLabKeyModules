@@ -23,3 +23,6 @@ SequenceAnalysis/resources/credits/dependencies.txt
 
 OpenLdapSync/resources/credits/dependencies.txt
 OpenLdapSync/resources/credits/jars.txt
+
+cluster/resources/credits/jars.txt
+cluster/resources/credits/dependencies.txt
