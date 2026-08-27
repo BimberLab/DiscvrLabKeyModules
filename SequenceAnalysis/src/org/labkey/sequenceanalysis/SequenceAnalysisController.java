@@ -717,7 +717,7 @@ public class SequenceAnalysisController extends SpringActionController
                                 msg.append("Folder: ").unsafeAppend("<a href='" + url.toString() + "' target='_blank'>" + h(target.getPath()) + "</a><br><input type='hidden' name='jobIds' value='" + h(sf.getRowId()) + "'/>");
                             }
                         }
-                        msg.append("<br>");
+                        msg.unsafeAppend("<br>");
                     }
                 }
             }
