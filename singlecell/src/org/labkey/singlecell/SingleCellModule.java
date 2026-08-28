@@ -82,6 +82,7 @@ import org.labkey.singlecell.pipeline.singlecell.PlotAverageCiteSeqCounts;
 import org.labkey.singlecell.pipeline.singlecell.PredictScTour;
 import org.labkey.singlecell.pipeline.singlecell.PredictTcellActivation;
 import org.labkey.singlecell.pipeline.singlecell.PrepareRawCounts;
+import org.labkey.singlecell.pipeline.singlecell.RecoverRiraUnassignedCells;
 import org.labkey.singlecell.pipeline.singlecell.RemoveCellCycle;
 import org.labkey.singlecell.pipeline.singlecell.RunCellHashing;
 import org.labkey.singlecell.pipeline.singlecell.RunCelltypist;
@@ -278,6 +279,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new RunCelltypist.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunCelltypistCustomModel.Provider());
         SequencePipelineService.get().registerPipelineStep(new RunRiraClassification.Provider());
+        SequencePipelineService.get().registerPipelineStep(new RecoverRiraUnassignedCells.Provider());
         SequencePipelineService.get().registerPipelineStep(new TrainCelltypist.Provider());
         SequencePipelineService.get().registerPipelineStep(new CheckExpectations.Provider());
         SequencePipelineService.get().registerPipelineStep(new CommonFilters.Provider());
