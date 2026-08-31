@@ -54,6 +54,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -131,51 +133,47 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         }
     }
 
-    private void possiblySubmitRemoteTask(Logger log)
+    private void possiblySubmitRemoteTask(Logger log) throws InterruptedException, ExecutionException
     {
         if (SequencePipelineService.get().isRemoteGenomeCacheUsed())
         {
             JobRunner jr = JobRunner.getDefault();
-            jr.execute(new Runnable()
-            {
-                @Override
-                public void run()
+            Future<?> future = jr.execute(() -> {
+                try
                 {
-                    try
-                    {
-                        Map<Integer, File> genomeMap = new IntHashMap<>();
-                        new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("rowid", "fasta_file"), new SimpleFilter(FieldKey.fromString("datedisabled"), null, CompareType.ISBLANK), null).forEachResults(rs -> {
-                            int dataId = rs.getInt(FieldKey.fromString("fasta_file"));
-                            if (dataId > -1)
-                            {
-                                ExpData d = ExperimentService.get().getExpData(dataId);
-                                if (d != null && d.getFile() != null)
-                                {
-                                    genomeMap.put(rs.getInt(FieldKey.fromString("rowid")), d.getFile());
-                                }
-                            }
-                        });
-
-                        if (!genomeMap.isEmpty())
+                    Map<Integer, File> genomeMap = new IntHashMap<>();
+                    new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("rowid", "fasta_file"), new SimpleFilter(FieldKey.fromString("datedisabled"), null, CompareType.ISBLANK), null).forEachResults(rs -> {
+                        int dataId = rs.getInt(FieldKey.fromString("fasta_file"));
+                        if (dataId > -1)
                         {
-                            final User adminUser = LDKService.get().getBackgroundAdminUser();
-                            if (adminUser == null)
+                            ExpData d = ExperimentService.get().getExpData(dataId);
+                            if (d != null && d.getFile() != null)
                             {
-                                log.error("LDK module BackgroundAdminUser property not set.  If this is set, JBrowseMaintenanceTask could automatically submit repair jobs.");
-                                return;
+                                genomeMap.put(rs.getInt(FieldKey.fromString("rowid")), d.getFile());
                             }
-
-                            CacheGenomeTrigger.cacheGenomes(ContainerManager.getSharedContainer(), adminUser, genomeMap, log, true);
                         }
-                    }
-                    catch (Exception e)
+                    });
+
+                    if (!genomeMap.isEmpty())
                     {
-                        log.error(e);
+                        final User adminUser = LDKService.get().getBackgroundAdminUser();
+                        if (adminUser == null)
+                        {
+                            log.error("LDK module BackgroundAdminUser property not set.  If this is set, JBrowseMaintenanceTask could automatically submit repair jobs.");
+                            return;
+                        }
+
+                        CacheGenomeTrigger.cacheGenomes(ContainerManager.getSharedContainer(), adminUser, genomeMap, log, true);
                     }
                 }
-            });
+                catch (Exception e)
+                {
+                    log.error(e);
+                }
+            }, 0);
 
-            jr.waitForCompletion();
+            // Wait for this job:
+            future.get();
         }
         else
         {
