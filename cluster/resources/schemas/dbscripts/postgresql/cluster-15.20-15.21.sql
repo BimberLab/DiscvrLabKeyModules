@@ -36,24 +36,3 @@ CREATE TABLE cluster.clusterJobs (
 
     CONSTRAINT PK_clusterJobs PRIMARY KEY (rowId)
 );
-
-
-CREATE FUNCTION cluster.handleUpgrade() RETURNS VOID AS $$
-DECLARE
-    BEGIN
-      IF EXISTS ( SELECT schema_name FROM information_schema.schemata WHERE schema_name = 'htcondorconnector' )
-      THEN
-        INSERT INTO cluster.clusterJobs (clusterId, jobId, hasStarted, status, location, activeTaskId, lastStatusCheck, container, createdBy, created, modifiedBy, modified)
-        SELECT condorId as clusterId, jobId, hasStarted, status, location, activeTaskId, lastStatusCheck, container, createdBy, created, modifiedBy, modified
-        FROM htcondorconnector.condorJobs;
-      END IF;
-    END;
-$$ LANGUAGE plpgsql;
-
-SELECT cluster.handleUpgrade();
-
-DROP FUNCTION cluster.handleUpgrade();
-
-SELECT core.fn_dropifexists('*', 'htcondorconnector', 'schema', null);
-
-
