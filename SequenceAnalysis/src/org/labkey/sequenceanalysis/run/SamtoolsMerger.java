@@ -25,8 +25,6 @@ public class SamtoolsMerger extends SamtoolsRunner
         List<String> params = new ArrayList<>();
         params.add(getSamtoolsPath().getPath());
         params.add(COMMAND);
-        params.add("-o");
-        params.add(outputFile.getPath());
 
         Integer threads = SequencePipelineService.get().getMaxThreads(getLogger());
         if (threads != null)
@@ -34,6 +32,9 @@ public class SamtoolsMerger extends SamtoolsRunner
             params.add(" --threads");
             params.add(String.valueOf(threads));
         }
+
+        params.add("-o");
+        params.add(outputFile.getPath());
 
         inputBams.forEach(f -> params.add(f.getPath()));
 
