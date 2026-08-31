@@ -71,6 +71,7 @@ import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.run.RestoreSraDataHandler;
+import org.labkey.sequenceanalysis.run.SamtoolsMerger;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
 import org.labkey.sequenceanalysis.run.util.AddOrReplaceReadGroupsWrapper;
@@ -1306,7 +1307,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             RecordedAction mergeAction = new RecordedAction(MERGE_ALIGNMENT_ACTIONNAME);
             Date start = new Date();
             mergeAction.setStartTime(start);
-            MergeSamFilesWrapper mergeSamFilesWrapper = new MergeSamFilesWrapper(getJob().getLogger());
+            SamtoolsMerger merger = new SamtoolsMerger(getPipelineJob().getLogger());
             List<File> bams = new ArrayList<>();
             for (File o : alignOutputs)
             {
@@ -1319,8 +1320,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             bam = new File(alignOutputs.get(0).getParent(), FileUtil.getBaseName(alignOutputs.get(0).getName()) + ".merged.bam");
             getHelper().getFileManager().addOutput(mergeAction, "Merged BAM", bam);
             //NOTE: merged BAMs will be deleted as intermediate files, and if we delete too early this breaks job resume
-            mergeSamFilesWrapper.execute(bams, bam, false);
-            getHelper().getFileManager().addCommandsToAction(mergeSamFilesWrapper.getCommandsExecuted(), mergeAction);
+            merger.mergeBams(bams, bam);
+            getHelper().getFileManager().addCommandsToAction(merger.getCommandsExecuted(), mergeAction);
 
             Date end = new Date();
             mergeAction.setEndTime(end);
