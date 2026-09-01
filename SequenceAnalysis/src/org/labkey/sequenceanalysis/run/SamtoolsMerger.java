@@ -29,7 +29,7 @@ public class SamtoolsMerger extends SamtoolsRunner
         Integer threads = SequencePipelineService.get().getMaxThreads(getLogger());
         if (threads != null)
         {
-            params.add(" --threads");
+            params.add("--threads");
             params.add(String.valueOf(threads));
         }
 
