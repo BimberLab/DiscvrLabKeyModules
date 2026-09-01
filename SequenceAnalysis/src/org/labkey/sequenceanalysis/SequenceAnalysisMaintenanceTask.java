@@ -195,7 +195,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             i++;
             if (i % 1000 == 0)
             {
-                log.info("readdata " + i + " of " + readDatas.size() + ". Current container: " + ContainerManager.getForId(rd.getContainer()).getPath());
+                log.info("readdata " + i + " of " + readDatas.size() + ". Current container: " + Objects.requireNonNull(ContainerManager.getForId(rd.getContainer())).getPath());
                 checkJobCancelled(log);
             }
 
@@ -209,14 +209,14 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                     {
                         log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId1() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
                     }
-                    else if (!d.getFile().exists())
+                    else if (!checkFile(d.getFile()))
                     {
                         log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId1() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
                     }
                 }
                 else
                 {
-                    if (d != null && d.getFile() != null && d.getFile().exists())
+                    if (d != null && d.getFile() != null && checkFile(d.getFile()))
                     {
                         log.error("ReadData marked as archived, but file exists: " + rd.getRowid() + ", " + rd.getFileId1() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
                     }
@@ -233,14 +233,14 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                     {
                         log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId2() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
                     }
-                    else if (!d.getFile().exists())
+                    else if (!checkFile(d.getFile()))
                     {
                         log.error("Unable to find file associated with ReadData: " + rd.getRowid() + ", " + rd.getFileId2() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
                     }
                 }
                 else
                 {
-                    if (d != null && d.getFile() != null && d.getFile().exists())
+                    if (d != null && d.getFile() != null && checkFile(d.getFile()))
                     {
                         log.error("ReadData marked as archived, but file exists: " + rd.getRowid() + ", " + rd.getFileId1() + ", " + d.getFile().getPath() + " for container: " + (c == null ? rd.getContainer() : c.getPath()));
                     }
@@ -271,7 +271,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                 {
                     log.error("Unable to find file associated with analysis: " + m.getAnalysisId() + ", " + m.getAlignmentFile() + " for container: " + (c == null ? m.getContainer() : c.getPath()));
                 }
-                else if (!d.getFile().exists())
+                else if (!checkFile(d.getFile()))
                 {
                     log.error("Unable to find file associated with analysis: " + m.getAnalysisId() + ", " + m.getAlignmentFile() + ", " + d.getFile().getPath() + " for container: " + (c == null ? m.getContainer() : c.getPath()));
                 }
@@ -281,6 +281,32 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         }
     }
 
+    Set<File> _filesPresent = new HashSet<>();
+    Set<File> _filesMissing = new HashSet<>();
+
+    // The purpose of this is to cache filesystem interactions and speed inspection of files:
+    private boolean checkFile(File f)
+    {
+        if (_filesMissing.contains(f))
+        {
+            return false;
+        }
+        else if (_filesPresent.contains(f))
+        {
+            return true;
+        }
+
+        if (f.exists())
+        {
+            _filesPresent.add(f);
+            return true;
+        }
+        else
+        {
+            _filesMissing.add(f);
+            return false;
+        }
+    }
     private void inspectForCoreFiles(Long runId, Logger log)
     {
         if (runId == null)
@@ -313,7 +339,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         }
 
         File root = new File(sf.getFilePath()).getParentFile();
-        if (!root.exists())
+        if (!checkFile(root))
         {
             log.error("Run file root does not exist. runId: " + runId + " / jobId: " + sf.getRowId() + " / " + root.getPath());
             return;
@@ -370,13 +396,13 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                     // File existence will be verified below:
                     expectedSequences.add(d.getFile());
                 }
-                else if (!d.getFile().exists())
+                else if (!checkFile(d.getFile()))
                 {
                     log.error("Missing sequence file {}", d.getFile().getPath());
                 }
             });
 
-            if (sequenceDir.exists())
+            if (checkFile(sequenceDir))
             {
                 inspectSequenceDir(sequenceDir, expectedSequences, log);
             }
@@ -385,7 +411,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             {
                 for (File missing : expectedSequences)
                 {
-                    if (missing.exists())
+                    if (checkFile(missing))
                     {
                         log.error("File exists, but wasnt removed from expectedSequences for folder {}, file:  {}", sequenceDir.getPath(), missing.getPath());
                     }
@@ -399,7 +425,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             //then libraries
             log.debug("Inspecting genomes");
             File libraryDir = SequenceAnalysisManager.get().getReferenceLibraryDir(c);
-            if (libraryDir != null && libraryDir.exists())
+            if (libraryDir != null && checkFile(libraryDir))
             {
                 TableInfo ti = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES);
                 TableSelector ts = new TableSelector(ti, Collections.singleton("rowid"), new SimpleFilter(FieldKey.fromString("container"), c.getId()), null);
@@ -409,165 +435,11 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                     expectedLibraries.add(rowId.toString());
                 }
 
-                for (File child : libraryDir.listFiles())
+                try (Stream<Path> stream = Files.list(libraryDir.toPath()))
                 {
-                    if ("log".equals(FileUtil.getExtension(child)) || "xml".equals(FileUtil.getExtension(child)))
-                    {
-                        continue;  //always ignore log files
-                    }
-
-                    if (!expectedLibraries.contains(child.getName()))
-                    {
-                        deleteFile(child, log);
-                    }
-                    else
-                    {
-                        //inspect within library
-                        List<String> expectedChildren = new ArrayList<>();
-                        int libraryId = Integer.parseInt(child.getName());
-                        Integer fastaId = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("fasta_file")).getObject(libraryId, Integer.class);
-                        if (fastaId == null)
-                        {
-                            log.error("Unable to find FASTA ExpData in DB matching jbrowse directory: " + child.getPath());
-                            continue;
-                        }
-
-                        ExpData fastaData = ExperimentService.get().getExpData(fastaId);
-                        File fasta = fastaData.getFile();
-                        if (!fasta.exists())
-                        {
-                            log.error("expected fasta file does not exist: " + fasta.getPath());
-                        }
-
-                        // Use this to retroactively convert existing genomes:
-                        File gz = new File(fasta.getPath() + ".gz");
-                        if (!gz.exists())
-                        {
-                            ReferenceGenomeImpl genome = new ReferenceGenomeImpl(fasta, fastaData, libraryId, null);
-
-                            // NOTE: we can hit a race condition in automated testing where a genome is newly created during a test, and the maintenance task runs concurrent with that test.
-                            // This is a check to reduce the log level, which thereby prevents the test from erroring
-                            Date created = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("created"), new SimpleFilter(FieldKey.fromString("rowId"), libraryId), null).getObject(Date.class);
-                            long timeSinceCreated = new Date().getTime() - created.getTime();
-                            // 1000*60*20 = 20 minutes
-                            Level l = timeSinceCreated > 1200000 ? Level.ERROR : Level.WARN;
-
-                            log.log(l, "GZipped genome missing for: " + genome.getGenomeId());
-
-                            if (SystemUtils.IS_OS_WINDOWS)
-                            {
-                                log.warn("Cannot create bgzipped file on windows machine");
-                            }
-                            else
-                            {
-                                genome.createGzippedFile(log);
-                            }
-                        }
-
-                        File gzi = new File(fasta.getPath() + ".gz.gzi");
-                        if (!gzi.exists())
-                        {
-                            if (SystemUtils.IS_OS_WINDOWS)
-                            {
-                                log.warn("Cannot index gzipped FASTA on windows: " + fasta.getPath());
-                            }
-                            else
-                            {
-                                new FastaIndexer(log).execute(gz);
-                            }
-                        }
-
-                        expectedChildren.add(fasta.getName() + ".gz");
-                        expectedChildren.add(fasta.getName() + ".gz.gzi");
-                        expectedChildren.add(fasta.getName() + ".gz.fai");
-
-                        expectedChildren.add(fasta.getName());
-                        expectedChildren.add(fasta.getName() + ".fai");
-                        expectedChildren.add(FileUtil.getBaseName(fasta.getName()) + ".idKey.txt");
-                        expectedChildren.add(FileUtil.getBaseName(fasta.getName()) + ".dict");
-                        expectedChildren.add("libraryMembers.xml");  //temp file creating during pipeline job
-                        expectedChildren.add("alignerIndexes");
-                        expectedChildren.add("tracks");
-                        expectedChildren.add("chainFiles");
-                        expectedChildren.add(".lastUpdate");
-
-                        for (String fileName : child.list())
-                        {
-                            if (!expectedChildren.contains(fileName))
-                            {
-                                if ("log".equals(FileUtil.getExtension(fileName)) || "xml".equals(FileUtil.getExtension(fileName)))
-                                {
-                                    continue;
-                                }
-
-                                deleteFile(FileUtil.appendName(child, fileName), log);
-                            }
-                        }
-
-                        //check/verify tracks
-                        File trackDir = FileUtil.appendName(child, "tracks");
-                        if (trackDir.exists())
-                        {
-                            Set<String> expectedTracks = new HashSet<>();
-                            TableInfo tracksTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_LIBRARY_TRACKS);
-                            TableSelector tracksTs = new TableSelector(tracksTable, Collections.singleton("fileid"), new SimpleFilter(FieldKey.fromString("library_id"), libraryId), null);
-                            for (Integer dataId : tracksTs.getArrayList(Integer.class))
-                            {
-                                ExpData trackData = ExperimentService.get().getExpData(dataId);
-                                if (trackData != null && trackData.getFile() != null)
-                                {
-                                    expectedTracks.add(trackData.getFile().getName());
-                                    if (!trackData.getFile().exists())
-                                    {
-                                        log.error("expected track file does not exist: " + trackData.getFile().getPath());
-                                    }
-
-                                    expectedTracks.addAll(getAssociatedFiles(trackData.getFile(), true));
-                                }
-                                else
-                                {
-                                    log.warn("unable to find ExpData for track with dataId: " + dataId);
-                                }
-                            }
-
-                            for (File f : trackDir.listFiles())
-                            {
-                                if (!expectedTracks.contains(f.getName()))
-                                {
-                                    deleteFile(f, log);
-                                }
-                            }
-                        }
-
-                        //check/verify chainFiles
-                        File chainDir = FileUtil.appendName(child, "chainFiles");
-                        if (chainDir.exists())
-                        {
-                            Set<String> expectedChains = new HashSet<>();
-                            TableInfo chainTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_CHAIN_FILES);
-                            TableSelector chainTs = new TableSelector(chainTable, Collections.singleton("chainFile"), new SimpleFilter(FieldKey.fromString("genomeId1"), libraryId), null);
-                            for (Integer dataId : chainTs.getArrayList(Integer.class))
-                            {
-                                ExpData chainData = ExperimentService.get().getExpData(dataId);
-                                if (chainData != null && chainData.getFile() != null)
-                                {
-                                    expectedChains.add(chainData.getFile().getName());
-                                    if (!chainData.getFile().exists())
-                                    {
-                                        log.error("expected chain file does not exist: " + chainData.getFile().getPath());
-                                    }
-                                }
-                            }
-
-                            for (File f : chainDir.listFiles())
-                            {
-                                if (!expectedChains.contains(f.getName()))
-                                {
-                                    deleteFile(f, log);
-                                }
-                            }
-                        }
-                    }
+                    stream.forEach(x -> {
+                        inspectLibraryDir(x.toFile(), expectedLibraries, log);
+                    });
                 }
             }
 
@@ -590,7 +462,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                     expectedFileNames.add(d.getFile().getName());
                     expectedFileNames.addAll(getAssociatedFiles(d.getFile(), true));
 
-                    if (!d.getFile().exists())
+                    if (!checkFile(d.getFile()))
                     {
                         log.error("expected output file does not exist: " + d.getFile().getPath());
                         continue;
@@ -600,7 +472,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                     if (_vcfFileType.isType(d.getFile()) && d.getFile().getPath().endsWith(".gz"))
                     {
                         File idx = new File(d.getFile().getPath() + ".tbi");
-                        if (!idx.exists())
+                        if (!checkFile(idx))
                         {
                             log.warn("unable to find index for file: " + d.getFile().getPath() + ", creating");
                             SequenceAnalysisService.get().ensureVcfIndex(d.getFile(), log);
@@ -610,14 +482,17 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
             }
 
             File sequenceOutputsDir = FileUtil.appendName(root.getRootPath(), "sequenceOutputs");
-            if (sequenceOutputsDir.exists())
+            if (checkFile(sequenceOutputsDir))
             {
-                for (File child : sequenceOutputsDir.listFiles())
+                try (Stream<Path> stream = Files.list(sequenceOutputsDir.toPath()))
                 {
-                    if (!expectedFileNames.contains(child.getName()))
-                    {
-                        deleteFile(child, log);
-                    }
+                    stream.forEach(path -> {
+                        File f = path.toFile();
+                        if (!expectedFileNames.contains(f.getName()))
+                        {
+                            deleteFile(f, log);
+                        }
+                    });
                 }
             }
 
@@ -630,43 +505,239 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
         }
     }
 
-    private void inspectSequenceDir(File sequenceDir, Set<File> expectedSequences, Logger log) throws IOException
+    private void inspectLibraryDir(File child, Set<String> expectedLibraries, Logger log)
     {
-        for (File child : Objects.requireNonNull(sequenceDir.listFiles()))
+        if ("log".equals(FileUtil.getExtension(child)) || "xml".equals(FileUtil.getExtension(child)))
         {
-            if (child.isDirectory())
+            return;  //always ignore log files
+        }
+
+        if (!expectedLibraries.contains(child.getName()))
+        {
+            deleteFile(child, log);
+            return;
+        }
+
+        //inspect within library
+        List<String> expectedChildren = new ArrayList<>();
+        int libraryId = Integer.parseInt(child.getName());
+        Integer fastaId = new TableSelector(SequenceAnalysisSchema.getInstance().getSchema().getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("fasta_file")).getObject(libraryId, Integer.class);
+        if (fastaId == null)
+        {
+            log.error("Unable to find FASTA ExpData in DB matching jbrowse directory: " + child.getPath());
+            return;
+        }
+
+        ExpData fastaData = ExperimentService.get().getExpData(fastaId);
+        if (fastaData == null)
+        {
+            log.error("Unable to find ExpData: {}", fastaId);
+            return;
+        }
+
+        File fasta = fastaData.getFile();
+        if (!checkFile(fasta))
+        {
+            log.error("expected fasta file does not exist: " + fasta.getPath());
+        }
+
+        try
+        {
+            // Use this to retroactively convert existing genomes:
+            File gz = new File(fasta.getPath() + ".gz");
+            if (!checkFile(gz))
             {
-                try (DirectoryStream<Path> stream = Files.newDirectoryStream(child.toPath()))
+                ReferenceGenomeImpl genome = new ReferenceGenomeImpl(fasta, fastaData, libraryId, null);
+
+                // NOTE: we can hit a race condition in automated testing where a genome is newly created during a test, and the maintenance task runs concurrent with that test.
+                // This is a check to reduce the log level, which thereby prevents the test from erroring
+                Date created = new TableSelector(SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_REF_LIBRARIES), PageFlowUtil.set("created"), new SimpleFilter(FieldKey.fromString("rowId"), libraryId), null).getObject(Date.class);
+                long timeSinceCreated = new Date().getTime() - created.getTime();
+                // 1000*60*20 = 20 minutes
+                Level l = timeSinceCreated > 1200000 ? Level.ERROR : Level.WARN;
+
+                log.log(l, "GZipped genome missing for: " + genome.getGenomeId());
+
+                if (SystemUtils.IS_OS_WINDOWS)
                 {
-                    if (!stream.iterator().hasNext())
+                    log.warn("Cannot create bgzipped file on windows machine");
+                }
+                else
+                {
+                    genome.createGzippedFile(log);
+                }
+            }
+
+            File gzi = new File(fasta.getPath() + ".gz.gzi");
+            if (!checkFile(gzi))
+            {
+                if (SystemUtils.IS_OS_WINDOWS)
+                {
+                    log.warn("Cannot index gzipped FASTA on windows: " + fasta.getPath());
+                }
+                else
+                {
+                    new FastaIndexer(log).execute(gz);
+                }
+            }
+
+            expectedChildren.add(fasta.getName() + ".gz");
+            expectedChildren.add(fasta.getName() + ".gz.gzi");
+            expectedChildren.add(fasta.getName() + ".gz.fai");
+
+            expectedChildren.add(fasta.getName());
+            expectedChildren.add(fasta.getName() + ".fai");
+            expectedChildren.add(FileUtil.getBaseName(fasta.getName()) + ".idKey.txt");
+            expectedChildren.add(FileUtil.getBaseName(fasta.getName()) + ".dict");
+            expectedChildren.add("libraryMembers.xml");  //temp file creating during pipeline job
+            expectedChildren.add("alignerIndexes");
+            expectedChildren.add("tracks");
+            expectedChildren.add("chainFiles");
+            expectedChildren.add(".lastUpdate");
+
+            for (String fileName : Objects.requireNonNull(child.list()))
+            {
+                if (!expectedChildren.contains(fileName))
+                {
+                    if ("log".equals(FileUtil.getExtension(fileName)) || "xml".equals(FileUtil.getExtension(fileName)))
                     {
-                        FileUtils.deleteDirectory(child);
                         continue;
+                    }
+
+                    deleteFile(FileUtil.appendName(child, fileName), log);
+                }
+            }
+
+            //check/verify tracks
+            File trackDir = FileUtil.appendName(child, "tracks");
+            if (checkFile(trackDir))
+            {
+                Set<String> expectedTracks = new HashSet<>();
+                TableInfo tracksTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_LIBRARY_TRACKS);
+                TableSelector tracksTs = new TableSelector(tracksTable, Collections.singleton("fileid"), new SimpleFilter(FieldKey.fromString("library_id"), libraryId), null);
+                for (Integer dataId : tracksTs.getArrayList(Integer.class))
+                {
+                    ExpData trackData = ExperimentService.get().getExpData(dataId);
+                    if (trackData != null && trackData.getFile() != null)
+                    {
+                        expectedTracks.add(trackData.getFile().getName());
+                        if (!checkFile(trackData.getFile()))
+                        {
+                            log.error("expected track file does not exist: " + trackData.getFile().getPath());
+                        }
+
+                        expectedTracks.addAll(getAssociatedFiles(trackData.getFile(), true));
+                    }
+                    else
+                    {
+                        log.warn("unable to find ExpData for track with dataId: " + dataId);
                     }
                 }
 
-                inspectSequenceDir(child, expectedSequences, log);
-            }
-            else
-            {
-                if (!expectedSequences.remove(child))
+                try (Stream<Path> stream = Files.list(trackDir.toPath()))
                 {
-                    deleteFile(child, log);
+                    stream.forEach(path -> {
+                        File f = path.toFile();
+                        if (!expectedTracks.contains(f.getName()))
+                        {
+                            deleteFile(path.toFile(), log);
+                        }
+                    });
+                }
+            }
+
+            //check/verify chainFiles
+            File chainDir = FileUtil.appendName(child, "chainFiles");
+            if (checkFile(chainDir))
+            {
+                Set<String> expectedChains = new HashSet<>();
+                TableInfo chainTable = SequenceAnalysisSchema.getTable(SequenceAnalysisSchema.TABLE_CHAIN_FILES);
+                TableSelector chainTs = new TableSelector(chainTable, Collections.singleton("chainFile"), new SimpleFilter(FieldKey.fromString("genomeId1"), libraryId), null);
+                for (Integer dataId : chainTs.getArrayList(Integer.class))
+                {
+                    ExpData chainData = ExperimentService.get().getExpData(dataId);
+                    if (chainData != null && chainData.getFile() != null)
+                    {
+                        expectedChains.add(chainData.getFile().getName());
+                        if (!checkFile(chainData.getFile()))
+                        {
+                            log.error("expected chain file does not exist: " + chainData.getFile().getPath());
+                        }
+                    }
+                }
+
+                try (Stream<Path> stream = Files.list(trackDir.toPath()))
+                {
+                    stream.forEach(path -> {
+                        File f = path.toFile();
+                        if (!expectedChains.contains(f.getName()))
+                        {
+                            deleteFile(f, log);
+                        }
+                    });
                 }
             }
         }
+        catch (PipelineJobException | IOException e)
+        {
+            log.error("Error processing library directory: " + child.getPath(), e);
+        }
     }
 
-    private void deleteFile(File f, Logger log) throws IOException
+    private void inspectSequenceDir(File sequenceDir, Set<File> expectedSequences, Logger log) throws IOException
+    {
+        try (Stream<Path> stream = Files.list(sequenceDir.toPath()))
+        {
+            stream.forEach(path -> {
+                File child = path.toFile();
+                if (child.isDirectory())
+                {
+                    try
+                    {
+                        try (DirectoryStream<Path> stream2 = Files.newDirectoryStream(child.toPath()))
+                        {
+                            if (!stream2.iterator().hasNext())
+                            {
+                                deleteFile(child, log);
+                                return;
+                            }
+                        }
+
+                        inspectSequenceDir(child, expectedSequences, log);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                }
+                else
+                {
+                    if (!expectedSequences.remove(child))
+                    {
+                        deleteFile(child, log);
+                    }
+                }
+            });
+        }
+    }
+
+    private void deleteFile(File f, Logger log)
     {
         log.info("deleting sequence file: " + f.getPath());
-        if (f.isDirectory())
+        try
         {
-            FileUtils.deleteDirectory(f);
+            if (f.isDirectory())
+            {
+                FileUtils.deleteDirectory(f);
+            }
+            else
+            {
+                Files.delete(f.toPath());
+            }
         }
-        else
+        catch (IOException e)
         {
-            f.delete();
+            log.error("Failed to delete file: " + f.getPath(), e);
         }
     }
 
@@ -733,7 +804,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 
         // NOTE: this allows modules to register handlers for extra ancillary files, such as seurat metadata
         SequenceAnalysisServiceImpl.get().getAccessoryFileProviders().forEach(fn -> {
-            ret.addAll(fn.apply(f).stream().map(File::getName).collect(Collectors.toList()));
+            ret.addAll(fn.apply(f).stream().map(File::getName).toList());
         });
 
         return ret;
