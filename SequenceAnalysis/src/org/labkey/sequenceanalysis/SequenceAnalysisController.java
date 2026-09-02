@@ -1914,7 +1914,7 @@ public class SequenceAnalysisController extends SpringActionController
                     {
                         throw new PipelineValidationException("Missing file for data: " + o.get("dataId"));
                     }
-                    else if (d.getContainer().hasPermission(u, ReadPermission.class))
+                    else if (!d.getContainer().hasPermission(u, ReadPermission.class))
                     {
                         throw new UnauthorizedException("You do not have permission to read data: " + o.get("dataId"));
                     }
