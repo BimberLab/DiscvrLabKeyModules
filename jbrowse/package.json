@@ -27,7 +27,7 @@
     "@jbrowse/plugin-linear-genome-view": "^4.3.0",
     "@jbrowse/react-linear-genome-view2": "^4.3.0",
     "@labkey/api": "^1.52.2",
-    "@labkey/components": "^7.48.0",
+    "@labkey/components": "^7.62.0",
     "@mui/icons-material": "^7.3.9",
     "@mui/material": "^7.3.9",
     "@mui/utils": "^7.3.9",
