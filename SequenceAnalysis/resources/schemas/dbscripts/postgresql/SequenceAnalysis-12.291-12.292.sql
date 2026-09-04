@@ -1,4 +1,6 @@
-SELECT core.fn_dropifexists('sequenceanalysis', 'barcodes', 'CONSTRAINT', 'UNIQUE_barcodes');
+-- The schema and table names were reversed in a previous attempt to drop this constraint, so it was never dropped.
+-- New syntax results in a SQL exception, so it's commented out, but left as historical documentation of the intent.
+-- ALTER TABLE barcodes.sequenceanalysis DROP CONSTRAINT IF EXISTS UNIQUE_barcodes;
 
 CREATE TABLE sequenceanalysis.genomeAliases (
   rowid serial,
