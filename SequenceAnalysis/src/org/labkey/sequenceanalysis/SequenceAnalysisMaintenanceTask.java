@@ -641,9 +641,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                         File f = path.toFile();
                         if (!expectedTracks.contains(f.getName()))
                         {
-                            log.info("Would delete track: " + f.getPath());
-                            log.info("Expected tracks: [" + StringUtils.join(expectedTracks, ",") + "]");
-                            //deleteFile(f, log, "Trigger by tracks, genome " + libraryId + ", total expected tracks: " + expectedTracks.size());
+                            deleteFile(f, log);
                         }
                     });
                 }
@@ -669,7 +667,7 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                     }
                 }
 
-                try (Stream<Path> stream = Files.list(trackDir.toPath()))
+                try (Stream<Path> stream = Files.list(chainDir.toPath()))
                 {
                     stream.forEach(path -> {
                         File f = path.toFile();
@@ -726,17 +724,6 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
 
     private void deleteFile(File f, Logger log)
     {
-        deleteFile(f, log, null);
-    }
-
-    private void deleteFile(File f, Logger log, String msg)
-    {
-        log.info("deleting sequence file: " + f.getPath());
-        if (msg != null)
-        {
-            log.info(msg);
-        }
-
         try
         {
             if (f.isDirectory())
