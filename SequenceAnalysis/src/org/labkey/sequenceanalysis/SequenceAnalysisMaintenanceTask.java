@@ -1,6 +1,7 @@
 package org.labkey.sequenceanalysis;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Logger;
@@ -640,7 +641,9 @@ public class SequenceAnalysisMaintenanceTask implements MaintenanceTask
                         File f = path.toFile();
                         if (!expectedTracks.contains(f.getName()))
                         {
-                            deleteFile(path.toFile(), log, "Trigger by tracks, genome " + libraryId + ", total expected tracks: " + expectedTracks.size());
+                            log.info("Would delete track: " + f.getPath());
+                            log.info("Expected tracks: [" + StringUtils.join(expectedTracks, ",") + "]");
+                            //deleteFile(f, log, "Trigger by tracks, genome " + libraryId + ", total expected tracks: " + expectedTracks.size());
                         }
                     });
                 }
