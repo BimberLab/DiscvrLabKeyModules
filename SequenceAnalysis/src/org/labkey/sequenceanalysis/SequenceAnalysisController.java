@@ -208,6 +208,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -5161,14 +5162,13 @@ public class SequenceAnalysisController extends SpringActionController
 
                 if (!toUpdate.isEmpty())
                 {
-                    List<Map<String, Object>> keys = new ArrayList<>();
-                    toUpdate.forEach(row -> {
-                        keys.add(new CaseInsensitiveHashMap<>(Map.of("rowid", row.get("rowid"))));
-                    });
+                    // Remove duplicates:
+                    List<Map<String, Object>> uniqueToUpdate = toUpdate.stream().distinct().toList();
+                    List<Map<String, Object>> keys = uniqueToUpdate.stream().map(row -> new CaseInsensitiveHashMap<>(Map.of("rowid", row.get("rowid")))).collect(Collectors.toList());
 
                     try
                     {
-                        readData.getUpdateService().updateRows(getUser(), getContainer(), toUpdate, keys, null, null);
+                        readData.getUpdateService().updateRows(getUser(), getContainer(), uniqueToUpdate, keys, null, null);
                     }
                     catch (Exception e)
                     {
