@@ -41,7 +41,7 @@
     "rxjs": "^7.8.2"
   },
   "devDependencies": {
-    "@labkey/build": "^10.0.0",
+    "@labkey/build": "^10.1.2",
     "@types/jest": "^30.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
