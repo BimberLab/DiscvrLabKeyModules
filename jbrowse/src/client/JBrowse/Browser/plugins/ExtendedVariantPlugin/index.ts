@@ -218,7 +218,7 @@ export default class ExtendedVariantPlugin extends Plugin {
             })
         })
 
-        pluginManager.jexl.addFunction('arrayMax', (array) => {
+        pluginManager.jexl.addFunction('arrayMax', (array: [number]) => {
             return Array.isArray(array) ? Math.max(...array) : array
         })
 

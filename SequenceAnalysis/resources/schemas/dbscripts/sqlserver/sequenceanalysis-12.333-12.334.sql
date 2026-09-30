@@ -1,0 +1,1 @@
+ALTER TABLE sequenceanalysis.barcodes DROP CONSTRAINT IF EXISTS UNIQUE_barcodes;

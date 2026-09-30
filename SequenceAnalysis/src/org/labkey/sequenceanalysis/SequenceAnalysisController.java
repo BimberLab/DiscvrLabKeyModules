@@ -208,6 +208,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -717,7 +718,7 @@ public class SequenceAnalysisController extends SpringActionController
                                 msg.append("Folder: ").unsafeAppend("<a href='" + url.toString() + "' target='_blank'>" + h(target.getPath()) + "</a><br><input type='hidden' name='jobIds' value='" + h(sf.getRowId()) + "'/>");
                             }
                         }
-                        msg.append("<br>");
+                        msg.unsafeAppend("<br>");
                     }
                 }
             }
@@ -1914,7 +1915,7 @@ public class SequenceAnalysisController extends SpringActionController
                     {
                         throw new PipelineValidationException("Missing file for data: " + o.get("dataId"));
                     }
-                    else if (d.getContainer().hasPermission(u, ReadPermission.class))
+                    else if (!d.getContainer().hasPermission(u, ReadPermission.class))
                     {
                         throw new UnauthorizedException("You do not have permission to read data: " + o.get("dataId"));
                     }
@@ -5161,14 +5162,13 @@ public class SequenceAnalysisController extends SpringActionController
 
                 if (!toUpdate.isEmpty())
                 {
-                    List<Map<String, Object>> keys = new ArrayList<>();
-                    toUpdate.forEach(row -> {
-                        keys.add(new CaseInsensitiveHashMap<>(Map.of("rowid", row.get("rowid"))));
-                    });
+                    // Remove duplicates:
+                    List<Map<String, Object>> uniqueToUpdate = toUpdate.stream().distinct().toList();
+                    List<Map<String, Object>> keys = uniqueToUpdate.stream().map(row -> new CaseInsensitiveHashMap<>(Map.of("rowid", row.get("rowid")))).collect(Collectors.toList());
 
                     try
                     {
-                        readData.getUpdateService().updateRows(getUser(), getContainer(), toUpdate, keys, null, null);
+                        readData.getUpdateService().updateRows(getUser(), getContainer(), uniqueToUpdate, keys, null, null);
                     }
                     catch (Exception e)
                     {

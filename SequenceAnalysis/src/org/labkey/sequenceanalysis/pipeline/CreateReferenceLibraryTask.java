@@ -68,6 +68,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import static org.labkey.api.util.IntegerUtils.asInteger;
 
@@ -467,7 +468,7 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                     {
                         getJob().getLogger().info("running genome trigger: " + t.getName());
                         final int libraryId = rowId;
-                        jr.execute(new Job()
+                        Future<?> future = jr.execute(new Job()
                         {
                             @Override
                             public void run()
@@ -481,11 +482,12 @@ public class CreateReferenceLibraryTask extends PipelineJob.Task<CreateReference
                                     t.onRecreate(getJob().getContainer(), getJob().getUser(), getJob().getLogger(), libraryId);
                                 }
                             }
-                        });
+                        }, 0);
+
+                        // Wait for this job:
+                        future.get();
                     }
                 }
-
-                jr.waitForCompletion();
             }
         }
         catch (Exception e)

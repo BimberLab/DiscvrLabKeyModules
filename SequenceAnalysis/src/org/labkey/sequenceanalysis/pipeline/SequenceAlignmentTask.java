@@ -71,6 +71,7 @@ import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.ReadDataImpl;
 import org.labkey.sequenceanalysis.SequenceReadsetImpl;
 import org.labkey.sequenceanalysis.run.RestoreSraDataHandler;
+import org.labkey.sequenceanalysis.run.SamtoolsMerger;
 import org.labkey.sequenceanalysis.run.bampostprocessing.SortSamStep;
 import org.labkey.sequenceanalysis.run.preprocessing.TrimmomaticWrapper;
 import org.labkey.sequenceanalysis.run.util.AddOrReplaceReadGroupsWrapper;
@@ -1306,7 +1307,6 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             RecordedAction mergeAction = new RecordedAction(MERGE_ALIGNMENT_ACTIONNAME);
             Date start = new Date();
             mergeAction.setStartTime(start);
-            MergeSamFilesWrapper mergeSamFilesWrapper = new MergeSamFilesWrapper(getJob().getLogger());
             List<File> bams = new ArrayList<>();
             for (File o : alignOutputs)
             {
@@ -1316,20 +1316,45 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 getHelper().getFileManager().addIntermediateFile(SequenceAnalysisService.get().getExpectedBamOrCramIndex(o));
             }
 
-            bam = new File(alignOutputs.get(0).getParent(), FileUtil.getBaseName(alignOutputs.get(0).getName()) + ".merged.bam");
+            bam = new File(alignOutputs.getFirst().getParent(), FileUtil.getBaseName(alignOutputs.getFirst().getName()) + ".merged.bam");
             getHelper().getFileManager().addOutput(mergeAction, "Merged BAM", bam);
+            Set<SAMFileHeader.SortOrder> sortOrders = alignOutputs.stream().map(x -> {
+                try
+                {
+                    return SequenceUtil.getBamSortOrder(x);
+                }
+                catch (IOException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            }).collect(Collectors.toSet());
+
             //NOTE: merged BAMs will be deleted as intermediate files, and if we delete too early this breaks job resume
-            mergeSamFilesWrapper.execute(bams, bam, false);
-            getHelper().getFileManager().addCommandsToAction(mergeSamFilesWrapper.getCommandsExecuted(), mergeAction);
+            String toolName;
+            if (sortOrders.size() > 1 || sortOrders.iterator().next() != SAMFileHeader.SortOrder.coordinate)
+            {
+                toolName = "MergeSamFiles";
+                MergeSamFilesWrapper merger = new MergeSamFilesWrapper(getPipelineJob().getLogger());
+                merger.execute(bams, bam, false);
+                getHelper().getFileManager().addCommandsToAction(merger.getCommandsExecuted(), mergeAction);
+            }
+            else
+            {
+                // This will be faster, but requires sorted input:
+                toolName = "Samtools merge";
+                SamtoolsMerger merger = new SamtoolsMerger(getPipelineJob().getLogger());
+                merger.mergeBams(bams, bam);
+                getHelper().getFileManager().addCommandsToAction(merger.getCommandsExecuted(), mergeAction);
+            }
 
             Date end = new Date();
             mergeAction.setEndTime(end);
-            getJob().getLogger().info("MergeSamFiles Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
+            getJob().getLogger().info(toolName + " Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
             alignActions.add(mergeAction);
         }
         else
         {
-            bam = alignOutputs.get(0);
+            bam = alignOutputs.getFirst();
         }
 
         return bam;
