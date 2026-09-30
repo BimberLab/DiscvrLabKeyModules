@@ -81,6 +81,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 import static org.labkey.api.util.IntegerUtils.asInteger;
 
@@ -163,18 +164,19 @@ public class ImportGenomeTrackTask extends PipelineJob.Task<ImportGenomeTrackTas
                     if (t.isAvailable(genomeContainer))
                     {
                         getJob().getLogger().info("running genome trigger: " + t.getName());
-                        jr.execute(new Job()
+                        Future<?> future = jr.execute(new Job()
                         {
                             @Override
                             public void run()
                             {
                                 t.onTrackAdd(genomeContainer, getJob().getUser(), getJob().getLogger(), libraryId, trackId);
                             }
-                        });
+                        }, 0);
+
+                        // Wait for the job:
+                        future.get();
                     }
                 }
-
-                jr.waitForCompletion();
             }
 
         }
