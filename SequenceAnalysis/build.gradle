@@ -199,9 +199,9 @@ if (project.findProject(BuildUtils.getTestProjectPath(project.gradle)) != null &
     }
     testProject.tasks.withType(SetUpProperties).configureEach {
         dependsOn(createPipelineConfigTask)
+        def applicationPropertiesFile = new File(new File(BuildUtils.getEmbeddedConfigPath(project)), "application.properties")
         it.doLast {
-            new File(new File(BuildUtils.getEmbeddedConfigPath(project)), "application.properties")
-                    << "\ncontext.pipelineConfig=${configDir.getAbsolutePath().replace("\\", "\\\\")}"
+            applicationPropertiesFile << "\ncontext.pipelineConfig=${configDir.getAbsolutePath().replace("\\", "\\\\")}"
         }
     }
 }
