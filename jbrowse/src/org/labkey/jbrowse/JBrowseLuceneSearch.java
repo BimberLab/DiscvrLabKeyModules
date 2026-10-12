@@ -65,13 +65,13 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 import static org.labkey.jbrowse.JBrowseFieldUtils.VARIABLE_SAMPLES;
 import static org.labkey.jbrowse.JBrowseFieldUtils.getSession;
@@ -507,26 +507,25 @@ public class JBrowseLuceneSearch
 
         public LuceneIndexCache()
         {
-            _cache = CacheManager.getStringKeyCache(1000, CacheManager.UNLIMITED, "JBrowseLuceneSearchCache");
+            _cache = CacheManager.getCache(String.class, 1000, CacheManager.UNLIMITED, "JBrowseLuceneSearchCache");
 
         }
 
         @Override
-        public void remove(@NotNull String key)
+        public boolean remove(@NotNull String key)
         {
             CacheEntry e = get(key);
-            _cache.remove(key);
+            boolean ret = _cache.remove(key);
 
             closeReader(e);
+
+            return ret;
         }
 
         @Override
         public void clear()
         {
-            for (String key : getKeys())
-            {
-                closeReader(get(key));
-            }
+            getKeys().forEach(key -> closeReader(get(key)));
 
             _cache.clear();
         }
@@ -534,10 +533,7 @@ public class JBrowseLuceneSearch
         @Override
         public void close()
         {
-            for (String key : getKeys())
-            {
-                closeReader(get(key));
-            }
+            getKeys().forEach(key -> closeReader(get(key)));
 
             _cache.close();
         }
@@ -590,7 +586,7 @@ public class JBrowseLuceneSearch
         }
 
         @Override
-        public Set<String> getKeys()
+        public Stream<String> getKeys()
         {
             return _cache.getKeys();
         }
@@ -640,8 +636,7 @@ public class JBrowseLuceneSearch
     public static JSONArray reportCacheInfo()
     {
         JSONArray cacheInfo = new JSONArray();
-        for (String sessionId : _cache.getKeys())
-        {
+        _cache.getKeys().forEach(sessionId -> {
             LRUQueryCache qc = _cache.get(sessionId).getQueryCache();
             JSONObject info = new JSONObject();
             info.put("cacheSize", qc.getCacheSize());
@@ -651,7 +646,7 @@ public class JBrowseLuceneSearch
             info.put("evictionCount", qc.getEvictionCount());
             info.put("totalCount", qc.getTotalCount());
             cacheInfo.put(info);
-        }
+        });
 
         return cacheInfo;
     }
@@ -677,14 +672,13 @@ public class JBrowseLuceneSearch
 
     public static void clearCacheForFile(@NotNull File luceneIndexDir)
     {
-        for (String key : _cache.getKeys())
-        {
+        _cache.getKeys().forEach(key -> {
             CacheEntry entry = _cache.get(key);
             if (entry != null && luceneIndexDir.equals(entry.getLuceneIndexDir()))
             {
                 _cache.remove(key);
             }
-        }
+        });
     }
 
     public static void clearCache(@Nullable String jbrowseTrackId)

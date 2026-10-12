@@ -23,7 +23,7 @@ import java.util.Map;
 
 public class JBrowseFieldUtils
 {
-    private static final Cache<String, Map<String, JBrowseFieldDescriptor>> _cache = CacheManager.getStringKeyCache(50000, CacheManager.DAY, "JBrowseFieldInfo");
+    private static final Cache<String, Map<String, JBrowseFieldDescriptor>> _cache = CacheManager.getCache(String.class, 50000, CacheManager.DAY, "JBrowseFieldInfo");
 
     private static final Logger _log = LogHelper.getLogger(JBrowseFieldUtils.class, "Logger for JBrowseFieldUtils");
 

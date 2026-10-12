@@ -16,7 +16,7 @@ public class LookupSetsManager
 
     private LookupSetsManager()
     {
-        _cache = CacheManager.getStringKeyCache(1000, CacheManager.UNLIMITED, "LookupSetsManagerCache");
+        _cache = CacheManager.getCache(String.class, 1000, CacheManager.UNLIMITED, "LookupSetsManagerCache");
     }
 
     public static LookupSetsManager get()
