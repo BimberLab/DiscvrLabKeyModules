@@ -33,6 +33,7 @@ import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
 import org.labkey.sequenceanalysis.run.util.VariantAnnotatorWrapper;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -158,6 +159,15 @@ public class AnnotateByLiftoverStep extends AbstractCommandPipelineStep<Bcftools
             selectArgs.add(inputVCF.getPath());
 
             br.execute(selectArgs);
+
+            try
+            {
+                SequenceAnalysisService.get().ensureVcfIndex(subsetVcf, getPipelineCtx().getLogger());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
         }
         else
         {
@@ -172,6 +182,15 @@ public class AnnotateByLiftoverStep extends AbstractCommandPipelineStep<Bcftools
         {
             LiftoverBcfToolsWrapper lbw = new LiftoverBcfToolsWrapper(getPipelineCtx().getLogger());
             lbw.doLiftover(subsetVcf, chainFile, genome.getWorkingFastaFile(), targetGenome.getWorkingFastaFile(), null, liftedVcf);
+
+            try
+            {
+                SequenceAnalysisService.get().ensureVcfIndex(liftedVcf, getPipelineCtx().getLogger());
+            }
+            catch (IOException e)
+            {
+                throw new PipelineJobException(e);
+            }
         }
         else
         {
