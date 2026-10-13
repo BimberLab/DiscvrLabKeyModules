@@ -236,20 +236,7 @@ public class AnnotateByLiftoverStep extends AbstractCommandPipelineStep<Bcftools
         if (!indexExists(vcfAnnotated))
         {
             VariantAnnotatorWrapper bpRunner = new VariantAnnotatorWrapper(getPipelineCtx().getLogger());
-            List<String> args = bpRunner.getBaseArgs("VariantAnnotator");
-
-            args.add("-V");
-            args.add(liftedVcfBackport.getPath());
-
-            args.add("-R");
-            args.add(genome.getWorkingFastaFile().getPath());
-
-            args.add("-O");
-            args.add(vcfAnnotated.getPath());
-
-            args.add("-O");
-            args.add(vcfAnnotated.getPath());
-
+            List<String> args = new ArrayList<>();
             args.add("-resource:lifted");
             args.add(liftedVcfBackport.getPath());
 
@@ -264,7 +251,7 @@ public class AnnotateByLiftoverStep extends AbstractCommandPipelineStep<Bcftools
             args.add("-E");
             args.add("lifted.LiftedStop");
 
-            bpRunner.execute(args);
+            bpRunner.execute(genome.getWorkingFastaFile(), liftedVcfBackport, vcfAnnotated, args);
             if (!liftedVcfBackport.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + vcfAnnotated.getPath());
