@@ -210,10 +210,10 @@ public class AnnotateByLiftoverStep extends AbstractCommandPipelineStep<Bcftools
             args.add(liftedVcf.getPath());
 
             args.add("-R");
-            args.add(genome.getWorkingFastaFile().getPath());
+            args.add(targetGenome.getWorkingFastaFile().getPath());
 
             args.add("--targetFasta");
-            args.add(targetGenome.getWorkingFastaFile().getPath());
+            args.add(genome.getWorkingFastaFile().getPath());
 
             args.add("-O");
             args.add(liftedVcfBackport.getPath());
