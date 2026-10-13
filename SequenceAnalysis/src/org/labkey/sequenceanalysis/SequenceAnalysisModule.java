@@ -163,6 +163,7 @@ import org.labkey.sequenceanalysis.run.reference.VirusReferenceLibraryStep;
 import org.labkey.sequenceanalysis.run.util.CombineGVCFsHandler;
 import org.labkey.sequenceanalysis.run.util.FastqcRunner;
 import org.labkey.sequenceanalysis.run.util.SVAnnotateStep;
+import org.labkey.sequenceanalysis.run.variant.AnnotateByLiftoverStep;
 import org.labkey.sequenceanalysis.run.variant.DepthOfCoverageHandler;
 import org.labkey.sequenceanalysis.run.variant.GenotypeConcordanceStep;
 import org.labkey.sequenceanalysis.run.variant.GenotypeFiltrationStep;
@@ -377,6 +378,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new BcftoolsFillFromFastaStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new SVAnnotateStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new WhatsHapStep.Provider());
+        SequencePipelineService.get().registerPipelineStep(new AnnotateByLiftoverStep.Provider());
 
         //handlers
         SequenceAnalysisService.get().registerFileHandler(new LiftoverHandler());
