@@ -33,6 +33,7 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStep;
 import org.labkey.api.sequenceanalysis.run.LiftoverBcfToolsWrapper;
 import org.labkey.api.sequenceanalysis.run.SelectVariantsWrapper;
 import org.labkey.api.util.FileType;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.sequenceanalysis.SequenceAnalysisModule;
@@ -133,7 +134,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
 
     private static File getUnmappedOutputFile(File liftedVcfFile)
     {
-        return new File(liftedVcfFile.getParentFile(), liftedVcfFile.getName().replaceAll(".lifted-", ".unmapped-"));
+        return FileUtil.appendName(liftedVcfFile.getParentFile(), liftedVcfFile.getName().replaceAll(".lifted-", ".unmapped-"));
     }
 
     private static String getOutputExtension(File inputFile)
@@ -214,7 +215,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
                 throw new PipelineJobException("Expected single input file");
             }
 
-            SequenceOutputFile f = inputFiles.get(0);
+            SequenceOutputFile f = inputFiles.getFirst();
             job.getLogger().info("processing output: " + f.getFile().getName());
 
             RecordedAction action = new RecordedAction(getName());
@@ -228,7 +229,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
 
             File outDir = ((FileAnalysisJobSupport) job).getAnalysisDirectory().toNioPathForRead().toFile();
             String baseName = SequenceAnalysisService.get().getUnzippedBaseName(f.getFile().getName());
-            File lifted = new File(outDir, baseName + ".lifted-" + targetGenomeId + getOutputExtension(f.getFile()));
+            File lifted = FileUtil.appendName(outDir, baseName + ".lifted-" + targetGenomeId + getOutputExtension(f.getFile()));
             File unmappedOutput = retainUnmapped ? getUnmappedOutputFile(lifted) : null;
 
             try
@@ -316,7 +317,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
         if (dropGenotypes || intervals != null)
         {
             ctx.getLogger().info("subsetting VCF");
-            File outputFile = new File(output.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(currentVCF.getName()) + ".noGenotypes.vcf.gz");
+            File outputFile = FileUtil.appendName(output.getParentFile(), SequenceAnalysisService.get().getUnzippedBaseName(currentVCF.getName()) + ".noGenotypes.vcf.gz");
             if (new File(outputFile.getPath() + ".tbi").exists())
             {
                 ctx.getLogger().info("resuming from file: " + outputFile.getPath());
@@ -364,7 +365,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
             File unmappedOutputFile = unmappedOutput;
             if (unmappedOutputFile == null)
             {
-                unmappedOutputFile = new File(currentVCF.getParentFile(), "liftoverRejects.vcf.gz");
+                unmappedOutputFile = FileUtil.appendName(currentVCF.getParentFile(), "liftoverRejects.vcf.gz");
             }
 
             LiftoverVcfWrapper wrapper = new LiftoverVcfWrapper(job.getLogger());
@@ -410,7 +411,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
     {
         if (ctx.getJob() instanceof SequenceOutputHandlerJob sj)
         {
-            SequenceOutputFile so = sj.getFiles().get(0);
+            SequenceOutputFile so = sj.getFiles().getFirst();
 
             return ProcessVariantsHandler.getScatterOutputByCategory(ctx, so.getCategory());
         }
@@ -423,7 +424,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
     @Override
     public SequenceOutputFile createFinalSequenceOutput(PipelineJob job, File processed, List<SequenceOutputFile> inputFiles) throws PipelineJobException
     {
-        return ProcessVariantsHandler.createSequenceOutput(job, processed, inputFiles, inputFiles.get(0).getCategory());
+        return ProcessVariantsHandler.createSequenceOutput(job, processed, inputFiles, inputFiles.getFirst().getCategory());
     }
 
     public void liftOverBed(File chain, File input, File output, @Nullable File unmappedOutput, PipelineJob job, double pct) throws IOException, PipelineJobException
@@ -498,7 +499,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
                 throw new PipelineJobException("No unmapped VCF found");
             }
 
-            File combined = getUnmappedOutputFile(orderedScatterOutputs.get(0));
+            File combined = getUnmappedOutputFile(orderedScatterOutputs.getFirst());
             File combinedIdx = new File(combined.getPath() + ".tbi");
             if (combinedIdx.exists())
             {
@@ -510,7 +511,7 @@ public class LiftoverHandler implements SequenceOutputHandler<SequenceOutputHand
             }
 
             SequenceOutputFile so = new SequenceOutputFile();
-            so.setName(orderedScatterOutputs.get(0).getName() + ": Lifted/Unmapped");
+            so.setName(orderedScatterOutputs.getFirst().getName() + ": Lifted/Unmapped");
             so.setFile(combined);
             so.setCategory("VCF File");
             so.setLibrary_id(genome.getGenomeId());
