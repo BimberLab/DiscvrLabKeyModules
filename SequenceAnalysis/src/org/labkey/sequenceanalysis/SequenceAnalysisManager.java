@@ -436,7 +436,7 @@ public class SequenceAnalysisManager
 
     public Set<Integer> getAnalysesAssociatedWithOutputFiles(List<Integer> outputFileIds)
     {
-        Set<Integer> possibleDeletes = new HashSet<>(outputFileIds.isEmpty() ? Collections.emptyList() : new SqlSelector(SequenceAnalysisSchema.getInstance().getSchema(), new SQLFragment("SELECT distinct a.rowid FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " o JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " a ON (o.dataId = a.alignmentFile) WHERE o.rowid IN (" + StringUtils.join(outputFileIds, ",") + ")")).getArrayList(Integer.class));
+        Set<Integer> possibleDeletes = new HashSet<>(outputFileIds.isEmpty() ? Collections.emptyList() : new SqlSelector(SequenceAnalysisSchema.getInstance().getSchema(), new SQLFragment("SELECT distinct a.rowid FROM " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_OUTPUTFILES + " o JOIN " + SequenceAnalysisSchema.SCHEMA_NAME + "." + SequenceAnalysisSchema.TABLE_ANALYSES + " a ON (o.dataId = a.alignmentFile) WHERE o.rowid").appendInClause(outputFileIds, SequenceAnalysisSchema.getInstance().getSchema().getSqlDialect())).getArrayList(Integer.class));
 
         //make sure these are not in use by other outputfiles not being deleted
         if (!possibleDeletes.isEmpty())

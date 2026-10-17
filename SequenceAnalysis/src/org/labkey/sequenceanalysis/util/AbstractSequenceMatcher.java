@@ -4,6 +4,7 @@ import au.com.bytecode.opencsv.CSVWriter;
 import htsjdk.samtools.fastq.FastqRecord;
 import htsjdk.samtools.fastq.FastqWriter;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.util.Pair;
 import org.labkey.sequenceanalysis.model.SequenceTag;
@@ -82,7 +83,7 @@ abstract public class AbstractSequenceMatcher
             targetSeq = sequenceToTest.substring(0, barcodeSeq.length());
         }
 
-        int editDist = StringUtils.getLevenshteinDistance(barcodeSeq, targetSeq);
+        int editDist = LevenshteinDistance.getDefaultInstance().apply(barcodeSeq, targetSeq);
         if (editDist <= _editDistance)
         {
             Map<String, SequenceMatch> matchesAtDist = trackingMap.get(editDist);
@@ -117,7 +118,7 @@ abstract public class AbstractSequenceMatcher
             targetSeq = StringUtils.reverse(sequenceToTest).substring(0, barcodeSeq.length());
         }
 
-        int editDist = StringUtils.getLevenshteinDistance(barcodeSeq, targetSeq);
+        int editDist = LevenshteinDistance.getDefaultInstance().apply(barcodeSeq, targetSeq);
         if (editDist <= _editDistance)
         {
             Map<String, SequenceMatch> matchesAtDist = trackingMap.get(editDist);

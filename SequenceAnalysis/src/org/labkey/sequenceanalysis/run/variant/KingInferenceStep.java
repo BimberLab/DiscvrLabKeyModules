@@ -7,6 +7,7 @@ import htsjdk.samtools.util.Interval;
 import htsjdk.variant.utils.SAMSequenceDictionaryExtractor;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.Strings;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -86,7 +87,7 @@ public class KingInferenceStep extends AbstractCommandPipelineStep<KingInference
         {
             SAMSequenceDictionary dict = SAMSequenceDictionaryExtractor.extractDictionary(genome.getSequenceDictionary().toPath());
             List<String> toKeep = dict.getSequences().stream().map(SAMSequenceRecord::getSequenceName).filter(sequenceName -> {
-                String name = StringUtils.replaceIgnoreCase(sequenceName, "^chr", "");
+                String name = Strings.CI.replace(sequenceName, "^chr", "");
 
                 return NumberUtils.isCreatable(name) || "X".equalsIgnoreCase(name) || "Y".equalsIgnoreCase(name);
             }).toList();
