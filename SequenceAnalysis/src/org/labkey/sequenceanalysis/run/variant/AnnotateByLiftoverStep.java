@@ -27,6 +27,7 @@ import org.labkey.api.sequenceanalysis.pipeline.VariantProcessingStepOutputImpl;
 import org.labkey.api.sequenceanalysis.run.AbstractCommandPipelineStep;
 import org.labkey.api.sequenceanalysis.run.DISCVRSeqRunner;
 import org.labkey.api.sequenceanalysis.run.LiftoverBcfToolsWrapper;
+import org.labkey.api.sequenceanalysis.run.SelectVariantsWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.sequenceanalysis.SequenceAnalysisSchema;
@@ -137,7 +138,34 @@ public class AnnotateByLiftoverStep extends AbstractCommandPipelineStep<Bcftools
 
         // Subset, drop annotations and genotypes:
         File subsetVcf = FileUtil.appendName(outputDirectory, SequenceAnalysisService.get().getUnzippedBaseName(inputVCF.getName()) + ".subset.vcf.gz");
-        if (!indexExists(subsetVcf))
+        if (intervals != null)
+        {
+            if (!indexExists(subsetVcf))
+            {
+                List<String> selectArgs = new ArrayList<>();
+                for (Interval interval : intervals)
+                {
+                    selectArgs.add("-L");
+                    selectArgs.add(interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd());
+                }
+
+                SelectVariantsWrapper wrapper = new SelectVariantsWrapper(getPipelineCtx().getLogger());
+                wrapper.execute(genome.getWorkingFastaFile(), inputVCF, subsetVcf, selectArgs);
+            }
+            else
+            {
+                getPipelineCtx().getLogger().debug("VCF index exists, skipping subset: " + subsetVcf.getPath());
+            }
+        }
+        else
+        {
+            subsetVcf = inputVCF;
+        }
+
+
+        // Drop annotations and genotypes:
+        File subsetVcfNoAnn = FileUtil.appendName(outputDirectory, SequenceAnalysisService.get().getUnzippedBaseName(inputVCF.getName()) + ".noann.vcf.gz");
+        if (!indexExists(subsetVcfNoAnn))
         {
             BcftoolsRunner br = new  BcftoolsRunner(getPipelineCtx().getLogger());
 
@@ -148,7 +176,7 @@ public class AnnotateByLiftoverStep extends AbstractCommandPipelineStep<Bcftools
             selectArgs.add("INFO,FORMAT");
 
             selectArgs.add("-o");
-            selectArgs.add(subsetVcf.getPath());
+            selectArgs.add(subsetVcfNoAnn.getPath());
 
             if (intervals != null)
             {
@@ -156,13 +184,13 @@ public class AnnotateByLiftoverStep extends AbstractCommandPipelineStep<Bcftools
                 selectArgs.add(intervals.stream().map(interval -> interval.getContig() + ":" + interval.getStart() + "-" + interval.getEnd()).collect(Collectors.joining(",")));
             }
 
-            selectArgs.add(inputVCF.getPath());
+            selectArgs.add(subsetVcf.getPath());
 
             br.execute(selectArgs);
 
             try
             {
-                SequenceAnalysisService.get().ensureVcfIndex(subsetVcf, getPipelineCtx().getLogger());
+                SequenceAnalysisService.get().ensureVcfIndex(subsetVcfNoAnn, getPipelineCtx().getLogger());
             }
             catch (IOException e)
             {
@@ -171,17 +199,17 @@ public class AnnotateByLiftoverStep extends AbstractCommandPipelineStep<Bcftools
         }
         else
         {
-            getPipelineCtx().getLogger().debug("VCF index exists, skipping subset: " + subsetVcf.getPath());
+            getPipelineCtx().getLogger().debug("VCF index exists, skipping genotype/annotation removal: " + subsetVcfNoAnn.getPath());
         }
-        output.addIntermediateFile(subsetVcf);
-        output.addIntermediateFile(new File(subsetVcf.getPath() + ".tbi"));
+        output.addIntermediateFile(subsetVcfNoAnn);
+        output.addIntermediateFile(new File(subsetVcfNoAnn.getPath() + ".tbi"));
 
         // Lift
         File liftedVcf = FileUtil.appendName(outputDirectory, SequenceAnalysisService.get().getUnzippedBaseName(inputVCF.getName()) + ".lifted.vcf.gz");
         if (!indexExists(liftedVcf))
         {
             LiftoverBcfToolsWrapper lbw = new LiftoverBcfToolsWrapper(getPipelineCtx().getLogger());
-            lbw.doLiftover(subsetVcf, chainFile, genome.getWorkingFastaFile(), targetGenome.getWorkingFastaFile(), null, liftedVcf);
+            lbw.doLiftover(subsetVcfNoAnn, chainFile, genome.getWorkingFastaFile(), targetGenome.getWorkingFastaFile(), null, liftedVcf);
 
             try
             {
@@ -251,8 +279,9 @@ public class AnnotateByLiftoverStep extends AbstractCommandPipelineStep<Bcftools
             args.add("-E");
             args.add("lifted.LiftedStop");
 
-            bpRunner.execute(genome.getWorkingFastaFile(), liftedVcfBackport, vcfAnnotated, args);
-            if (!liftedVcfBackport.exists())
+            // NOTE: this should use the original VCF, with annotations and genotypes:
+            bpRunner.execute(genome.getWorkingFastaFile(), subsetVcf, vcfAnnotated, args);
+            if (!vcfAnnotated.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + vcfAnnotated.getPath());
             }
