@@ -165,7 +165,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                                 job.getLogger().warn("Parent file unexpectedly exists: " + f1.getFile().getParentFile().getPath());
                             }
 
-                            f1.setDataFileURI(new File(outputDir, accession + "_1.fastq.gz").toURI());
+                            f1.setDataFileURI(FileUtil.appendName(outputDir, accession + "_1.fastq.gz").toURI());
                             f1.save(job.getUser());
                             job.getLogger().debug("Updating filepath: " + f1.getFile().getPath());
 
@@ -177,7 +177,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                                     throw new PipelineJobException("Missing Expdata: " + rd.getFileId2());
                                 }
 
-                                f2.setDataFileURI(new File(outputDir, accession + "_2.fastq.gz").toURI());
+                                f2.setDataFileURI(FileUtil.appendName(outputDir, accession + "_2.fastq.gz").toURI());
                                 f2.save(job.getUser());
                                 job.getLogger().debug("Updating filepath: " + f2.getFile().getPath());
                             }
@@ -239,7 +239,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                         rd.setSra_accession(accession);
 
                         ExpData data1 = ExperimentService.get().getExpData(toMerge.get(0).getFileId1());
-                        File expectedFastq1 = new File(data1.getFile().getParentFile(), accession + "_1.fastq.gz");
+                        File expectedFastq1 = FileUtil.appendName(data1.getFile().getParentFile(), accession + "_1.fastq.gz");
                         ExpData expData1 = ExperimentService.get().getExpDataByURL(expectedFastq1, ContainerManager.getForId(rs.getContainer()));
                         if (expData1 == null)
                         {
@@ -253,7 +253,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                         if (toMerge.get(0).getFileId2() != null)
                         {
                             ExpData data2 = ExperimentService.get().getExpData(toMerge.get(0).getFileId2());
-                            File expectedFastq2 = new File(data2.getFile().getParentFile(), accession + "_2.fastq.gz");
+                            File expectedFastq2 = FileUtil.appendName(data2.getFile().getParentFile(), accession + "_2.fastq.gz");
                             ExpData expData2 = ExperimentService.get().getExpDataByURL(expectedFastq2, ContainerManager.getForId(rs.getContainer()));
                             if (expData2 == null)
                             {
@@ -274,7 +274,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                         rd.setPlatformUnit(accession);
 
                         job.getLogger().debug("Merging readdata for accession: " + accession);
-                        File sraLog = new File(data1.getFile().getParentFile(), FileUtil.makeLegalName("sraDownload.txt"));
+                        File sraLog = FileUtil.appendName(data1.getFile().getParentFile(), FileUtil.makeLegalName("sraDownload.txt"));
                         try (PrintWriter writer = PrintWriters.getPrintWriter(IOUtil.openFileForWriting(sraLog, sraLog.exists())))
                         {
                             for (ReadData r : toMerge)
@@ -443,7 +443,14 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                     if (!expectedFile1.getParentFile().exists())
                     {
                         ctx.getLogger().info("Creating folder: " + expectedFile1.getParentFile().getPath());
-                        expectedFile1.getParentFile().mkdirs();
+                        try
+                        {
+                            FileUtil.mkdirs(expectedFile1.getParentFile());
+                        }
+                        catch (IOException e)
+                        {
+                            throw new PipelineJobException(e);
+                        }
                     }
 
                     FastqDumpWrapper wrapper = new FastqDumpWrapper(ctx.getLogger());
@@ -475,7 +482,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
                         }
                     }
 
-                    File sraLog = new File(expectedFile1.getParentFile(), FileUtil.makeLegalName("sraDownload.txt"));
+                    File sraLog = FileUtil.appendName(expectedFile1.getParentFile(), "sraDownload.txt");
                     try (PrintWriter writer = PrintWriters.getPrintWriter(IOUtil.openFileForWriting(sraLog, sraLog.exists())))
                     {
                         ctx.getLogger().info("Copying file to: " + expectedFile1.getPath());
@@ -557,7 +564,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
 
             List<File> files = new ArrayList<>(Arrays.asList(Objects.requireNonNull(outDir.listFiles((dir, name) -> name.startsWith(dataset)))));
 
-            File file1 = new File(outDir, dataset + (expectPaired ? "_1" : "") + ".fastq");
+            File file1 = FileUtil.appendName(outDir, dataset + (expectPaired ? "_1" : "") + ".fastq");
             if (!file1.exists())
             {
                 throw new PipelineJobException("Missing file: " + file1.getPath());
@@ -565,7 +572,7 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
             file1 = doGzip(file1);
             files.remove(file1);
 
-            File file2 = new File(outDir, dataset + "_2.fastq");
+            File file2 = FileUtil.appendName(outDir, dataset + "_2.fastq");
             if (expectPaired & !file2.exists())
             {
                 throw new PipelineJobException("Missing file: " + file2.getPath());
