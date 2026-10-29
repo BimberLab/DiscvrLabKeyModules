@@ -1073,7 +1073,13 @@ public class SequenceAnalysisController extends SpringActionController
                     FileLike base = root.getRootFileLike();
 
                     if (form.getPath() != null)
-                        base = base.resolveFile(new Path(form.getPath()));
+                    {
+                        base = root.resolvePathToFileLike(form.getPath());
+                        if (null == base)
+                        {
+                            throw new PipelineJobException("Invalid path: " + form.getPath());
+                        }
+                    }
 
                     for (String fileName : form.getFileNames())
                     {
@@ -1088,7 +1094,7 @@ public class SequenceAnalysisController extends SpringActionController
                             Map<String, Object> map = new HashMap<>();
                             map.put("fileName", fileName);
                             map.put("filePath", f.getPath());
-                            map.put("relPath", FileUtil.relativePath(FileUtil.getAbsoluteCaseSensitiveFile(FileSystemLike.toFile(root.getRootFileLike())).getPath(), FileUtil.getAbsoluteCaseSensitiveFile(f).getPath()));
+                            map.put("relPath", root.relativePath(f));
                             map.put("container", getContainer().getId());
                             map.put("containerPath", getContainer().getPath());
                             String basename = SequenceTaskHelper.getUnzippedBaseName(fileName);
@@ -1925,12 +1931,13 @@ public class SequenceAnalysisController extends SpringActionController
                 else if (o.has("relPath") || o.has("fileName"))
                 {
                     FileLike f;
-                    if (o.opt("relPath") == null)
+                    if (o.isNull("relPath"))
                     {
-                        if (path != null)
+                        if (StringUtils.isNotEmpty(path))
                         {
                             f = pr.resolvePathToFileLike(path);
-                            f = f.resolveFile(Path.parse(o.getString("fileName")));
+                            if (f != null)
+                                f = f.resolveFile(Path.parse(o.getString("fileName")));
                         }
                         else
                         {
@@ -2231,7 +2238,12 @@ public class SequenceAnalysisController extends SpringActionController
                 return null;
             }
 
-            FileLike baseDir = StringUtils.trimToNull(form.getPath()) == null ? root.getRootFileLike() : root.getRootFileLike().resolveFile(new Path(form.getPath()));
+            FileLike baseDir = StringUtils.trimToNull(form.getPath()) == null ? root.getRootFileLike() : root.resolvePathToFileLike(form.getPath());
+            if (baseDir == null)
+            {
+                errors.reject(ERROR_MSG, "Invalid path: " + form.getPath());
+                return null;
+            }
 
             if (!baseDir.exists())
             {
