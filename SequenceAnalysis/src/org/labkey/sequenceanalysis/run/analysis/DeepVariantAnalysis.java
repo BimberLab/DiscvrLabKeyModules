@@ -104,7 +104,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
                         modelType = "WGS";
                         break;
                     case "Whole Exome":
-                        modelType = "WXS";
+                        modelType = "WES";
                         break;
                     default:
                         throw new IllegalArgumentException("Unknown application: " + rs.getApplication());
