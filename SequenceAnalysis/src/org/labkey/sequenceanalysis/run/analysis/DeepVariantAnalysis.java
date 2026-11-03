@@ -65,7 +65,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
                 }}, "X,Y"),
                 ToolParameterDescriptor.create("binVersion", "DeepVariant Version", "The version of DeepVariant to run, which is passed to their docker container", "textfield", new JSONObject(){{
                     put("allowBlank", false);
-                }}, "1.6.0"),
+                }}, "1.10.0"),
                 ToolParameterDescriptor.create("retainVcf", "Retain VCF", "If selected, the VCF with called genotypes will be retained", "checkbox", null, false)
         );
     }
@@ -130,8 +130,8 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
         AnalysisOutputImpl output = new AnalysisOutputImpl();
         output.addInput(inputBam, "Input BAM File");
 
-        File outputFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".g.vcf.gz");
-        File idxFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".g.vcf.gz.idx");
+        File outputFile = FileUtil.appendName(outputDir, FileUtil.getBaseName(inputBam) + ".g.vcf.gz");
+        File idxFile = FileUtil.appendName(outputDir, FileUtil.getBaseName(inputBam) + ".g.vcf.gz.idx");
 
         String inferredModelType = getPipelineCtx().getSequenceSupport().getCachedObject("modelType", String.class);
         String modelType = inferredModelType == null ? getProvider().getParameterByName("modelType").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class) : inferredModelType;
@@ -164,7 +164,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
 
         if (retainVcf)
         {
-            File outputFileVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".vcf.gz");
+            File outputFileVcf = FileUtil.appendName(outputDir, FileUtil.getBaseName(inputBam) + ".vcf.gz");
             if (!outputFileVcf.exists())
             {
                 throw new PipelineJobException("Missing expected file: " + outputFileVcf.getPath());
