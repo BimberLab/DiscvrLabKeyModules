@@ -44,6 +44,7 @@ import org.labkey.singlecell.pipeline.singlecell.AppendTcr;
 import org.labkey.singlecell.pipeline.singlecell.ApplyKnownClonotypicData;
 import org.labkey.singlecell.pipeline.singlecell.AvgExpression;
 import org.labkey.singlecell.pipeline.singlecell.CalculateGeneComponentScores;
+import org.labkey.singlecell.pipeline.singlecell.CalculatePerforinUCell;
 import org.labkey.singlecell.pipeline.singlecell.CalculateTcrRepertoireStats;
 import org.labkey.singlecell.pipeline.singlecell.CalculateUCellScores;
 import org.labkey.singlecell.pipeline.singlecell.CellBarcodeFilter;
@@ -266,6 +267,7 @@ public class SingleCellModule extends ExtendedSimpleModule
         SequencePipelineService.get().registerPipelineStep(new CiteSeqPlots.Provider());
         SequencePipelineService.get().registerPipelineStep(new PhenotypePlots.Provider());
         SequencePipelineService.get().registerPipelineStep(new CalculateUCellScores.Provider());
+        SequencePipelineService.get().registerPipelineStep(new CalculatePerforinUCell.Provider());
         SequencePipelineService.get().registerPipelineStep(new CalculateGeneComponentScores.Provider());
         SequencePipelineService.get().registerPipelineStep(new AppendMetadata.Provider());
         SequencePipelineService.get().registerPipelineStep(new AppendSaturation.Provider());
