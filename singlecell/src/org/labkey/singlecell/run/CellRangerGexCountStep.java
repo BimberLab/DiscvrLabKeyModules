@@ -214,7 +214,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
 
         IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
-        File indexDir = new File(outputDir, getIndexCachedDirName(getPipelineCtx().getJob()));
+        File indexDir = FileUtil.appendName(outputDir, getIndexCachedDirName(getPipelineCtx().getJob()));
         boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(getPipelineCtx().getJob()), referenceGenome);
         if (!hasCachedIndex)
         {
@@ -240,7 +240,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
             int linesDropped = 0;
             int exonsAdded = 0;
 
-            File gtfEdit = new File(indexDir.getParentFile(), FileUtil.getBaseName(gtfFile) + ".geneId.gtf");
+            File gtfEdit = FileUtil.appendName(indexDir.getParentFile(), FileUtil.getBaseName(gtfFile) + ".geneId.gtf");
 
             try (CSVReader reader = new CSVReader(Readers.getReader(gtfFile), '\t', CSVWriter.NO_QUOTE_CHARACTER); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(gtfEdit), '\t', CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.NO_ESCAPE_CHARACTER))
             {
@@ -389,7 +389,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         getWrapper().setWorkingDir(outputDirectory);
 
         //Note: we can safely assume only this server is working on these files, so if the _lock file exists, it was from a previous failed job.
-        File lockFile = new File(outputDirectory, id + "/_lock");
+        File lockFile = FileUtil.appendName(outputDirectory, id + "/_lock");
         if (lockFile.exists())
         {
             getPipelineCtx().getLogger().info("Lock file exists, deleting: " + lockFile.getPath());
@@ -398,10 +398,10 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
 
         getWrapper().execute(args);
 
-        File outdir = new File(outputDirectory, id);
-        outdir = new File(outdir, "outs");
+        File outdir = FileUtil.appendName(outputDirectory, id);
+        outdir = FileUtil.appendName(outdir, "outs");
 
-        File bam = new File(outdir, "possorted_genome_bam.bam");
+        File bam = FileUtil.appendName(outdir, "possorted_genome_bam.bam");
         if (!shouldDiscardBam())
         {
             if (!bam.exists())
@@ -416,13 +416,13 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         try
         {
             String prefix = FileUtil.makeLegalName(rs.getName() + "_");
-            File outputHtml = new File(outdir, "web_summary.html");
+            File outputHtml = FileUtil.appendName(outdir, "web_summary.html");
             if (!outputHtml.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + outputHtml.getPath());
             }
 
-            File outputHtmlRename = new File(outdir, prefix + outputHtml.getName());
+            File outputHtmlRename = FileUtil.appendName(outdir, prefix + outputHtml.getName());
             if (outputHtmlRename.exists())
             {
                 outputHtmlRename.delete();
@@ -431,10 +431,10 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
             String description = getAlignDescription(getProvider(), getPipelineCtx(), getStepIdx(), false, getWrapper().getVersionString());
             output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x Count Summary", "10x Run Summary", rs.getRowId(), null, referenceGenome.getGenomeId(), description);
 
-            File loupe = new File(outdir, "cloupe.cloupe");
+            File loupe = FileUtil.appendName(outdir, "cloupe.cloupe");
             if (loupe.exists())
             {
-                File loupeRename = new File(outdir, prefix + loupe.getName());
+                File loupeRename = FileUtil.appendName(outdir, prefix + loupe.getName());
                 if (loupeRename.exists())
                 {
                     loupeRename.delete();
@@ -453,7 +453,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         }
 
         //NOTE: this folder has many unnecessary files and symlinks that get corrupted when we rename the main outputs
-        File directory = new File(outdir.getParentFile(), "SC_RNA_COUNTER_CS");
+        File directory = FileUtil.appendName(outdir.getParentFile(), "SC_RNA_COUNTER_CS");
         if (directory.exists())
         {
             //NOTE: this will have lots of symlinks, including corrupted ones, which java handles badly
@@ -506,7 +506,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
             throw new PipelineJobException("Unable to find rowId for analysis");
         }
 
-        File metrics = new File(outsDir, "metrics_summary.csv");
+        File metrics = FileUtil.appendName(outsDir, "metrics_summary.csv");
         if (metrics.exists())
         {
             getPipelineCtx().getLogger().debug("adding 10x metrics");
@@ -664,7 +664,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
                 }
             }
 
-            File il = new File(exe.getParentFile(), "../lib/python/cellranger/barcodes/" + _inclusionListFile);
+            File il = FileUtil.appendName(exe.getParentFile(), "../lib/python/cellranger/barcodes/" + _inclusionListFile);
             if (!il.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + il.getPath());
