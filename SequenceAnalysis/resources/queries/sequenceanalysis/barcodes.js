@@ -18,3 +18,11 @@ function beforeInsert(row, errors) {
 function beforeUpdate(row, oldRow, errors) {
     beforeUpsert(row, errors);
 }
+
+function managedColumns() {
+    const theColumns = ['reverse_complement']
+    return {
+        update: theColumns,
+        insert: theColumns
+    }
+}
