@@ -16,10 +16,10 @@ for (datasetId in names(seuratObjects)) {
     seuratObj <- Rdiscvr::DownloadAndAppendTcrClonotypes(seuratObj, allowMissing = TRUE)
   }
 
-  Rdiscvr::IdentifyAndStoreActiveClonotypes(seuratObj, chain = 'TRA', storeStimLevelData = FALSE, minEDS = minEDS)
-  Rdiscvr::IdentifyAndStoreActiveClonotypes(seuratObj, chain = 'TRD', storeStimLevelData = FALSE, minEDS = minEDS)
-  Rdiscvr::IdentifyAndStoreActiveClonotypes(seuratObj, chain = 'TRG', storeStimLevelData = FALSE, minEDS = minEDS)
-  Rdiscvr::IdentifyAndStoreActiveClonotypes(seuratObj, chain = 'TRB', minEDS = minEDS)
+  Rdiscvr::IdentifyAndStoreActiveClonotypes(seuratObj, chain = 'TRA', storeStimLevelData = FALSE, minEDS = minEDS, method = calculationMethod)
+  Rdiscvr::IdentifyAndStoreActiveClonotypes(seuratObj, chain = 'TRD', storeStimLevelData = FALSE, minEDS = minEDS, method = calculationMethod)
+  Rdiscvr::IdentifyAndStoreActiveClonotypes(seuratObj, chain = 'TRG', storeStimLevelData = FALSE, minEDS = minEDS, method = calculationMethod)
+  Rdiscvr::IdentifyAndStoreActiveClonotypes(seuratObj, chain = 'TRB', minEDS = minEDS, method = calculationMethod)
 
   saveData(seuratObj, datasetId)
 

@@ -1,5 +1,6 @@
 package org.labkey.singlecell.pipeline.singlecell;
 
+import org.json.JSONObject;
 import org.labkey.api.sequenceanalysis.pipeline.AbstractPipelineStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.singlecell.pipeline.SeuratToolParameter;
@@ -19,7 +20,11 @@ public class IdentifyAndStoreActiveClonotypes extends AbstractRDiscvrStep
         public Provider()
         {
             super("IdentifyAndStoreActiveClonotypes", "Identify And Store Active Clonotypes", "Rdiscvr", "This uses RDiscvr::IdentifyAndStoreActiveClonotypes to predict TCR-triggered T cells and save the results to the database", List.of(
-                SeuratToolParameter.create("minEDS", "Min EDS", "If provided, only cells with an EffectorDifferentiationScore (EDS) above this value will be included", "ldk-integerfield", null, 2.0, null, true)
+                SeuratToolParameter.create("minEDS", "Min EDS", "If provided, only cells with an EffectorDifferentiationScore (EDS) above this value will be included", "ldk-integerfield", null, 2.0, null, true),
+                SeuratToolParameter.create("calculationMethod", "Method", "The approached used to calculate which cells are activated", "ldk-simplecombo", new JSONObject(){{
+                    put("storeValues", "TAR-seq;Cluster-Based;TAR-seq_Plus_UCell");
+                    put("multiSelect", false);
+                }}, "TAR-seq", null, true)
             ), null, null);
         }
 
