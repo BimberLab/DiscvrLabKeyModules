@@ -43,7 +43,8 @@ public class ApplyKnownClonotypicData extends AbstractRDiscvrStep
                         put("minValue", 0);
                         put("maxValue", 1.0);
                         put("decimalPrecision", 4);
-                    }}, 0.05)
+                    }}, 0.05),
+                    IdentifyAndStoreActiveClonotypes.getMethodParam()
             ), List.of("/sequenceanalysis/field/TrimmingTextArea.js"), null);
         }
 
