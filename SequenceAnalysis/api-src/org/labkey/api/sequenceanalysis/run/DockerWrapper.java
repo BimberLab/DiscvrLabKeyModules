@@ -33,6 +33,7 @@ public class DockerWrapper extends AbstractCommandWrapper
     private String _entryPoint = null;
     private boolean _runPrune = false;
     private boolean _useLocalContainerStorage;
+    private boolean _enforceMaxCpus = false;
     private String _alternateUserHome = null;
     private final Map<String, String> _dockerEnvironment = new HashMap<>();
     private int _maxRetries = 3;
@@ -175,6 +176,12 @@ public class DockerWrapper extends AbstractCommandWrapper
             {
                 writer.println("\t-e SEQUENCEANALYSIS_MAX_RAM=" + maxRam + " \\");
                 writer.println("\t--memory='" + maxRam + "g' \\");
+            }
+
+            Integer maxCores = SequencePipelineService.get().getMaxThreads(getLogger());
+            if (_enforceMaxCpus && maxCores != null)
+            {
+                writer.println("\t--cpus='" + maxCores + "g' \\");
             }
 
             for (String key : _dockerEnvironment.keySet())
@@ -339,5 +346,10 @@ public class DockerWrapper extends AbstractCommandWrapper
         }
 
         return "--root=" + getLocalContainerDir().getPath() + " ";
+    }
+
+    public void setEnforceMaxCpus(boolean enforceMaxCpus)
+    {
+        _enforceMaxCpus = enforceMaxCpus;
     }
 }
