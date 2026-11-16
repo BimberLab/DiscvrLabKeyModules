@@ -181,7 +181,7 @@ public class DockerWrapper extends AbstractCommandWrapper
             Integer maxCores = SequencePipelineService.get().getMaxThreads(getLogger());
             if (_enforceMaxCpus && maxCores != null)
             {
-                writer.println("\t--cpus='" + maxCores + "g' \\");
+                writer.println("\t--cpus='" + maxCores + "' \\");
             }
 
             for (String key : _dockerEnvironment.keySet())
