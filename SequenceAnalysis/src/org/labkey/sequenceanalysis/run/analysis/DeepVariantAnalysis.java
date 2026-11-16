@@ -231,7 +231,8 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
 
             DockerWrapper wrapper = new DockerWrapper("google/deepvariant:" + binVersion, ctx.getLogger(), ctx);
             wrapper.setEntryPoint("/bin/bash");
-            wrapper.setEnforceMaxCpus(true);
+            // NOTE: this forces CPU-only mode:
+            wrapper.addToDockerEnvironment("JAX_PLATFORMS", "cpu");
             wrapper.executeWithDocker(bashArgs, ctx.getWorkingDirectory(), tracker, inputFiles);
 
             if (!outputGvcf.exists())
