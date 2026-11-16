@@ -39,6 +39,7 @@ public class IdentifyAndStoreActiveClonotypes extends AbstractRDiscvrStep
             put("storeValues", "TAR-seq;Cluster-Based;TAR-seq_Plus_UCell;TAR-seq_MT_Plus_UCell;Metallothionein");
             put("multiSelect", true);
             put("allowBlank", false);
+            put("joinReturnValue", true);
         }}, "TAR-seq", null, true, true);
     }
 
