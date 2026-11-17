@@ -208,6 +208,9 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
 
             List<String> bashArgs = new ArrayList<>(Arrays.asList("/opt/deepvariant/bin/run_deepvariant"));
             bashArgs.add("--make_examples_extra_args='normalize_reads=true'");
+
+            // NOTE: consider this:
+            //bashArgs.add("--call_variants_extra_args='writer_threads=" + writerThreads + "'");
             bashArgs.add("--ref=" + refFasta.getPath());
             bashArgs.add("--reads=" + inputBam.getPath());
             bashArgs.add("--output_gvcf=" + outputGvcf.getPath());
@@ -215,6 +218,11 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
             if (maxThreads != null)
             {
+                if (cpuBuffer > 0)
+                {
+                    getLogger().debug("Reducing maxThreads based on cpuBuffer, by: " + cpuBuffer);
+                }
+
                 int effectiveMaxThreads = maxThreads - cpuBuffer;
                 if (effectiveMaxThreads < 1)
                 {
