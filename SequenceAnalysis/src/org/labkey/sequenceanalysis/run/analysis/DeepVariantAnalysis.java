@@ -234,6 +234,9 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             // NOTE: this is designed to avoid errors in make_examples, where the subprocesses use all cores on the node:
             wrapper.addToDockerEnvironment("OPENBLAS_NUM_THREADS", "1");
             wrapper.addToDockerEnvironment("OMP_NUM_THREADS", "1");
+            wrapper.addToDockerEnvironment("MKL_NUM_THREADS", "1");
+            wrapper.addToDockerEnvironment("TF_NUM_INTEROP_THREADS", "1");
+            wrapper.addToDockerEnvironment("TF_NUM_INTRAOP_THREADS", "1");
 
             wrapper.executeWithDocker(bashArgs, ctx.getWorkingDirectory(), tracker, inputFiles);
 
