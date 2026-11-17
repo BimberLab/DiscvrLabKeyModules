@@ -233,6 +233,9 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             wrapper.setEntryPoint("/bin/bash");
             // NOTE: this forces CPU-only mode:
             wrapper.addToDockerEnvironment("JAX_PLATFORMS", "cpu");
+            wrapper.addToDockerEnvironment("OPENBLAS_NUM_THREADS", "1");
+            wrapper.addToDockerEnvironment("OMP_NUM_THREADS", "1");
+
             wrapper.executeWithDocker(bashArgs, ctx.getWorkingDirectory(), tracker, inputFiles);
 
             if (!outputGvcf.exists())
