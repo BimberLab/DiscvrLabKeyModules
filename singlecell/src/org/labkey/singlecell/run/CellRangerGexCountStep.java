@@ -389,7 +389,7 @@ public class CellRangerGexCountStep extends AbstractAlignmentPipelineStep<CellRa
         getWrapper().setWorkingDir(outputDirectory);
 
         //Note: we can safely assume only this server is working on these files, so if the _lock file exists, it was from a previous failed job.
-        File lockFile = FileUtil.appendName(outputDirectory, id + "/_lock");
+        File lockFile = FileUtil.appendPath(outputDirectory, org.labkey.api.util.Path.parse(id + "/_lock"));
         if (lockFile.exists())
         {
             getPipelineCtx().getLogger().info("Lock file exists, deleting: " + lockFile.getPath());
