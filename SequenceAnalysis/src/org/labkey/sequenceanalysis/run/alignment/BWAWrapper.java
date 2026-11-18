@@ -107,7 +107,7 @@ public class BWAWrapper extends AbstractCommandWrapper
             getPipelineCtx().getLogger().info("Creating " + getProvider().getName() + " index");
             IndexOutputImpl output = new IndexOutputImpl(referenceGenome);
 
-            File indexDir = new File(outputDir, getIndexCachedDirName(getPipelineCtx().getJob()));
+            File indexDir = FileUtil.appendName(outputDir, getIndexCachedDirName(getPipelineCtx().getJob()));
             boolean hasCachedIndex = AlignerIndexUtil.hasCachedIndex(this.getPipelineCtx(), getIndexCachedDirName(getPipelineCtx().getJob()), referenceGenome);
             if (!hasCachedIndex)
             {
@@ -131,7 +131,7 @@ public class BWAWrapper extends AbstractCommandWrapper
                     indexDir.mkdirs();
                 }
 
-                args.add(new File(indexDir, outPrefix).getPath());
+                args.add(FileUtil.appendName(indexDir, outPrefix).getPath());
                 args.add(referenceGenome.getWorkingFastaFile().getPath());
                 getWrapper().execute(args);
             }
@@ -195,12 +195,12 @@ public class BWAWrapper extends AbstractCommandWrapper
         List<String> args = new ArrayList<>();
         args.add(getExe().getPath());
         args.add("aln");
-        appendThreads(job, args);
+        appendThreads(job, args, 0);
         args.addAll(bwaAlnArgs);
-        args.add(new File(referenceGenome.getAlignerIndexDir(getIndexDirName()), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
+        args.add(FileUtil.appendName(referenceGenome.getAlignerIndexDir(getIndexDirName()), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
         args.add(inputFile.getPath());
 
-        File output = new File(getOutputDir(inputFile), inputFile.getName() + ".sai");
+        File output = FileUtil.appendName(getOutputDir(inputFile), inputFile.getName() + ".sai");
 
         execute(args, output);
 
@@ -230,12 +230,12 @@ public class BWAWrapper extends AbstractCommandWrapper
             throw new PipelineJobException("Reference FASTA does not exist: " + referenceGenome.getWorkingFastaFile().getPath());
         }
 
-        File expectedIndex = new File(referenceGenome.getAlignerIndexDir(getIndexDirName()), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile()) + ".bwa.index.sa");
+        File expectedIndex = FileUtil.appendName(referenceGenome.getAlignerIndexDir(getIndexDirName()), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile()) + ".bwa.index.sa");
         if (!expectedIndex.exists())
         {
             throw new PipelineJobException("Expected index does not exist: " + expectedIndex);
         }
-        args.add(new File(referenceGenome.getAlignerIndexDir(getIndexDirName()), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
+        args.add(FileUtil.appendName(referenceGenome.getAlignerIndexDir(getIndexDirName()), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
 
         //add SAI
         args.add(sai1.getPath());
@@ -251,7 +251,7 @@ public class BWAWrapper extends AbstractCommandWrapper
             args.add(inputFastq2.getPath());
         }
 
-        File sam = new File(outputDirectory, basename + ".sam");
+        File sam = FileUtil.appendName(outputDirectory, basename + ".sam");
         execute(args, sam);
         if (!sam.exists() || !SequenceUtil.hasMinLineCount(sam, 2))
         {
@@ -259,7 +259,7 @@ public class BWAWrapper extends AbstractCommandWrapper
         }
 
         //convert to BAM
-        File bam = new File(outputDirectory, basename + ".bam");
+        File bam = FileUtil.appendName(outputDirectory, basename + ".bam");
         bam = new SamFormatConverterWrapper(getLogger()).execute(sam, bam, true);
         if (!bam.exists())
         {
@@ -269,11 +269,20 @@ public class BWAWrapper extends AbstractCommandWrapper
         output.addOutput(bam, AlignmentOutputImpl.BAM_ROLE);
     }
 
-    protected void appendThreads(PipelineJob job, List<String> args)
+    protected void appendThreads(PipelineJob job, List<String> args, int threadsForSamtools)
     {
         Integer threads = SequenceTaskHelper.getMaxThreads(job);
         if (threads != null)
         {
+            if (threadsForSamtools > 0)
+            {
+                threads = threads - threadsForSamtools;
+                if (threads < 1)
+                {
+                    throw new IllegalArgumentException("Cannot reserve for threads for samtools (" + threadsForSamtools + ") than available threads");
+                }
+            }
+
             args.add("-t"); //multi-threaded
             args.add(threads.toString());
         }

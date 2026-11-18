@@ -79,8 +79,8 @@ public class DockerWrapper extends AbstractCommandWrapper
 
     public void executeWithDocker(List<String> containerArgs, File workDir, PipelineOutputTracker tracker, @Nullable Collection<File> inputFiles) throws PipelineJobException
     {
-        File localBashScript = new File(workDir, "docker.sh");
-        File dockerBashScript = new File(workDir, "dockerRun.sh");
+        File localBashScript = FileUtil.appendName(workDir, "docker.sh");
+        File dockerBashScript = FileUtil.appendName(workDir, "dockerRun.sh");
         tracker.addIntermediateFile(localBashScript);
         tracker.addIntermediateFile(dockerBashScript);
 
