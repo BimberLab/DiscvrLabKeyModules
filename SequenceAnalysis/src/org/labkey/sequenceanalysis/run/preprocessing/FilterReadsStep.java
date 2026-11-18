@@ -76,16 +76,16 @@ public class FilterReadsStep extends AbstractPipelineStep implements Preprocessi
 
         AlignmentOutputImpl alignmentOutput = new AlignmentOutputImpl();
         String basename = SequenceAnalysisService.get().getUnzippedBaseName(inputFile.getName()) + ".filterAlign";
-        wrapper.performMemAlignment(getPipelineCtx().getJob(), alignmentOutput, inputFile, inputFile2, outputDir, genome, basename, bwaArgs);
+        wrapper.performMemAlignment(getPipelineCtx().getJob(), alignmentOutput, inputFile, inputFile2, outputDir, genome, basename, bwaArgs, 0);
 
         SequencePipelineService.get().ensureBamIndex(alignmentOutput.getBAM(), getPipelineCtx().getLogger(), true);
         
         output.addIntermediateFile(alignmentOutput.getBAM());
         output.addIntermediateFile(SequenceUtil.getExpectedIndex(alignmentOutput.getBAM()));
 
-        File unmappedReadsF = new File(alignmentOutput.getBAM().getParentFile(), FileUtil.getBaseName(alignmentOutput.getBAM()) + "_unmapped_F.fastq");
-        File unmappedReadsR = new File(alignmentOutput.getBAM().getParentFile(), FileUtil.getBaseName(alignmentOutput.getBAM()) + "_unmapped_R.fastq");
-        File singletons = new File(alignmentOutput.getBAM().getParentFile(), FileUtil.getBaseName(alignmentOutput.getBAM()) + "_unmapped_singletons.fastq");
+        File unmappedReadsF = FileUtil.appendName(alignmentOutput.getBAM().getParentFile(), FileUtil.getBaseName(alignmentOutput.getBAM()) + "_unmapped_F.fastq");
+        File unmappedReadsR = FileUtil.appendName(alignmentOutput.getBAM().getParentFile(), FileUtil.getBaseName(alignmentOutput.getBAM()) + "_unmapped_R.fastq");
+        File singletons = FileUtil.appendName(alignmentOutput.getBAM().getParentFile(), FileUtil.getBaseName(alignmentOutput.getBAM()) + "_unmapped_singletons.fastq");
 
         UnmappedReadExportHandler.Processor.writeUnmappedReadsAsFastq(alignmentOutput.getBAM(), unmappedReadsF, unmappedReadsR, singletons, getPipelineCtx().getLogger());
         output.addIntermediateFile(singletons);
