@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 public class DockerWrapper extends AbstractCommandWrapper
@@ -258,10 +259,11 @@ public class DockerWrapper extends AbstractCommandWrapper
                         throw e;
                     }
 
-                    getLogger().info("Exit code " + getLastReturnCode() + ", retrying after 1 sec (" + retries + " of " + getMaxRetries()+ ")");
+                    final long randomNum = ThreadLocalRandom.current().nextInt(2, 11);
+                    getLogger().info("Exit code " + getLastReturnCode() + ", retrying after " + randomNum + " sec(s) (" + retries + " of " + getMaxRetries()+ ")");
                     try
                     {
-                        Thread.sleep(1000);
+                        Thread.sleep(1000 * randomNum);
                     }
                     catch (InterruptedException ex)
                     {
