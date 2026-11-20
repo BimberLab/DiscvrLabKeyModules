@@ -325,7 +325,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
                 RecordedAction copyAction = new RecordedAction(COPY_INPUTS_ACTIONNAME);
                 preprocessingActions.add(copyAction);
-                File target = new File(getHelper().getWorkingDirectory(), pair.first.getName());
+                File target = FileUtil.appendName(getHelper().getWorkingDirectory(), pair.first.getName());
 
                 target = _wd.inputFile(pair.first, target, false);
                 copiedInputs.put(pair.first, target);
@@ -335,7 +335,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
                 if (pair.second != null)
                 {
-                    File target2 = new File(getHelper().getWorkingDirectory(), pair.second.getName());
+                    File target2 = FileUtil.appendName(getHelper().getWorkingDirectory(), pair.second.getName());
                     target2 = _wd.inputFile(pair.second, target2, false);
                     copiedInputs.put(pair.second, target2);
                     getHelper().getFileManager().addInput(copyAction, "Input FASTQ", pair.second);
@@ -426,7 +426,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
         //check client-supplied params
         String val = getJob().getParameters().get(AlignerIndexUtil.COPY_LOCALLY);
-        boolean doCopy = val == null || ConvertHelper.convert(val, Boolean.class);
+        boolean doCopy = val == null || Boolean.TRUE.equals(ConvertHelper.convert(val, Boolean.class));
 
         //but let aligners override this.
         AlignmentStep alignmentStep = getHelper().getSingleStep(AlignmentStep.class).create(getHelper());
@@ -447,13 +447,13 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             action.setStartTime(start);
 
             String basename = FileUtil.getBaseName(refFasta);
-            File targetDir = new File(_wd.getDir().toNioPathForRead().toFile(), "Shared");
+            File targetDir = FileUtil.appendName(_wd.getDir().toNioPathForRead().toFile(), "Shared");
             for (File f : refFasta.getParentFile().listFiles())
             {
                 if (f.getName().startsWith(basename))
                 {
                     getJob().getLogger().debug("copying reference file: " + f.getPath());
-                    File movedFile = _wd.inputFile(f, new File(targetDir, f.getName()), true);
+                    File movedFile = _wd.inputFile(f, FileUtil.appendName(targetDir, f.getName()), true);
                     copiedInputs.put(f, movedFile);
                     action.addInputIfNotPresent(f, "Reference File");
                     action.addOutputIfNotPresent(movedFile, "Copied Reference File", true);
@@ -465,7 +465,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             getJob().getLogger().info("Copy Reference Duration: " + DurationFormatUtils.formatDurationWords(end.getTime() - start.getTime(), true, true));
             actions.add(action);
 
-            referenceGenome.setWorkingFasta(new File(targetDir, refFasta.getName()));
+            referenceGenome.setWorkingFasta(FileUtil.appendName(targetDir, refFasta.getName()));
 
             getTaskFileManagerImpl().addIntermediateFile(targetDir);
         }
@@ -560,8 +560,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 }
             }
 
-            File outputDir = new File(getHelper().getWorkingDirectory(), originalbaseName);
-            outputDir = new File(outputDir, SequenceTaskHelper.PREPROCESSING_SUBFOLDER_NAME);
+            File outputDir = FileUtil.appendName(getHelper().getWorkingDirectory(), originalbaseName);
+            outputDir = FileUtil.appendName(outputDir, SequenceTaskHelper.PREPROCESSING_SUBFOLDER_NAME);
             if (!outputDir.exists())
             {
                 getJob().getLogger().debug("creating output directory: " + outputDir.getPath());
@@ -628,7 +628,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             RecordedAction action = new RecordedAction(NORMALIZE_FILENAMES_ACTION);
             Date start = new Date();
             action.setStartTime(start);
-            File renamed1 = new File(pair.first.getParentFile(), originalbaseName + ".preprocessed" + extension);
+            File renamed1 = FileUtil.appendName(pair.first.getParentFile(), originalbaseName + ".preprocessed" + extension);
             if (renamed1.exists())
             {
                 getJob().getLogger().debug("deleting existing file prior to rename: " + renamed1.getName());
@@ -644,7 +644,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
             if (pair.second != null)
             {
-                File renamed2 = new File(pair.second.getParentFile(), originalbaseName2 + ".preprocessed" + extension);
+                File renamed2 = FileUtil.appendName(pair.second.getParentFile(), originalbaseName2 + ".preprocessed" + extension);
                 if (renamed2.exists())
                 {
                     getJob().getLogger().debug("deleting existing file prior to rename: " + renamed2.getName());
@@ -876,7 +876,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             Date start = new Date();
             renameAction.setStartTime(start);
             getHelper().getFileManager().addInput(renameAction, "Input BAM", bam);
-            renamedBam = new File(bam.getParentFile(), basename + ".bam");
+            renamedBam = FileUtil.appendName(bam.getParentFile(), basename + ".bam");
             if (!renamedBam.getPath().equalsIgnoreCase(bam.getPath()))
             {
                 getJob().getLogger().info("\tnormalizing BAM name to: " + renamedBam.getPath());
@@ -940,7 +940,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     originalIndex.delete();
                 }
 
-                renamedBam = new File(bam.getParentFile(), basename + ".bam");
+                renamedBam = FileUtil.appendName(bam.getParentFile(), basename + ".bam");
                 getHelper().getFileManager().addInput(indexAction, FINAL_BAM_ROLE, renamedBam);
 
                 File bai = SequenceAnalysisService.get().getExpectedBamOrCramIndex(renamedBam);
@@ -998,7 +998,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     metricsAction.setStartTime(start);
                     getJob().getLogger().info("calculating alignment metrics");
                     getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING ALIGNMENT SUMMARY METRICS");
-                    File metricsFile = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".summary.metrics");
+                    File metricsFile = FileUtil.appendName(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".summary.metrics");
                     AlignmentSummaryMetricsWrapper wrapper = new AlignmentSummaryMetricsWrapper(getJob().getLogger());
                     wrapper.executeCommand(renamedBam, referenceGenome.getWorkingFastaFile(), metricsFile);
                     getHelper().getFileManager().addInput(metricsAction, "BAM File", renamedBam);
@@ -1014,7 +1014,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     {
                         getJob().getLogger().info("calculating wgs metrics");
                         getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS");
-                        File wgsMetricsFile = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".wgs.metrics");
+                        File wgsMetricsFile = FileUtil.appendName(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".wgs.metrics");
                         CollectWgsMetricsWrapper wgsWrapper = new CollectWgsMetricsWrapper(getJob().getLogger());
                         wgsWrapper.executeCommand(renamedBam, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
                         getHelper().getFileManager().addOutput(metricsAction, "WGS Metrics File", wgsMetricsFile);
@@ -1030,7 +1030,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     {
                         getJob().getLogger().info("calculating wgs metrics over non-zero coverage");
                         getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING WGS METRICS OVER NON-ZERO COVERAGE");
-                        File wgsMetricsFile = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".wgsNonZero.metrics");
+                        File wgsMetricsFile = FileUtil.appendName(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".wgsNonZero.metrics");
                         CollectWgsMetricsWithNonZeroCoverageWrapper wgsWrapper = new CollectWgsMetricsWithNonZeroCoverageWrapper(getJob().getLogger());
                         wgsWrapper.executeCommand(renamedBam, wgsMetricsFile, referenceGenome.getWorkingFastaFile());
                         getHelper().getFileManager().addOutput(metricsAction, "WGS Non-Zero Coverage Metrics File", wgsMetricsFile);
@@ -1043,8 +1043,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                     {
                         getJob().getLogger().info("calculating insert size metrics");
                         getJob().setStatus(PipelineJob.TaskStatus.running, "CALCULATING INSERT SIZE METRICS");
-                        File metricsFile2 = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".insertsize.metrics");
-                        File metricsHistogram = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".insertsize.metrics.pdf");
+                        File metricsFile2 = FileUtil.appendName(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".insertsize.metrics");
+                        File metricsHistogram = FileUtil.appendName(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".insertsize.metrics.pdf");
                         CollectInsertSizeMetricsWrapper collectInsertSizeMetricsWrapper = new CollectInsertSizeMetricsWrapper(getJob().getLogger());
                         if (collectInsertSizeMetricsWrapper.executeCommand(renamedBam, metricsFile2, metricsHistogram, referenceGenome.getWorkingFastaFile()) != null)
                         {
@@ -1072,7 +1072,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 {
                     IdxStatsRunner idxRunner = new IdxStatsRunner(getJob().getLogger());
                     idxRunner.execute(renamedBam);
-                    idxRunner.executeAndSave(renamedBam, new File(renamedBam.getParentFile(), "idxstats.txt"));
+                    idxRunner.executeAndSave(renamedBam, FileUtil.appendName(renamedBam.getParentFile(), "idxstats.txt"));
                     getHelper().getFileManager().addCommandsToAction(idxRunner.getCommandsExecuted(), metricsAction);
                 }
                 else
@@ -1145,7 +1145,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
         if (doCramConvert)
         {
             getJob().getLogger().info("BAM will be converted to CRAM");
-            final File cramFile = new File(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".cram");
+            final File cramFile = FileUtil.appendName(renamedBam.getParentFile(), FileUtil.getBaseName(renamedBam) + ".cram");
             final File cramFileIdx = new File(cramFile.getPath() + ".crai");
             Integer threads = SequenceTaskHelper.getMaxThreads(getJob());
             if (!cramFileIdx.exists())
@@ -1204,7 +1204,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             Date start = new Date();
             mergeAction1.setStartTime(start);
 
-            File doneFile = new File(getHelper().getWorkingDirectory(), "merge.done");
+            File doneFile = FileUtil.appendName(getHelper().getWorkingDirectory(), "merge.done");
             Set<Integer> typesFound = new HashSet<>();
             for (Pair<File, File> pair : files.values())
             {
@@ -1224,7 +1224,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 throw new PipelineJobException("These data have a mixture of paired and unpaired reads");
             }
 
-            File mergedForward = new File(getHelper().getWorkingDirectory(), SequenceTaskHelper.getMinimalBaseName(forward.get(0).getName()) + ".merged.R1.fastq.gz");
+            File mergedForward = FileUtil.appendName(getHelper().getWorkingDirectory(), SequenceTaskHelper.getMinimalBaseName(forward.get(0).getName()) + ".merged.R1.fastq.gz");
             if (doneFile.exists())
             {
                 getJob().getLogger().info("FASTQ merge completed, skipping forward merge");
@@ -1250,7 +1250,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 mergeAction2.setStartTime(start);
                 reverse.forEach(x -> getHelper().getFileManager().addInput(mergeAction2, "Input FASTQ", x));
 
-                mergedReverse = new File(getHelper().getWorkingDirectory(), SequenceTaskHelper.getMinimalBaseName(forward.get(0).getName()) + ".merged.R2.fastq.gz");
+                mergedReverse = FileUtil.appendName(getHelper().getWorkingDirectory(), SequenceTaskHelper.getMinimalBaseName(forward.get(0).getName()) + ".merged.R2.fastq.gz");
                 if (doneFile.exists())
                 {
                     getJob().getLogger().info("FASTQ merge completed, skipping reverse merge");
@@ -1421,8 +1421,8 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
             getHelper().getFileManager().addInput(alignmentAction, IndexOutputImpl.REFERENCE_DB_FASTA, referenceGenome.getSourceFastaFile());
 
-            File outputDirectory = new File(getHelper().getWorkingDirectory(), SequenceTaskHelper.getMinimalBaseName(inputFiles.get(0).first.getName()));
-            outputDirectory = new File(outputDirectory, ALIGNMENT_SUBFOLDER_NAME);
+            File outputDirectory = FileUtil.appendName(getHelper().getWorkingDirectory(), SequenceTaskHelper.getMinimalBaseName(inputFiles.get(0).first.getName()));
+            outputDirectory = FileUtil.appendName(outputDirectory, ALIGNMENT_SUBFOLDER_NAME);
             if (!outputDirectory.exists())
             {
                 getJob().getLogger().debug("creating directory: " + outputDirectory.getPath());
@@ -1854,7 +1854,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             action1.addOutput(new File("/output"), "Output", false);
 
             File tmp = new File(System.getProperty("java.io.tmpdir"));
-            File xml = new File(tmp, Resumer.JSON_NAME);
+            File xml = FileUtil.appendName(tmp, Resumer.JSON_NAME);
 
             ObjectMapper objectMapper = PipelineJob.createObjectMapper();
             objectMapper.writeValue(xml, action1);
@@ -1893,7 +1893,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
             r._filesToAlign.put(rd, pair);
 
             File tmp = new File(System.getProperty("java.io.tmpdir"));
-            File file = new File(tmp, Resumer.JSON_NAME);
+            File file = FileUtil.appendName(tmp, Resumer.JSON_NAME);
             r.writeToJson(tmp);
 
             //after deserialization the RecordedAction should match the original
@@ -1921,7 +1921,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
     private File getCachedReadDataDir()
     {
-        return new File(getHelper().getWorkingDirectory(), "cachedReadData");
+        return FileUtil.appendName(getHelper().getWorkingDirectory(), "cachedReadData");
     }
 
     private void restoreArchivedReadDataIfNeeded(Readset rs) throws PipelineJobException
@@ -2003,16 +2003,16 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                 File outDir = getCachedReadDataDir();
                 getTaskFileManagerImpl().addDeferredIntermediateFile(outDir); // NOTE: this must be deferred so it remains until the end
 
-                File doneFile = new File(outDir, rd.getSra_accession() + ".done");
+                File doneFile = FileUtil.appendName(outDir, rd.getSra_accession() + ".done");
                 sraIDs.add(rd.getSra_accession());
                 RestoreSraDataHandler.FastqDumpWrapper sra = new RestoreSraDataHandler.FastqDumpWrapper(getJob().getLogger());
                 if (doneFile.exists())
                 {
                     getPipelineJob().getLogger().debug("Re-using existing SRA download: " + rd.getSra_accession());
-                    rdi.setFile(new File(outDir, rd.getSra_accession() + (rd.isPairedEnd() ? "_1" : "") + ".fastq.gz"), 1);
+                    rdi.setFile(FileUtil.appendName(outDir, rd.getSra_accession() + (rd.isPairedEnd() ? "_1" : "") + ".fastq.gz"), 1);
                     if (rd.getFileId2() != null)
                     {
-                        rdi.setFile(new File(outDir, rd.getSra_accession() + "_2.fastq.gz"), 2);
+                        rdi.setFile(FileUtil.appendName(outDir, rd.getSra_accession() + "_2.fastq.gz"), 2);
                     }
                 }
                 else
@@ -2036,7 +2036,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
                         }
 
                         Pair<File, File> downloaded = sra.downloadSra(rd.getSra_accession(), unzippedOutDir, rd.isPairedEnd(), false);
-                        File moved1 = new File(outDir, downloaded.first.getName());
+                        File moved1 = FileUtil.appendName(outDir, downloaded.first.getName());
                         if (moved1.exists())
                         {
                             moved1.delete();
@@ -2048,7 +2048,7 @@ public class SequenceAlignmentTask extends WorkDirectoryTask<SequenceAlignmentTa
 
                         if (downloaded.second != null)
                         {
-                            File moved2 = new File(outDir, downloaded.second.getName());
+                            File moved2 = FileUtil.appendName(outDir, downloaded.second.getName());
                             if (moved2.exists())
                             {
                                 moved2.delete();

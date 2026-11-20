@@ -618,8 +618,17 @@ public class RestoreSraDataHandler extends AbstractParameterizedOutputHandler<Se
             else
             {
                 // run gzip directly for speed:
+                Integer threads = SequencePipelineService.get().getMaxThreads(getLogger());
+                File pigz = SimpleScriptWrapper.resolveFileInPath("pigz", null, false);
                 SimpleScriptWrapper wrapper = new SimpleScriptWrapper(getLogger());
-                wrapper.execute(Arrays.asList("/bin/bash", "-c", "gzip -f '" + input.getPath() + "'"));
+                if (threads != null && pigz != null)
+                {
+                    wrapper.execute(Arrays.asList("/bin/bash", "-c", pigz.getPath() + " -p " + threads + " '" + input.getPath() + "'"));
+                }
+                else
+                {
+                    wrapper.execute(Arrays.asList("/bin/bash", "-c", "gzip -f '" + input.getPath() + "'"));
+                }
 
                 return new File(input.getPath() + ".gz");
             }
