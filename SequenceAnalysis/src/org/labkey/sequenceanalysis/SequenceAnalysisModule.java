@@ -149,6 +149,7 @@ import org.labkey.sequenceanalysis.run.bampostprocessing.SplitNCigarReadsStep;
 import org.labkey.sequenceanalysis.run.preprocessing.CutadaptCropWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.CutadaptWrapper;
 import org.labkey.sequenceanalysis.run.preprocessing.DownsampleFastqWrapper;
+import org.labkey.sequenceanalysis.run.preprocessing.FastpStep;
 import org.labkey.sequenceanalysis.run.preprocessing.FastqcProcessingStep;
 import org.labkey.sequenceanalysis.run.preprocessing.FilterReadsStep;
 import org.labkey.sequenceanalysis.run.preprocessing.FlashPipelineStep;
@@ -278,6 +279,7 @@ public class SequenceAnalysisModule extends ExtendedSimpleModule
 
         //preprocessing
         SequencePipelineService.get().registerPipelineStep(new DownsampleFastqWrapper.Provider());
+        SequencePipelineService.get().registerPipelineStep(new FastpStep.Provider());
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.ReadLengthFilterProvider());
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.SlidingWindowTrimmingProvider());
         SequencePipelineService.get().registerPipelineStep(new TrimmomaticWrapper.CropReadsProvider());
