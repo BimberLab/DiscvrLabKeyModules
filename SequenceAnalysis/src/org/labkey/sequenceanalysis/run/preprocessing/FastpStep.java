@@ -57,7 +57,7 @@ public class FastpStep extends AbstractCommandPipelineStep<FastpStep.FastpWrappe
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.createSwitch("--cut_tail"), "cut_tail", "Cut Tail", "Move a sliding window from tail (3') to front, drop the bases in the window if its mean quality is below cut_mean_quality, stop otherwise. Default is disabled.", "checkbox", new JSONObject()
                     {{
 
-                    }}, true),
+                    }}, false),
                     ToolParameterDescriptor.createCommandLineParam(CommandLineParam.create("--cut_mean_quality"), "cut_mean_quality", "Cut Mean Quality", "Min read length required", "ldk-integerfield", new JSONObject()
                     {{
                         put("minValue", 0);
