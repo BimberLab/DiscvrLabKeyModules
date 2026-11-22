@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<study archiveVersion="11.31" label="Study Data" timepointType="CONTINUOUS" subjectNounSingular="Animal" subjectNounPlural="Animals" subjectColumnName="Id" description="" descriptionRendererType="TEXT_WITH_LINKS" investigator="" grant="" startDate="1990-01-01-06:00" securityType="BASIC_WRITE" xmlns="http://labkey.org/study/xml">
+  <!--<cohorts type="AUTOMATIC" mode="SIMPLE" datasetId="1012" datasetProperty="v_status"/>-->
+  <qcStates showPrivateDataByDefault="true"/>
+  <datasets dir="datasets" file="datasets_manifest.xml">
+    <definition file="Studies.dataset"/>
+  </datasets>
+  <comments/>
+</study>

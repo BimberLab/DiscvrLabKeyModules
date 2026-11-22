@@ -1,0 +1,27 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="outcomes" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Id"/>
+                    <column columnName="date">
+                        <columnTitle>Date</columnTitle>
+                        <formatString>Date</formatString>
+                    </column>
+                    <column columnName="outcome">
+                        <columnTitle>Outcome/Phenotype</columnTitle>
+                    </column>
+                    <column columnName="suboutcome">
+                        <columnTitle>Sub-Outcome</columnTitle>
+                    </column>
+                    <column columnName="comments">
+                        <columnTitle>Comments</columnTitle>
+                    </column>
+                    <column columnName="dataSource">
+                        <columnTitle>Data Source</columnTitle>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>
