@@ -11,7 +11,7 @@ for (datasetId in names(seuratObjects)) {
     printName(datasetId)
     seuratObj <- readSeuratRDS(seuratObjects[[datasetId]])
 
-    seuratObj <- ApplyKnownClonotypicData(seuratObj, antigenInclusionList = antigenInclusionList, antigenExclusionList = antigenExclusionList, minActivationFrequency = minActivationFrequency, minFractionCloneActivated = minFractionCloneActivated)
+    seuratObj <- ApplyKnownClonotypicData(seuratObj, methods = calculationMethods, antigenInclusionList = antigenInclusionList, antigenExclusionList = antigenExclusionList, minActivationFrequency = minActivationFrequency, minFractionCloneActivated = minFractionCloneActivated)
     saveData(seuratObj, datasetId)
 
     # Cleanup

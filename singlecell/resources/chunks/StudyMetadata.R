@@ -34,6 +34,8 @@ for (datasetId in names(seuratObjects)) {
         seuratObj <- Rdiscvr::ApplyPPG_Stim_Metadata(seuratObj, errorIfUnknownIdsFound = errorIfUnknownIdsFound)
     } else if (studyName == 'IMPAC_TB_Human') {
         seuratObj <- Rdiscvr::ApplyIMPAC_TB_Human_Metadata(seuratObj, errorIfUnknownIdsFound = errorIfUnknownIdsFound)
+    } else if (studyName == 'SIV_Metadata') {
+        seuratObj <- Rdiscvr::AppendSivStudyInfo(seuratObj)
     } else {
         stop(paste0('Unknown study: ', studyName))
     }

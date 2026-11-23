@@ -32,6 +32,9 @@ function beforeUpsert(row, oldRow, errors){
     else if (['Infected cells: Mock', 'Infected Cells: Mock'].indexOf(row.stim) !== -1){
         row.stim = 'Mock-Infected CD4s';
     }
+    else if (['mock'].indexOf(row.stim) !== -1){
+        row.stim = 'Mock';
+    }
 
     var lookupFields = ['stim'];
     for (var i=0;i<lookupFields.length;i++){

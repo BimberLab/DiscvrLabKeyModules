@@ -71,9 +71,9 @@ public class BWASWWrapper extends BWAWrapper
         args.add("bwasw");
         if (additionalArgs != null)
             args.addAll(additionalArgs);
-        appendThreads(job, args);
+        appendThreads(job, args, 0);
 
-        args.add(new File(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
+        args.add(FileUtil.appendName(referenceGenome.getAlignerIndexDir("bwa"), FileUtil.getBaseName(referenceGenome.getWorkingFastaFile().getName()) + ".bwa.index").getPath());
         args.add(inputFastq1.getPath());
 
         if (inputFastq2 != null)
@@ -81,7 +81,7 @@ public class BWASWWrapper extends BWAWrapper
             args.add(inputFastq2.getPath());
         }
 
-        File sam = new File(outputDirectory, basename + ".sam");
+        File sam = FileUtil.appendName(outputDirectory, basename + ".sam");
         execute(args, sam);
         if (!sam.exists() || !SequenceUtil.hasMinLineCount(sam, 2))
         {
@@ -89,7 +89,7 @@ public class BWASWWrapper extends BWAWrapper
         }
 
         //convert to BAM
-        File bam = new File(outputDirectory, basename + ".bam");
+        File bam = FileUtil.appendName(outputDirectory, basename + ".bam");
         SamFormatConverterWrapper converter = new SamFormatConverterWrapper(getLogger());
         converter.setStringency(ValidationStringency.SILENT);
         bam = converter.execute(sam, bam, true);

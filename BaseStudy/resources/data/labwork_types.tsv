@@ -1,0 +1,61 @@
+value	title	units	sort_order	category
+GLUC	Glucose	mg/dL	1	Chemistry
+BUN	Blood urea nitrogen	mg/dL	2	Chemistry
+CREAT	Creatinine	mg/dL	3	Chemistry
+CPK	Creatine phosphokinase	U/L	4	Chemistry
+CHOL	Cholesterol	mg/dl	5	Chemistry
+TRIG	Triglyceride	mg/dL	6	Chemistry
+SGOT	Serum glutamic oxaloacetic transaminase	IU/L	7	Chemistry
+LDL	Low-Density Lipoprotein	mg/dL	8	Chemistry
+LDH	Lactate dehydrogenase	IU/L	9	Chemistry
+TB	Total Bilirubin	mg/dL	10	Chemistry
+GGT	Gamma-glutamyltransferase	IU/L	11	Chemistry
+SGPT	Serum glutamic pyruvic transaminase	IU/L	12	Chemistry
+TP	Total Protein	g/dL	13	Chemistry
+ALB	Albumin	g/dL	14	Chemistry
+ALKP	Alkaline Phosphatase	IU/L	15	Chemistry
+CA	Calcium	mg/dL	16	Chemistry
+PHOS	Phosphorus	mg/dL	17	Chemistry
+FE	Iron	?g/dL	18	Chemistry
+K	Potassium	mmol/L	20	Chemistry
+UA	Uric Acid	mg/dL	22	Chemistry
+A/P	Albumin/Protein Ratio	ratio	999	Chemistry
+B/C	BUN/Creatinine Ratio	ratio	999	Chemistry
+CL	Chloride	mEq/L	999	Chemistry
+FIBR	Fibrinogen	mg/dL	999	Chemistry
+HDL	High-Density Lipoprotein	mg/dL	999	Chemistry
+WBC	White Blood Cells	10^3/uL	1	Hematology
+NEUT%	Neutrophils	%	2	Hematology
+BAND%	Bands		3	Hematology
+LYMPH%	Lymphocytes	%	4	Hematology
+MONO%	Monocytes	%	5	Hematology
+EOS%	Eosinophils	%	6	Hematology
+BASO%	Basophils	%	7	Hematology
+HCT	Hematocrit	%	8	Hematology
+HGB	Hemoglobin		9	Hematology
+RBC	Red Blood Cells	10^6/uL	10	Hematology
+MCV	Mean corpuscular volume	fL	11	Hematology
+MCH	Mean corpuscular hemoglobin	picograms	12	Hematology
+MCHC	Mean corpuscular hemoglobin concentration	g/dL	13	Hematology
+RETIC	Reticulocytes	%	14	Hematology
+PLT	Platelets	10^3/uL	15	Hematology
+MYELO	Myelocytes	%	999	Hematology
+MPV	Mean platelet volume	fl	999	Hematology
+Anisocytosis	Anisocytosis		999	Hematology
+GLOB	Globulin	g/dL	999	Hematology
+Hypochromic RBC	Hypochromic RBC		999	Hematology
+LUC	Large unstained cells		999	Hematology
+Macrocytic RBC	Macrocytic RBC		999	Hematology
+METAMYELO	Metamyelocytes	%	999	Hematology
+Microcytic RBC	Microcytic RBC		999	Hematology
+NRBC	Nucleated red blood cells		999	Hematology
+PCV	Packed cell volume	%	999	Hematology
+Polychromasia RBC	Polychromasia RBC		999	Hematology
+MPMN	Neutrophils		999	Hematology
+SEDRate	Sedimentation rate		999	Hematology
+RDW		%	999	Hematology
+NEUT#	Neutrophil #	10^3/uL	16	Hematology
+LYMPH#	Lymphocyte #	10^3/uL	17	Hematology
+MONO#	Monocyte #	10^3/uL	18	Hematology
+EOS#	Eosinophil #	10^3/uL	19	Hematology
+BASO#	Basophil #	10^3/uL	20	Hematology

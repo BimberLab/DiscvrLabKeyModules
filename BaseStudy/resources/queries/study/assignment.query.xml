@@ -1,0 +1,49 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="assignment" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Id"/>
+                    <column columnName="date">
+                        <columnTitle>Start Date</columnTitle>
+                        <formatString>Date</formatString>
+                    </column>
+                    <column columnName="enddate">
+                        <columnTitle>End Date</columnTitle>
+                        <formatString>Date</formatString>
+                    </column>
+                    <column columnName="study">
+                        <columnTitle>Study Name</columnTitle>
+                    </column>
+                    <column columnName="cohortId">
+                        <columnTitle>Cohort ID</columnTitle>
+                        <fk>
+                            <fkDbSchema>studies</fkDbSchema>
+                            <fkTable>studyCohorts</fkTable>
+                            <fkColumnName>rowId</fkColumnName>
+                            <fkDisplayColumnName>studyAndCohort</fkDisplayColumnName>
+                        </fk>
+                    </column>
+                    <!-- Deprecated -->
+                    <column columnName="subgroup">
+                        <columnTitle>Sub-Group</columnTitle>
+                    </column>
+                    <!-- Deprecated -->
+                    <column columnName="cohortAlias">
+                        <columnTitle>Cohort Alias</columnTitle>
+                    </column>
+                    <column columnName="dataSource">
+                        <columnTitle>Data Source</columnTitle>
+                    </column>
+                    <column columnName="category">
+                        <columnTitle>Category</columnTitle>
+                    </column>
+                    <column columnName="description">
+                        <columnTitle>Description</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>
