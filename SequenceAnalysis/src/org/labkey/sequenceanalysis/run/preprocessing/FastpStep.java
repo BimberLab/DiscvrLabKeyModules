@@ -108,7 +108,7 @@ public class FastpStep extends AbstractCommandPipelineStep<FastpStep.FastpWrappe
 
         args.addAll(getClientCommandArgs());
 
-        getWrapper().execute(args);
+        getWrapper().run(args);
 
         output.setProcessedFastq(Pair.of(outputFile1, outputFile2));
         output.addCommandsExecuted(getWrapper().getCommandsExecuted());
@@ -128,7 +128,6 @@ public class FastpStep extends AbstractCommandPipelineStep<FastpStep.FastpWrappe
             List<String> params = new ArrayList<>();
             File fastp = AbstractCommandWrapper.resolveFileInPath("fastp", null, true);
             params.add(fastp.getAbsolutePath());
-
             params.addAll(extraParams);
 
             Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
