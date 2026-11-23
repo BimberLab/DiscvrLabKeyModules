@@ -1,0 +1,22 @@
+reporttype	category	schemaname	queryname	viewname	reporttitle	subjectfieldname
+query	General	study	additionalDatatypes		Additional Data	
+query	Clinical	study	weight		Weights	
+query	Clinical	study	treatments		Treatments/Medications	
+query	Clinical	study	chemistryPivot		Blood Chemistry	
+query	Clinical	study	hematologyPivot		CBC/Hematology	
+query	Study Design	study	assignment		Project/Study Assignment	
+query	Research	study	flow		Flow Cytometry	
+query	Research	study	outcomes		Study Outcomes/Phenotypes	
+query	Research	study	pvl_outcomes		Study PVL-Based Outcomes
+query	Research	study	genetics		Genetic Data / MHC
+query	Clinical	study	procedures		Procedures	
+query	Research	study	viralLoads		Viral Loads	
+query	General	study	samples		Samples	
+query	Research	study	immunizations		Immunizations	
+query	General	study	flags		Flags/Misc Information	
+query	General	study	demographics		Demographics	
+query	General	study	demographics	Project Summary	Project Summary	
+query	General	study	demographics	MHC Type	MHC Typing	
+query	General	study	demographics	Expanded	Expanded Information
+query	Study Design	studies	timepointToDate		Timepoints	subjectId
+query	Study Design	studies	subjectAnchorDates		Anchor Dates	subjectId

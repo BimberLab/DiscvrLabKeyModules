@@ -1,0 +1,20 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="chemistryPivot" tableDbType="TABLE">
+                <tableTitle>Chemistry Results</tableTitle>
+                <javaCustomizer class="org.labkey.sivstudies.query.SivStudiesCustomizer"/>
+                <columns>
+                    <column columnName="Id">
+                        <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+                        <fk>
+                            <fkDbSchema>study</fkDbSchema>
+                            <fkTable>animal</fkTable>
+                            <fkColumnName>Id</fkColumnName>
+                        </fk>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

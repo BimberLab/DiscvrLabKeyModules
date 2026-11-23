@@ -1,0 +1,53 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="immunizations" tableDbType="TABLE" useColumnOrder="true">
+                <tableTitle>Immunizations/Vaccinations</tableTitle>
+                <columns>
+                    <column columnName="Id"/>
+                    <column columnName="date">
+                        <columnTitle>Date</columnTitle>
+                        <formatString>Date</formatString>
+                    </column>
+                    <column columnName="category">
+                        <columnTitle>Category</columnTitle>
+                    </column>
+                    <column columnName="treatment">
+                        <columnTitle>Treatment</columnTitle>
+                    </column>
+                    <column columnName="backbone">
+                        <columnTitle>Vector Backbone</columnTitle>
+                    </column>
+                    <column columnName="antigens">
+                        <columnTitle>Antigens</columnTitle>
+                    </column>
+                    <column columnName="route">
+                        <columnTitle>Route</columnTitle>
+                    </column>
+                    <column columnName="quantity">
+                        <columnTitle>Quantity</columnTitle>
+                    </column>
+                    <column columnName="quantity_units">
+                        <columnTitle>Quantity Units</columnTitle>
+                    </column>
+                    <column columnName="reason">
+                        <columnTitle>Reason</columnTitle>
+                    </column>
+                    <column columnName="vectorId">
+                        <columnTitle>Vector ID</columnTitle>
+                    </column>
+                    <column columnName="isMock">
+                        <columnTitle>Is Mock?</columnTitle>
+                    </column>
+                    <column columnName="comments">
+                        <columnTitle>Comments</columnTitle>
+                        <inputType>textarea</inputType>
+                    </column>
+                    <column columnName="dataSource">
+                        <columnTitle>Data Source</columnTitle>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>
