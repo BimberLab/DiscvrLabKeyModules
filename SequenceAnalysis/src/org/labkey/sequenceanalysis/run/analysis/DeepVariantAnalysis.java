@@ -65,8 +65,9 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
                 }}, "X,Y"),
                 ToolParameterDescriptor.create("binVersion", "DeepVariant Version", "The version of DeepVariant to run, which is passed to their docker container", "textfield", new JSONObject(){{
                     put("allowBlank", false);
-                }}, "1.6.0"),
-                ToolParameterDescriptor.create("retainVcf", "Retain VCF", "If selected, the VCF with called genotypes will be retained", "checkbox", null, false)
+                }}, "1.10.0"),
+                ToolParameterDescriptor.create("retainVcf", "Retain VCF", "If selected, the VCF with called genotypes will be retained", "checkbox", null, false),
+                ToolParameterDescriptor.create("cpuBuffer", "CPU Buffer", "If provided, the docker process will reduce --num-shards by this value (it is otherwise limited by the job's CPU limit", "ldk-integerfield", null, 2)
         );
     }
 
@@ -104,7 +105,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
                         modelType = "WGS";
                         break;
                     case "Whole Exome":
-                        modelType = "WXS";
+                        modelType = "WES";
                         break;
                     default:
                         throw new IllegalArgumentException("Unknown application: " + rs.getApplication());
@@ -130,8 +131,8 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
         AnalysisOutputImpl output = new AnalysisOutputImpl();
         output.addInput(inputBam, "Input BAM File");
 
-        File outputFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".g.vcf.gz");
-        File idxFile = new File(outputDir, FileUtil.getBaseName(inputBam) + ".g.vcf.gz.idx");
+        File outputFile = FileUtil.appendName(outputDir, FileUtil.getBaseName(inputBam) + ".g.vcf.gz");
+        File idxFile = FileUtil.appendName(outputDir, FileUtil.getBaseName(inputBam) + ".g.vcf.gz.idx");
 
         String inferredModelType = getPipelineCtx().getSequenceSupport().getCachedObject("modelType", String.class);
         String modelType = inferredModelType == null ? getProvider().getParameterByName("modelType").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class) : inferredModelType;
@@ -150,10 +151,11 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
         }
 
         boolean retainVcf = getProvider().getParameterByName("retainVcf").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Boolean.class, false);
+        int cpuBuffer = getProvider().getParameterByName("cpuBuffer").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class, 0);
 
         getWrapper().setOutputDir(outputDir);
         getWrapper().setWorkingDir(outputDir);
-        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, retainVcf, output, binVersion, args, getPipelineCtx());
+        getWrapper().execute(inputBam, referenceGenome.getWorkingFastaFile(), outputFile, retainVcf, output, binVersion, args, getPipelineCtx(), cpuBuffer);
 
         output.addOutput(outputFile, "gVCF File");
         output.addSequenceOutput(outputFile, outputFile.getName(), "DeepVariant gVCF File", rs.getReadsetId(), null, referenceGenome.getGenomeId(), "DeepVariant Version: " + binVersion);
@@ -164,7 +166,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
 
         if (retainVcf)
         {
-            File outputFileVcf = new File(outputDir, FileUtil.getBaseName(inputBam) + ".vcf.gz");
+            File outputFileVcf = FileUtil.appendName(outputDir, FileUtil.getBaseName(inputBam) + ".vcf.gz");
             if (!outputFileVcf.exists())
             {
                 throw new PipelineJobException("Missing expected file: " + outputFileVcf.getPath());
@@ -189,7 +191,7 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             super(logger);
         }
 
-        public void execute(File inputBam, File refFasta, File outputGvcf, boolean retainVcf, PipelineOutputTracker tracker, String binVersion, List<String> extraArgs, PipelineContext ctx) throws PipelineJobException
+        public void execute(File inputBam, File refFasta, File outputGvcf, boolean retainVcf, PipelineOutputTracker tracker, String binVersion, List<String> extraArgs, PipelineContext ctx, int cpuBuffer) throws PipelineJobException
         {
             File workDir = outputGvcf.getParentFile();
             File outputVcf = new File(outputGvcf.getPath().replaceAll(".g.vcf", ".vcf"));
@@ -206,6 +208,9 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
 
             List<String> bashArgs = new ArrayList<>(Arrays.asList("/opt/deepvariant/bin/run_deepvariant"));
             bashArgs.add("--make_examples_extra_args='normalize_reads=true'");
+
+            // NOTE: consider this:
+            //bashArgs.add("--call_variants_extra_args='writer_threads=" + writerThreads + "'");
             bashArgs.add("--ref=" + refFasta.getPath());
             bashArgs.add("--reads=" + inputBam.getPath());
             bashArgs.add("--output_gvcf=" + outputGvcf.getPath());
@@ -213,7 +218,18 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
             Integer maxThreads = SequencePipelineService.get().getMaxThreads(getLogger());
             if (maxThreads != null)
             {
-                bashArgs.add("--num_shards=" + maxThreads);
+                if (cpuBuffer > 0)
+                {
+                    getLogger().debug("Reducing maxThreads based on cpuBuffer, by: " + cpuBuffer);
+                }
+
+                int effectiveMaxThreads = maxThreads - cpuBuffer;
+                if (effectiveMaxThreads < 1)
+                {
+                    throw new PipelineJobException("The combination of maxThreads (" + maxThreads + ") and cpuBuffer (" + cpuBuffer + ") resulted in a negative value");
+                }
+
+                bashArgs.add("--num_shards=" + effectiveMaxThreads);
             }
 
             if (extraArgs != null)
@@ -223,6 +239,13 @@ public class DeepVariantAnalysis extends AbstractCommandPipelineStep<DeepVariant
 
             DockerWrapper wrapper = new DockerWrapper("google/deepvariant:" + binVersion, ctx.getLogger(), ctx);
             wrapper.setEntryPoint("/bin/bash");
+            // NOTE: this is designed to avoid errors in make_examples, where the subprocesses use all cores on the node:
+            wrapper.addToDockerEnvironment("OPENBLAS_NUM_THREADS", "1");
+            wrapper.addToDockerEnvironment("OMP_NUM_THREADS", "1");
+            wrapper.addToDockerEnvironment("MKL_NUM_THREADS", "1");
+            wrapper.addToDockerEnvironment("TF_NUM_INTEROP_THREADS", "1");
+            wrapper.addToDockerEnvironment("TF_NUM_INTRAOP_THREADS", "1");
+
             wrapper.executeWithDocker(bashArgs, ctx.getWorkingDirectory(), tracker, inputFiles);
 
             if (!outputGvcf.exists())

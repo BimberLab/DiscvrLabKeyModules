@@ -42,6 +42,7 @@ import org.labkey.api.sequenceanalysis.run.AbstractCommandWrapper;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.Path;
 import org.labkey.api.writer.PrintWriters;
 
 import java.io.BufferedReader;
@@ -311,8 +312,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             args.add("--disable-ui");
 
             String idParam = StringUtils.trimToNull(getProvider().getParameterByName("id").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
-            String id = FileUtil.makeLegalName(rs.getName()) + (idParam == null ? "" : "-" + idParam);
-            id = id.replaceAll("[^a-zA-z0-9_\\-]", "_");
+            String id = CellRangerWrapper.getId(idParam, rs);
             args.add("--id=" + id);
 
             File indexDir = AlignerIndexUtil.getIndexDir(referenceGenome, getIndexCachedDirName(getPipelineCtx().getJob()));
@@ -323,7 +323,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 throw new PipelineJobException("Enrichment primers are required");
             }
 
-            File primerFile = new File(outputDirectory, "primers.txt");
+            File primerFile = FileUtil.appendName(outputDirectory, "primers.txt");
             primers = primers.replaceAll("\\s+", ",");
             primers = primers.replaceAll(",+", ",");
 
@@ -356,13 +356,13 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 args.add("--localmem=" + maxRam);
             }
 
-            File localFqDir = new File(outputDirectory, "localFq");
+            File localFqDir = FileUtil.appendName(outputDirectory, "localFq");
             output.addIntermediateFile(localFqDir);
             Set<String> sampleNames = prepareFastqSymlinks(rs, localFqDir);
 
             getPipelineCtx().getLogger().debug("Sample names: [" + StringUtils.join(sampleNames, ",") + "]");
 
-            File sampleFile = new File(getPipelineCtx().getWorkingDirectory(), "sample.csv");
+            File sampleFile = FileUtil.appendName(getPipelineCtx().getWorkingDirectory(), "sample.csv");
             output.addIntermediateFile(sampleFile);
             try (PrintWriter writer = PrintWriters.getPrintWriter(sampleFile))
             {
@@ -392,7 +392,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             getWrapper().setWorkingDir(outputDirectory);
 
             //Note: we can safely assume only this server is working on these files, so if the _lock file exists, it was from a previous failed job.
-            File lockFile = new File(outputDirectory, id + "/_lock");
+            File lockFile = FileUtil.appendPath(outputDirectory, Path.parse(id + "/_lock"));
             if (lockFile.exists())
             {
                 getPipelineCtx().getLogger().info("Lock file exists, deleting: " + lockFile.getPath());
@@ -401,8 +401,8 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
             getWrapper().execute(args);
 
-            File outdir = new File(outputDirectory, id);
-            outdir = new File(outdir, "outs");
+            File outdir = FileUtil.appendName(outputDirectory, id);
+            outdir = FileUtil.appendName(outdir, "outs");
 
 
             File csvAB = processOutputsForType(id, rs, referenceGenome, outdir, output, "vdj_t");
@@ -411,10 +411,10 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             processAndMergeCSVs(csvAB, csvGD, getPipelineCtx().getLogger());
 
             // Repeat for filtered contig annotations:
-            processAndMergeCSVs(new File(csvAB.getParentFile(), "filtered_contig_annotations.csv"), new File(csvGD.getParentFile(), "filtered_contig_annotations.csv"), getPipelineCtx().getLogger());
+            processAndMergeCSVs(FileUtil.appendName(csvAB.getParentFile(), "filtered_contig_annotations.csv"), FileUtil.appendName(csvGD.getParentFile(), "filtered_contig_annotations.csv"), getPipelineCtx().getLogger());
 
             //NOTE: this folder has many unnecessary files and symlinks that get corrupted when we rename the main outputs
-            File directory = new File(outdir.getParentFile(), "SC_MULTI_CS");
+            File directory = FileUtil.appendName(outdir.getParentFile(), "SC_MULTI_CS");
             if (directory.exists())
             {
                 //NOTE: this will have lots of symlinks, including corrupted ones, which java handles badly
@@ -425,18 +425,18 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 getPipelineCtx().getLogger().warn("Unable to find folder: " + directory.getPath());
             }
 
-            output.addIntermediateFile(new File(outdir, "vdj_reference"));
-            output.addIntermediateFile(new File(outdir, "multi"));
+            output.addIntermediateFile(FileUtil.appendName(outdir, "vdj_reference"));
+            output.addIntermediateFile(FileUtil.appendName(outdir, "multi"));
 
             try
             {
-                File outputHtml = new File(outdir, "per_sample_outs/" + id + "/web_summary.html");
+                File outputHtml = FileUtil.appendPath(outdir, Path.parse("per_sample_outs/" + id + "/web_summary.html"));
                 if (!outputHtml.exists())
                 {
                     throw new PipelineJobException("Unable to find file: " + outputHtml.getPath());
                 }
 
-                File outputHtmlRename = new File(outputHtml.getParentFile(), FileUtil.makeLegalName(rs.getName() + "_") + outputHtml.getName());
+                File outputHtmlRename = FileUtil.appendName(outputHtml.getParentFile(), FileUtil.makeLegalName(rs.getName() + "_") + outputHtml.getName());
                 if (outputHtmlRename.exists())
                 {
                     outputHtmlRename.delete();
@@ -460,13 +460,13 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         {
             boolean isPrimaryDir = "vdj_t".equals(subdirName);
 
-            File multiDir = new File(outdir, "multi/" + subdirName);
+            File multiDir = FileUtil.appendPath(outdir, Path.parse("multi/" + subdirName));
             if (!multiDir.exists())
             {
                 throw new PipelineJobException("Missing folder: " + multiDir.getPath());
             }
 
-            File sampleDir = new File(outdir, "per_sample_outs/" + sampleId + "/" + subdirName);
+            File sampleDir = FileUtil.appendPath(outdir, Path.parse("per_sample_outs/" + sampleId + "/" + subdirName));
             if (!sampleDir.exists())
             {
                 throw new PipelineJobException("Missing folder: " + sampleDir.getPath());
@@ -477,7 +477,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
             {
                 try
                 {
-                    File dest = new File(sampleDir, f.getName());
+                    File dest = FileUtil.appendName(sampleDir, f.getName());
                     if (dest.exists())
                     {
                         dest.delete();
@@ -491,7 +491,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 }
             }
 
-            File bam = new File(sampleDir, "all_contig.bam");
+            File bam = FileUtil.appendName(sampleDir, "all_contig.bam");
             if (!bam.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + bam.getPath());
@@ -508,14 +508,14 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 new File(bam.getPath() + ".bai").delete();
             }
 
-            File allContigAnnotations = new File(sampleDir, "all_contig_annotations.csv");
+            File allContigAnnotations = FileUtil.appendName(sampleDir, "all_contig_annotations.csv");
             if (!allContigAnnotations.exists())
             {
                 throw new PipelineJobException("Missing file: " + allContigAnnotations.getPath());
             }
 
-            File outputVloupe = new File(sampleDir, "vloupe.vloupe");
-            File csv = new File(sampleDir, "all_contig_annotations.csv");
+            File outputVloupe = FileUtil.appendName(sampleDir, "vloupe.vloupe");
+            File csv = FileUtil.appendName(sampleDir, "all_contig_annotations.csv");
             if (!outputVloupe.exists())
             {
                 //NOTE: if there were no A/B hits, the vLoupe isnt created, but all other outputs exist
@@ -548,18 +548,18 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 output.addSequenceOutput(outputVloupe, rs.getName() + " 10x VLoupe", VLOUPE_CATEGORY, rs.getRowId(), null, referenceGenome.getGenomeId(), versionString);
             }
 
-            output.addIntermediateFile(new File(sampleDir, "airr_rearrangement.tsv"));
-            output.addIntermediateFile(new File(sampleDir, "all_contig_annotations.bed"));
-            output.addIntermediateFile(new File(sampleDir, "all_contig_annotations.json"));
-            output.addIntermediateFile(new File(sampleDir, "cell_barcodes.json"));
-            output.addIntermediateFile(new File(sampleDir, "concat_ref.bam"));
-            output.addIntermediateFile(new File(sampleDir, "concat_ref.bam.bai"));
-            output.addIntermediateFile(new File(sampleDir, "concat_ref.fasta"));
-            output.addIntermediateFile(new File(sampleDir, "concat_ref.fasta.fai"));
-            output.addIntermediateFile(new File(sampleDir, "consensus.bam"));
-            output.addIntermediateFile(new File(sampleDir, "consensus.bam.bai"));
-            output.addIntermediateFile(new File(sampleDir, "donor_regions.fa"));
-            output.addIntermediateFile(new File(sampleDir, "vdj_contig_info.pb"));
+            output.addIntermediateFile(FileUtil.appendName(sampleDir, "airr_rearrangement.tsv"));
+            output.addIntermediateFile(FileUtil.appendName(sampleDir, "all_contig_annotations.bed"));
+            output.addIntermediateFile(FileUtil.appendName(sampleDir, "all_contig_annotations.json"));
+            output.addIntermediateFile(FileUtil.appendName(sampleDir, "cell_barcodes.json"));
+            output.addIntermediateFile(FileUtil.appendName(sampleDir, "concat_ref.bam"));
+            output.addIntermediateFile(FileUtil.appendName(sampleDir, "concat_ref.bam.bai"));
+            output.addIntermediateFile(FileUtil.appendName(sampleDir, "concat_ref.fasta"));
+            output.addIntermediateFile(FileUtil.appendName(sampleDir, "concat_ref.fasta.fai"));
+            output.addIntermediateFile(FileUtil.appendName(sampleDir, "consensus.bam"));
+            output.addIntermediateFile(FileUtil.appendName(sampleDir, "consensus.bam.bai"));
+            output.addIntermediateFile(FileUtil.appendName(sampleDir, "donor_regions.fa"));
+            output.addIntermediateFile(FileUtil.appendName(sampleDir, "vdj_contig_info.pb"));
 
             return csv;
         }
@@ -621,7 +621,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                 try
                 {
                     // a/b:
-                    File target1 = new File(localFqDir, getSymlinkFileName(rs.getName(), idx, false));
+                    File target1 = FileUtil.appendName(localFqDir, getSymlinkFileName(rs.getName(), idx, false));
                     getPipelineCtx().getLogger().debug("file: " + rd.getFile1().getPath());
                     getPipelineCtx().getLogger().debug("target: " + target1.getPath());
                     if (target1.exists())
@@ -634,7 +634,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                     ret.add(getSampleName(target1.getName()));
 
                     // repeat for g/d:
-                    File target1gd = new File(localFqDir, getSymlinkFileName(rs.getName(), idx, false, "-GD"));
+                    File target1gd = FileUtil.appendName(localFqDir, getSymlinkFileName(rs.getName(), idx, false, "-GD"));
                     getPipelineCtx().getLogger().debug("file: " + rd.getFile1().getPath());
                     getPipelineCtx().getLogger().debug("target: " + target1gd.getPath());
                     if (target1gd.exists())
@@ -648,7 +648,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                     if (rd.getFile2() != null)
                     {
                         // a/b:
-                        File target2 = new File(localFqDir, getSymlinkFileName(rs.getName(), idx, true));
+                        File target2 = FileUtil.appendName(localFqDir, getSymlinkFileName(rs.getName(), idx, true));
                         getPipelineCtx().getLogger().debug("file: " + rd.getFile2().getPath());
                         getPipelineCtx().getLogger().debug("target: " + target2.getPath());
                         if (target2.exists())
@@ -660,7 +660,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
                         ret.add(getSampleName(target2.getName()));
 
                         // g/d
-                        File target2gd = new File(localFqDir, getSymlinkFileName(rs.getName(), idx, true, "-GD"));
+                        File target2gd = FileUtil.appendName(localFqDir, getSymlinkFileName(rs.getName(), idx, true, "-GD"));
                         getPipelineCtx().getLogger().debug("file: " + rd.getFile2().getPath());
                         getPipelineCtx().getLogger().debug("target: " + target2gd.getPath());
                         if (target2gd.exists())
@@ -700,7 +700,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
         {
             getPipelineCtx().getLogger().debug("adding 10x metrics");
 
-            File metrics = new File(outDir, "metrics_summary.csv");
+            File metrics = FileUtil.appendName(outDir, "metrics_summary.csv");
             if (!metrics.exists())
             {
                 throw new PipelineJobException("Unable to find file: " + metrics.getPath());
@@ -858,7 +858,7 @@ public class CellRangerVDJWrapper extends AbstractCommandWrapper
 
     private static void processAndMergeCSVs(File abCSV, File gdCSV, Logger log) throws PipelineJobException
     {
-        File output = new File(abCSV.getParentFile(), FileUtil.getBaseName(abCSV) + "_combined.csv");
+        File output = FileUtil.appendName(abCSV.getParentFile(), FileUtil.getBaseName(abCSV) + "_combined.csv");
 
         try (PrintWriter writer = PrintWriters.getPrintWriter(output))
         {

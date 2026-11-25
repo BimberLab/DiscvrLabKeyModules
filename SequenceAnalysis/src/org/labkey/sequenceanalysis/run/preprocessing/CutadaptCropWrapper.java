@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 
 public class CutadaptCropWrapper extends AbstractCommandWrapper
 {
@@ -70,8 +71,8 @@ public class CutadaptCropWrapper extends AbstractCommandWrapper
             PreprocessingOutputImpl output = new PreprocessingOutputImpl(inputFile, inputFile2);
 
             String extension = getExtension(inputFile);
-            File output1 = new File(outputDir, SequenceTaskHelper.getUnzippedBaseName(inputFile.getName()) + ".crop" + extension);
-            File output2 = inputFile2 == null ? null : new File(outputDir, SequenceTaskHelper.getUnzippedBaseName(inputFile2.getName()) + ".crop" + extension);
+            File output1 = FileUtil.appendName(outputDir, SequenceTaskHelper.getUnzippedBaseName(inputFile.getName()) + ".crop" + extension);
+            File output2 = inputFile2 == null ? null : FileUtil.appendName(outputDir, SequenceTaskHelper.getUnzippedBaseName(inputFile2.getName()) + ".crop" + extension);
 
             Integer both = getProvider().getParameterByName("bothReads").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
             Integer r1 = getProvider().getParameterByName("read1").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), Integer.class);
@@ -127,7 +128,7 @@ public class CutadaptCropWrapper extends AbstractCommandWrapper
 
         private static String getExtension(File input)
         {
-            return FileUtil.getExtension(input).endsWith("gz") ? ".fastq.gz" : ".fastq";
+            return Objects.requireNonNull(FileUtil.getExtension(input)).endsWith("gz") ? ".fastq.gz" : ".fastq";
         }
     }
 

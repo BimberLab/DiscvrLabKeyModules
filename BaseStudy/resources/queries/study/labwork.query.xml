@@ -1,0 +1,59 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="labwork" tableDbType="TABLE" useColumnOrder="true">
+                <columns>
+                    <column columnName="Id"/>
+                    <column columnName="date">
+                        <columnTitle>Date</columnTitle>
+                        <formatString>Date</formatString>
+                    </column>
+                    <column columnName="category">
+                        <columnTitle>Category</columnTitle>
+                    </column>
+                    <column columnName="test">
+                        <columnTitle>Test</columnTitle>
+                        <fk>
+                            <fkDbSchema>studies</fkDbSchema>
+                            <fkTable>labwork_types</fkTable>
+                            <fkColumnName>value</fkColumnName>
+                            <fkDisplayColumnName useRawValue="true"/>
+                        </fk>
+                    </column>
+                    <column columnName="result">
+                        <columnTitle>Result</columnTitle>
+                    </column>
+                    <column columnName="units">
+                        <columnTitle>Units</columnTitle>
+                    </column>
+                    <column columnName="qualResult">
+                        <columnTitle>Qualitative Result</columnTitle>
+                        <isHidden>true</isHidden>
+                        <shownInDetailsView>false</shownInDetailsView>
+                    </column>
+                    <column columnName="method">
+                        <columnTitle>Method</columnTitle>
+                    </column>
+                    <column columnName="comments">
+                        <columnTitle>Comments</columnTitle>
+                        <inputType>textarea</inputType>
+                    </column>
+                    <column columnName="dataSource">
+                        <columnTitle>Data Source</columnTitle>
+                    </column>
+                    <column columnName="resultOORIndicator">
+                        <columnTitle>Result OOR Indicator</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="resultNumber">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="resultInRange">
+                        <columnTitle>Result In Range?</columnTitle>
+                        <isHidden>true</isHidden>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ns:studySecurityPolicy xmlns:ns="http://labkey.org/studySecurityPolicy/xml">
+    <ns:securityType>BASIC_WRITE</ns:securityType>
+    <ns:groupPermissions>
+        <ns:groupPermission groupName="Users" securityType="NONE"/>
+    </ns:groupPermissions>
+    <ns:perDatasetPermissions>
+
+    </ns:perDatasetPermissions>
+</ns:studySecurityPolicy>

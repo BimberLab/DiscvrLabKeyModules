@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -58,7 +59,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
         Set<File> toAdd = new HashSet<>();
         for (String dir : dirs)
         {
-            File subDir = new File(outputDir, dir);
+            File subDir = FileUtil.appendName(outputDir, dir);
             if (subDir.exists())
             {
                 toAdd.add(subDir);
@@ -70,7 +71,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
 
     public File getLocalFastqDir(File outputDirectory)
     {
-        return new File(outputDirectory, "localFq");
+        return FileUtil.appendName(outputDirectory, "localFq");
     }
 
     public List<String> prepareCountArgs(AlignmentOutputImpl output, String id, File outputDirectory, Readset rs, List<Pair<File, File>> inputFastqPairs, List<String> extraArgs, boolean writeFastqArgs) throws PipelineJobException
@@ -138,13 +139,13 @@ public class CellRangerWrapper extends AbstractCommandWrapper
             idx++;
             try
             {
-                File target1 = new File(localFqDir, getSymlinkFileName(pair.getLeft().getName(), doRename, rs.getName(), idx, false));
+                File target1 = FileUtil.appendName(localFqDir, getSymlinkFileName(pair.getLeft().getName(), doRename, rs.getName(), idx, false));
                 createSymLink(pair.getLeft(), target1);
                 ret.add(getSampleName(target1.getName()));
 
                 if (pair.getRight() != null)
                 {
-                    File target2 = new File(localFqDir, getSymlinkFileName(pair.getRight().getName(), doRename, rs.getName(), idx, true));
+                    File target2 = FileUtil.appendName(localFqDir, getSymlinkFileName(pair.getRight().getName(), doRename, rs.getName(), idx, true));
                     createSymLink(pair.getRight(), target2);
                     ret.add(getSampleName(target2.getName()));
                 }
@@ -239,7 +240,7 @@ public class CellRangerWrapper extends AbstractCommandWrapper
 
     public void deleteSymlinks(File localFqDir) throws PipelineJobException
     {
-        for (File fq : localFqDir.listFiles())
+        for (File fq : Objects.requireNonNull(localFqDir.listFiles()))
         {
             try
             {

@@ -14,9 +14,11 @@ import org.labkey.api.sequenceanalysis.pipeline.AlignmentStepProvider;
 import org.labkey.api.sequenceanalysis.pipeline.PipelineContext;
 import org.labkey.api.sequenceanalysis.pipeline.ReferenceGenome;
 import org.labkey.api.sequenceanalysis.pipeline.SequenceAnalysisJobSupport;
+import org.labkey.api.util.FileUtil;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.List;
 
@@ -35,13 +37,13 @@ public class AbstractCellRangerDependentStep extends CellRangerGexCountStep
 
     protected File runCellRanger(AlignmentOutputImpl output, Readset rs, List<File> inputFastqs1, @Nullable List<File> inputFastqs2, File outputDirectory, ReferenceGenome referenceGenome, String basename, String readGroupId, @Nullable String platformUnit) throws PipelineJobException
     {
-        getPipelineCtx().getJob().setStatus(PipelineJob.TaskStatus.running, "Running Cellranger GEX");
+        getPipelineCtx().getJob().setStatus(PipelineJob.TaskStatus.running, "Running CellRanger GEX");
 
-        File localBam = new File(outputDirectory, basename + ".cellranger.bam");
+        File localBam = FileUtil.appendName(outputDirectory, basename + ".cellranger.bam");
         File localBamIdx = SequenceAnalysisService.get().getExpectedBamOrCramIndex(localBam);
 
         String idParam = StringUtils.trimToNull(getProvider().getParameterByName("id").extractValue(getPipelineCtx().getJob(), getProvider(), getStepIdx(), String.class));
-        File cellrangerOutdir = new File(outputDirectory, CellRangerWrapper.getId(idParam, rs));
+        File cellrangerOutdir = FileUtil.appendName(outputDirectory, CellRangerWrapper.getId(idParam, rs));
 
         if (localBam.exists() && localBamIdx.exists())
         {
@@ -49,7 +51,7 @@ public class AbstractCellRangerDependentStep extends CellRangerGexCountStep
         }
         else
         {
-            File crBam = new File(cellrangerOutdir, "outs/possorted_genome_bam.bam");
+            File crBam = FileUtil.appendName(cellrangerOutdir, "outs/possorted_genome_bam.bam");
             if (crBam.exists())
             {
                 getPipelineCtx().getLogger().info("Using previous cellranger count run");
@@ -78,7 +80,7 @@ public class AbstractCellRangerDependentStep extends CellRangerGexCountStep
 
                 if (localBamIdx.exists())
                 {
-                    localBamIdx.delete();
+                    Files.delete(localBamIdx.toPath());
                 }
                 FileUtils.moveFile(SequenceAnalysisService.get().getExpectedBamOrCramIndex(crBam), localBamIdx);
             }
@@ -96,11 +98,4 @@ public class AbstractCellRangerDependentStep extends CellRangerGexCountStep
     {
         // Skip GEX-specific complete steps.
     }
-
-    @Override
-    public boolean alwaysCopyIndexToWorkingDir()
-    {
-        return false;
-    }
-
 }

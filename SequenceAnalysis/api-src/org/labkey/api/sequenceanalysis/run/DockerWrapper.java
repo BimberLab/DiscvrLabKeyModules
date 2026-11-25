@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 public class DockerWrapper extends AbstractCommandWrapper
@@ -33,6 +34,7 @@ public class DockerWrapper extends AbstractCommandWrapper
     private String _entryPoint = null;
     private boolean _runPrune = false;
     private boolean _useLocalContainerStorage;
+    private boolean _enforceMaxCpus = false;
     private String _alternateUserHome = null;
     private final Map<String, String> _dockerEnvironment = new HashMap<>();
     private int _maxRetries = 3;
@@ -78,8 +80,8 @@ public class DockerWrapper extends AbstractCommandWrapper
 
     public void executeWithDocker(List<String> containerArgs, File workDir, PipelineOutputTracker tracker, @Nullable Collection<File> inputFiles) throws PipelineJobException
     {
-        File localBashScript = new File(workDir, "docker.sh");
-        File dockerBashScript = new File(workDir, "dockerRun.sh");
+        File localBashScript = FileUtil.appendName(workDir, "docker.sh");
+        File dockerBashScript = FileUtil.appendName(workDir, "dockerRun.sh");
         tracker.addIntermediateFile(localBashScript);
         tracker.addIntermediateFile(dockerBashScript);
 
@@ -177,6 +179,12 @@ public class DockerWrapper extends AbstractCommandWrapper
                 writer.println("\t--memory='" + maxRam + "g' \\");
             }
 
+            Integer maxCores = SequencePipelineService.get().getMaxThreads(getLogger());
+            if (_enforceMaxCpus && maxCores != null)
+            {
+                writer.println("\t--cpus='" + maxCores + "' \\");
+            }
+
             for (String key : _dockerEnvironment.keySet())
             {
                 writer.println("\t-e " + key + "='" + _dockerEnvironment.get(key) + "' \\");
@@ -251,10 +259,11 @@ public class DockerWrapper extends AbstractCommandWrapper
                         throw e;
                     }
 
-                    getLogger().info("Exit code " + getLastReturnCode() + ", retrying after 1 sec (" + retries + " of " + getMaxRetries()+ ")");
+                    final long randomNum = ThreadLocalRandom.current().nextInt(2, 11);
+                    getLogger().info("Exit code " + getLastReturnCode() + ", retrying after " + randomNum + " sec(s) (" + retries + " of " + getMaxRetries()+ ")");
                     try
                     {
-                        Thread.sleep(1000);
+                        Thread.sleep(1000 * randomNum);
                     }
                     catch (InterruptedException ex)
                     {
@@ -339,5 +348,10 @@ public class DockerWrapper extends AbstractCommandWrapper
         }
 
         return "--root=" + getLocalContainerDir().getPath() + " ";
+    }
+
+    public void setEnforceMaxCpus(boolean enforceMaxCpus)
+    {
+        _enforceMaxCpus = enforceMaxCpus;
     }
 }

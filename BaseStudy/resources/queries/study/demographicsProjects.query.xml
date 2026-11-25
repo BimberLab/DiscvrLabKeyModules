@@ -1,0 +1,34 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="demographicsProjects" tableDbType="NOT_IN_DB">
+                <tableTitle>Project Summary</tableTitle>
+                <columns>
+                    <column columnName="Id">
+                        <isKeyField>true</isKeyField>
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="categories">
+                        <columnTitle>Study Categories</columnTitle>
+                    </column>
+                    <column columnName="allStudies">
+                        <columnTitle>Studies</columnTitle>
+                        <url>/query/executeQuery.view?schemaName=study&amp;query.queryName=assignment&amp;query.Id~eq=${Id}</url>
+                        <urlTarget>_blank</urlTarget>
+                    </column>
+                    <column columnName="allStudiesAndAnalyses">
+                        <columnTitle>Studies and Analyses</columnTitle>
+                    </column>
+                    <column columnName="analysisGroups">
+                        <columnTitle>Analysis Groups</columnTitle>
+                        <displayWidth>150</displayWidth>
+                    </column>
+                    <column columnName="subgroups">
+                        <columnTitle>Subgroups/Treatments</columnTitle>
+                    </column>
+                </columns>
+                <titleColumn>categories</titleColumn>
+            </table>
+        </tables>
+    </metadata>
+</query>

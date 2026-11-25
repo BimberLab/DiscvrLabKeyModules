@@ -1,0 +1,48 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="" tableDbType="TABLE" useColumnOrder="true">
+                <javaCustomizer class="org.labkey.sivstudies.query.SivStudiesCustomizer"/>
+                <columns>
+                    <column columnName="Id">
+                        <conceptURI>http://cpas.labkey.com/Study#ParticipantId</conceptURI>
+                        <url>laboratory/dataBrowser.view?subjectId=${Id}</url>
+                        <facetingBehavior>ALWAYS_OFF</facetingBehavior>
+                    </column>
+                    <column columnName="date">
+                        <columnTitle>Date</columnTitle>
+                    </column>
+                    <column columnName="enddate">
+                        <columnTitle>End Date</columnTitle>
+                    </column>
+                    <column columnName="objectId">
+                        <columnTitle>Key</columnTitle>
+                        <isHidden>true</isHidden>
+                        <isKeyField>true</isKeyField>
+                        <shownInDetailsView>false</shownInDetailsView>
+                    </column>
+                    <column columnName="container">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="AnimalVisit">
+                        <isHidden>true</isHidden>
+                    </column>
+                    <column columnName="DataSets">
+                        <isHidden>true</isHidden>
+                    </column>
+                </columns>
+                <buttonBarOptions includeStandardButtons="true">
+                    <item hidden="true">
+                        <originalText>Filter</originalText>
+                    </item>
+                    <item hidden="true">
+                        <originalText>Groups</originalText>
+                    </item>
+                    <item hidden="true">
+                        <originalText>Manage</originalText>
+                    </item>
+                </buttonBarOptions>
+            </table>
+        </tables>
+    </metadata>
+</query>

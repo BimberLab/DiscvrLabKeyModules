@@ -34,6 +34,7 @@ import org.labkey.api.sequenceanalysis.pipeline.ToolParameterDescriptor;
 import org.labkey.api.sequenceanalysis.run.SimpleScriptWrapper;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.Path;
 import org.labkey.api.writer.PrintWriters;
 import org.labkey.singlecell.CellHashingServiceImpl;
 import org.labkey.singlecell.SingleCellModule;
@@ -236,7 +237,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             List<String> args = wrapper.prepareCountArgs(output, id, ctx.getOutputDir(), rs, inputFastqs, extraArgs, false);
 
             //https://support.10xgenomics.com/single-cell-gene-expression/software/pipelines/latest/using/feature-bc-analysis
-            File libraryCsv = new File(ctx.getOutputDir(), "libraries.csv");
+            File libraryCsv = FileUtil.appendName(ctx.getOutputDir(), "libraries.csv");
             try (CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(libraryCsv), ',', CSVWriter.NO_QUOTE_CHARACTER))
             {
                 writer.writeNext(new String[]{"fastqs", "sample", "library_type"});
@@ -256,7 +257,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             wrapper.setWorkingDir(ctx.getOutputDir());
 
             //Note: we can safely assume only this server is working on these files, so if the _lock file exists, it was from a previous failed job.
-            File lockFile = new File(ctx.getOutputDir(), id + "/_lock");
+            File lockFile = FileUtil.appendPath(ctx.getOutputDir(), Path.parse(id + "/_lock"));
             if (lockFile.exists())
             {
                 ctx.getLogger().info("Lock file exists, deleting: " + lockFile.getPath());
@@ -265,7 +266,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
 
             wrapper.execute(args);
 
-            File crDir  = new File(ctx.getOutputDir(), id);
+            File crDir  = FileUtil.appendName(ctx.getOutputDir(), id);
             if (idSuffix != null)
             {
                 File toMove = new File(crDir.getPath() + idSuffix);
@@ -282,9 +283,9 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                 crDir = toMove;
             }
 
-            File outsdir = new File(crDir, "outs");
+            File outsdir = FileUtil.appendName(crDir, "outs");
 
-            File bam = new File(outsdir, "possorted_genome_bam.bam");
+            File bam = FileUtil.appendName(outsdir, "possorted_genome_bam.bam");
             if (bam.exists())
             {
                 throw new PipelineJobException("Did not expect to find BAM: " + bam.getPath());
@@ -295,13 +296,13 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             try
             {
                 String prefix = FileUtil.makeLegalName(rs.getName() + "_");
-                File outputHtml = new File(outsdir, "web_summary.html");
+                File outputHtml = FileUtil.appendName(outsdir, "web_summary.html");
                 if (!outputHtml.exists())
                 {
                     throw new PipelineJobException("Unable to find file: " + outputHtml.getPath());
                 }
 
-                File outputHtmlRename = new File(outsdir, prefix + outputHtml.getName());
+                File outputHtmlRename = FileUtil.appendName(outsdir, prefix + outputHtml.getName());
                 if (outputHtmlRename.exists())
                 {
                     outputHtmlRename.delete();
@@ -315,7 +316,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                 }
                 output.addSequenceOutput(outputHtmlRename, rs.getName() + " 10x " + rs.getApplication() + " Summary", "10x Run Summary", rs.getRowId(), null, null, description);
 
-                File rawCounts = new File(outsdir, "raw_feature_bc_matrix/matrix.mtx.gz");
+                File rawCounts = FileUtil.appendName(outsdir, "raw_feature_bc_matrix/matrix.mtx.gz");
                 if (rawCounts.exists())
                 {
                     output.addSequenceOutput(rawCounts, rs.getName() + ": " + rs.getApplication() + " Raw Counts", category, rs.getRowId(), null, null, description);
@@ -332,7 +333,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
             }
 
             //NOTE: this folder has many unnecessary files and symlinks that get corrupted when we rename the main outputs
-            File directory = new File(outsdir.getParentFile(), "SC_RNA_COUNTER_CS");
+            File directory = FileUtil.appendName(outsdir.getParentFile(), "SC_RNA_COUNTER_CS");
             if (directory.exists())
             {
                 //NOTE: this will have lots of symlinks, including corrupted ones, which java handles badly
@@ -348,20 +349,20 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
         {
             try
             {
-                File indexDir = new File(ctx.getOutputDir(), "cellrangerIndex");
+                File indexDir = FileUtil.appendName(ctx.getOutputDir(), "cellrangerIndex");
                 if (indexDir.exists())
                 {
                     FileUtils.deleteDirectory(indexDir);
                 }
 
-                File fasta = new File(ctx.getOutputDir(), "genome.fasta");
+                File fasta = FileUtil.appendName(ctx.getOutputDir(), "genome.fasta");
                 try (PrintWriter writer = PrintWriters.getPrintWriter(fasta))
                 {
                     writer.println(">1");
                     writer.println("ATGATGATGATGATG");
                 }
 
-                File gtf = new File(ctx.getOutputDir(), "genome.gtf");
+                File gtf = FileUtil.appendName(ctx.getOutputDir(), "genome.gtf");
                 try (PrintWriter writer = PrintWriters.getPrintWriter(gtf))
                 {
                     writer.println("1\tnowhere\texon\t1\t4\t.\t+\t.\ttranscript_id \"transcript1\"; gene_id \"gene1\"; gene_name \"gene1\";");
@@ -404,7 +405,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
 
         private File createFeatureRefForCiteSeq(File outputDir, File adtWhitelist) throws PipelineJobException
         {
-            File featuresCsv = new File(outputDir, "adtFeatureRef.csv");
+            File featuresCsv = FileUtil.appendName(outputDir, "adtFeatureRef.csv");
             try (CSVReader reader = new CSVReader(Readers.getReader(adtWhitelist), '\t'); CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(featuresCsv), ',', CSVWriter.DEFAULT_QUOTE_CHARACTER))
             {
                 writer.writeNext(new String[]{"id", "name", "read", "pattern", "sequence", "feature_type"});
@@ -438,7 +439,7 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
 
         private File createFeatureRefForHashing(File outputDir, File hashingWhitelist) throws PipelineJobException
         {
-            File featuresCsv = new File(outputDir, "hashingFeatureRef.csv");
+            File featuresCsv = FileUtil.appendName(outputDir, "hashingFeatureRef.csv");
             try (CSVReader reader = new CSVReader(Readers.getReader(hashingWhitelist), ',');CSVWriter writer = new CSVWriter(PrintWriters.getPrintWriter(featuresCsv), ',', CSVWriter.DEFAULT_QUOTE_CHARACTER))
             {
                 writer.writeNext(new String[]{"id", "name", "read", "pattern", "sequence", "feature_type"});
@@ -482,9 +483,9 @@ public class CellRangerFeatureBarcodeHandler extends AbstractParameterizedOutput
                 throw new PipelineJobException("Unable to find count matrix as output");
             }
 
-            Readset rs = readsets.get(0);
+            Readset rs = readsets.getFirst();
 
-            File metrics = new File(so.getFile().getParentFile().getParentFile(), "metrics_summary.csv");
+            File metrics = FileUtil.appendName(so.getFile().getParentFile().getParentFile(), "metrics_summary.csv");
             if (!metrics.exists())
             {
                 throw new PipelineJobException("unable to find metrics file: " + metrics.getPath());
