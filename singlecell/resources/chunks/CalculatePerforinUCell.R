@@ -14,7 +14,7 @@ for (datasetId in names(seuratObjects)) {
       PRF1_GZMB = c('PRF1', 'GZMB')
     ), ncores = nCores, assay = assayName)
 
-    seuratObj <- UCell::SmoothKNN(seuratObj, signature.names = 'PRF1_UCell', 'PRF1_GZMB_UCell')
+    seuratObj <- UCell::SmoothKNN(seuratObj, signature.names = c('PRF1_UCell', 'PRF1_GZMB_UCell'))
 
     saveData(seuratObj, datasetId)
 
